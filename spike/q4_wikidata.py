@@ -80,7 +80,8 @@ def full(langs: set[str]) -> dict:
     schema = pa.schema([("site", pa.string()), ("title", pa.string()), ("qid", pa.int32())])
     with gzip.open(dest, "rb") as f:
         for line in io.BufferedReader(f, 1 << 24):
-            if not line.startswith(b"INSERT INTO"):
+            # mariadb-dump 10.11 writes one "(...)," tuple per line after "INSERT INTO ... VALUES"
+            if not (line.startswith(b"(") or line.startswith(b"INSERT INTO")):
                 continue
             for _, item, site, page in TUPLE.findall(line):
                 total += 1
