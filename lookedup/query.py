@@ -12,6 +12,7 @@ from datetime import datetime
 
 import duckdb
 
+from lookedup import db
 from lookedup.settings import HF_REPO_ID, LOCAL_LAKE_DIR, SITELINKS_PATH
 from lookedup.store import hour_path
 
@@ -24,7 +25,7 @@ def lake_root(local: bool = False) -> str:
 
 
 def _base(root: str) -> duckdb.DuckDBPyConnection:
-    con = duckdb.connect()
+    con = db.connect()
     if root.startswith("hf://"):
         con.execute("INSTALL httpfs; LOAD httpfs;")
         token = os.environ.get("HF_TOKEN")

@@ -15,10 +15,10 @@ import re
 import tempfile
 from pathlib import Path
 
-import duckdb
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from lookedup import db
 from lookedup.dumps import download
 from lookedup.settings import RAW_DIR, SITELINKS_DUMP
 
@@ -71,7 +71,7 @@ def build_sitelinks(langs: list[str], out: Path, dump: Path | None = None) -> di
             writer.write_table(pa.table(list(cols), schema=SCHEMA))
         writer.close()
         out.parent.mkdir(parents=True, exist_ok=True)
-        con = duckdb.connect()
+        con = db.connect()
         con.execute(f"SET temp_directory='{tmp}'")
         con.execute(f"""COPY (SELECT * FROM '{unsorted}' ORDER BY lang, title)
                         TO '{out}' (FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE 1000000)""")
@@ -82,7 +82,7 @@ def build_sitelinks(langs: list[str], out: Path, dump: Path | None = None) -> di
 
 def join_coverage(hourly_glob: str, sitelinks: str) -> list[tuple[str, int, int, float]]:
     """Per language: (lang, views, views matched to a QID, % matched) over the given hours."""
-    rows = duckdb.sql(f"""
+    rows = db.connect().sql(f"""
         WITH h AS (SELECT lang, title, views_desktop + views_mobile AS v FROM read_parquet('{hourly_glob}'))
         SELECT h.lang, sum(v)::BIGINT AS views, sum(v) FILTER (WHERE s.qid IS NOT NULL)::BIGINT AS matched
         FROM h LEFT JOIN read_parquet('{sitelinks}') s USING (lang, title)

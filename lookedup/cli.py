@@ -19,7 +19,7 @@ import json
 import logging
 import sys
 import tempfile
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 
 log = logging.getLogger("lookedup")

@@ -22,6 +22,7 @@ import duckdb
 import pyarrow as pa
 import pyarrow.compute as pc
 
+from lookedup import db
 from lookedup.parse import (
     INVALID_TITLES,
     ArticleFilter,
@@ -43,7 +44,7 @@ SCHEMA = pa.schema([
 
 
 def _connect(langs: Iterable[str], filt: ArticleFilter) -> duckdb.DuckDBPyConnection:
-    con = duckdb.connect()
+    con = db.connect()
     con.create_function("norm_title", normalize_title, ["VARCHAR"], "VARCHAR", side_effects=False)
     langs = sorted(set(langs))
     con.execute("CREATE TEMP TABLE langs(lang VARCHAR)")

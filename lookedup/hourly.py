@@ -14,9 +14,8 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import duckdb
 
-from lookedup import dumps
+from lookedup import db, dumps
 from lookedup.languages import active_codes, article_filter
 from lookedup.parse import ArticleFilter
 from lookedup.settings import MAX_HOURS_PER_RUN, MIN_VIEWS, WINDOW_HOURS
@@ -94,7 +93,7 @@ def verify_alignment(ts_hour_start: datetime, work_dir: Path) -> dict:
     f = dumps.HourlyFile(name=dumps.file_name(ts_hour_start), url=dumps.file_url(ts_hour_start),
                          ts_hour_start=ts_hour_start, posted=ts_hour_start, size=0)
     raw = dumps.download(f.url, work_dir / f.name)
-    total = duckdb.sql(f"""
+    total = db.connect().sql(f"""
         SELECT sum(views) FROM read_csv('{raw}', delim=' ', header=false, quote='', escape='',
             auto_detect=false, columns={{'p':'VARCHAR','t':'VARCHAR','views':'BIGINT','b':'BIGINT'}},
             ignore_errors=true) WHERE p IN ('en', 'en.m')""").fetchone()[0]
