@@ -17,11 +17,10 @@ import duckdb
 
 from common import DERIVED, RAW
 
-files = sorted((RAW / "pageviews").glob("pageviews-2026100[67]-*.gz"))
 q1 = json.loads((DERIVED / "q1_summary.json").read_text())
 langs = ",".join(f"'{l}'" for l, _, _ in q1["top50_langs"])
-recent = [f for f in files if f.name in {x["file"] for x in q1["files"]}]
-assert len(recent) == 3, recent
+recent = [RAW / "pageviews" / x["file"] for x in q1["files"]]  # the 3 hours q1 measured
+assert all(f.exists() for f in recent), recent
 
 con = duckdb.connect()
 union = " UNION ALL ".join(f"""
