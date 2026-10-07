@@ -21,7 +21,7 @@ NON_WIKIPEDIA = {
     "commons", "meta", "species", "incubator", "outreach", "wikimania", "wikidata",
     "foundation", "mediawiki", "wikisource", "wikitech", "login", "sources", "beta",
     "nostalgia", "strategy", "usability", "quality", "office", "ten", "test", "test2",
-    "advisory", "donate", "api", "vote", "wikifunctions", "auth",
+    "advisory", "donate", "api", "vote", "wikifunctions", "auth", "thankyou",
 }
 
 
