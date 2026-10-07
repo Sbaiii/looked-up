@@ -10,3 +10,10 @@ data/
 
 # OS
 .DS_Store
+
+# Secrets
+.env
+
+# Build
+*.egg-info/
+.pytest_cache/
