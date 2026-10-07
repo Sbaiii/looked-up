@@ -248,3 +248,117 @@ Joining one hour of top-50 Wikipedia pageviews (desktop + mobile summed) on `(si
   and the old names keep collecting views. Sources: the `redirect` + `page` table dumps per wiki, or
   `pageview_complete`'s `page_id` (which survives renames). Q5 resolves redirects through the API, and that
   was necessary to get correct numbers.
+
+---
+
+## 5. The key test: do spikes precede the news?
+
+Scripts: [`q5a_current_events.py`](../spike/q5a_current_events.py) (pick events),
+[`q5_spike_test.py`](../spike/q5_spike_test.py) (build tables), [`q5b_analyse.py`](../spike/q5b_analyse.py)
+(detectors), [`q5c_edit_lead.py`](../spike/q5c_edit_lead.py) (editor reaction).
+Tables: [`q5_harald_v_death_hourly.csv`](q5_harald_v_death_hourly.csv),
+[`q5_colombia_earthquake_hourly.csv`](q5_colombia_earthquake_hourly.csv),
+[`q5_us_open_final_zverev_hourly.csv`](q5_us_open_final_zverev_hourly.csv),
+[`q5_detection_summary.csv`](q5_detection_summary.csv), [`q5_edit_lead.csv`](q5_edit_lead.csv).
+
+### Method
+
+- 3 events from Portal:Current_events in the last 60 days: a death, a disaster and a sports final.
+- **24 hourly dump files per event** (the cap), titles resolved through Wikidata in **10 languages each**, with **every
+  redirect summed in**. New articles get renamed, and views land on whatever title was live at the time.
+- Baseline "same hour of the previous day" comes from the previous day's **`pageview_complete`** file (hourly
+  counts inside), so we didn't need 24 more hourly files. **Cross-check: on the 179 (hour, title) pairs present in both
+  sources, the hourly dumps and `pageview_complete` are identical, 179/179.** The sources agree exactly, and the
+  "filename = end of hour" reading is confirmed again.
+- Detectors (first hour from event − 6 h onward, floor ≥ 20 views):
+  - **day-over-day (as specified):** views ≥ 5 × same hour of the previous day;
+  - **hour-over-hour (added):** views ≥ 3 × median of the previous 3 hours.
+
+### Events and real timestamps (UTC)
+
+| Event | Real time | Source |
+|---|---|---|
+| Death of King Harald V of Norway | died **04:35**, palace announcement **06:35** (28 Aug) | en.wikipedia *Death and state funeral of Harald V* (06:35 / 08:35 CEST) |
+| M7.4 earthquake, Chocó, Colombia | **12:34:28** (10 Aug) | article infobox (USGS-style timestamp, 07:34 COT) |
+| US Open men's final, Zverev d. Shelton | start **18:00**, result **≈ 21:48** (13 Sep) | start: Al Jazeera (2 p.m. ET). End: de.wikipedia edit at 21:49 *"er hat vor 20 Sekunden die us open gewonnen"*; first wire 21:55 |
+
+### Results
+
+**Harald V: the whole of Europe in the same hour.** Views of *Harald V* per hour:
+
+| Lang | 03:00 | 04:00 | 05:00 | **06:00** | 07:00 | jump 05→06 |
+|---|---|---|---|---|---|---|
+| en | 2,461 | 2,586 | 2,881 | **20,949** | 53,428 | 7.3 × |
+| no | 216 | 510 | 812 | **6,082** | 9,419 | 7.5 × |
+| sv | 351 | 864 | 1,523 | **5,967** | 8,313 | 3.9 × |
+| da | 152 | 277 | 414 | **2,002** | 3,515 | 4.8 × |
+| de | 521 | 922 | 1,387 | **10,015** | 21,585 | 7.2 × |
+| fr | 167 | 375 | 537 | **4,272** | 11,248 | 8.0 × |
+| es | 313 | 331 | 386 | **2,663** | 5,697 | 6.9 × |
+| it | 105 | 174 | 338 | **2,615** | 8,217 | 7.7 × |
+| ru | 83 | 113 | 170 | **3,643** | 8,096 | 21.4 × |
+| ja | 98 | 86 | 97 | 201 | **2,658** | 13 × at 07:00 |
+
+- **9 of 10 languages jump in the 06:00–07:00 hour**, the hour of the 06:35 announcement. ja follows one hour
+  later (16:00 JST). Detection delay is **within the announcement hour (< 25 min after the announcement)**.
+- **The specified day-over-day rule fails here:** it fires at 00:00 in all 10 languages, 4.6 h *before* the
+  death. On 27 Aug the palace said his condition was "extremely serious", so the previous day was already a news
+  day (en baseline went from ~110/h to 6.6 k/h). Comparing to yesterday's same hour assumes yesterday was quiet.
+- The 04:00–05:00 rise in no/sv/de (2–3 × the earlier hours, before the official announcement) is **ambiguous**:
+  that hour is 06:00 CEST, the start of the European morning, and the baseline day shows a similar morning ramp. I
+  don't count it as a "before the news" signal.
+
+**Colombia earthquake: the local language reacts first, within the hour.**
+
+| Article | Lang | First spike hour (UTC) | Delay after quake | Views in that hour (prev-day same hour) |
+|---|---|---|---|---|
+| *Chocó Department* (existing) | **es** | **12:00–13:00** | **≤ 26 min** | 376 (4), then 1,492 at 13:00 |
+| | en | 12:00–13:00 | ≤ 26 min | 61 (6) |
+| | fr, pt, it | 13:00 | + 0.4 h | 43–114 |
+| | de, ja | 14:00 | + 1.4 h | 47–102 |
+| | zh | 15:00 | + 2.4 h | 21 |
+| | ru, ar | none | — | ≤ 11 |
+| *2026 Colombia earthquake* (new) | en | 13:00 | created **12:49** (+16 min), 855 views at 13:00 | — |
+| | es | 13:00 | created 13:09 (+36 min) | — |
+| | pt, zh, ar, ja | 14:00–16:00 | created + 2 to 4 h | — |
+| | fr, it / de / ru | — | created + 8 h / + 22 h / + 2 days | — |
+
+- Attention spreads from the local language outward: es/en → fr/pt/it (+1 h) → de/ja (+2 h) → zh (+3 h).
+  That makes it a good product feature to show.
+- An existing, related article (the region) is the fastest and most reliable signal. The event's own article
+  doesn't exist yet in most languages for hours, so **it has no QID yet**.
+
+**US Open final: scheduled events spike at kick-off, not at the result.**
+
+- 8 of 10 languages flagged in the **18:00 hour (match start)**, es at 17:00 (pre-match) and ja at 19:00. That is
+  3.8 h *before* the result. en climbs 7 k → 41 k → 49 k → 58 k → 89 k → **119.6 k in the 22:00 hour**, which holds
+  the 21:48 result.
+- **de gets a second wave at 03:00–06:00 UTC** the next morning (Germans waking up to the news: 43 × baseline
+  at 04:00). Attention follows time zones, so hourly granularity really matters.
+- Both detectors agree here because the previous day was quiet.
+
+### Editors are faster than readers (and faster than the dumps)
+
+First edit or creation after the event ([`q5_edit_lead.csv`](q5_edit_lead.csv)):
+
+- Zverev: **all 10 languages edited within 1–29 min** of the result (de at +1 min, it +3, pt +5, es +6, fr +7, ru +9,
+  ja +11, pl +24, zh +29).
+- Harald V: death-related edits in no/da/fr/es/ru at 06:39–06:43 (**4–8 min after the announcement**), ja at 07:03.
+  (Earlier edits that morning were routine: a comma, link clean-up.)
+- Quake: en article **created 16 min after the quake**, es 36 min.
+
+### Answer
+
+- **Pageview spikes do not precede the news. They coincide with it**, inside the same clock hour, for
+  unscheduled events (≤ 25–30 min after the first public information), and they appear in **many languages at
+  once** (Harald: 9/10 in one hour; US Open: 8/10 in one hour; quake: 2 at once, 7 within 3 h).
+- **Detection delay for us with hourly dumps:** hour end + median 2.2 h publication → **≈ 2.5–3.5 h after the
+  event**. Daily data (top lists, `pageview_complete`) only arrives 2.4 h after the UTC day ends, so hourly dumps are **≈ 12–23 h faster** depending on the time of day. They are still 2–3 h *slower* than the newswire.
+- **The edit stream is the only signal that comes before the dumps**: editors react within 1–30 min. A
+  burst of human edits (or a new article) linked to a QID is the "early warning". Pageviews confirm the attention and measure its size.
+- Detection design: **the specified rule (5 × same hour yesterday) works for "quiet before" events and fails
+  after a newsy day.** Use a trailing baseline (previous hours plus a 7-day same-hour median), a views floor, and
+  multi-language confirmation.
+- Where Looked Up adds value is not beating the news. It is **measuring how much attention the world pays, in which
+  languages, how it spreads and how long it lasts**, at hourly resolution.
+
