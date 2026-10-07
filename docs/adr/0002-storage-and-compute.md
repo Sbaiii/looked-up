@@ -1,6 +1,6 @@
 # 0002 — Storage on Hugging Face Datasets, compute on GitHub Actions
 
-- Status: accepted
+- Status: accepted; retention refined by ADR 0007, layout by ADR 0008
 - Date: 2026-10-07
 - Evidence: [feasibility §6](../feasibility.md)
 

@@ -1,6 +1,6 @@
 # 0003 — Top-50 Wikipedias, unified through Wikidata sitelinks
 
-- Status: accepted
+- Status: accepted; the top-50 language set is superseded by ADR 0006 (30 languages, human article views)
 - Date: 2026-10-07
 - Evidence: [feasibility §1, §4](../feasibility.md)
 

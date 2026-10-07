@@ -1,6 +1,6 @@
 # 0001 — Pageview sources: hourly dumps live, pageview_complete for history
 
-- Status: accepted
+- Status: accepted; the "desktop and mobile summed" rule is superseded by ADR 0005
 - Date: 2026-10-07
 - Evidence: [feasibility §1, §2, §5](../feasibility.md)
 
