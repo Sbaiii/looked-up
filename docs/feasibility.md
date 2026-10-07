@@ -4,6 +4,23 @@ Measured on 2026-10-07 from a MacBook (Apple Silicon, home connection ≈1.4 MB/
 dumps.wikimedia.org), Python 3.12, DuckDB 1.5.6. Every number below comes from a script in
 [`spike/`](../spike) and can be reproduced; raw downloads live in the git-ignored `data/`.
 
+## Summary
+
+**Recommendation: GO**, reframed as "hour-by-hour attention across languages" rather than "before the news".
+
+| Question | Key number |
+|---|---|
+| Hourly dump size / lag | ≈ 55 MB gz, 6.2 M lines, 1,960 projects per hour; **published ≈ 2.2 h after the hour (median)** |
+| Load + Parquet | DuckDB loads an hour in **0.7 s**; top-50 Wikipedias compacted per day ≈ 132 GB/yr full, **≈ 15–21 GB/yr at ≥ 5 views/hour** |
+| Mobile vs desktop | mobile = 56 % of Wikipedia views (fa 88 %, de 45 %); **sum them** |
+| pageview_complete | daily, ≈ 0.69 GB bz2, hourly counts inside, lag 2.4 h after the *day*; **identical to hourly dumps (179/179)** |
+| REST API | per-article daily since 2015-07-01, no hourly per article; ~200 req/min with UA; country data only daily, top-1000, rounded, 18/38 probed countries suppressed |
+| Edit stream | ≈ 30 events/s, 31 % bots, only 29 % Wikipedias, ≈ 4.3 human Wikipedia edits/s |
+| Wikidata mapping | 1.9 GB monthly dump, 100.6 M sitelinks; **(site, title) → QID covers 93–95 % of views** |
+| Spikes vs news | spike in the **same hour as the event, in 8–9 languages at once**; visible to us ≈ 2.5–3.5 h later; editors react in 1–30 min |
+| Compute | hourly job ≈ 3 s processing (35–65 s with home download), 1 GB RAM: fits free GitHub Actions |
+| Storage | **Hugging Face Datasets** (public, no card, DuckDB `hf://`); raw history stays at Wikimedia |
+
 ---
 
 ## 1. Hourly pageview dumps
