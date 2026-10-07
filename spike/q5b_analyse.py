@@ -68,7 +68,7 @@ def main() -> None:
                 "baseline_same_hour_prev_day": next((b for h, _, b in s if h == event_t.replace(minute=0)), 0),
             })
     with open(DOCS / "q5_detection_summary.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(out[0].keys()))
+        w = csv.DictWriter(f, fieldnames=list(out[0].keys()), lineterminator="\n")
         w.writeheader()
         w.writerows(out)
     for r in out:

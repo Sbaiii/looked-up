@@ -65,7 +65,7 @@ def main() -> None:
         print(out[-1]["event"][:12], out[-1]["entity"][:16], out[-1]["lang"], out[-1]["first_edit_after_event_utc"],
               out[-1]["edit_lead_min"], "NEW" if new_article else "", out[-1]["first_edit_comment"][:60])
     with open(DOCS / "q5_edit_lead.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(out[0].keys()))
+        w = csv.DictWriter(f, fieldnames=list(out[0].keys()), lineterminator="\n")
         w.writeheader()
         w.writerows(out)
 

@@ -209,7 +209,7 @@ def analyse(ev: dict) -> list[dict]:
                             "data_available_after_event_h": round(delay + 1 + 134 / 60, 1) if delay is not None else None,
                             "peak_views_hour": max((cur_a.get((h, ent, lang), 0) for h in hours), default=0)})
     with open(DOCS / f"q5_{ev['key']}_hourly.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 
@@ -233,7 +233,7 @@ def main() -> None:
                   r["peak_views_hour"])
         allsum += s
     with open(DOCS / "q5_detection_summary.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(allsum[0].keys()))
+        w = csv.DictWriter(f, fieldnames=list(allsum[0].keys()), lineterminator="\n")
         w.writeheader()
         w.writerows(allsum)
     meta = [{k: (str(v) if isinstance(v, datetime) else v) for k, v in ev.items()} for ev in EVENTS]
