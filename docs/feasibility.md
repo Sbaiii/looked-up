@@ -210,7 +210,7 @@ hi *लिस्बन*, … The API works well for a handful of entities, but i
 ### Offline: `wikidatawiki-latest-wb_items_per_site.sql.gz`
 
 - **Size: 1.91 GB gz** (dump of 2026-10-03), so under 3 GB and downloaded in full. It parsed in **6.2 min** with a
-  streaming regex in pure Python. It is refreshed roughly weekly.
+  streaming regex in pure Python. It comes from the **monthly** dump run (2026-10-01 run, file written 2026-10-03), so the mapping can be up to ~5 weeks stale. New event articles always need a live fallback (API or the `page-create` stream).
 - Structure (the CREATE TABLE in the dump):
 
   ```sql
