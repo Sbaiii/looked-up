@@ -1,0 +1,241 @@
+hour_start_utc,entity,qid,lang,title,views,baseline_prev_day,ratio,spike
+2026-09-13 12:00,Alexander Zverev,Q13990552,en,Alexander Zverev,2157,3467,0.6,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,en,Alexander Zverev,2254,3203,0.7,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,en,Alexander Zverev,2492,2962,0.8,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,en,Alexander Zverev,2698,2724,1.0,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,en,Alexander Zverev,2860,2531,1.1,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,en,Alexander Zverev,7241,2371,3.1,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,en,Alexander Zverev,41215,2324,17.7,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,en,Alexander Zverev,48921,2198,22.3,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,en,Alexander Zverev,58367,2370,24.6,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,en,Alexander Zverev,88715,2779,31.9,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,en,Alexander Zverev,119621,3726,32.1,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,en,Alexander Zverev,34444,2672,12.9,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,en,Alexander Zverev,28858,2143,13.5,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,en,Alexander Zverev,26852,1936,13.9,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,en,Alexander Zverev,23837,2305,10.3,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,en,Alexander Zverev,20957,1916,10.9,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,en,Alexander Zverev,18088,1677,10.8,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,en,Alexander Zverev,16785,1349,12.4,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,en,Alexander Zverev,16351,1406,11.6,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,en,Alexander Zverev,14200,1306,10.9,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,en,Alexander Zverev,12725,1293,9.8,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,en,Alexander Zverev,11795,1314,9.0,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,en,Alexander Zverev,11940,1448,8.2,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,en,Alexander Zverev,13628,1745,7.8,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,de,Alexander Zverev,515,679,0.8,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,de,Alexander Zverev,475,514,0.9,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,de,Alexander Zverev,544,490,1.1,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,de,Alexander Zverev,582,376,1.5,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,de,Alexander Zverev,665,386,1.7,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,de,Alexander Zverev,1257,1049,1.2,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,de,Alexander Zverev,6697,1776,3.8,0
+2026-09-13 19:00,Alexander Zverev,Q13990552,de,Alexander Zverev,9591,717,13.4,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,de,Alexander Zverev,10266,585,17.5,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,de,Alexander Zverev,11235,597,18.8,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,de,Alexander Zverev,13046,859,15.2,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,de,Alexander Zverev,2273,221,10.3,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,de,Alexander Zverev,1236,112,11.0,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,de,Alexander Zverev,906,79,11.5,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,de,Alexander Zverev,1212,67,18.1,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,de,Alexander Zverev,2385,75,31.8,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,de,Alexander Zverev,5974,138,43.3,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,de,Alexander Zverev,8682,307,28.3,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,de,Alexander Zverev,9525,516,18.5,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,de,Alexander Zverev,8578,667,12.9,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,de,Alexander Zverev,6764,642,10.5,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,de,Alexander Zverev,5544,574,9.7,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,de,Alexander Zverev,5511,594,9.3,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,de,Alexander Zverev,4680,531,8.8,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,253,321,0.8,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,238,298,0.8,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,229,230,1.0,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,204,184,1.1,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,197,197,1.0,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,253,192,1.3,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,2419,197,12.3,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,3992,218,18.3,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,4692,195,24.1,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,6676,212,31.5,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,5779,206,28.1,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,1350,124,10.9,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,835,60,13.9,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,558,50,11.2,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,541,57,9.5,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,659,31,21.3,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,1478,55,26.9,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,2499,113,22.1,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,2454,186,13.2,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,2099,234,9.0,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,1750,253,6.9,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,1603,187,8.6,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,1493,221,6.8,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,fr,Alexander Zverev,1461,231,6.3,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,es,Alexander Zverev,133,255,0.5,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,es,Alexander Zverev,185,272,0.7,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,es,Alexander Zverev,182,221,0.8,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,es,Alexander Zverev,250,244,1.0,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,es,Alexander Zverev,242,201,1.2,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1045,170,6.1,1
+2026-09-13 18:00,Alexander Zverev,Q13990552,es,Alexander Zverev,6408,208,30.8,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,es,Alexander Zverev,6782,221,30.7,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,es,Alexander Zverev,8981,222,40.5,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,es,Alexander Zverev,12818,440,29.1,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,es,Alexander Zverev,12476,538,23.2,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,es,Alexander Zverev,3355,338,9.9,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,es,Alexander Zverev,2617,170,15.4,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,es,Alexander Zverev,2279,161,14.2,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,es,Alexander Zverev,2032,161,12.6,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1571,114,13.8,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1370,113,12.1,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1449,107,13.5,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1358,103,13.2,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1162,95,12.2,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1051,103,10.2,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,es,Alexander Zverev,915,104,8.8,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1076,94,11.4,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,es,Alexander Zverev,1240,116,10.7,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,it,Alexander Zverev,202,250,0.8,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,it,Alexander Zverev,156,211,0.7,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,it,Alexander Zverev,133,213,0.6,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,it,Alexander Zverev,147,171,0.9,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,it,Alexander Zverev,162,137,1.2,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,it,Alexander Zverev,253,114,2.2,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,it,Alexander Zverev,2495,166,15.0,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,it,Alexander Zverev,3188,185,17.2,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,it,Alexander Zverev,3660,150,24.4,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,it,Alexander Zverev,5187,123,42.2,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,it,Alexander Zverev,5222,137,38.1,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,it,Alexander Zverev,1180,89,13.3,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,it,Alexander Zverev,527,41,12.9,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,it,Alexander Zverev,340,21,16.2,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,it,Alexander Zverev,358,21,17.0,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,it,Alexander Zverev,597,21,28.4,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,it,Alexander Zverev,1567,37,42.4,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,it,Alexander Zverev,2562,97,26.4,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,it,Alexander Zverev,2354,142,16.6,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,it,Alexander Zverev,2036,195,10.4,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,it,Alexander Zverev,1591,179,8.9,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,it,Alexander Zverev,1395,148,9.4,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,it,Alexander Zverev,1302,152,8.6,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,it,Alexander Zverev,1469,153,9.6,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",176,189,0.9,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",175,177,1.0,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",183,173,1.1,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",196,142,1.4,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",212,108,2.0,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",368,137,2.7,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",1899,148,12.8,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2335,173,13.5,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2040,156,13.1,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2390,170,14.1,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2689,175,15.4,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",788,153,5.2,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",702,62,11.3,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",776,46,16.9,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",1212,62,19.5,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",1810,90,20.1,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2253,111,20.3,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2618,145,18.1,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2530,189,13.4,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2000,191,10.5,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",2001,203,9.9,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",1726,221,7.8,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",1503,173,8.7,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,ru,"Зверев, Александр",1375,216,6.4,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,51,64,0.8,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,48,58,0.8,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,38,47,0.8,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,30,31,1.0,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,31,21,1.5,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,13,23,0.6,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,83,16,5.2,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,127,10,12.7,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,168,7,24.0,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,504,21,24.0,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,1394,36,38.7,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,758,46,16.5,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,952,41,23.2,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,672,34,19.8,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,456,44,10.4,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,599,72,8.3,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,381,57,6.7,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,358,35,10.2,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,306,39,7.8,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,268,42,6.4,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,283,39,7.3,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,253,58,4.4,0
+2026-09-14 10:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,303,48,6.3,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,ja,アレクサンダー・ズベレフ,419,68,6.2,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,62,66,0.9,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,62,61,1.0,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,98,65,1.5,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,73,52,1.4,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,100,50,2.0,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,257,60,4.3,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,4115,97,42.4,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,3923,87,45.1,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,3076,115,26.7,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,2924,74,39.5,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,3639,77,47.3,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,311,65,4.8,0
+2026-09-14 00:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,158,11,14.4,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,115,6,19.2,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,154,10,15.4,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,305,9,33.9,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,907,17,53.4,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,1232,28,44.0,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,1505,62,24.3,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,1381,81,17.0,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,944,113,8.4,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,814,76,10.7,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,662,88,7.5,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,pl,Alexander Zverev,512,68,7.5,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,41,60,0.7,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,44,57,0.8,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,51,41,1.2,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,53,30,1.8,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,49,34,1.4,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,95,38,2.5,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,822,39,21.1,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,988,29,34.1,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,1155,34,34.0,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,2120,38,55.8,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,2418,65,37.2,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,689,68,10.1,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,569,38,15.0,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,418,23,18.2,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,267,21,12.7,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,152,18,8.4,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,96,14,6.9,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,84,12,7.0,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,129,8,16.1,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,137,5,27.4,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,178,17,10.5,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,235,19,12.4,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,262,24,10.9,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,pt,Alexander Zverev,321,25,12.8,1
+2026-09-13 12:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,44,74,0.6,0
+2026-09-13 13:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,61,61,1.0,0
+2026-09-13 14:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,72,74,1.0,0
+2026-09-13 15:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,52,83,0.6,0
+2026-09-13 16:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,54,48,1.1,0
+2026-09-13 17:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,55,24,2.3,0
+2026-09-13 18:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,193,29,6.7,1
+2026-09-13 19:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,271,8,33.9,1
+2026-09-13 20:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,289,12,24.1,1
+2026-09-13 21:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,517,22,23.5,1
+2026-09-13 22:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,990,47,21.1,1
+2026-09-13 23:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,619,38,16.3,1
+2026-09-14 00:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,671,41,16.4,1
+2026-09-14 01:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,647,51,12.7,1
+2026-09-14 02:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,597,47,12.7,1
+2026-09-14 03:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,567,41,13.8,1
+2026-09-14 04:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,453,53,8.5,1
+2026-09-14 05:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,409,37,11.1,1
+2026-09-14 06:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,305,36,8.5,1
+2026-09-14 07:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,289,25,11.6,1
+2026-09-14 08:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,274,42,6.5,1
+2026-09-14 09:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,296,31,9.5,1
+2026-09-14 10:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,294,42,7.0,1
+2026-09-14 11:00,Alexander Zverev,Q13990552,zh,亞歷山大·茲韋列夫,385,42,9.2,1

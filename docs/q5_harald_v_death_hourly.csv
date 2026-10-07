@@ -1,0 +1,241 @@
+hour_start_utc,entity,qid,lang,title,views,baseline_prev_day,ratio,spike
+2026-08-28 00:00,Harald V,Q57287,en,Harald V,2719,136,20.0,1
+2026-08-28 01:00,Harald V,Q57287,en,Harald V,2762,133,20.8,1
+2026-08-28 02:00,Harald V,Q57287,en,Harald V,2570,132,19.5,1
+2026-08-28 03:00,Harald V,Q57287,en,Harald V,2461,114,21.6,1
+2026-08-28 04:00,Harald V,Q57287,en,Harald V,2586,109,23.7,1
+2026-08-28 05:00,Harald V,Q57287,en,Harald V,2881,135,21.3,1
+2026-08-28 06:00,Harald V,Q57287,en,Harald V,20949,117,179.1,1
+2026-08-28 07:00,Harald V,Q57287,en,Harald V,53428,988,54.1,1
+2026-08-28 08:00,Harald V,Q57287,en,Harald V,42639,2153,19.8,1
+2026-08-28 09:00,Harald V,Q57287,en,Harald V,38567,3900,9.9,1
+2026-08-28 10:00,Harald V,Q57287,en,Harald V,39534,4681,8.4,1
+2026-08-28 11:00,Harald V,Q57287,en,Harald V,38639,5521,7.0,1
+2026-08-28 12:00,Harald V,Q57287,en,Harald V,39635,6622,6.0,1
+2026-08-28 13:00,Harald V,Q57287,en,Harald V,37127,6609,5.6,1
+2026-08-28 14:00,Harald V,Q57287,en,Harald V,32259,6531,4.9,0
+2026-08-28 15:00,Harald V,Q57287,en,Harald V,29577,6081,4.9,0
+2026-08-28 16:00,Harald V,Q57287,en,Harald V,26785,5294,5.1,1
+2026-08-28 17:00,Harald V,Q57287,en,Harald V,27855,5528,5.0,1
+2026-08-28 18:00,Harald V,Q57287,en,Harald V,24325,5115,4.8,0
+2026-08-28 19:00,Harald V,Q57287,en,Harald V,22124,5136,4.3,0
+2026-08-28 20:00,Harald V,Q57287,en,Harald V,19955,4998,4.0,0
+2026-08-28 21:00,Harald V,Q57287,en,Harald V,19581,4541,4.3,0
+2026-08-28 22:00,Harald V,Q57287,en,Harald V,16016,3916,4.1,0
+2026-08-28 23:00,Harald V,Q57287,en,Harald V,13343,3281,4.1,0
+2026-08-28 00:00,Harald V,Q57287,no,Harald V,256,5,51.2,1
+2026-08-28 01:00,Harald V,Q57287,no,Harald V,173,4,43.2,1
+2026-08-28 02:00,Harald V,Q57287,no,Harald V,117,3,39.0,1
+2026-08-28 03:00,Harald V,Q57287,no,Harald V,216,4,54.0,1
+2026-08-28 04:00,Harald V,Q57287,no,Harald V,510,22,23.2,1
+2026-08-28 05:00,Harald V,Q57287,no,Harald V,812,29,28.0,1
+2026-08-28 06:00,Harald V,Q57287,no,Harald V,6082,49,124.1,1
+2026-08-28 07:00,Harald V,Q57287,no,Harald V,9419,1230,7.7,1
+2026-08-28 08:00,Harald V,Q57287,no,Harald V,5342,2056,2.6,0
+2026-08-28 09:00,Harald V,Q57287,no,Harald V,4297,2368,1.8,0
+2026-08-28 10:00,Harald V,Q57287,no,Harald V,5153,2303,2.2,0
+2026-08-28 11:00,Harald V,Q57287,no,Harald V,3711,2627,1.4,0
+2026-08-28 12:00,Harald V,Q57287,no,Harald V,2948,6302,0.5,0
+2026-08-28 13:00,Harald V,Q57287,no,Harald V,2810,15678,0.2,0
+2026-08-28 14:00,Harald V,Q57287,no,Harald V,2746,9772,0.3,0
+2026-08-28 15:00,Harald V,Q57287,no,Harald V,2841,4815,0.6,0
+2026-08-28 16:00,Harald V,Q57287,no,Harald V,2732,3132,0.9,0
+2026-08-28 17:00,Harald V,Q57287,no,Harald V,3545,3010,1.2,0
+2026-08-28 18:00,Harald V,Q57287,no,Harald V,3079,4219,0.7,0
+2026-08-28 19:00,Harald V,Q57287,no,Harald V,2518,3268,0.8,0
+2026-08-28 20:00,Harald V,Q57287,no,Harald V,2341,2922,0.8,0
+2026-08-28 21:00,Harald V,Q57287,no,Harald V,1683,1892,0.9,0
+2026-08-28 22:00,Harald V,Q57287,no,Harald V,1061,812,1.3,0
+2026-08-28 23:00,Harald V,Q57287,no,Harald V,516,347,1.5,0
+2026-08-28 00:00,Harald V,Q57287,sv,Harald V av Norge,195,7,27.9,1
+2026-08-28 01:00,Harald V,Q57287,sv,Harald V av Norge,113,5,22.6,1
+2026-08-28 02:00,Harald V,Q57287,sv,Harald V av Norge,195,11,17.7,1
+2026-08-28 03:00,Harald V,Q57287,sv,Harald V av Norge,351,13,27.0,1
+2026-08-28 04:00,Harald V,Q57287,sv,Harald V av Norge,864,68,12.7,1
+2026-08-28 05:00,Harald V,Q57287,sv,Harald V av Norge,1523,25,60.9,1
+2026-08-28 06:00,Harald V,Q57287,sv,Harald V av Norge,5967,39,153.0,1
+2026-08-28 07:00,Harald V,Q57287,sv,Harald V av Norge,8313,1301,6.4,1
+2026-08-28 08:00,Harald V,Q57287,sv,Harald V av Norge,5163,1307,4.0,0
+2026-08-28 09:00,Harald V,Q57287,sv,Harald V av Norge,3727,1073,3.5,0
+2026-08-28 10:00,Harald V,Q57287,sv,Harald V av Norge,4386,1508,2.9,0
+2026-08-28 11:00,Harald V,Q57287,sv,Harald V av Norge,3312,1235,2.7,0
+2026-08-28 12:00,Harald V,Q57287,sv,Harald V av Norge,2657,1096,2.4,0
+2026-08-28 13:00,Harald V,Q57287,sv,Harald V av Norge,2468,1060,2.3,0
+2026-08-28 14:00,Harald V,Q57287,sv,Harald V av Norge,2502,1991,1.3,0
+2026-08-28 15:00,Harald V,Q57287,sv,Harald V av Norge,2332,2072,1.1,0
+2026-08-28 16:00,Harald V,Q57287,sv,Harald V av Norge,2639,1601,1.6,0
+2026-08-28 17:00,Harald V,Q57287,sv,Harald V av Norge,2900,2023,1.4,0
+2026-08-28 18:00,Harald V,Q57287,sv,Harald V av Norge,2152,1510,1.4,0
+2026-08-28 19:00,Harald V,Q57287,sv,Harald V av Norge,2163,1937,1.1,0
+2026-08-28 20:00,Harald V,Q57287,sv,Harald V av Norge,1825,1814,1.0,0
+2026-08-28 21:00,Harald V,Q57287,sv,Harald V av Norge,1005,875,1.1,0
+2026-08-28 22:00,Harald V,Q57287,sv,Harald V av Norge,535,416,1.3,0
+2026-08-28 23:00,Harald V,Q57287,sv,Harald V av Norge,262,245,1.1,0
+2026-08-28 00:00,Harald V,Q57287,da,Harald 5. af Norge,59,5,11.8,1
+2026-08-28 01:00,Harald V,Q57287,da,Harald 5. af Norge,54,2,27.0,1
+2026-08-28 02:00,Harald V,Q57287,da,Harald 5. af Norge,76,2,38.0,1
+2026-08-28 03:00,Harald V,Q57287,da,Harald 5. af Norge,152,5,30.4,1
+2026-08-28 04:00,Harald V,Q57287,da,Harald 5. af Norge,277,9,30.8,1
+2026-08-28 05:00,Harald V,Q57287,da,Harald 5. af Norge,414,9,46.0,1
+2026-08-28 06:00,Harald V,Q57287,da,Harald 5. af Norge,2002,23,87.0,1
+2026-08-28 07:00,Harald V,Q57287,da,Harald 5. af Norge,3515,453,7.8,1
+2026-08-28 08:00,Harald V,Q57287,da,Harald 5. af Norge,2211,612,3.6,0
+2026-08-28 09:00,Harald V,Q57287,da,Harald 5. af Norge,1686,634,2.7,0
+2026-08-28 10:00,Harald V,Q57287,da,Harald 5. af Norge,1653,643,2.6,0
+2026-08-28 11:00,Harald V,Q57287,da,Harald 5. af Norge,1474,629,2.3,0
+2026-08-28 12:00,Harald V,Q57287,da,Harald 5. af Norge,1163,572,2.0,0
+2026-08-28 13:00,Harald V,Q57287,da,Harald 5. af Norge,1201,548,2.2,0
+2026-08-28 14:00,Harald V,Q57287,da,Harald 5. af Norge,1112,593,1.9,0
+2026-08-28 15:00,Harald V,Q57287,da,Harald 5. af Norge,1021,577,1.8,0
+2026-08-28 16:00,Harald V,Q57287,da,Harald 5. af Norge,1430,1081,1.3,0
+2026-08-28 17:00,Harald V,Q57287,da,Harald 5. af Norge,1165,1312,0.9,0
+2026-08-28 18:00,Harald V,Q57287,da,Harald 5. af Norge,807,726,1.1,0
+2026-08-28 19:00,Harald V,Q57287,da,Harald 5. af Norge,793,1004,0.8,0
+2026-08-28 20:00,Harald V,Q57287,da,Harald 5. af Norge,625,610,1.0,0
+2026-08-28 21:00,Harald V,Q57287,da,Harald 5. af Norge,429,346,1.2,0
+2026-08-28 22:00,Harald V,Q57287,da,Harald 5. af Norge,246,176,1.4,0
+2026-08-28 23:00,Harald V,Q57287,da,Harald 5. af Norge,132,84,1.6,0
+2026-08-28 00:00,Harald V,Q57287,de,Harald V.,237,10,23.7,1
+2026-08-28 01:00,Harald V,Q57287,de,Harald V.,198,9,22.0,1
+2026-08-28 02:00,Harald V,Q57287,de,Harald V.,243,7,34.7,1
+2026-08-28 03:00,Harald V,Q57287,de,Harald V.,521,9,57.9,1
+2026-08-28 04:00,Harald V,Q57287,de,Harald V.,922,20,46.1,1
+2026-08-28 05:00,Harald V,Q57287,de,Harald V.,1387,38,36.5,1
+2026-08-28 06:00,Harald V,Q57287,de,Harald V.,10015,41,244.3,1
+2026-08-28 07:00,Harald V,Q57287,de,Harald V.,21585,193,111.8,1
+2026-08-28 08:00,Harald V,Q57287,de,Harald V.,16639,624,26.7,1
+2026-08-28 09:00,Harald V,Q57287,de,Harald V.,14385,860,16.7,1
+2026-08-28 10:00,Harald V,Q57287,de,Harald V.,14519,1222,11.9,1
+2026-08-28 11:00,Harald V,Q57287,de,Harald V.,13411,1280,10.5,1
+2026-08-28 12:00,Harald V,Q57287,de,Harald V.,12943,1446,9.0,1
+2026-08-28 13:00,Harald V,Q57287,de,Harald V.,10770,1771,6.1,1
+2026-08-28 14:00,Harald V,Q57287,de,Harald V.,10153,1524,6.7,1
+2026-08-28 15:00,Harald V,Q57287,de,Harald V.,11392,2408,4.7,0
+2026-08-28 16:00,Harald V,Q57287,de,Harald V.,9272,1574,5.9,1
+2026-08-28 17:00,Harald V,Q57287,de,Harald V.,9648,1503,6.4,1
+2026-08-28 18:00,Harald V,Q57287,de,Harald V.,9430,1830,5.2,1
+2026-08-28 19:00,Harald V,Q57287,de,Harald V.,8140,2215,3.7,0
+2026-08-28 20:00,Harald V,Q57287,de,Harald V.,8408,2228,3.8,0
+2026-08-28 21:00,Harald V,Q57287,de,Harald V.,4777,1541,3.1,0
+2026-08-28 22:00,Harald V,Q57287,de,Harald V.,3091,775,4.0,0
+2026-08-28 23:00,Harald V,Q57287,de,Harald V.,1654,364,4.5,0
+2026-08-28 00:00,Harald V,Q57287,fr,Harald V,180,21,8.6,1
+2026-08-28 01:00,Harald V,Q57287,fr,Harald V,136,16,8.5,1
+2026-08-28 02:00,Harald V,Q57287,fr,Harald V,146,5,29.2,1
+2026-08-28 03:00,Harald V,Q57287,fr,Harald V,167,11,15.2,1
+2026-08-28 04:00,Harald V,Q57287,fr,Harald V,375,12,31.2,1
+2026-08-28 05:00,Harald V,Q57287,fr,Harald V,537,30,17.9,1
+2026-08-28 06:00,Harald V,Q57287,fr,Harald V,4272,28,152.6,1
+2026-08-28 07:00,Harald V,Q57287,fr,Harald V,11248,141,79.8,1
+2026-08-28 08:00,Harald V,Q57287,fr,Harald V,8150,370,22.0,1
+2026-08-28 09:00,Harald V,Q57287,fr,Harald V,7015,490,14.3,1
+2026-08-28 10:00,Harald V,Q57287,fr,Harald V,6740,770,8.8,1
+2026-08-28 11:00,Harald V,Q57287,fr,Harald V,7366,804,9.2,1
+2026-08-28 12:00,Harald V,Q57287,fr,Harald V,5699,743,7.7,1
+2026-08-28 13:00,Harald V,Q57287,fr,Harald V,4652,810,5.7,1
+2026-08-28 14:00,Harald V,Q57287,fr,Harald V,4237,778,5.4,1
+2026-08-28 15:00,Harald V,Q57287,fr,Harald V,4729,853,5.5,1
+2026-08-28 16:00,Harald V,Q57287,fr,Harald V,4286,855,5.0,1
+2026-08-28 17:00,Harald V,Q57287,fr,Harald V,3920,879,4.5,0
+2026-08-28 18:00,Harald V,Q57287,fr,Harald V,4123,1066,3.9,0
+2026-08-28 19:00,Harald V,Q57287,fr,Harald V,3567,1233,2.9,0
+2026-08-28 20:00,Harald V,Q57287,fr,Harald V,3489,1231,2.8,0
+2026-08-28 21:00,Harald V,Q57287,fr,Harald V,2848,1016,2.8,0
+2026-08-28 22:00,Harald V,Q57287,fr,Harald V,1917,451,4.3,0
+2026-08-28 23:00,Harald V,Q57287,fr,Harald V,1151,372,3.1,0
+2026-08-28 00:00,Harald V,Q57287,es,Harald V de Noruega,361,31,11.6,1
+2026-08-28 01:00,Harald V,Q57287,es,Harald V de Noruega,323,24,13.5,1
+2026-08-28 02:00,Harald V,Q57287,es,Harald V de Noruega,304,39,7.8,1
+2026-08-28 03:00,Harald V,Q57287,es,Harald V de Noruega,313,19,16.5,1
+2026-08-28 04:00,Harald V,Q57287,es,Harald V de Noruega,331,17,19.5,1
+2026-08-28 05:00,Harald V,Q57287,es,Harald V de Noruega,386,26,14.8,1
+2026-08-28 06:00,Harald V,Q57287,es,Harald V de Noruega,2663,46,57.9,1
+2026-08-28 07:00,Harald V,Q57287,es,Harald V de Noruega,5697,263,21.7,1
+2026-08-28 08:00,Harald V,Q57287,es,Harald V de Noruega,4863,550,8.8,1
+2026-08-28 09:00,Harald V,Q57287,es,Harald V de Noruega,4681,415,11.3,1
+2026-08-28 10:00,Harald V,Q57287,es,Harald V de Noruega,4606,538,8.6,1
+2026-08-28 11:00,Harald V,Q57287,es,Harald V de Noruega,5358,657,8.2,1
+2026-08-28 12:00,Harald V,Q57287,es,Harald V de Noruega,6667,787,8.5,1
+2026-08-28 13:00,Harald V,Q57287,es,Harald V de Noruega,7398,796,9.3,1
+2026-08-28 14:00,Harald V,Q57287,es,Harald V de Noruega,6380,869,7.3,1
+2026-08-28 15:00,Harald V,Q57287,es,Harald V de Noruega,7047,854,8.3,1
+2026-08-28 16:00,Harald V,Q57287,es,Harald V de Noruega,5352,741,7.2,1
+2026-08-28 17:00,Harald V,Q57287,es,Harald V de Noruega,5002,733,6.8,1
+2026-08-28 18:00,Harald V,Q57287,es,Harald V de Noruega,4068,695,5.9,1
+2026-08-28 19:00,Harald V,Q57287,es,Harald V de Noruega,4707,941,5.0,1
+2026-08-28 20:00,Harald V,Q57287,es,Harald V de Noruega,3712,939,4.0,0
+2026-08-28 21:00,Harald V,Q57287,es,Harald V de Noruega,3436,836,4.1,0
+2026-08-28 22:00,Harald V,Q57287,es,Harald V de Noruega,2977,755,3.9,0
+2026-08-28 23:00,Harald V,Q57287,es,Harald V de Noruega,2270,430,5.3,1
+2026-08-28 00:00,Harald V,Q57287,it,Harald V di Norvegia,117,5,23.4,1
+2026-08-28 01:00,Harald V,Q57287,it,Harald V di Norvegia,44,6,7.3,1
+2026-08-28 02:00,Harald V,Q57287,it,Harald V di Norvegia,66,1,66.0,1
+2026-08-28 03:00,Harald V,Q57287,it,Harald V di Norvegia,105,4,26.2,1
+2026-08-28 04:00,Harald V,Q57287,it,Harald V di Norvegia,174,7,24.9,1
+2026-08-28 05:00,Harald V,Q57287,it,Harald V di Norvegia,338,21,16.1,1
+2026-08-28 06:00,Harald V,Q57287,it,Harald V di Norvegia,2615,25,104.6,1
+2026-08-28 07:00,Harald V,Q57287,it,Harald V di Norvegia,8217,45,182.6,1
+2026-08-28 08:00,Harald V,Q57287,it,Harald V di Norvegia,6480,125,51.8,1
+2026-08-28 09:00,Harald V,Q57287,it,Harald V di Norvegia,5347,159,33.6,1
+2026-08-28 10:00,Harald V,Q57287,it,Harald V di Norvegia,5024,254,19.8,1
+2026-08-28 11:00,Harald V,Q57287,it,Harald V di Norvegia,5530,383,14.4,1
+2026-08-28 12:00,Harald V,Q57287,it,Harald V di Norvegia,4946,500,9.9,1
+2026-08-28 13:00,Harald V,Q57287,it,Harald V di Norvegia,4045,497,8.1,1
+2026-08-28 14:00,Harald V,Q57287,it,Harald V di Norvegia,3461,459,7.5,1
+2026-08-28 15:00,Harald V,Q57287,it,Harald V di Norvegia,2753,540,5.1,1
+2026-08-28 16:00,Harald V,Q57287,it,Harald V di Norvegia,2306,576,4.0,0
+2026-08-28 17:00,Harald V,Q57287,it,Harald V di Norvegia,2125,517,4.1,0
+2026-08-28 18:00,Harald V,Q57287,it,Harald V di Norvegia,2190,519,4.2,0
+2026-08-28 19:00,Harald V,Q57287,it,Harald V di Norvegia,2204,656,3.4,0
+2026-08-28 20:00,Harald V,Q57287,it,Harald V di Norvegia,2046,581,3.5,0
+2026-08-28 21:00,Harald V,Q57287,it,Harald V di Norvegia,1732,515,3.4,0
+2026-08-28 22:00,Harald V,Q57287,it,Harald V di Norvegia,1259,352,3.6,0
+2026-08-28 23:00,Harald V,Q57287,it,Harald V di Norvegia,686,189,3.6,0
+2026-08-28 00:00,Harald V,Q57287,ru,Харальд V,41,7,5.9,1
+2026-08-28 01:00,Harald V,Q57287,ru,Харальд V,38,6,6.3,1
+2026-08-28 02:00,Harald V,Q57287,ru,Харальд V,54,8,6.8,1
+2026-08-28 03:00,Harald V,Q57287,ru,Харальд V,83,7,11.9,1
+2026-08-28 04:00,Harald V,Q57287,ru,Харальд V,113,3,37.7,1
+2026-08-28 05:00,Harald V,Q57287,ru,Харальд V,170,9,18.9,1
+2026-08-28 06:00,Harald V,Q57287,ru,Харальд V,3643,14,260.2,1
+2026-08-28 07:00,Harald V,Q57287,ru,Харальд V,8096,36,224.9,1
+2026-08-28 08:00,Harald V,Q57287,ru,Харальд V,5183,72,72.0,1
+2026-08-28 09:00,Harald V,Q57287,ru,Харальд V,4303,120,35.9,1
+2026-08-28 10:00,Harald V,Q57287,ru,Харальд V,3936,140,28.1,1
+2026-08-28 11:00,Harald V,Q57287,ru,Харальд V,3302,145,22.8,1
+2026-08-28 12:00,Harald V,Q57287,ru,Харальд V,3093,266,11.6,1
+2026-08-28 13:00,Harald V,Q57287,ru,Харальд V,2503,308,8.1,1
+2026-08-28 14:00,Harald V,Q57287,ru,Харальд V,2146,269,8.0,1
+2026-08-28 15:00,Harald V,Q57287,ru,Харальд V,2062,338,6.1,1
+2026-08-28 16:00,Harald V,Q57287,ru,Харальд V,1880,205,9.2,1
+2026-08-28 17:00,Harald V,Q57287,ru,Харальд V,1869,324,5.8,1
+2026-08-28 18:00,Harald V,Q57287,ru,Харальд V,1827,254,7.2,1
+2026-08-28 19:00,Harald V,Q57287,ru,Харальд V,1617,261,6.2,1
+2026-08-28 20:00,Harald V,Q57287,ru,Харальд V,1497,197,7.6,1
+2026-08-28 21:00,Harald V,Q57287,ru,Харальд V,1058,182,5.8,1
+2026-08-28 22:00,Harald V,Q57287,ru,Харальд V,649,115,5.6,1
+2026-08-28 23:00,Harald V,Q57287,ru,Харальд V,501,58,8.6,1
+2026-08-28 00:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),100,3,33.3,1
+2026-08-28 01:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),77,6,12.8,1
+2026-08-28 02:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),118,7,16.9,1
+2026-08-28 03:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),98,3,32.7,1
+2026-08-28 04:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),86,4,21.5,1
+2026-08-28 05:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),97,9,10.8,1
+2026-08-28 06:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),201,1,201.0,1
+2026-08-28 07:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),2658,11,241.6,1
+2026-08-28 08:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),2309,14,164.9,1
+2026-08-28 09:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),1084,49,22.1,1
+2026-08-28 10:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),1101,141,7.8,1
+2026-08-28 11:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),1266,467,2.7,0
+2026-08-28 12:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),1191,440,2.7,0
+2026-08-28 13:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),1035,372,2.8,0
+2026-08-28 14:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),700,262,2.7,0
+2026-08-28 15:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),511,157,3.3,0
+2026-08-28 16:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),350,90,3.9,0
+2026-08-28 17:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),244,55,4.4,0
+2026-08-28 18:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),184,22,8.4,1
+2026-08-28 19:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),181,39,4.6,0
+2026-08-28 20:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),168,39,4.3,0
+2026-08-28 21:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),299,74,4.0,0
+2026-08-28 22:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),380,86,4.4,0
+2026-08-28 23:00,Harald V,Q57287,ja,ハーラル5世 (ノルウェー王),496,92,5.4,1
