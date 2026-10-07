@@ -362,3 +362,70 @@ First edit or creation after the event ([`q5_edit_lead.csv`](q5_edit_lead.csv)):
 - Where Looked Up adds value is not beating the news. It is **measuring how much attention the world pays, in which
   languages, how it spreads and how long it lasts**, at hourly resolution.
 
+---
+
+## 6. Cost and compute
+
+Scripts: [`q6_hourly_job.py`](../spike/q6_hourly_job.py), [`q6b_storage_tiers.py`](../spike/q6b_storage_tiers.py),
+[`q6c_full_day_compaction.py`](../spike/q6c_full_day_compaction.py)
+
+### The hourly job on this Mac (download → filter top-50 → Parquet → append + compact)
+
+| Step | Run 1 | Run 2 |
+|---|---|---|
+| list directory | 1.0 s | — |
+| download 58.8 MB gz | 60.7 s | 32.1 s |
+| filter to Wikipedia top-50, sum desktop + mobile, write Parquet (4.63 M rows, 44 MB) | 2.2 s | 1.7 s |
+| append into the day partition + compact | 1.1 s | 1.0 s |
+| **total** | **65 s** | **36 s** |
+| peak memory | 1.0 GB | 1.0 GB |
+
+The job is network-bound: processing takes ~3 s. Daily jobs: converting 24 hours takes 36 s, and compacting a full
+day (106 M rows → 361 MB) takes **55 s**. The ≥ 5 views tier takes 4 s.
+
+### Does it fit GitHub Actions? Yes, comfortably.
+
+- Standard GitHub-hosted runners are **free and unlimited for public repositories** (GitHub docs). ubuntu-latest =
+  4 vCPU, 16 GB RAM, 14 GB SSD. Each job may run up to 6 h. Our job needs ~1 GB of RAM, < 1 GB of disk and a few
+  minutes including setup, so 24 runs/day is nothing.
+- Caveats: `schedule` cron is best-effort (runs can be late or skipped under load) and has a 5-minute minimum interval. In public
+  repos, scheduled workflows are auto-disabled after 60 days without repository activity. Since the data
+  only arrives ≈ 2.2 h after the hour anyway, the job should be **idempotent and catch up**: each run
+  ingests every hour not yet ingested, so a late or skipped run costs nothing.
+- **Not on Actions:** a permanent SSE consumer for the edit stream (needs an always-on process). It's deferred,
+  and we have no €0 host for it yet.
+
+### How big is the lake? (top-50 Wikipedias, desktop + mobile summed, one compacted file per day)
+
+| Retention | Rows kept | Views kept | GB/year |
+|---|---|---|---|
+| everything (≥ 1 view/hour) | 100 % | 100 % | **≈ 132–230** (full-day measure vs 3-hour extrapolation) |
+| ≥ 2 views/hour | 37 % | 79 % | ≈ 79 |
+| **≥ 5 views/hour** | 10 % | 57 % | **≈ 15–21** |
+| ≥ 10 views/hour | 4 % | 44 % | ≈ 8 |
+| ≥ 25 views/hour | 1 % | 30 % | ≈ 2.3 |
+| daily rollup (lang, title, views), ≥ 5 views/day | — | — | ≈ 10 |
+
+Most rows are the long tail (1 view/hour). The same title then shows up at ≥ 5 in the hours it matters, and the
+**raw history is never lost**: Wikimedia keeps every hourly file since 2015 (CC0), so any hour can be rebuilt.
+We don't need to store 100+ GB at all. A **≈ 15–25 GB/year** derived lake (≥ 5 views/hour, plus daily rollups and
+the spike tables) covers detection, comparisons and forecasting.
+
+### Where should it live for €0?
+
+| Option | Free allowance | Fit |
+|---|---|---|
+| GitHub Releases | 2 GiB per file, no stated total | Works as a bucket, but assets are blobs on a release. That's awkward for 365+ partitions, a gray area under the ToS, and has no query story. |
+| Cloudflare R2 | **10 GB-month storage**, 1 M class-A + 10 M class-B ops/month, **zero egress** | Excellent S3 API, and DuckDB reads it over httpfs. But it holds less than one year of the ≥ 5 tier, and **needs a payment method on file**: overage is billed, so €0 isn't guaranteed. |
+| Backblaze B2 | 10 GB free, free egress up to 3 × stored | Same 10 GB ceiling as R2, with fewer extras. |
+| **Hugging Face Datasets** (public) | **No fixed quota for public repos ("best-effort")**; < 100 k files, < 10 k per folder recommended | Parquet is first-class, **DuckDB reads `hf://datasets/...` directly**, there's a dataset viewer, and it's discoverable. No card is needed, so there's no surprise bill. HF asks that "beyond the first few gigabytes" the content be genuinely useful to others, which fits a public CC0 attention dataset. |
+
+**Recommendation: Hugging Face Datasets** (public), one compacted Parquet file per day (`date=YYYY-MM-DD/…`),
+sorted by (lang, title, hour), ≥ 5 views/hour tier plus daily rollups, ≈ 15–25 GB/year:
+
+- €0 with **no payment method at all**, so no overage risk. That's the only option that truly honours the budget.
+- Not capped at 10 GB. Years of the derived lake fit.
+- The analytics engine (DuckDB) and the public can query it in place, and the dataset itself becomes a shareable artefact.
+- Upload **once a day** (≈ 365 commits/year; HF says repos degrade after "a few thousand commits"). Today's partial
+  hours live in the Actions cache or are re-derived from the Wikimedia dumps, which are the system of record anyway.
+- Keep the risk bounded: stay well under ~50 GB, write a dataset card, and keep R2 (10 GB) as a fallback for the hot window if HF ever pushes back.
