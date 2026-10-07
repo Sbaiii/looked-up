@@ -50,27 +50,40 @@ def hourly_url(dt: datetime) -> str:
     return f"{DUMPS}/{dt:%Y}/{dt:%Y-%m}/pageviews-{dt:%Y%m%d-%H}0000.gz"
 
 
-def download(url: str, dest: Path, retries: int = 3) -> tuple[Path, float]:
-    """Download url to dest (skips if already present). Returns (path, seconds)."""
+def download(url: str, dest: Path, retries: int = 8) -> tuple[Path, float]:
+    """Download url to dest, resuming a partial .part file with HTTP Range.
+
+    Skips the download if dest already exists. Returns (path, seconds). Long transfers
+    from dumps.wikimedia.org get cut (observed at exactly 256 MiB), hence the resume.
+    """
     dest.parent.mkdir(parents=True, exist_ok=True)
     if dest.exists() and dest.stat().st_size > 0:
         return dest, 0.0
+    tmp = dest.with_suffix(dest.suffix + ".part")
     t0 = time.perf_counter()
     for attempt in range(retries):
+        have = tmp.stat().st_size if tmp.exists() else 0
+        headers = {"Range": f"bytes={have}-"} if have else {}
         try:
-            with session.get(url, stream=True, timeout=120) as r:
+            with session.get(url, stream=True, timeout=120, headers=headers) as r:
+                if r.status_code == 416:  # already complete
+                    break
                 r.raise_for_status()
-                tmp = dest.with_suffix(dest.suffix + ".part")
-                with open(tmp, "wb") as f:
+                total = have + int(r.headers.get("Content-Length", 0))
+                mode = "ab" if have and r.status_code == 206 else "wb"
+                with open(tmp, mode) as f:
                     for chunk in r.iter_content(1 << 20):
                         f.write(chunk)
-                tmp.rename(dest)
-            return dest, time.perf_counter() - t0
+            if tmp.stat().st_size >= total:
+                break
         except requests.RequestException:
             if attempt == retries - 1:
                 raise
-            time.sleep(5 * (attempt + 1))
-    raise RuntimeError("unreachable")
+            time.sleep(min(30, 5 * (attempt + 1)))
+    else:
+        raise RuntimeError(f"incomplete download after {retries} attempts: {url}")
+    tmp.rename(dest)
+    return dest, time.perf_counter() - t0
 
 
 def human(n: float) -> str:
