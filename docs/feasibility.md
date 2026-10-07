@@ -429,3 +429,55 @@ sorted by (lang, title, hour), ≥ 5 views/hour tier plus daily rollups, ≈ 15�
 - Upload **once a day** (≈ 365 commits/year; HF says repos degrade after "a few thousand commits"). Today's partial
   hours live in the Actions cache or are re-derived from the Wikimedia dumps, which are the system of record anyway.
 - Keep the risk bounded: stay well under ~50 GB, write a dataset card, and keep R2 (10 GB) as a fallback for the hot window if HF ever pushes back.
+
+---
+
+## Recommendation: **GO**
+
+Every building block works for €0, measured rather than assumed:
+
+- **Data:** hourly per-article views for 376 Wikipedias, published ≈ 2.2 h (median) after each hour, identical to the
+  REST API and to `pageview_complete`. One hour loads into DuckDB in 0.7 s.
+- **Signal:** on all three test events, real-world attention showed up **in the hour it happened, in 8–9 languages
+  at once**, with the local language first. That is exactly the raw material for "what the world is looking at".
+- **Entities:** one 1.9 GB monthly Wikidata file maps (site, title) → QID for **93–95 % of all pageviews**.
+- **Compute:** the hourly job takes ≈ 3 s of processing (≈ 35–65 s with the home download). That's trivial for free GitHub Actions.
+- **Storage:** a ≈ 15–25 GB/year derived lake. Wikimedia keeps the raw history for us.
+
+The GO comes with a **reframing**. Looked Up should not promise *"before the news"*. Pageviews react to the
+news, and the dumps arrive ≈ 2.5–3.5 h after an event. The honest promise is **"what the world is paying attention to, hour by
+hour, across languages"**: size, spread, duration and who cares. Only the edit stream can come close to "before",
+and that's a later phase.
+
+## Risks
+
+| # | Risk | Evidence | Mitigation |
+|---|---|---|---|
+| 1 | **"Right now" is really "≈ 3 h ago"** | publication lag median 134 min, p90 161 min, one outlier at 11 h | Label it honestly in the UI. Use the edit stream as an early hint later. Catch-up ingestion for late files. |
+| 2 | **Automated traffic labelled `user`** | fr #1 article *Cookie_(informatique)* 624 k/day; `Special:RecentChanges` is 82–97 % of "user" views on sco/pcd/ha/chy/kw/csb/ik | Namespace filter, per-language Main Page/Search deny-list, and a single-title-dominance and access-ratio anomaly filter before anything is published. |
+| 3 | **No geography at article level** | `top-per-country` is daily, top-1000, rounded; 18 of 38 probed countries suppressed (RU, CN, IR, TR, EG, SA, …) | Globe by **language community**; optional daily country overlay with an explicit "no data" for protected countries. |
+| 4 | **Naive baselines misfire** | the 5×-yesterday rule fired 4.6 h *before* Harald V's death because the day before was newsy | Trailing and 7-day same-hour baselines, views floor, multi-language confirmation. Backtest on more events in Phase 1. |
+| 5 | **New events have no QID yet; titles move** | quake article absent in de for 22 h and ru for 2 days; sitelink dump is monthly; redirects carry views | Track related existing entities (place, person); redirect tables; API / `page-create` fallback for fresh pages. |
+| 6 | **Free-tier fragility** | HF public storage is "best-effort"; GitHub cron can be delayed/dropped and is disabled after 60 days of inactivity; dumps server cut transfers at 256 MiB | Idempotent catch-up jobs, resumable downloads (done), regular commits, R2 fallback, keep the lake small. |
+| 7 | **Upstream format drift** | `bytes` column now always 0; wb_items_per_site switched to one tuple per line (broke the first parser) | Schema assertions and row-count checks in every job; fail loudly. |
+| 8 | **Wikimedia etiquette / rate limits** | REST 200 req/min with a proper UA; dumps allow only a few parallel connections | Bulk only from dumps, ≤ 2 connections, descriptive User-Agent (done), cache everything. |
+
+## Decisions this implies
+
+1. **Source.** Live: hourly `pageviews` dumps, `user` traffic, **desktop + mobile summed** (`xx` + `xx.m`), the `bytes`
+   column dropped. Backfill and baselines: `pageview_complete` (one bz2 per day, `page_id`, verified identical). REST API
+   only for spot checks and the daily per-country overlay. EventStreams deferred to a later phase.
+2. **Language set.** Start with the **top 50 Wikipedias ranked by article views** (titles without a namespace prefix,
+   full day): `en ja de ru fr es it zh pl pt fa nl ar tr sv ko cs id he fi uk vi no hu th el sr ro da bg hr ca hi simple sk bn ms et ta ur lt az sl sh te zh-yue arz ka hy lv`.
+   This covers **99.3 %** of article views (top 30: 98.2 %; top 100: 99.8 %). Keep it as config and re-rank weekly
+   over 7 days (one day in August is a biased sample). `simple` and `sh` need a decision: keep them as communities or drop them.
+3. **Entities.** Join on (site, title) with the monthly `wb_items_per_site` file (≈ 95 % of article views), add
+   redirect resolution, and keep only sitelinks for titles that actually receive views. That shrinks the 1.2 GB mapping.
+4. **Storage.** Hugging Face Datasets (public), one compacted Parquet per day sorted by (lang, title, hour),
+   zstd 9, rows with **≥ 5 views/hour**, plus daily rollups and spike tables: ≈ 15–25 GB/year. Raw stays at Wikimedia.
+5. **Compute.** GitHub Actions: an hourly idempotent catch-up job (cron at :20, avoiding the top-of-hour load
+   peak) and one daily compaction and upload job. No always-on process in Phase 1.
+6. **Detection.** Hour-over-hour and 7-day same-hour baselines, ≥ 20 views floor, multi-language confirmation,
+   noise filters from risk #2. The CSVs in `docs/` become the first regression fixtures.
+
+These go into `docs/adr/` as individual decision records.
