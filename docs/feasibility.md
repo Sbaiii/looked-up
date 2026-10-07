@@ -53,8 +53,9 @@ Script: [`spike/q1_hourly_dumps.py`](../spike/q1_hourly_dumps.py),
 Parquet is barely smaller than gzip at the per-hour level, because the long tail of unique titles
 dominates. **Compaction matters**: putting 3 hours in one file sorted by (lang, title, hour) is
 34 % smaller than 3 separate files (125.8 MB → 82.9 MB at zstd 9, 75.6 MB at zstd 19), because
-titles repeat. A full-day file should do better still. §6 shows how retention thresholds bring this
-down to single-digit GB/year.
+titles repeat. **A real full day does much better:** the 24 hourly files of 2026-08-28 total 1.00 GB and compact
+into **one 361 MB day file (ratio 0.36), ≈ 132 GB/year** ([`q6c`](../spike/q6c_full_day_compaction.py)).
+§6 shows how a retention threshold brings this down to ≈ 15–20 GB/year.
 
 Top-50 languages by views in that hour (desktop+mobile): en, ja, de, fr, ru, it, zh, es, pl, fa, nl,
 tr, pt, ar, sv, id, cs, ko, uk, fi, he, vi, th, hu, el, ro, no, sr, hi, da, bg, ca, ceb, hr, simple,
@@ -89,7 +90,7 @@ Script: [`spike/q1d_pageview_complete.py`](../spike/q1d_pageview_complete.py)
 | Size | 24 × ≈ 52 MB gz ≈ 1.25 GB/day | ≈ 0.69 GB/day bz2 (≈ 3.9 GB uncompressed) |
 | Columns | project, title, views, (bytes=0) | wiki, title, **page_id**, access (desktop / mobile-web / mobile-app), daily total, hourly string |
 | Agent | user only | separate `user` and `automated` files |
-| Compression | gzip (fast to read) | bz2 (slow to decompress; see Q5 timing) |
+| Compression | gzip: a day (24 files, 147.7 M lines) streams in **50 s** | bz2: a day (55.5 M lines, 3.52 GB) streams in **84 s**, single-threaded Python |
 | History | since May 2015 | directory listing from 2011; readme says Dec 2007 onward (older years rebuilt from pagecounts); page IDs from 2015 |
 
 Known issue (readme): rows without a page ID have 5 columns instead of 6.
