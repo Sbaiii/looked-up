@@ -194,3 +194,56 @@ its own. Its value is as an **early-warning hint**: a burst of human edits to on
 languages, or a brand-new article, shows up ≈ 2–3 h before the hourly pageview dump confirms the
 attention. It needs a long-running consumer, which GitHub Actions doesn't provide (see §6). It is a
 "later" feature.
+
+---
+
+## 4. Entity unification (Wikidata)
+
+Scripts: [`spike/q4_wikidata.py`](../spike/q4_wikidata.py), [`spike/q4b_join_coverage.py`](../spike/q4b_join_coverage.py)
+
+### API: one QID, every language
+
+`action=wbgetentities&sites=enwiki&titles=Lisbon&props=sitelinks` → **Q597**, with 267 sitelinks, 224 of them
+Wikipedias: en *Lisbon*, pt *Lisboa*, fr *Lisbonne*, ja *リスボン*, ar *لشبونة*, ru *Лиссабон*, zh *里斯本*,
+hi *लिस्बन*, … The API works well for a handful of entities, but it's the wrong tool for mapping 6 M pageview rows an hour.
+
+### Offline: `wikidatawiki-latest-wb_items_per_site.sql.gz`
+
+- **Size: 1.91 GB gz** (dump of 2026-10-03), so under 3 GB and downloaded in full. It parsed in **6.2 min** with a
+  streaming regex in pure Python. It is refreshed roughly weekly.
+- Structure (the CREATE TABLE in the dump):
+
+  ```sql
+  CREATE TABLE `wb_items_per_site` (
+    `ips_row_id`    bigint unsigned NOT NULL AUTO_INCREMENT,
+    `ips_item_id`   int unsigned NOT NULL,        -- the Q number (597 = Q597)
+    `ips_site_id`   varbinary(32) NOT NULL,       -- 'enwiki', 'ptwiki', 'zh_yuewiki', 'commonswiki', ...
+    `ips_site_page` varbinary(310) NOT NULL,      -- title with spaces, e.g. 'Lisbon'
+    UNIQUE KEY (`ips_site_id`, `ips_site_page`), KEY (`ips_item_id`)
+  )
+  ```
+  Rows look like `(55,3596065,'abwiki','Џьгьарда')`. mariadb-dump 10.11 writes **one tuple per line**, so a line
+  parser works without a SQL engine.
+- **100.6 M sitelinks, 959 sites, 366 Wikipedias.** Biggest: enwiki 10.4 M, commonswiki 6.2 M, cebwiki 5.7 M,
+  dewiki 3.8 M, frwiki 3.5 M.
+- For our top-50 languages: **70.1 M (site, title) → QID rows covering 27.9 M distinct items**, which is 1.2 GB of
+  Parquet unsorted. We can shrink it a lot by keeping only titles that actually get views.
+
+**Yes, it is exactly the mapping we need.** It goes (site, title) → QID, and the unique key guarantees that a title maps
+to at most one item. Two adjustments: dump titles use spaces where pageviews use underscores, and
+`zh-yue` becomes `zh_yuewiki`.
+
+### How much traffic actually joins?
+
+Joining one hour of top-50 Wikipedia pageviews (desktop + mobile summed) on `(site, title)`:
+
+- **93.4 % of views** (87.0 % of rows) get a QID. Excluding namespace-prefixed titles: **95.5 %**.
+- 2.44 M distinct QIDs see at least one view in a single hour.
+- Per language: ja 96.9 %, pl 96.4 %, fr 94.5 %, it 94.5 %, ru 94.1 %, de 93.5 %, en 93.2 %, zh **87.9 %**.
+- What doesn't match: `Special:Search` in every language (the biggest bucket), `-` (bad requests), `File:` pages,
+  **redirects** (pageviews count the requested title, not the target), and articles created after the
+  2026-10-03 dump (e.g. *2026_Rolex_Shanghai_Masters_–_Singles*). zh is lower because of script-variant titles.
+- **Redirect resolution is needed** for anything event-driven. New articles get renamed in their first hours,
+  and the old names keep collecting views. Sources: the `redirect` + `page` table dumps per wiki, or
+  `pageview_complete`'s `page_id` (which survives renames). Q5 resolves redirects through the API, and that
+  was necessary to get correct numbers.
