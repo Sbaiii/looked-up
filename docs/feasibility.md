@@ -89,9 +89,10 @@ Script: [`spike/q1d_pageview_complete.py`](../spike/q1d_pageview_complete.py)
 | Size | 24 × ≈ 52 MB gz ≈ 1.25 GB/day | ≈ 0.69 GB/day bz2 (≈ 3.9 GB uncompressed) |
 | Columns | project, title, views, (bytes=0) | wiki, title, **page_id**, access (desktop / mobile-web / mobile-app), daily total, hourly string |
 | Agent | user only | separate `user` and `automated` files |
-| Compression | gzip (fast to read) | bz2 (≈ 10 × slower to decompress) |
-| History | since May 2015 | since 2011 (merged with older pagecounts) |
+| Compression | gzip (fast to read) | bz2 (slow to decompress; see Q5 timing) |
+| History | since May 2015 | directory listing from 2011; readme says Dec 2007 onward (older years rebuilt from pagecounts); page IDs from 2015 |
 
+Known issue (readme): rows without a page ID have 5 columns instead of 6.
 In a 20,000-line sample the hourly letters always summed to the daily total. The Q5 cross-check below compares
 both sources hour by hour.
 
@@ -99,3 +100,97 @@ both sources hour by hour.
 daily files are a day late. **`pageview_complete` for backfill and baselines**: one file per day
 instead of 24, half the bytes, `page_id` included (robust against page moves), and the same hourly
 resolution. We use both.
+
+---
+
+## 2. Pageviews REST API
+
+Base: `https://wikimedia.org/api/rest_v1/metrics/pageviews/` · Script: [`spike/q2_rest_api.py`](../spike/q2_rest_api.py)
+
+### 2a. Top articles for yesterday (2026-10-06, all-access, user)
+
+| | #1–#3 (housekeeping pages) | First real articles |
+|---|---|---|
+| en | Main_Page 6.45 M, Special:Search 0.90 M, Wikipedia:Featured_pictures 0.58 M | Steve_Gleason 516 k, Christa_Pike 294 k, Jeffrey_Archer 285 k, Jim_Bakker 251 k |
+| fr | **Cookie_(informatique) 624 k**, Accueil_principal 510 k, Spécial:Recherche 79 k | Michael_Olise 44 k, Paul_St-Pierre_Plamondon 41 k, Élections_générales_québécoises_de_2026 31 k |
+| ja | メインページ 711 k, 特別:検索 110 k | 簗和生 110 k, 玉城ティナ 103 k, 和田邦坊 80 k |
+| ar | الصفحة_الرئيسة 34 k | همام_الهمامي 23 k, كأس_الخليج_العربي 21 k, a *File:* page 12 k |
+
+- Each call returns up to 1,000 articles in 30–140 ms. Responses are CDN-cached (`cache-control: s-maxage=14400`).
+  Yesterday is available; **today returns 404**. Daily top lists come out once a day, so they cannot
+  power "right now".
+- **Noise is real even in `user` traffic.** fr's #1 article (`Cookie_(informatique)`, 624 k, more than the Main
+  Page) and en's `Wikipedia:Featured_pictures` are almost certainly automated traffic that got through the
+  classifier. We need namespace filters (Special:, Wikipedia:, File:/ملف:, Main Page in each language)
+  and a single-access/single-title anomaly filter before anything goes on a globe.
+- **Rate limits:** the Analytics API docs say limits "are dependent on the client's identity" and
+  ask clients to "wait for each request to finish before sending another request". The global Wikimedia
+  API policy (mediawiki.org *Wikimedia APIs/Rate limits*) gives **200 requests/minute for
+  unauthenticated bots with a compliant User-Agent**, and **10 requests/minute** for requests identified only by IP.
+  So the API is fine for spot lookups and impossible for bulk use. **Bulk data must come from dumps.**
+
+### 2b. One article, five languages, 90 days
+
+Wikidata Q90 (Paris), titles resolved through sitelinks: en *Paris*, fr *Paris*, ja *パリ*, ar *باريس*, de *Paris*.
+
+| Lang | Days returned | Views in 90 days (2026-07-09 → 2026-10-06) | Earliest day available |
+|---|---|---|---|
+| en | 90 | 467,905 | 2015-07-01 |
+| fr | 90 | 237,471 | 2015-07-01 |
+| de | 90 | 93,320 | 2015-07-01 |
+| ja | 90 | 26,565 | 2015-07-01 |
+| ar | 90 | 10,848 | 2015-07-01 |
+
+- **Earliest date: 2015-07-01** for per-article data, for every language.
+- Per-article granularity is **daily or monthly only**. `hourly` returns HTTP 400 ("granularity should be
+  equal to one of the allowed values: [daily, monthly]"). Hourly totals exist only at project level (`aggregate`).
+
+### 2c. Geography: does it exist?
+
+Yes, but coarse, daily at best, and with gaps on purpose.
+
+| Endpoint | Returns | Granularity |
+|---|---|---|
+| `top-by-country/{project}/{access}/{yyyy}/{mm}` | Countries ranked by views of one project, **bucketed** (`"views": "100000000-999999999"`, plus a rounded `views_ceil`) | monthly |
+| `top-per-country/{CC}/{access}/{yyyy}/{mm}/{dd}` | Top ≈ 1,000 articles **across all projects** viewed from one country, `views_ceil` rounded (e.g. 261,500) | daily |
+
+- Example: from France on 2026-10-06, #4 = *Michael_Olise* (fr) 37.6 k and #5 = *Mort_de_Thomas_Perotto* 21.1 k. From
+  Japan, #2 = *簗和生* 108.6 k. en.wikipedia by country in September: US ≈ 2.66 B, GB ≈ 0.69 B, IN ≈ 0.49 B.
+- `top-per-country` starts in **2021** (2021-01-01 works, 2020-12-31 → 404). Today → 404, so lag ≥ 1 day.
+- **Privacy protection list:** 18 of the 38 countries probed return 404 every time, namely RU, TR, IR, EG, SA, AE, CN, HK,
+  VN, PK, BD, PS, SY, IQ, CU, VE, BY, KP. The docs also drop countries with ≤ 100 views and zero values.
+- **Implication:** there is **no per-article × country × hour data**. A "live globe" has to map attention by
+  **language** (and the countries where that language is spoken), plus at most a daily per-country overlay
+  that leaves out much of the Middle East, Russia and China. This is a product constraint to design around.
+
+---
+
+## 3. Live edit stream (EventStreams, SSE)
+
+Script: [`spike/q3_edit_stream.py`](../spike/q3_edit_stream.py) · samples in `data/raw/stream/*.jsonl`
+
+| Stream | Duration | Events | Events/s | Sample size |
+|---|---|---|---|---|
+| `recentchange` | 60 s | 1,790 | **29.8** | 2.4 MB (≈ 3.5 GB/day raw JSON) |
+| `page-create` | 20 s | 20 | 1.0 | 32 KB |
+| `revision-create` | 20 s | 382 | 19.0 | 624 KB |
+
+`recentchange` breakdown (60 s):
+
+- **Top wikis:** commonswiki 691, wikidatawiki 458, enwiki 166, zhwiki 47, eswiki 32, frwiki 28, ruwiki 27,
+  eowiktionary 27, arwiki 21, dewiki 20.
+- **Types:** edit 1,036 (58 %), categorize 629 (35 %), log 82 (5 %), new 43 (2 %).
+- **Bot fraction: 30.9 %.** Wikipedia sites are only **28.8 %** of events, and **human edits/new pages on Wikipedias
+  ≈ 4.3/s**. Main namespace (ns 0) is 42.7 % of all events.
+- Delivery lag (event `timestamp` → receipt): median 34 s, p95 59 s. Part of this is the stream replaying recent
+  history on connect, so true steady-state lag is lower.
+- `page-create` / `revision-create` carry `page_id`, `rev_id`, `performer`, `rev_len`, but **no
+  `bot` flag at the top level** (it sits in `performer.user_is_bot`). `revision-create` is dominated by Wikidata and Commons
+  just like `recentchange`.
+
+**Takeaway:** the edit stream is a cheap, sub-minute signal (one SSE connection, ≈ 30 msgs/s), but it is
+**noisy and sparse per article**. Most of it is Commons/Wikidata/bots. It can't measure attention on
+its own. Its value is as an **early-warning hint**: a burst of human edits to one article in several
+languages, or a brand-new article, shows up ≈ 2–3 h before the hourly pageview dump confirms the
+attention. It needs a long-running consumer, which GitHub Actions doesn't provide (see §6). It is a
+"later" feature.
