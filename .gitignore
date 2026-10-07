@@ -1,0 +1,12 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Data (downloads and derived files never go in git)
+data/
+*.gz
+*.parquet
+
+# OS
+.DS_Store
