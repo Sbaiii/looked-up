@@ -18,8 +18,10 @@ from __future__ import annotations
 import json
 import logging
 import os
+import random
 import shutil
 import tempfile
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -150,7 +152,7 @@ class Store(Protocol):
 
 
 def write_hours(store: Store, tables: dict[datetime, tuple[pa.Table, str]], message: str,
-                overwrite: bool = False, attempts: int = 5) -> list[datetime]:
+                overwrite: bool = False, attempts: int = 10) -> list[datetime]:
     """Merge hourly tables into their day files and commit them with the manifest, atomically.
 
     ``tables`` maps hour start -> (table, source). Hours already in the manifest are skipped
@@ -183,6 +185,7 @@ def write_hours(store: Store, tables: dict[datetime, tuple[pa.Table, str]], mess
                 return sorted(todo)
             except StoreConflict:
                 log.warning("lake changed while writing (attempt %d), merging again", attempt + 1)
+                time.sleep(random.uniform(1, 4) * (attempt + 1))  # jitter: parallel backfill jobs
     raise RuntimeError(f"could not commit after {attempts} attempts: {message}")
 
 
