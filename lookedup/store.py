@@ -238,7 +238,9 @@ class HFStore:
         if create:
             if not self.token:
                 raise RuntimeError("HF token missing: set HF_TOKEN or run `huggingface-cli login`")
-            self.api.create_repo(repo_id, repo_type="dataset", private=False, exist_ok=True)
+            # fine-grained tokens without "create repos" get 403 even with exist_ok, so check first
+            if not self.api.repo_exists(repo_id, repo_type="dataset"):
+                self.api.create_repo(repo_id, repo_type="dataset", private=False)
 
     def head(self) -> str:
         return self.api.dataset_info(self.repo_id).sha
