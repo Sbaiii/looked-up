@@ -2,7 +2,7 @@
 
 Each run: expected hours (last 72 h) - hours in the manifest = missing; of those, the
 ones already published on dumps.wikimedia.org are processed, newest first, at most 6
-per run, then committed to the store in a single commit (data files + manifest).
+per run, merged into their day files and committed in a single commit (day files + manifest).
 Hours already present are never reprocessed, so a late, skipped or repeated run is harmless.
 """
 
@@ -14,12 +14,13 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import pyarrow as pa
 
 from lookedup import db, dumps
 from lookedup.languages import active_codes, article_filter
 from lookedup.parse import ArticleFilter
 from lookedup.settings import MAX_HOURS_PER_RUN, MIN_VIEWS, WINDOW_HOURS
-from lookedup.store import Manifest, Store, expected_hours, hour_path, missing_hours, write_parquet
+from lookedup.store import Manifest, Store, expected_hours, missing_hours, write_hours
 from lookedup.transform import hourly_dump_to_table
 
 log = logging.getLogger(__name__)
@@ -42,22 +43,17 @@ def plan(manifest: Manifest, now: datetime, window_hours: int = WINDOW_HOURS,
 
 
 def process_hour(f: dumps.HourlyFile, langs: list[str], filt: ArticleFilter, work_dir: Path,
-                 min_views: int = MIN_VIEWS) -> tuple[Path, dict]:
-    """Download one hourly dump, build its retained table, write Parquet. Raw file is deleted."""
+                 min_views: int = MIN_VIEWS) -> pa.Table:
+    """Download one hourly dump and build its retained table. The raw file is deleted."""
     t0 = time.monotonic()
     raw = dumps.download(f.url, work_dir / f.name)
     t1 = time.monotonic()
     table = hourly_dump_to_table(raw, f.ts_hour_start, langs, filt, min_views)
-    out = work_dir / f"{f.ts_hour_start:%Y%m%dT%H}.parquet"
-    size = write_parquet(table, out)
     t2 = time.monotonic()
     raw.unlink(missing_ok=True)
-    m = Manifest()
-    m.add(f.ts_hour_start, rows=table.num_rows, size=size, source="hourly_dump")
-    log.info("hour=%s rows=%d bytes=%d lag=%dmin gz=%d download=%.1fs process=%.1fs source=hourly_dump",
-             f"{f.ts_hour_start:%Y-%m-%dT%H:00Z}", table.num_rows, size, f.lag_minutes, f.size,
-             t1 - t0, t2 - t1)
-    return out, m.hours
+    log.info("hour=%s rows=%d lag=%dmin gz=%d download=%.1fs process=%.1fs source=hourly_dump",
+             f"{f.ts_hour_start:%Y-%m-%dT%H:00Z}", table.num_rows, f.lag_minutes, f.size, t1 - t0, t2 - t1)
+    return table
 
 
 def run(store: Store, now: datetime | None = None, langs: list[str] | None = None,
@@ -78,14 +74,10 @@ def run(store: Store, now: datetime | None = None, langs: list[str] | None = Non
     if not todo:
         return 0
     with tempfile.TemporaryDirectory() as tmp:
-        files, entries = {}, {}
-        for f in todo:
-            out, entry = process_hour(f, langs, filt, Path(tmp))
-            files[hour_path(f.ts_hour_start)] = out
-            entries.update(entry)
-        first, last = min(f.ts_hour_start for f in todo), max(f.ts_hour_start for f in todo)
-        store.commit(files, entries, f"data: ingest {len(todo)} hour(s) {first:%Y-%m-%dT%H}..{last:%Y-%m-%dT%H}Z")
-    return len(todo)
+        tables = {f.ts_hour_start: (process_hour(f, langs, filt, Path(tmp)), "hourly_dump") for f in todo}
+    first, last = min(tables), max(tables)
+    written = write_hours(store, tables, f"data: ingest {len(tables)} hour(s) {first:%Y-%m-%dT%H}..{last:%Y-%m-%dT%H}Z")
+    return len(written)
 
 
 def verify_alignment(ts_hour_start: datetime, work_dir: Path) -> dict:

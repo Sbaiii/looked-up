@@ -20,13 +20,15 @@ import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from lookedup import dumps
 from lookedup.languages import active_codes, article_filter
 from lookedup.parse import ArticleFilter
 from lookedup.settings import RAW_DIR
-from lookedup.store import Manifest, Store, hour_path, open_store, write_parquet
+from lookedup.store import Store, day_path, open_store, write_hours
 from lookedup.transform import hourly_dump_to_table, pageview_complete_to_tables
 
 log = logging.getLogger(__name__)
@@ -52,20 +54,14 @@ def backfill_day(store: Store, day: date, langs: list[str], filt: ArticleFilter,
     t1 = time.monotonic()
     tables = pageview_complete_to_tables(raw, day, langs, filt)
     t2 = time.monotonic()
-    with tempfile.TemporaryDirectory() as tmp:
-        files, m = {}, Manifest()
-        for ts in missing:
-            out = Path(tmp) / f"{ts:%Y%m%dT%H}.parquet"
-            size = write_parquet(tables[ts], out)
-            files[hour_path(ts)] = out
-            m.add(ts, rows=tables[ts].num_rows, size=size, source="pageview_complete")
-        store.commit(files, m.hours, f"data: backfill {day} ({len(missing)} hours) from pageview_complete")
-    rows = sum(tables[ts].num_rows for ts in missing)
+    written = write_hours(store, {ts: (tables[ts], "pageview_complete") for ts in missing},
+                          f"data: backfill {day} ({len(missing)} hours) from pageview_complete")
+    rows = sum(tables[ts].num_rows for ts in written)
     log.info("day=%s hours=%d rows=%d download=%.0fs process=%.0fs source=pageview_complete",
              day, len(missing), rows, t1 - t0, t2 - t1)
     if not keep_raw:
         raw.unlink(missing_ok=True)
-    return len(missing)
+    return len(written)
 
 
 def backfill(store: Store, start: date, end: date, newest_first: bool = True, keep_raw: bool = False) -> int:
@@ -88,7 +84,8 @@ def validate(store: Store, n: int = 3, seed: int | None = None) -> list[dict]:
     with tempfile.TemporaryDirectory() as tmp:
         for key in picks:
             ts = datetime.strptime(key, "%Y-%m-%dT%H:%M:%SZ")
-            stored = pq.read_table(store.fetch(hour_path(ts), Path(tmp)))
+            day_file = pq.read_table(store.fetch(day_path(ts), Path(tmp)))
+            stored = day_file.filter(pc.equal(day_file["ts_hour_start"], pa.scalar(ts, pa.timestamp("us"))))
             raw = dumps.download(dumps.file_url(ts), Path(tmp) / dumps.file_name(ts))
             rebuilt = hourly_dump_to_table(raw, ts, langs, filt)
 
