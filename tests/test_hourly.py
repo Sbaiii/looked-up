@@ -66,7 +66,7 @@ def test_run_is_idempotent_and_self_healing(fake_server, tmp_path, article_filte
 
 def test_hf_upload_failure_is_loud(fake_server, tmp_path, article_filter):
     class Broken(LocalStore):
-        def commit(self, files, entries, message):
+        def commit(self, files, delta, message, parent=None):
             raise RuntimeError("upload failed")
 
     with pytest.raises(RuntimeError, match="upload failed"):

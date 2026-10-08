@@ -46,8 +46,8 @@ def test_backfill_resumes_and_never_overwrites_hourly(fake_dumps, tmp_path):
     store = LocalStore(tmp_path / "lake")
     # the hourly job already ingested 14:00 for that day
     m = Manifest()
-    m.add(datetime(2026, 9, 13, 14), rows=1, size=1, source="hourly_dump")
-    store.commit({}, m.hours, "seed")
+    m.add(datetime(2026, 9, 13, 14), rows=1, source="hourly_dump")
+    store.commit({}, m, "seed")
 
     assert backfill.backfill(store, DAY, DAY) == 23
     manifest = store.read_manifest()
