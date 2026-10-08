@@ -73,6 +73,7 @@ def build_sitelinks(langs: list[str], out: Path, dump: Path | None = None) -> di
         out.parent.mkdir(parents=True, exist_ok=True)
         con = db.connect()
         con.execute(f"SET temp_directory='{tmp}'")
+        con.execute("SET memory_limit='1GB'")  # spill the sort to disk instead of holding it in RAM
         con.execute(f"""COPY (SELECT * FROM '{unsorted}' ORDER BY lang, title)
                         TO '{out}' (FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE 1000000)""")
     log.info("sitelinks: %d rows for %d languages -> %s (%d bytes)", sum(counts.values()), len(counts),
