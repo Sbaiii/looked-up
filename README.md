@@ -16,7 +16,7 @@ storage. CC0 data in, open data out.
 
 **Ready to go live, waiting for the `HF_TOKEN` secret.** The pipeline is built and tested, and a local lake (1–7 Oct)
 is migrated to the final daily layout. Once the token is set, GitHub Actions adds each new hour of 30 Wikipedias to
-the public dataset [`Sbaiii/looked-up`](https://huggingface.co/datasets/Sbaiii/looked-up), and a parallel
+the public dataset [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up), and a parallel
 backfill fills the previous 90 days. No analytics yet: spike detection, comparisons and the daily briefing come next.
 
 - Data model, layout and querying: [docs/data_model.md](docs/data_model.md)
@@ -35,7 +35,7 @@ Or straight from DuckDB, with no install beyond `duckdb`:
 ```sql
 INSTALL httpfs; LOAD httpfs;
 SELECT lang, title, views_desktop, views_mobile
-FROM 'hf://datasets/Sbaiii/looked-up/data/hourly/year=2026/month=10/day=06.parquet'
+FROM 'hf://datasets/Sbaiiiiii/looked-up/data/hourly/year=2026/month=10/day=06.parquet'
 WHERE ts_hour_start = TIMESTAMP '2026-10-06 14:00'
 ORDER BY views_desktop + views_mobile DESC LIMIT 20;
 ```

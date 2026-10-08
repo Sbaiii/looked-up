@@ -29,13 +29,13 @@ the [data model](https://github.com/Sbaiii/looked-up/blob/main/docs/data_model.m
 ```python
 import duckdb
 con = duckdb.connect(); con.execute("INSTALL httpfs; LOAD httpfs;")
-lake = "hf://datasets/Sbaiii/looked-up/data/hourly/*/*/*.parquet"
+lake = "hf://datasets/Sbaiiiiii/looked-up/data/hourly/*/*/*.parquet"
 con.sql(f"""SELECT title, sum(views_desktop + views_mobile) AS views FROM read_parquet('{lake}')
             WHERE lang = 'fr' AND ts_hour_start >= (now() AT TIME ZONE 'UTC') - INTERVAL 24 HOUR GROUP BY 1 ORDER BY 2 DESC LIMIT 20""").show()
 ```
 
 One day is one file, so reading a single day is fastest:
-`read_parquet('hf://datasets/Sbaiii/looked-up/data/hourly/year=2026/month=10/day=06.parquet')`.
+`read_parquet('hf://datasets/Sbaiiiiii/looked-up/data/hourly/year=2026/month=10/day=06.parquet')`.
 
 ## Layout
 

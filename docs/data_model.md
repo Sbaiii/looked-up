@@ -1,6 +1,6 @@
 # Data model
 
-The lake is a public Hugging Face dataset, **[`Sbaiii/looked-up`](https://huggingface.co/datasets/Sbaiii/looked-up)**,
+The lake is a public Hugging Face dataset, **[`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up)**,
 refreshed every hour by GitHub Actions. Decisions: ADR [0005](adr/0005-separate-desktop-and-mobile-views.md)–[0012](adr/0012-one-parquet-file-per-day.md).
 
 ## Layout
@@ -107,7 +107,7 @@ refreshed monthly. Redirects and articles newer than the dump don't match. Cover
 ```python
 import duckdb
 con = duckdb.connect(); con.execute("INSTALL httpfs; LOAD httpfs;")
-lake = "hf://datasets/Sbaiii/looked-up/data/hourly/*/*/*.parquet"
+lake = "hf://datasets/Sbaiiiiii/looked-up/data/hourly/*/*/*.parquet"
 con.sql(f"""SELECT title, sum(views_desktop + views_mobile) AS views FROM read_parquet('{lake}')
             WHERE lang = 'fr' AND ts_hour_start >= (now() AT TIME ZONE 'UTC') - INTERVAL 24 HOUR GROUP BY 1 ORDER BY 2 DESC LIMIT 20""").show()
 ```
@@ -118,4 +118,4 @@ Reading one day file is faster than globbing the whole lake:
 python -m lookedup.cli top --lang fr --hour 2026-10-06T14:00     # top 20 with desktop, mobile, mobile share
 ```
 
-To join with Wikidata: `JOIN read_parquet('hf://datasets/Sbaiii/looked-up/data/wikidata/sitelinks.parquet') USING (lang, title)`.
+To join with Wikidata: `JOIN read_parquet('hf://datasets/Sbaiiiiii/looked-up/data/wikidata/sitelinks.parquet') USING (lang, title)`.

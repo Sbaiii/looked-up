@@ -6,7 +6,7 @@
 
 ## Decision
 
-Public dataset repo **`Sbaiii/looked-up`**:
+Public dataset repo **`Sbaiiiiii/looked-up`**:
 
 ```
 data/hourly/year=YYYY/month=MM/day=DD/hour=HH.parquet   # zstd, one file per hour

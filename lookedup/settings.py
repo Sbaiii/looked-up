@@ -23,7 +23,7 @@ PVC_BASE = "https://dumps.wikimedia.org/other/pageview_complete"
 REST_BASE = "https://wikimedia.org/api/rest_v1/metrics/pageviews"
 SITELINKS_DUMP = "https://dumps.wikimedia.org/wikidatawiki/latest/wikidatawiki-latest-wb_items_per_site.sql.gz"
 
-HF_REPO_ID = os.environ.get("LOOKEDUP_HF_REPO", "Sbaiii/looked-up")
+HF_REPO_ID = os.environ.get("LOOKEDUP_HF_REPO", "Sbaiiiiii/looked-up")
 MANIFEST_PATH = "data/manifest.json"
 SITELINKS_PATH = "data/wikidata/sitelinks.parquet"
 
