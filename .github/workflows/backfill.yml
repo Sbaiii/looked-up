@@ -1,7 +1,8 @@
 name: backfill
 
-# Manual backfill from pageview_complete, the remote alternative to running
-# `python -m lookedup.backfill` locally. Resumable: completed days are skipped.
+# Manual backfill from pageview_complete, chunked into date ranges that run in parallel.
+# Each chunk is resumable (hours already in the manifest are skipped) and stays far below
+# the 6 h job limit (~5 min per day on a runner). Re-run with the same inputs to resume.
 on:
   workflow_dispatch:
     inputs:
@@ -11,23 +12,47 @@ on:
       to:
         description: "Last day (YYYY-MM-DD)"
         required: true
-
-concurrency:
-  group: lake-writer-backfill
-  cancel-in-progress: false
+      chunk_days:
+        description: "Days per job"
+        default: "15"
 
 permissions:
   contents: read  # pipelines write to the lake on Hugging Face, never to this repo
 
 jobs:
-  backfill:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    outputs:
+      chunks: ${{ steps.split.outputs.chunks }}
+    steps:
+      - id: split
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from datetime import date, timedelta
+          a, b = date.fromisoformat("${{ inputs.from }}"), date.fromisoformat("${{ inputs.to }}")
+          n, out = int("${{ inputs.chunk_days }}"), []
+          while a <= b:
+              e = min(b, a + timedelta(days=n - 1))
+              out.append({"from": a.isoformat(), "to": e.isoformat()})
+              a = e + timedelta(days=1)
+          print("chunks=" + json.dumps(out))
+          PY
+
+  backfill:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 3  # be polite to dumps.wikimedia.org
+      matrix:
+        chunk: ${{ fromJSON(needs.plan.outputs.chunks) }}
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -35,5 +60,5 @@ jobs:
       - run: pip install -e .
       - name: Check HF token
         run: test -n "$HF_TOKEN" || { echo "::error::HF_TOKEN secret is not set"; exit 1; }
-      - name: Backfill
-        run: python -m lookedup.backfill --from "${{ inputs.from }}" --to "${{ inputs.to }}"
+      - name: Backfill ${{ matrix.chunk.from }}..${{ matrix.chunk.to }}
+        run: python -m lookedup.backfill --from "${{ matrix.chunk.from }}" --to "${{ matrix.chunk.to }}"
