@@ -1,14 +1,16 @@
-"""Lake storage: Parquet files, the manifest, and the Hugging Face / local backends (D5).
+"""Lake storage: daily Parquet files, the manifest, and the Hugging Face / local backends.
 
-Layout (identical locally and on the Hub)::
+Layout (identical locally and on the Hub), see ADR 0012::
 
-    data/hourly/year=YYYY/month=MM/day=DD/hour=HH.parquet
+    data/hourly/year=YYYY/month=MM/day=DD.parquet   all hours of one UTC day
     data/wikidata/sitelinks.parquet
     data/manifest.json
 
-The manifest lists every hour present. Writers commit data files and the updated
-manifest in ONE commit, with optimistic concurrency on the Hub (``parent_commit``):
-if someone else committed in between, we re-read the manifest, merge, and retry.
+The manifest tracks HOURS (an hour is present iff it is in the manifest); a ``files``
+section records the size of each day file. All writers go through :func:`write_hours`,
+which merges new hours into the day file as of a given Hub revision and commits the
+day files plus the manifest in ONE commit with ``parent_commit`` set. If another writer
+committed meanwhile, the whole merge is redone on the new revision, so no rows are lost.
 """
 
 from __future__ import annotations
@@ -17,13 +19,15 @@ import json
 import logging
 import os
 import shutil
-import time
+import tempfile
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from lookedup.dumps import utcnow
@@ -32,18 +36,42 @@ from lookedup.settings import HF_REPO_ID, LOCAL_LAKE_DIR, MANIFEST_PATH
 log = logging.getLogger(__name__)
 
 SOURCES = ("hourly_dump", "pageview_complete")
+SORT_KEYS = [("lang", "ascending"), ("title", "ascending"), ("ts_hour_start", "ascending")]
+ROW_GROUP_SIZE = 1_000_000
 
 
-def hour_path(ts: datetime) -> str:
-    """Repo-relative path of the Parquet file for the hour starting at ``ts``."""
-    return f"data/hourly/year={ts:%Y}/month={ts:%m}/day={ts:%d}/hour={ts:%H}.parquet"
+class StoreConflict(Exception):
+    """Another writer committed after the revision we based our changes on."""
+
+
+def day_path(ts: datetime) -> str:
+    """Repo-relative path of the daily Parquet file holding the hour starting at ``ts``."""
+    return f"data/hourly/year={ts:%Y}/month={ts:%m}/day={ts:%d}.parquet"
 
 
 def write_parquet(table: pa.Table, path: Path) -> int:
-    """Write ``table`` as zstd Parquet; returns the file size in bytes."""
+    """Write ``table`` as zstd-9 Parquet with ~1M-row row groups; returns the file size."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    pq.write_table(table, path, compression="zstd", compression_level=9, row_group_size=500_000)
+    pq.write_table(table, path, compression="zstd", compression_level=9, row_group_size=ROW_GROUP_SIZE)
     return path.stat().st_size
+
+
+def merge_day(existing: pa.Table | None, new: list[pa.Table]) -> pa.Table:
+    """Day table with the hours of ``new`` replacing those hours in ``existing``, sorted."""
+    parts = [t for t in new if t.num_rows]
+    hours = set()
+    for t in new:
+        hours.update(t["ts_hour_start"].unique().to_pylist())
+    if existing is not None and existing.num_rows:
+        keep = existing
+        if hours:
+            mask = pc.is_in(existing["ts_hour_start"], value_set=pa.array(sorted(hours), existing.schema.field("ts_hour_start").type))
+            keep = existing.filter(pc.invert(mask))
+        parts.insert(0, keep)
+    if not parts:
+        return new[0] if new else existing
+    schema = parts[-1].schema
+    return pa.concat_tables([p.cast(schema) for p in parts]).sort_by(SORT_KEYS)
 
 
 def _key(ts: datetime) -> str:
@@ -56,21 +84,25 @@ def _parse_key(key: str) -> datetime:
 
 @dataclass
 class Manifest:
-    """Every hour present in the lake: path, row count, bytes, source, ingestion time."""
+    """Every hour present (path, rows, source, ingestion time) and every day file (rows, bytes)."""
 
     hours: dict[str, dict] = field(default_factory=dict)
+    files: dict[str, dict] = field(default_factory=dict)
 
     @classmethod
     def from_json(cls, text: str | None) -> Manifest:
         if not text:
             return cls()
-        return cls(hours=dict(json.loads(text).get("hours", {})))
+        doc = json.loads(text)
+        return cls(hours=dict(doc.get("hours", {})), files=dict(doc.get("files", {})))
 
     def to_json(self) -> str:
         doc = {
-            "schema_version": 1,
+            "schema_version": 2,
             "updated_at": f"{utcnow():%Y-%m-%dT%H:%M:%SZ}",
             "hour_count": len(self.hours),
+            "total_bytes": sum(f["bytes"] for f in self.files.values()),
+            "files": dict(sorted(self.files.items())),
             "hours": dict(sorted(self.hours.items())),
         }
         return json.dumps(doc, indent=1) + "\n"
@@ -81,17 +113,21 @@ class Manifest:
     def has(self, ts: datetime) -> bool:
         return _key(ts) in self.hours
 
-    def add(self, ts: datetime, rows: int, size: int, source: str, ingested_at: datetime | None = None) -> None:
+    def add(self, ts: datetime, rows: int, source: str, ingested_at: datetime | None = None) -> None:
         if source not in SOURCES:
             raise ValueError(f"unknown source {source!r}")
         self.hours[_key(ts)] = {
-            "path": hour_path(ts), "rows": rows, "bytes": size, "source": source,
+            "path": day_path(ts), "rows": rows, "source": source,
             "ingested_at": f"{(ingested_at or utcnow()):%Y-%m-%dT%H:%M:%SZ}",
         }
 
-    def merge(self, entries: dict[str, dict]) -> None:
-        """Apply new entries on top of this manifest (new entries win)."""
-        self.hours.update(entries)
+    def set_file(self, path: str, rows: int, size: int) -> None:
+        self.files[path] = {"rows": rows, "bytes": size, "updated_at": f"{utcnow():%Y-%m-%dT%H:%M:%SZ}"}
+
+    def merge(self, other: Manifest) -> None:
+        """Apply ``other`` on top of this manifest (its entries win)."""
+        self.hours.update(other.hours)
+        self.files.update(other.files)
 
 
 def expected_hours(now: datetime, window_hours: int) -> list[datetime]:
@@ -107,9 +143,47 @@ def missing_hours(manifest: Manifest, expected: list[datetime]) -> list[datetime
 
 
 class Store(Protocol):
-    def read_manifest(self) -> Manifest: ...
-    def commit(self, files: dict[str, Path], entries: dict[str, dict], message: str) -> None: ...
-    def fetch(self, repo_path: str, dest_dir: Path) -> Path | None: ...
+    def head(self) -> str | None: ...
+    def read_manifest(self, revision: str | None = None) -> Manifest: ...
+    def fetch(self, repo_path: str, dest_dir: Path, revision: str | None = None) -> Path | None: ...
+    def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None: ...
+
+
+def write_hours(store: Store, tables: dict[datetime, tuple[pa.Table, str]], message: str,
+                overwrite: bool = False, attempts: int = 5) -> list[datetime]:
+    """Merge hourly tables into their day files and commit them with the manifest, atomically.
+
+    ``tables`` maps hour start -> (table, source). Hours already in the manifest are skipped
+    unless ``overwrite``. Returns the hours actually written.
+    """
+    for attempt in range(attempts):
+        rev = store.head()
+        manifest = store.read_manifest(rev)
+        todo = {ts: v for ts, v in tables.items() if overwrite or not manifest.has(ts)}
+        if not todo:
+            return []
+        by_day: dict[str, list[datetime]] = defaultdict(list)
+        for ts in todo:
+            by_day[day_path(ts)].append(ts)
+        delta = Manifest()
+        with tempfile.TemporaryDirectory() as tmp:
+            files = {}
+            for path, hours in sorted(by_day.items()):
+                src = store.fetch(path, Path(tmp) / "in", rev) if path in manifest.files else None
+                existing = pq.read_table(src) if src else None
+                merged = merge_day(existing, [todo[ts][0] for ts in hours])
+                out = Path(tmp) / "out" / path
+                size = write_parquet(merged, out)
+                files[path] = out
+                delta.set_file(path, merged.num_rows, size)
+                for ts in hours:
+                    delta.add(ts, rows=todo[ts][0].num_rows, source=todo[ts][1])
+            try:
+                store.commit(files, delta, message, parent=rev)
+                return sorted(todo)
+            except StoreConflict:
+                log.warning("lake changed while writing (attempt %d), merging again", attempt + 1)
+    raise RuntimeError(f"could not commit after {attempts} attempts: {message}")
 
 
 class LocalStore:
@@ -118,25 +192,28 @@ class LocalStore:
     def __init__(self, root: Path = LOCAL_LAKE_DIR) -> None:
         self.root = Path(root)
 
-    def read_manifest(self) -> Manifest:
+    def head(self) -> str | None:
+        return None
+
+    def read_manifest(self, revision: str | None = None) -> Manifest:
         p = self.root / MANIFEST_PATH
         return Manifest.from_json(p.read_text() if p.exists() else None)
 
-    def commit(self, files: dict[str, Path], entries: dict[str, dict], message: str) -> None:
+    def fetch(self, repo_path: str, dest_dir: Path, revision: str | None = None) -> Path | None:
+        p = self.root / repo_path
+        return p if p.exists() else None
+
+    def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None:
         for repo_path, src in files.items():
             dst = self.root / repo_path
             dst.parent.mkdir(parents=True, exist_ok=True)
             if Path(src).resolve() != dst.resolve():
                 shutil.copyfile(src, dst)
         m = self.read_manifest()
-        m.merge(entries)
+        m.merge(delta)
         (self.root / MANIFEST_PATH).parent.mkdir(parents=True, exist_ok=True)
         (self.root / MANIFEST_PATH).write_text(m.to_json())
         log.info("local commit: %s (%d files)", message, len(files))
-
-    def fetch(self, repo_path: str, dest_dir: Path) -> Path | None:
-        p = self.root / repo_path
-        return p if p.exists() else None
 
 
 def hf_token() -> str | None:
@@ -160,61 +237,47 @@ class HFStore:
                 raise RuntimeError("HF token missing: set HF_TOKEN or run `huggingface-cli login`")
             self.api.create_repo(repo_id, repo_type="dataset", private=False, exist_ok=True)
 
-    def _head(self) -> str:
+    def head(self) -> str:
         return self.api.dataset_info(self.repo_id).sha
 
-    def _manifest_at(self, revision: str) -> Manifest:
-        from huggingface_hub import hf_hub_download
-        from huggingface_hub.utils import EntryNotFoundError
+    def read_manifest(self, revision: str | None = None) -> Manifest:
+        p = self.fetch(MANIFEST_PATH, None, revision or self.head())
+        return Manifest.from_json(p.read_text() if p else None)
 
-        try:
-            p = hf_hub_download(self.repo_id, MANIFEST_PATH, repo_type="dataset", revision=revision,
-                                token=self.token)
-        except EntryNotFoundError:
-            return Manifest()
-        return Manifest.from_json(Path(p).read_text())
-
-    def read_manifest(self) -> Manifest:
-        return self._manifest_at(self._head())
-
-    def commit(self, files: dict[str, Path], entries: dict[str, dict], message: str, retries: int = 5) -> None:
-        from huggingface_hub import CommitOperationAdd
-        from huggingface_hub.utils import HfHubHTTPError
-
-        if not self.token:
-            raise RuntimeError("HF token missing: set HF_TOKEN or run `huggingface-cli login`")
-        for attempt in range(retries):
-            head = self._head()
-            manifest = self._manifest_at(head)
-            manifest.merge(entries)
-            ops = [CommitOperationAdd(path_in_repo=p, path_or_fileobj=str(src)) for p, src in files.items()]
-            ops.append(CommitOperationAdd(path_in_repo=MANIFEST_PATH, path_or_fileobj=manifest.to_json().encode()))
-            try:
-                info = self.api.create_commit(self.repo_id, operations=ops, commit_message=message,
-                                              repo_type="dataset", parent_commit=head)
-                log.info("hf commit %s: %s (%d files)", info.oid[:8], message, len(files))
-                return
-            except HfHubHTTPError as e:
-                status = getattr(e.response, "status_code", None)
-                if status in (409, 412) and attempt < retries - 1:
-                    log.warning("hf commit raced with another writer (HTTP %s), retrying", status)
-                    time.sleep(2 * (attempt + 1))
-                    continue
-                raise
-
-    def fetch(self, repo_path: str, dest_dir: Path) -> Path | None:
+    def fetch(self, repo_path: str, dest_dir: Path | None, revision: str | None = None) -> Path | None:
         from huggingface_hub import hf_hub_download
         from huggingface_hub.utils import EntryNotFoundError
 
         try:
             return Path(hf_hub_download(self.repo_id, repo_path, repo_type="dataset", token=self.token,
-                                        local_dir=dest_dir))
+                                        revision=revision, local_dir=dest_dir))
         except EntryNotFoundError:
             return None
 
+    def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None:
+        """One Hub commit with the files and the merged manifest. Raises StoreConflict on a race."""
+        from huggingface_hub import CommitOperationAdd
+        from huggingface_hub.utils import HfHubHTTPError
+
+        if not self.token:
+            raise RuntimeError("HF token missing: set HF_TOKEN or run `huggingface-cli login`")
+        base = parent or self.head()
+        manifest = self.read_manifest(base)
+        manifest.merge(delta)
+        ops = [CommitOperationAdd(path_in_repo=p, path_or_fileobj=str(src)) for p, src in files.items()]
+        ops.append(CommitOperationAdd(path_in_repo=MANIFEST_PATH, path_or_fileobj=manifest.to_json().encode()))
+        try:
+            info = self.api.create_commit(self.repo_id, operations=ops, commit_message=message,
+                                          repo_type="dataset", parent_commit=base)
+        except HfHubHTTPError as e:
+            if getattr(e.response, "status_code", None) in (409, 412):
+                raise StoreConflict(str(e)) from e
+            raise
+        log.info("hf commit %s: %s (%d files)", info.oid[:8], message, len(files))
+
 
 def open_store(local: bool = False) -> Store:
-    """Hub store by default; ``local=True`` (or no token) writes to data/lake/ instead."""
+    """Hub store by default; ``local=True`` writes to data/lake/ instead."""
     if local:
         return LocalStore()
     return HFStore(create=True)
