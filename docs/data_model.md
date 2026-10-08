@@ -81,8 +81,9 @@ refreshed monthly. Redirects and articles newer than the dump don't match. Cover
 }
 ```
 
-- `source` is `hourly_dump` (live path) or `pageview_complete` (backfill). Both paths share one transformation and
-  give identical rows for the same hour (checked by tests and by `python -m lookedup.cli validate`).
+- `source` is `hourly_dump` (live path) or `pageview_complete` (backfill). Both paths share one transformation.
+  For the same hour they agree on ≈ 99.999 % of rows. `pageview_complete` misses a few mobile views on missing
+  pages and redirects (≈ 0.0003 % of views, ADR 0010). Check with `python -m lookedup.cli validate`.
 - An hour is present **if and only if** it is in the manifest. Writers commit the data files and the manifest in a
   single Hub commit.
 
