@@ -129,7 +129,8 @@ def cmd_push(a):
     import pyarrow.compute as pc
     import pyarrow.parquet as pq
 
-    from lookedup.store import HFStore, LocalStore, write_hours
+    from lookedup.settings import SITELINKS_PATH
+    from lookedup.store import HFStore, LocalStore, Manifest, write_hours
 
     local, hf = LocalStore(), HFStore(create=True)
     entries = local.read_manifest().hours
@@ -150,6 +151,10 @@ def cmd_push(a):
         written = write_hours(hf, tables, f"data: upload {len(tables)} hour(s) {min(tables):%Y-%m-%dT%H}.."
                                           f"{max(tables):%Y-%m-%dT%H}Z from a local lake")
         log.info("pushed %d hour(s) (%d/%d days)", len(written), min(i + a.batch, len(days)), len(days))
+    sitelinks = local.root / SITELINKS_PATH
+    if sitelinks.exists() and not hf.api.file_exists(hf.repo_id, SITELINKS_PATH, repo_type="dataset"):
+        hf.commit({SITELINKS_PATH: sitelinks}, Manifest(), "data: add Wikidata sitelinks from a local lake")
+        log.info("pushed %s (%d bytes)", SITELINKS_PATH, sitelinks.stat().st_size)
     cmd_card(a)
 
 
