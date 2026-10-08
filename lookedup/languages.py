@@ -19,10 +19,12 @@ import bz2
 import json
 import logging
 import tempfile
+import time
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
 
+import requests
 import yaml
 
 from lookedup import db
@@ -73,13 +75,26 @@ def article_filter(path: Path = NAMESPACES_FILE) -> ArticleFilter:
 
 # ---------------------------------------------------------------- wiki metadata
 
+def _get_json(url: str, params: dict, retries: int = 5, **kw) -> dict:
+    """GET with retries: metadata calls must not lose 30 minutes of aggregation to one dropped connection."""
+    for attempt in range(retries):
+        try:
+            r = session().get(url, params=params, timeout=60, **kw)
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException as e:
+            if attempt == retries - 1:
+                raise
+            log.warning("%s failed (%s), retry %d", url, e, attempt + 1)
+            time.sleep(3 * (attempt + 1))
+    raise RuntimeError("unreachable")
+
+
 def fetch_siteinfo(lang: str) -> dict:
     """Main page title and every non-article namespace name/alias of one Wikipedia."""
-    r = session().get(f"https://{lang}.wikipedia.org/w/api.php", params={
+    q = _get_json(f"https://{lang}.wikipedia.org/w/api.php", {
         "action": "query", "meta": "siteinfo", "siprop": "general|namespaces|namespacealiases",
-        "format": "json", "formatversion": 2}, timeout=30)
-    r.raise_for_status()
-    q = r.json()["query"]
+        "format": "json", "formatversion": 2})["query"]
     names = set()
     for ns in q["namespaces"].values():
         if ns["id"] != 0:
@@ -94,12 +109,11 @@ def fetch_siteinfo(lang: str) -> dict:
 
 def fetch_names() -> dict[str, tuple[str | None, str | None]]:
     """lang code -> (English name, native name) from the sitematrix API."""
-    r = session().get("https://meta.wikimedia.org/w/api.php", params={
+    data = _get_json("https://meta.wikimedia.org/w/api.php", {
         "action": "sitematrix", "smtype": "language", "smlangprop": "code|name|localname",
-        "format": "json", "uselang": "en"}, timeout=60)
-    r.raise_for_status()
+        "format": "json", "uselang": "en"})
     out = {}
-    for k, v in r.json()["sitematrix"].items():
+    for k, v in data["sitematrix"].items():
         if k.isdigit():
             out[v["code"]] = (v.get("localname"), v.get("name"))
     return out
@@ -172,8 +186,11 @@ def rank_languages(days: list[date], work_dir: Path | None = None, candidates: i
 
     con = db.connect()
     files = ", ".join(f"'{p}'" for p in day_files)
-    con.execute(f"""CREATE TABLE t AS SELECT lang, title, sum(coalesce(desktop,0)) AS d,
-                    sum(coalesce(mobile,0)) AS m FROM read_parquet([{files}]) GROUP BY ALL""")
+    week = work / f"window-{days[0]:%Y%m%d}-{days[-1]:%Y%m%d}.parquet"
+    if not week.exists():  # the expensive step (~30 min): cache it so re-runs are quick
+        con.execute(f"""COPY (SELECT lang, title, sum(coalesce(desktop,0)) AS d, sum(coalesce(mobile,0)) AS m
+                        FROM read_parquet([{files}]) GROUP BY ALL) TO '{week}' (FORMAT parquet, COMPRESSION zstd)""")
+    con.execute(f"CREATE VIEW t AS SELECT * FROM read_parquet('{week}')")
     raw_rank = [r[0] for r in con.execute(
         "SELECT lang FROM t GROUP BY 1 ORDER BY sum(d + m) DESC").fetchall()]
     cand = raw_rank[:candidates]
