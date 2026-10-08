@@ -10,6 +10,7 @@ Commands:
   top           top articles of one language in one hour (D10 smoke test)
   verify-hour   check 'filename = end of hour' against the REST API
   push          upload a local lake (data/lake/) to Hugging Face
+  compact       migrate a local lake from hourly files to daily files (one-off)
 """
 
 from __future__ import annotations
@@ -81,22 +82,22 @@ def cmd_wikidata(a):
     counts = build_sitelinks(active_codes(), out)
     print(json.dumps(counts, indent=1))
     if not a.no_upload:
-        open_store(a.local).commit({SITELINKS_PATH: out}, Manifest().hours,
+        open_store(a.local).commit({SITELINKS_PATH: out}, Manifest(),
                                    f"data: refresh Wikidata sitelinks ({sum(counts.values()):,} rows)")
 
 
 def cmd_coverage(a):
     from lookedup.query import lake_root
     from lookedup.settings import SITELINKS_PATH
-    from lookedup.store import hour_path, open_store
+    from lookedup.store import day_path, open_store
     from lookedup.wikidata import join_coverage
 
     store = open_store(a.local)
     present = sorted(store.read_manifest().present())[-a.hours:]
     with tempfile.TemporaryDirectory() as tmp:
-        paths = [str(store.fetch(hour_path(ts), Path(tmp))) for ts in present]
+        paths = sorted({str(store.fetch(day_path(ts), Path(tmp))) for ts in present})
         sl = store.fetch(SITELINKS_PATH, Path(tmp)) or f"{lake_root(a.local)}/{SITELINKS_PATH}"
-        rows = join_coverage(paths, str(sl))
+        rows = join_coverage(paths, str(sl), since=present[0], until=present[-1])
     lines = ["| Lang | Views | Matched to a QID | Coverage |", "|---|---|---|---|"]
     lines += [f"| {l} | {v:,} | {m:,} | {p} % |" for l, v, m, p in rows]
     tot_v, tot_m = sum(r[1] for r in rows), sum(r[2] for r in rows)
@@ -123,18 +124,45 @@ def cmd_verify_hour(a):
 
 
 def cmd_push(a):
-    from lookedup.store import HFStore, LocalStore
+    import pyarrow as pa
+    import pyarrow.compute as pc
+    import pyarrow.parquet as pq
+
+    from lookedup.store import HFStore, LocalStore, write_hours
 
     local, hf = LocalStore(), HFStore(create=True)
     entries = local.read_manifest().hours
     remote = hf.read_manifest().hours
-    todo = {k: v for k, v in entries.items() if k not in remote}
-    keys = sorted(todo)
-    for i in range(0, len(keys), a.batch):
-        chunk = {k: todo[k] for k in keys[i:i + a.batch]}
-        files = {v["path"]: local.root / v["path"] for v in chunk.values()}
-        hf.commit(files, chunk, f"data: upload {len(chunk)} hour(s) {keys[i]}..{keys[min(i + a.batch, len(keys)) - 1]}")
-    log.info("pushed %d hour(s)", len(keys))
+    todo = sorted(k for k in entries if k not in remote)
+    by_day: dict[str, list[str]] = {}
+    for k in todo:
+        by_day.setdefault(entries[k]["path"], []).append(k)
+    days = sorted(by_day)
+    for i in range(0, len(days), a.batch):
+        tables = {}
+        for path in days[i:i + a.batch]:
+            day = pq.read_table(local.root / path)
+            for k in by_day[path]:
+                ts = datetime.strptime(k, "%Y-%m-%dT%H:%M:%SZ")
+                hour = day.filter(pc.equal(day["ts_hour_start"], pa.scalar(ts, pa.timestamp("us"))))
+                tables[ts] = (hour, entries[k]["source"])
+        written = write_hours(hf, tables, f"data: upload {len(tables)} hour(s) {min(tables):%Y-%m-%dT%H}.."
+                                          f"{max(tables):%Y-%m-%dT%H}Z from a local lake")
+        log.info("pushed %d hour(s) (%d/%d days)", len(written), min(i + a.batch, len(days)), len(days))
+
+
+def cmd_compact(a):
+    from lookedup.compact import compact_local
+    from lookedup.settings import LOCAL_LAKE_DIR
+
+    report = compact_local(LOCAL_LAKE_DIR)
+    print(json.dumps(report, indent=1))
+    full = [r for r in report if r["hours"] == 24]
+    if full:
+        before = sum(r["bytes_hourly_files"] for r in full) / len(full)
+        after = sum(r["bytes_day_file"] for r in full) / len(full)
+        print(f"full days: {len(full)}; mean bytes/day {before:,.0f} -> {after:,.0f} "
+              f"({after / before:.2f}x); {after * 365 / 1e9:.1f} GB/year")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -178,7 +206,8 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("verify-hour", cmd_verify_hour, local=False)
     sp.add_argument("--hour", required=True)
     sp = add("push", cmd_push, local=False)
-    sp.add_argument("--batch", type=int, default=48)
+    sp.add_argument("--batch", type=int, default=3, help="days per Hub commit")
+    add("compact", cmd_compact, local=False)
 
     a = p.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO,

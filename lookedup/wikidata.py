@@ -13,6 +13,7 @@ import io
 import logging
 import re
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 import pyarrow as pa
@@ -81,11 +82,18 @@ def build_sitelinks(langs: list[str], out: Path, dump: Path | None = None) -> di
     return counts
 
 
-def join_coverage(hourly_files: list[str], sitelinks: str) -> list[tuple[str, int, int, float]]:
-    """Per language: (lang, views, views matched to a QID, % matched) over the given hourly files."""
-    files = ", ".join("'" + f.replace("'", "''") + "'" for f in hourly_files)
+def join_coverage(day_files: list[str], sitelinks: str, since: datetime | None = None,
+                  until: datetime | None = None) -> list[tuple[str, int, int, float]]:
+    """Per language: (lang, views, views matched to a QID, % matched) over the hours in [since, until]."""
+    files = ", ".join("'" + f.replace("'", "''") + "'" for f in day_files)
+    where = []
+    if since:
+        where.append(f"ts_hour_start >= TIMESTAMP '{since:%Y-%m-%d %H:00:00}'")
+    if until:
+        where.append(f"ts_hour_start <= TIMESTAMP '{until:%Y-%m-%d %H:00:00}'")
+    cond = ("WHERE " + " AND ".join(where)) if where else ""
     rows = db.connect().sql(f"""
-        WITH h AS (SELECT lang, title, views_desktop + views_mobile AS v FROM read_parquet([{files}]))
+        WITH h AS (SELECT lang, title, views_desktop + views_mobile AS v FROM read_parquet([{files}]) {cond})
         SELECT h.lang, sum(v)::BIGINT AS views, sum(v) FILTER (WHERE s.qid IS NOT NULL)::BIGINT AS matched
         FROM h LEFT JOIN read_parquet('{sitelinks}') s USING (lang, title)
         GROUP BY 1 ORDER BY views DESC

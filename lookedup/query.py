@@ -14,7 +14,7 @@ import duckdb
 
 from lookedup import db
 from lookedup.settings import HF_REPO_ID, LOCAL_LAKE_DIR, SITELINKS_PATH
-from lookedup.store import hour_path
+from lookedup.store import day_path
 
 
 def lake_root(local: bool = False) -> str:
@@ -38,7 +38,7 @@ def connect(local: bool = False) -> duckdb.DuckDBPyConnection:
     """DuckDB connection with views ``hourly`` (all hours) and ``sitelinks``."""
     root = lake_root(local)
     con = _base(root)
-    con.execute(f"""CREATE VIEW hourly AS SELECT * FROM read_parquet('{root}/data/hourly/*/*/*/*.parquet',
+    con.execute(f"""CREATE VIEW hourly AS SELECT * FROM read_parquet('{root}/data/hourly/*/*/*.parquet',
                     hive_partitioning = false)""")
     con.execute(f"CREATE VIEW sitelinks AS SELECT * FROM read_parquet('{root}/{SITELINKS_PATH}')")
     return con
@@ -48,12 +48,12 @@ def top(lang: str, hour: datetime, n: int = 20, local: bool = False) -> duckdb.D
     """Top ``n`` articles of one language in one hour, with desktop, mobile and mobile share."""
     root = lake_root(local)
     con = _base(root)
-    path = f"{root}/{hour_path(hour)}"
+    path = f"{root}/{day_path(hour)}"
     return con.sql(f"""
         SELECT title, views_desktop, views_mobile, views_desktop + views_mobile AS views,
                round(100.0 * views_mobile / (views_desktop + views_mobile), 1) AS mobile_pct
         FROM read_parquet('{path}')
-        WHERE lang = '{lang.replace("'", "''")}'
+        WHERE lang = '{lang.replace("'", "''")}' AND ts_hour_start = TIMESTAMP '{hour:%Y-%m-%d %H:00:00}'
         ORDER BY views DESC, title
         LIMIT {int(n)}
     """)
