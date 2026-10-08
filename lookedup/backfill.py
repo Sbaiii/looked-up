@@ -96,8 +96,13 @@ def validate(store: Store, n: int = 3, seed: int | None = None) -> list[dict]:
                 return sorted(zip(*(t[c].to_pylist() for c in
                                     ("ts_hour_start", "lang", "title", "views_desktop", "views_mobile"))))
             a, b = rows(stored), rows(rebuilt)
+            only_a, only_b = set(a) - set(b), set(b) - set(a)
+            views = lambda rs: sum(r[3] + r[4] for r in rs)  # noqa: E731
             res = {"hour": key, "stored_rows": len(a), "rebuilt_rows": len(b), "identical": a == b,
-                   "rows_only_in_stored": len(set(a) - set(b)), "rows_only_in_rebuilt": len(set(b) - set(a))}
+                   "rows_only_in_stored": len(only_a), "rows_only_in_rebuilt": len(only_b),
+                   "matching_rows_pct": round(100 * len(set(a) & set(b)) / max(len(b), 1), 4),
+                   "views_stored": views(a), "views_rebuilt": views(b),
+                   "differing_rows_sample": sorted(only_a | only_b)[:5]}
             log.info("validate %s", res)
             results.append(res)
     return results

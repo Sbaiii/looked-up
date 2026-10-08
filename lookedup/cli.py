@@ -53,8 +53,10 @@ def cmd_validate(a):
     from lookedup.store import open_store
 
     res = validate(open_store(a.local), n=a.n, seed=a.seed)
-    print(json.dumps(res, indent=1))
-    if not all(r["identical"] for r in res):
+    print(json.dumps(res, indent=1, default=str, ensure_ascii=False))
+    # pageview_complete under-counts a few mobile views on missing pages/redirects (ADR 0010):
+    # fail only when more than 0.01 % of rows differ
+    if any(r["matching_rows_pct"] < a.min_match for r in res):
         sys.exit(1)
 
 
@@ -159,6 +161,7 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("validate", cmd_validate)
     sp.add_argument("-n", type=int, default=3)
     sp.add_argument("--seed", type=int)
+    sp.add_argument("--min-match", type=float, default=99.99, help="minimum %% of identical rows")
     sp = add("languages", cmd_languages, local=False)
     sp.add_argument("--top-n", type=int, default=30)
     sp.add_argument("--today", help="pretend today is this date (YYYY-MM-DD)")
