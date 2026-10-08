@@ -1,0 +1,190 @@
+# Phase 2 analytics configuration. PRIMARY CONFIGURATION, pre-registered in docs/prereg_phase2.md
+# (2026-10-08). Changing any value after results are seen is a deviation: log it in an ADR and in the results.
+
+period:
+  start: "2026-07-09"          # first hour used (baselines only during warm-up)
+  eval_start: "2026-07-16"     # first hour scored and evaluated (7-day warm-up)
+  end: "2026-10-07"            # last day, inclusive
+  completeness_min: 0.98       # share of hours that must be present in the manifest
+
+automation:
+  day_views_min: 500           # (a) day views >= this ...
+  mobile_share_max: 0.05       #     ... and mobile share below this
+  flat_cv_max: 0.15            # (b) coefficient of variation of hourly views over the day below this ...
+  flat_hourly_mean_min: 200    #     ... with mean views per hour >= this
+
+baseline:
+  lookback_days: 28
+  min_observations: 7
+  weekend_days: [5, 6]         # ISO weekday - 1 (Mon=0): Saturday, Sunday
+  prior_min_days_seen: 7       # entities feeding the language-level prior
+
+spike:
+  r1_ratio: 5.0                # views >= 5 x same hour yesterday
+  r2_ratio: 3.0                # views >= 3 x median of previous 3 hours
+  r2_hours: 3
+  min_views: 100               # floor for R1 and R2
+  r3_threshold: 8.0            # surprise score
+  mad_scale: 1.4826
+
+event:
+  min_languages: 3
+  window_hours: 6
+  breadth_hours: 24
+  new_event_gap_hours: 24
+
+evaluation:
+  recall_windows_hours: [6, 24]
+  major_min_languages: 3       # sitelinks among our 30 languages
+  precision_window_days: 2
+  manual_review_top_n: 30
+  h3_pool_size: 1000
+  h3_sample_size: 100
+  h3_seed: 20261008
+  h3_min_non_events: 20
+  h4_min_group_size: 10
+  h4_alpha: 0.05
+  death_window_days_before: 7
+  death_window_days_after: 1
+
+ablations:
+  r3_threshold: [6, 8, 12]
+  min_languages: [2, 3, 5]
+  window_hours: [3, 6, 12]
+
+# Entities linked from countless portal bullets; excluded from the ground truth.
+generic_classes:
+  Q6256: country
+  Q3624078: sovereign state
+  Q5107: continent
+  Q9430: ocean
+  Q484652: international organization
+  Q5119: capital city
+
+# P31 classes -> coarse category, checked in this priority order (first match wins).
+categories:
+  disaster:
+    Q7944: earthquake
+    Q8092: tropical cyclone
+    Q8068: flood
+    Q169950: wildfire
+    Q179057: explosion
+    Q744913: aviation accident
+    Q1078765: railway accident
+    Q852190: shipwreck
+    Q2223653: terrorist attack
+    Q21480300: mass shooting
+    Q167903: landslide
+    Q7692360: volcanic eruption
+    Q3839081: disaster
+    Q8065: natural disaster
+  sports:
+    Q12973014: sports team
+    Q476028: association football club
+    Q27020041: sports season
+    Q13406554: sports competition
+    Q16510064: sporting event
+    Q13219666: tennis tournament
+  entertainment:
+    Q11424: film
+    Q5398426: television series
+    Q15416: television program
+    Q482994: album
+    Q134556: single
+    Q7366: song
+    Q7889: video game
+    Q215380: musical group
+    Q4504495: award ceremony
+  politics:
+    Q40231: public election
+    Q1076105: general election
+    Q7278: political party
+    Q273120: protest
+    Q43109: referendum
+    Q45382: coup d'état
+  science_tech:
+    Q40218: spacecraft
+    Q2133344: space mission
+    Q7397: software
+    Q12136: disease
+    Q44512: epidemic
+    Q12184: pandemic
+  place:
+    Q515: city
+    Q1549591: big city
+    Q486972: human settlement
+    Q15284: municipality
+    Q3957: town
+  organization:
+    Q4830453: business
+    Q783794: company
+    Q6881511: enterprise
+    Q163740: nonprofit organization
+    Q3918: university
+
+human_class: Q5
+
+# P106 occupations that put a (living) human into sports or entertainment.
+occupations:
+  sports:
+    Q937857: association football player
+    Q10833314: tennis player
+    Q3665646: basketball player
+    Q378622: racing driver
+    Q11513337: athletics competitor
+    Q2309784: sport cyclist
+    Q11338576: boxer
+    Q19204627: American football player
+    Q12299841: cricketer
+    Q11774891: ice hockey player
+    Q11303721: golfer
+    Q10871364: baseball player
+  entertainment:
+    Q33999: actor
+    Q10800557: film actor
+    Q10798782: television actor
+    Q177220: singer
+    Q639669: musician
+    Q2252262: rapper
+    Q2526255: film director
+    Q245068: comedian
+    Q4610556: model
+    Q17125263: YouTuber
+    Q488205: singer-songwriter
+    Q36834: composer
+
+# P37 official language item -> our language code (for H2).
+official_languages:
+  Q1860: en
+  Q5287: ja
+  Q188: de
+  Q7737: ru
+  Q150: fr
+  Q1321: es
+  Q652: it
+  Q7850: zh
+  Q727694: zh
+  Q5146: pt
+  Q809: pl
+  Q9168: fa
+  Q7411: nl
+  Q13955: ar
+  Q256: tr
+  Q9240: id
+  Q9027: sv
+  Q9176: ko
+  Q9056: cs
+  Q1412: fi
+  Q8798: uk
+  Q9288: he
+  Q9199: vi
+  Q9067: hu
+  Q9129: el
+  Q36510: el
+  Q9217: th
+  Q7913: ro
+  Q9043: "no"
+  Q25167: "no"
+  Q9299: sr
+  Q7918: bg
+  Q1568: hi
