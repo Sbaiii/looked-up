@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG_DIR = ROOT / "config"
 LANGUAGES_FILE = CONFIG_DIR / "languages.yml"
+DATASET_CARD = ROOT / "dataset" / "README.md"
 NAMESPACES_FILE = CONFIG_DIR / "namespaces.json"
 
 # Local working directories (git-ignored). Raw dumps are transient.

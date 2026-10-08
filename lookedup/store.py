@@ -243,6 +243,11 @@ class HFStore:
     def head(self) -> str:
         return self.api.dataset_info(self.repo_id).sha
 
+    def upload_card(self, path: Path) -> None:
+        """Upload the dataset card (the repo README) without touching data or manifest."""
+        self.api.upload_file(path_or_fileobj=str(path), path_in_repo="README.md", repo_id=self.repo_id,
+                             repo_type="dataset", commit_message="docs: update dataset card")
+
     def read_manifest(self, revision: str | None = None) -> Manifest:
         p = self.fetch(MANIFEST_PATH, None, revision or self.head())
         return Manifest.from_json(p.read_text() if p else None)

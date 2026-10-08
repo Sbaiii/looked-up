@@ -11,6 +11,7 @@ Commands:
   verify-hour   check 'filename = end of hour' against the REST API
   push          upload a local lake (data/lake/) to Hugging Face
   compact       migrate a local lake from hourly files to daily files (one-off)
+  card          upload dataset/README.md as the Hugging Face dataset card
 """
 
 from __future__ import annotations
@@ -149,6 +150,15 @@ def cmd_push(a):
         written = write_hours(hf, tables, f"data: upload {len(tables)} hour(s) {min(tables):%Y-%m-%dT%H}.."
                                           f"{max(tables):%Y-%m-%dT%H}Z from a local lake")
         log.info("pushed %d hour(s) (%d/%d days)", len(written), min(i + a.batch, len(days)), len(days))
+    cmd_card(a)
+
+
+def cmd_card(a):
+    from lookedup.settings import DATASET_CARD
+    from lookedup.store import HFStore
+
+    HFStore(create=True).upload_card(DATASET_CARD)
+    log.info("dataset card uploaded from %s", DATASET_CARD)
 
 
 def cmd_compact(a):
@@ -208,6 +218,7 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("push", cmd_push, local=False)
     sp.add_argument("--batch", type=int, default=3, help="days per Hub commit")
     add("compact", cmd_compact, local=False)
+    add("card", cmd_card, local=False)
 
     a = p.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO,
