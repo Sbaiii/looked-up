@@ -14,10 +14,10 @@ storage. CC0 data in, open data out.
 
 ## Status
 
-**Ready to go live, waiting for the `HF_TOKEN` secret.** The pipeline is built and tested, and a local lake (1–7 Oct)
-is migrated to the final daily layout. Once the token is set, GitHub Actions adds each new hour of 30 Wikipedias to
-the public dataset [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up), and a parallel
-backfill fills the previous 90 days. No analytics yet: spike detection, comparisons and the daily briefing come next.
+**Live, backfilling.** Every hour at :45, GitHub Actions adds each newly published hour of 30 Wikipedias to the
+public dataset [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up). A parallel backfill
+from Wikimedia's daily files is filling 9 Jul–30 Sep 2026. No analytics yet: spike detection, comparisons and the
+daily briefing come next.
 
 - Data model, layout and querying: [docs/data_model.md](docs/data_model.md)
 - Decisions: [docs/adr/](docs/adr/)
