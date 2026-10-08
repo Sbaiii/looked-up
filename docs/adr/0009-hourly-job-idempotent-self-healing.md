@@ -23,3 +23,12 @@ Downloads resume across the 256 MiB server cut. A failed upload fails the job.
   72-hour outage heals in about 14 runs).
 - A gap older than 72 h is not healed by the hourly job. Use the backfill (ADR 0010).
 - Concurrent writers (hourly, backfill, wikidata) are serialised by Hub optimistic concurrency, not by locks.
+
+## Amendments (2026-10-08)
+
+- **Missing configuration is not a failure.** If the `HF_TOKEN` secret is absent, the scheduled job emits a GitHub
+  Actions warning annotation and exits 0. A real upload error still fails the job. The manual backfill still fails
+  loudly without a token, because someone started it on purpose.
+- **Pipelines write to the lake only.** Workflows run with `permissions: contents: read`, and no package code may run
+  `git commit`/`git push` (guarded by `tests/test_no_git_in_pipeline.py`).
+- Since ADR 0012, each run merges its hours into the day files through `lookedup.store.write_hours`.
