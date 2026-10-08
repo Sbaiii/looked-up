@@ -1,47 +1,64 @@
 # looked-up
 
-**What is humanity paying attention to, right now?** Looked Up reads Wikipedia's public
-traffic across 300+ language editions — every pageview, published hourly, and every edit, as a
-live stream — to detect attention spikes as they form, often before the news cycle catches up.
-Articles are unified across languages through Wikidata, so "Lisbon", "Lisboa" and "リスボン"
-count as one thing. The goal: a live globe of attention, comparisons between language
-communities, a forecast of tomorrow's attention, and a daily briefing that begins
-*"Today the world looked up…"*. Built with Python, DuckDB, dbt and Parquet on free
-infrastructure only.
+**What the world pays attention to, hour by hour, across languages.** Looked Up reads Wikipedia's public
+pageview dumps, published every hour for more than 300 language editions. It turns them into a small, clean lake
+that shows how much attention each topic gets, in which language communities, how it spreads and how long it
+lasts. Articles are unified across languages through Wikidata, so "Lisbon", "Lisboa" and "リスボン" are one topic.
+
+Pageviews are the **attention measure**. Edits (the live EventStreams feed) are the **fast signal**: editors react
+within minutes, while the hourly dumps arrive ≈ 2 h after each hour. Edits come in a later phase. See the
+[feasibility study](docs/feasibility.md) for the measurements behind these choices.
+
+Built with Python, DuckDB and Parquet on free infrastructure only: GitHub Actions for compute, Hugging Face for
+storage. CC0 data in, open data out.
 
 ## Status
 
-**Phase 0 — feasibility.** Nothing here is the product yet. The `spike/` scripts measure the
-data sources (size, latency, structure, cost) and test whether pageview spikes really line up
-with real-world events. Results and the GO / NO-GO call are in
-[`docs/feasibility.md`](docs/feasibility.md).
+**Ingesting.** Every hour, GitHub Actions adds the latest complete hour of 30 Wikipedias to the public dataset
+[`Sbaiii/looked-up`](https://huggingface.co/datasets/Sbaiii/looked-up). No analytics yet: spike detection,
+comparisons and the daily briefing come next.
 
-## Running the spike
+- Data model, layout and querying: [docs/data_model.md](docs/data_model.md)
+- Decisions: [docs/adr/](docs/adr/)
+- Languages: [config/languages.yml](config/languages.yml) (ranked by human article views; `top_n` sets how many are ingested)
 
-Requires Python 3.12 and ~10 GB of free disk (downloads land in the git-ignored `data/`).
+## Query the lake
 
 ```bash
-python3.12 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-
-.venv/bin/python spike/q1_hourly_dumps.py        # hourly dumps: size, lag, DuckDB, Parquet
-.venv/bin/python spike/q1b_compaction.py         # per-hour vs compacted Parquet
-.venv/bin/python spike/q1d_pageview_complete.py  # daily pageview_complete files
-.venv/bin/python spike/q1c_language_set.py       # language ranking over a full day (after q5)
-.venv/bin/python spike/q2_rest_api.py            # REST API: top, per-article, per-country
-.venv/bin/python spike/q3_edit_stream.py         # 60 s of the live edit stream
-.venv/bin/python spike/q4_wikidata.py [--full]   # Wikidata sitelinks (API + 1.9 GB dump)
-.venv/bin/python spike/q4b_join_coverage.py      # share of pageviews that map to a QID
-.venv/bin/python spike/q5a_current_events.py     # candidate events from Portal:Current events
-.venv/bin/python spike/q5_spike_test.py          # do spikes match real events? (~6 GB download)
-.venv/bin/python spike/q5b_analyse.py            # detectors and per-language delays
-.venv/bin/python spike/q5c_edit_lead.py          # how fast editors reacted
-.venv/bin/python spike/q6_hourly_job.py --fresh  # end-to-end hourly job timing
-.venv/bin/python spike/q6b_storage_tiers.py      # yearly storage per retention tier
-.venv/bin/python spike/q6c_full_day_compaction.py # one real day, 24 hours -> 1 file
+pip install -e .
+python -m lookedup.cli top --lang fr --hour 2026-10-06T14:00     # top 20 articles, desktop vs mobile
 ```
 
-Run `q1_hourly_dumps.py` first; later scripts reuse its downloads and its language list.
-Every request identifies itself with a descriptive User-Agent, as Wikimedia requires.
+Or straight from DuckDB, with no install beyond `duckdb`:
 
-Data: Wikimedia pageviews and Wikidata, CC0.
+```sql
+INSTALL httpfs; LOAD httpfs;
+SELECT lang, title, views_desktop, views_mobile
+FROM 'hf://datasets/Sbaiii/looked-up/data/hourly/year=2026/month=10/day=06/hour=14.parquet'
+ORDER BY views_desktop + views_mobile DESC LIMIT 20;
+```
+
+## Running the pipeline
+
+```bash
+python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/pytest                                              # tests (also run in CI)
+
+huggingface-cli login                                         # or export HF_TOKEN=... (never commit it)
+.venv/bin/python -m lookedup.cli hourly                       # ingest missing hours of the last 72 h
+.venv/bin/python -m lookedup.backfill --from 2026-07-09 --to 2026-10-06   # resumable backfill
+.venv/bin/python -m lookedup.cli validate -n 3                # backfill vs hourly dumps, must be identical
+.venv/bin/python -m lookedup.cli wikidata                     # rebuild Wikidata sitelinks
+.venv/bin/python -m lookedup.cli languages                    # re-rank languages over the last 7 days
+```
+
+Add `--local` to write to `data/lake/` instead of Hugging Face. Workflows:
+[`hourly.yml`](.github/workflows/hourly.yml) (every hour at :45),
+[`wikidata-monthly.yml`](.github/workflows/wikidata-monthly.yml),
+[`backfill.yml`](.github/workflows/backfill.yml) (manual) and
+[`tests.yml`](.github/workflows/tests.yml). They need the `HF_TOKEN` repository secret.
+
+The Phase 0 scripts are still in [`spike/`](spike/) (see `docs/feasibility.md`).
+
+Every request identifies itself with a descriptive User-Agent, as Wikimedia requires. Data: Wikimedia pageviews and
+Wikidata, CC0.
