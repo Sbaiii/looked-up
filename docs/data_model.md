@@ -1,22 +1,22 @@
 # Data model
 
 The lake is a public Hugging Face dataset, **[`Sbaiii/looked-up`](https://huggingface.co/datasets/Sbaiii/looked-up)**,
-refreshed every hour by GitHub Actions. Decisions: ADR [0005](adr/0005-separate-desktop-and-mobile-views.md)–[0011](adr/0011-wikidata-sitelinks.md).
+refreshed every hour by GitHub Actions. Decisions: ADR [0005](adr/0005-separate-desktop-and-mobile-views.md)–[0012](adr/0012-one-parquet-file-per-day.md).
 
 ## Layout
 
 ```
 data/
-  hourly/year=YYYY/month=MM/day=DD/hour=HH.parquet   one file per UTC hour (zstd)
+  hourly/year=YYYY/month=MM/day=DD.parquet          all ingested hours of one UTC day (zstd 9)
   wikidata/sitelinks.parquet                         (lang, title) -> Wikidata QID
   manifest.json                                      every hour present, with provenance
 ```
 
-`HH` is the **start** of the hour. The source dumps name files after the *end* of the hour
+`ts_hour_start` is the **start** of the hour. The source dumps name files after the *end* of the hour
 (`pageviews-20261007-120000.gz` = 11:00–12:00 UTC), so `ts_hour_start = file timestamp − 1 h`.
 This was verified against the REST API (ADR 0008).
 
-## `data/hourly/…/hour=HH.parquet`
+## `data/hourly/…/day=DD.parquet`
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -26,7 +26,11 @@ This was verified against the REST API (ADR 0008).
 | `views_desktop` | `INTEGER` | Desktop views (`xx` in the hourly dumps) |
 | `views_mobile` | `INTEGER` | Mobile web + app views (`xx.m`) |
 
-- Rows are sorted by `(lang, title)`. Each `(ts_hour_start, lang, title)` appears once.
+- One file per UTC day (ADR 0012). Rows are sorted by `(lang, title, ts_hour_start)`, in row groups of ≈ 1 M rows.
+  Each `(ts_hour_start, lang, title)` appears once. A day file can be partial (today, or a gap); the manifest says
+  which hours exist.
+- Adding an hour rewrites that day's file (read, replace the hour's rows, sort, write). All writers share
+  `lookedup.store.write_hours`, which retries the whole merge if another writer committed meanwhile.
 - Only `user` traffic is included (Wikimedia already removes spiders and the `automated` class). Some bots still get through.
   `views_mobile / (views_desktop + views_mobile)` is the first signal to check (humans ≈ 56 % mobile, bots ≈ 0 %).
 - Desktop and mobile are **never pre-summed** (ADR 0005).
@@ -46,10 +50,9 @@ A missing row means **fewer than 5 views** in that hour, not zero. Raw dumps are
 
 ### Size
 
-Measured on 7 Oct 2026 (four hours, 07:00–11:00 UTC): **440 k–530 k rows and 4.3–5.2 MB per hour**, so about
-110 MB a day and **≈ 40 GB a year**. The one-file-per-hour layout costs about 2.5× the daily compacted files
-measured in Phase 0, because Parquet cannot compress repeated titles across hours. If storage becomes a concern,
-compact closed months into one file per day (same schema). That is a Phase 2 option, not needed for Hugging Face today.
+Measured on 2026-10-08 over 6 full days (1–6 Oct): **≈ 12.5 M rows and 44.4 MB per day**, so **≈ 16 GB a year**
+for 30 languages. The Phase 1 layout of one file per hour needed 120 MB/day (≈ 44 GB/year). Daily files are 0.37×
+that because titles repeat across the hours of a day (ADR 0012).
 
 ## `data/wikidata/sitelinks.parquet`
 
@@ -67,13 +70,17 @@ refreshed monthly. Redirects and articles newer than the dump don't match. Cover
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "updated_at": "2026-10-08T14:46:02Z",
   "hour_count": 2160,
+  "total_bytes": 4012345678,
+  "files": {
+    "data/hourly/year=2026/month=10/day=07.parquet": {"rows": 12512345, "bytes": 44438296, "updated_at": "2026-10-08T02:46:01Z"}
+  },
   "hours": {
     "2026-10-07T11:00:00Z": {
-      "path": "data/hourly/year=2026/month=10/day=07/hour=11.parquet",
-      "rows": 412345, "bytes": 1834567,
+      "path": "data/hourly/year=2026/month=10/day=07.parquet",
+      "rows": 528990,
       "source": "hourly_dump",
       "ingested_at": "2026-10-07T14:46:01Z"
     }
@@ -81,23 +88,31 @@ refreshed monthly. Redirects and articles newer than the dump don't match. Cover
 }
 ```
 
-- `source` is `hourly_dump` (live path) or `pageview_complete` (backfill). Both paths share one transformation.
-  For the same hour they agree on ≈ 99.999 % of rows. `pageview_complete` misses a few mobile views on missing
-  pages and redirects (≈ 0.0003 % of views, ADR 0010). Check with `python -m lookedup.cli validate`.
-- An hour is present **if and only if** it is in the manifest. Writers commit the data files and the manifest in a
-  single Hub commit.
+- The manifest tracks **hours**. An hour is present **if and only if** it is in `hours`. `files` records the size of
+  each day file. Writers commit the day files and the manifest in a single Hub commit.
+- `source` is `hourly_dump` (live path) or `pageview_complete` (backfill). Both share one transformation.
+
+## Known caveats
+
+- **Backfill vs live hours.** For the same hour, `pageview_complete` (backfill) and the hourly dumps (live) agree on
+  ≈ **99.999 % of rows**. Total views differ by ≈ **0.0003 %**. The differing rows are low-volume mobile views on
+  pages that do not exist or are redirects, which `pageview_complete` appears to under-count (ADR 0010). Check with
+  `python -m lookedup.cli validate`.
+- **Absent means < 5.** A missing (hour, lang, title) row means fewer than 5 views, not zero (ADR 0007).
+- **Bots inside `user` traffic.** Use the mobile share to spot them (ADR 0005).
+- **Redirects are not resolved.** Views count the requested title. Redirect titles do not join to Wikidata.
 
 ## Query it from DuckDB (5 lines)
 
 ```python
 import duckdb
 con = duckdb.connect(); con.execute("INSTALL httpfs; LOAD httpfs;")
-lake = "hf://datasets/Sbaiii/looked-up/data/hourly/*/*/*/*.parquet"
+lake = "hf://datasets/Sbaiii/looked-up/data/hourly/*/*/*.parquet"
 con.sql(f"""SELECT title, sum(views_desktop + views_mobile) AS views FROM read_parquet('{lake}')
             WHERE lang = 'fr' AND ts_hour_start >= (now() AT TIME ZONE 'UTC') - INTERVAL 24 HOUR GROUP BY 1 ORDER BY 2 DESC LIMIT 20""").show()
 ```
 
-Reading one file is faster than globbing the whole lake:
+Reading one day file is faster than globbing the whole lake:
 
 ```bash
 python -m lookedup.cli top --lang fr --hour 2026-10-06T14:00     # top 20 with desktop, mobile, mobile share
