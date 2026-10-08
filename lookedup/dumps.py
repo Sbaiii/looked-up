@@ -103,7 +103,30 @@ def pvc_url(day: date) -> str:
     return f"{PVC_BASE}/{day:%Y}/{day:%Y-%m}/pageviews-{day:%Y%m%d}-user.bz2"
 
 
-def download(url: str, dest: Path, retries: int = 8) -> Path:
+class _Stalled(Exception):
+    """Raised when a transfer trickles too slowly; the download resumes on a new connection."""
+
+
+class _StallWatch:
+    """Abort a connection that stays below ``min_bps`` for ``window`` seconds.
+
+    A read timeout alone does not catch connections that trickle a few bytes at a time.
+    """
+
+    def __init__(self, min_bps: int = 20_000, window: float = 60.0) -> None:
+        self.min_bps, self.window = min_bps, window
+        self.t0, self.bytes = time.monotonic(), 0
+
+    def update(self, n: int) -> None:
+        self.bytes += n
+        elapsed = time.monotonic() - self.t0
+        if elapsed >= self.window:
+            if self.bytes / elapsed < self.min_bps:
+                raise _Stalled(f"{self.bytes / elapsed:.0f} B/s over {elapsed:.0f}s")
+            self.t0, self.bytes = time.monotonic(), 0
+
+
+def download(url: str, dest: Path, retries: int = 20) -> Path:
     """Download ``url`` to ``dest``, resuming a ``.part`` file with HTTP Range.
 
     dumps.wikimedia.org cuts long transfers (observed at exactly 256 MiB), so a
@@ -118,7 +141,7 @@ def download(url: str, dest: Path, retries: int = 8) -> Path:
         have = tmp.stat().st_size if tmp.exists() else 0
         headers = {"Range": f"bytes={have}-"} if have else {}
         try:
-            with _session.get(url, stream=True, timeout=120, headers=headers) as r:
+            with _session.get(url, stream=True, timeout=(30, 30), headers=headers) as r:
                 if r.status_code == 416:  # nothing left to fetch
                     break
                 r.raise_for_status()
@@ -126,16 +149,18 @@ def download(url: str, dest: Path, retries: int = 8) -> Path:
                     have = 0
                 total = have + int(r.headers.get("Content-Length", 0))
                 with open(tmp, "ab" if have else "wb") as f:
-                    for chunk in r.iter_content(1 << 20):
+                    watch = _StallWatch()
+                    for chunk in r.iter_content(1 << 16):
                         f.write(chunk)
+                        watch.update(len(chunk))
             if tmp.stat().st_size >= total:
                 break
             log.info("download cut at %d bytes, resuming %s", tmp.stat().st_size, url)
-        except requests.RequestException as e:
+        except (requests.RequestException, _Stalled) as e:
             if attempt == retries - 1:
                 raise
             log.warning("download error (%s), retry %d: %s", e, attempt + 1, url)
-            time.sleep(min(30, 5 * (attempt + 1)))
+            time.sleep(min(30, 2 * (attempt + 1)))
     else:
         raise RuntimeError(f"incomplete download after {retries} attempts: {url}")
     tmp.rename(dest)
