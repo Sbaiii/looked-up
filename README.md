@@ -14,9 +14,10 @@ storage. CC0 data in, open data out.
 
 ## Status
 
-**Ingesting.** Every hour, GitHub Actions adds the latest complete hour of 30 Wikipedias to the public dataset
-[`Sbaiii/looked-up`](https://huggingface.co/datasets/Sbaiii/looked-up). No analytics yet: spike detection,
-comparisons and the daily briefing come next.
+**Ready to go live, waiting for the `HF_TOKEN` secret.** The pipeline is built and tested, and a local lake (1–7 Oct)
+is migrated to the final daily layout. Once the token is set, GitHub Actions adds each new hour of 30 Wikipedias to
+the public dataset [`Sbaiii/looked-up`](https://huggingface.co/datasets/Sbaiii/looked-up), and a parallel
+backfill fills the previous 90 days. No analytics yet: spike detection, comparisons and the daily briefing come next.
 
 - Data model, layout and querying: [docs/data_model.md](docs/data_model.md)
 - Decisions: [docs/adr/](docs/adr/)
@@ -34,7 +35,8 @@ Or straight from DuckDB, with no install beyond `duckdb`:
 ```sql
 INSTALL httpfs; LOAD httpfs;
 SELECT lang, title, views_desktop, views_mobile
-FROM 'hf://datasets/Sbaiii/looked-up/data/hourly/year=2026/month=10/day=06/hour=14.parquet'
+FROM 'hf://datasets/Sbaiii/looked-up/data/hourly/year=2026/month=10/day=06.parquet'
+WHERE ts_hour_start = TIMESTAMP '2026-10-06 14:00'
 ORDER BY views_desktop + views_mobile DESC LIMIT 20;
 ```
 
@@ -50,13 +52,15 @@ huggingface-cli login                                         # or export HF_TOK
 .venv/bin/python -m lookedup.cli validate -n 3                # backfill vs hourly dumps, must be identical
 .venv/bin/python -m lookedup.cli wikidata                     # rebuild Wikidata sitelinks
 .venv/bin/python -m lookedup.cli languages                    # re-rank languages over the last 7 days
+.venv/bin/python -m lookedup.cli push                         # upload a local lake (data/lake/) + dataset card
 ```
 
 Add `--local` to write to `data/lake/` instead of Hugging Face. Workflows:
 [`hourly.yml`](.github/workflows/hourly.yml) (every hour at :45),
 [`wikidata-monthly.yml`](.github/workflows/wikidata-monthly.yml),
-[`backfill.yml`](.github/workflows/backfill.yml) (manual) and
-[`tests.yml`](.github/workflows/tests.yml). They need the `HF_TOKEN` repository secret.
+[`backfill.yml`](.github/workflows/backfill.yml) (manual, parallel date chunks) and
+[`tests.yml`](.github/workflows/tests.yml). They need the `HF_TOKEN` repository secret; without it the scheduled jobs skip with a warning. Pipelines only
+write to the lake on Hugging Face and never commit to this repository (enforced by `tests/test_no_git_in_pipeline.py`).
 
 The Phase 0 scripts are still in [`spike/`](spike/) (see `docs/feasibility.md`).
 
