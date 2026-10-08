@@ -1,0 +1,30 @@
+name: wikidata sitelinks
+
+on:
+  schedule:
+    # wb_items_per_site comes from the monthly dump run (started on the 1st, written ~3 days later)
+    - cron: "30 6 8 * *"
+  workflow_dispatch:
+
+concurrency:
+  group: lake-writer-wikidata
+  cancel-in-progress: false
+
+jobs:
+  sitelinks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e .
+      - name: Check HF token
+        run: test -n "$HF_TOKEN" || { echo "::error::HF_TOKEN secret is not set"; exit 1; }
+      - name: Build and upload sitelinks for the active languages
+        run: python -m lookedup.cli wikidata
