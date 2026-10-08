@@ -17,3 +17,6 @@ data/
 # Build
 *.egg-info/
 .pytest_cache/
+
+# DuckDB spill files
+.tmp/
