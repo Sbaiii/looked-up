@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import logging
 import re
+import socket
+import threading
 import time
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -104,26 +106,50 @@ def pvc_url(day: date) -> str:
 
 
 class _Stalled(Exception):
-    """Raised when a transfer trickles too slowly; the download resumes on a new connection."""
+    """Raised when a transfer stalls or trickles; the download resumes on a new connection."""
 
 
-class _StallWatch:
-    """Abort a connection that stays below ``min_bps`` for ``window`` seconds.
+class _Watchdog(threading.Thread):
+    """Shut down a connection whose throughput stays below ``min_bps`` for ``window`` seconds.
 
-    A read timeout alone does not catch connections that trickle a few bytes at a time.
+    A read timeout alone misses connections that trickle a few bytes at a time, and a
+    check inside the read loop never runs while the read is blocked. So a thread watches
+    the byte counter and closes the socket, which unblocks the read.
     """
 
-    def __init__(self, min_bps: int = 20_000, window: float = 60.0) -> None:
-        self.min_bps, self.window = min_bps, window
-        self.t0, self.bytes = time.monotonic(), 0
+    def __init__(self, response, min_bps: int = 20_000, window: float = 60.0, interval: float = 5.0) -> None:
+        super().__init__(daemon=True)
+        self.response, self.min_bps, self.window, self.interval = response, min_bps, window, interval
+        self.bytes = 0
+        self.stalled = False
+        self._done = threading.Event()
 
-    def update(self, n: int) -> None:
+    def add(self, n: int) -> None:
         self.bytes += n
-        elapsed = time.monotonic() - self.t0
-        if elapsed >= self.window:
-            if self.bytes / elapsed < self.min_bps:
-                raise _Stalled(f"{self.bytes / elapsed:.0f} B/s over {elapsed:.0f}s")
-            self.t0, self.bytes = time.monotonic(), 0
+
+    def run(self) -> None:
+        mark_b, mark_t = 0, time.monotonic()
+        while not self._done.wait(self.interval):
+            now = time.monotonic()
+            if now - mark_t >= self.window:
+                if (self.bytes - mark_b) / (now - mark_t) < self.min_bps:
+                    self.stalled = True
+                    self._kill()
+                    return
+                mark_b, mark_t = self.bytes, now
+
+    def _kill(self) -> None:
+        try:
+            self.response.raw.connection.sock.shutdown(socket.SHUT_RDWR)
+        except Exception:  # best effort: the connection may already be gone
+            pass
+        try:
+            self.response.close()
+        except Exception:
+            pass
+
+    def stop(self) -> None:
+        self._done.set()
 
 
 def download(url: str, dest: Path, retries: int = 20) -> Path:
@@ -148,11 +174,21 @@ def download(url: str, dest: Path, retries: int = 20) -> Path:
                 if have and r.status_code != 206:  # server ignored Range: start over
                     have = 0
                 total = have + int(r.headers.get("Content-Length", 0))
-                with open(tmp, "ab" if have else "wb") as f:
-                    watch = _StallWatch()
-                    for chunk in r.iter_content(1 << 16):
-                        f.write(chunk)
-                        watch.update(len(chunk))
+                watchdog = _Watchdog(r)
+                watchdog.start()
+                try:
+                    with open(tmp, "ab" if have else "wb") as f:
+                        for chunk in r.iter_content(1 << 16):
+                            f.write(chunk)
+                            watchdog.add(len(chunk))
+                except Exception as e:
+                    if watchdog.stalled:
+                        raise _Stalled(f"below {watchdog.min_bps} B/s for {watchdog.window:.0f}s") from e
+                    raise
+                finally:
+                    watchdog.stop()
+                if watchdog.stalled:
+                    raise _Stalled(f"below {watchdog.min_bps} B/s for {watchdog.window:.0f}s")
             if tmp.stat().st_size >= total:
                 break
             log.info("download cut at %d bytes, resuming %s", tmp.stat().st_size, url)

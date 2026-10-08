@@ -1,16 +1,45 @@
 from __future__ import annotations
 
-import pytest
+import time
 
 from lookedup import dumps
 
 
-def test_stall_watch_aborts_trickling_connections(monkeypatch):
-    clock = [0.0]
-    monkeypatch.setattr(dumps.time, "monotonic", lambda: clock[0])
-    w = dumps._StallWatch(min_bps=1000, window=60)
-    clock[0] = 61
-    w.update(120_000)            # ~2 kB/s: healthy, window resets
-    clock[0] = 122
-    with pytest.raises(dumps._Stalled):
-        w.update(100)            # ~2 B/s over the next window: abort and resume
+class _Sock:
+    def __init__(self):
+        self.shut = False
+
+    def shutdown(self, how):
+        self.shut = True
+
+
+class _Resp:
+    def __init__(self):
+        self.raw = type("Raw", (), {})()
+        self.raw.connection = type("Conn", (), {})()
+        self.raw.connection.sock = _Sock()
+        self.closed = False
+
+    def close(self):
+        self.closed = True
+
+
+def test_watchdog_kills_a_stalled_connection():
+    r = _Resp()
+    w = dumps._Watchdog(r, min_bps=1000, window=0.2, interval=0.05)
+    w.start()
+    w.join(timeout=2)
+    assert w.stalled and r.raw.connection.sock.shut and r.closed
+
+
+def test_watchdog_leaves_a_healthy_connection_alone():
+    r = _Resp()
+    w = dumps._Watchdog(r, min_bps=1000, window=0.2, interval=0.05)
+    w.start()
+    t_end = time.monotonic() + 0.5
+    while time.monotonic() < t_end:
+        w.add(10_000)
+        time.sleep(0.02)
+    w.stop()
+    w.join(timeout=2)
+    assert not w.stalled and not r.closed
