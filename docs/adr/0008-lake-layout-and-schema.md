@@ -33,3 +33,6 @@ Dump filenames carry the **end** of the hour: `pageviews-20261007-120000.gz` cov
 - One file per hour means about 8,760 Hub commits a year from the hourly job. HF warns that UX degrades after
   "a few thousand commits", so squash history periodically (`super_squash_history`) and keep the manifest as the
   source of truth.
+- Measured size: ≈ 4.6 MB and ≈ 460 k rows per hour for 30 languages, so ≈ 40 GB a year. That is about 2.5× the
+  daily-compacted estimate from Phase 0, because hourly files lose cross-hour compression. Compacting closed months
+  into daily files is the fallback if Hugging Face storage pushes back.
