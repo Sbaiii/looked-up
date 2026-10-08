@@ -10,6 +10,9 @@ concurrency:
   group: lake-writer-wikidata
   cancel-in-progress: false
 
+permissions:
+  contents: read  # pipelines write to the lake on Hugging Face, never to this repo
+
 jobs:
   sitelinks:
     runs-on: ubuntu-latest
@@ -25,6 +28,14 @@ jobs:
           cache-dependency-path: pyproject.toml
       - run: pip install -e .
       - name: Check HF token
-        run: test -n "$HF_TOKEN" || { echo "::error::HF_TOKEN secret is not set"; exit 1; }
+        id: token
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::warning title=HF_TOKEN missing::Repository secret HF_TOKEN is not set; skipping. Add it with: gh secret set HF_TOKEN -R ${{ github.repository }}"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Build and upload sitelinks for the active languages
+        if: steps.token.outputs.present == 'true'
         run: python -m lookedup.cli wikidata

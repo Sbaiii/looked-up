@@ -16,6 +16,9 @@ concurrency:
   group: lake-writer-backfill
   cancel-in-progress: false
 
+permissions:
+  contents: read  # pipelines write to the lake on Hugging Face, never to this repo
+
 jobs:
   backfill:
     runs-on: ubuntu-latest

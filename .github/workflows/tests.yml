@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read  # pipelines write to the lake on Hugging Face, never to this repo
+
 jobs:
   pytest:
     runs-on: ubuntu-latest
