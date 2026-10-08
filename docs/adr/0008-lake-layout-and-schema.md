@@ -1,6 +1,6 @@
 # 0008 — Lake on Hugging Face: layout, schema, manifest, hour alignment
 
-- Status: accepted (project owner decision D5). Implements ADR 0002.
+- Status: accepted (project owner decision D5); the one-file-per-hour layout is superseded by ADR 0012 (one file per day).
 - Date: 2026-10-08
 - Details: [data_model.md](../data_model.md)
 
