@@ -12,6 +12,7 @@ Commands:
   push          upload a local lake (data/lake/) to Hugging Face
   compact       migrate a local lake from hourly files to daily files (one-off)
   card          upload dataset/README.md as the Hugging Face dataset card
+  sync          download day files, manifest and sitelinks from Hugging Face into data/lake/
 """
 
 from __future__ import annotations
@@ -166,6 +167,14 @@ def cmd_card(a):
     log.info("dataset card uploaded from %s", DATASET_CARD)
 
 
+def cmd_sync(a):
+    from lookedup.store import HFStore, LocalStore, sync_to_local
+
+    res = sync_to_local(HFStore(), LocalStore(), datetime.fromisoformat(a.start),
+                        include_sitelinks=not a.no_sitelinks)
+    print(json.dumps(res, indent=1))
+
+
 def cmd_compact(a):
     from lookedup.compact import compact_local
     from lookedup.settings import LOCAL_LAKE_DIR
@@ -224,6 +233,9 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--batch", type=int, default=3, help="days per Hub commit")
     add("compact", cmd_compact, local=False)
     add("card", cmd_card, local=False)
+    sp = add("sync", cmd_sync, local=False)
+    sp.add_argument("--from", dest="start", required=True, help="first day to mirror (YYYY-MM-DD)")
+    sp.add_argument("--no-sitelinks", action="store_true")
 
     a = p.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO,

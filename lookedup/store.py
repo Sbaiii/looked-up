@@ -33,7 +33,7 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from lookedup.dumps import utcnow
-from lookedup.settings import HF_REPO_ID, LOCAL_LAKE_DIR, MANIFEST_PATH
+from lookedup.settings import HF_REPO_ID, LOCAL_LAKE_DIR, MANIFEST_PATH, SITELINKS_PATH
 
 log = logging.getLogger(__name__)
 
@@ -284,6 +284,42 @@ class HFStore:
                 raise StoreConflict(str(e)) from e
             raise
         log.info("hf commit %s: %s (%d files)", info.oid[:8], message, len(files))
+
+
+def sync_to_local(hf: HFStore, local: LocalStore, since: datetime, include_sitelinks: bool = True) -> dict:
+    """Mirror day files (from ``since``), the manifest and sitelinks from the Hub into the local lake.
+
+    A file is downloaded only if it is missing locally or its size differs from the manifest.
+    Returns counts of downloaded and skipped files.
+    """
+    from huggingface_hub import hf_hub_download
+
+    rev = hf.head()
+    manifest = hf.read_manifest(rev)
+    wanted = sorted(p for p in manifest.files if _day_of(p) >= since.date())
+    paths = wanted + ([SITELINKS_PATH] if include_sitelinks else [])
+    done = skipped = 0
+    for path in paths:
+        dst = local.root / path
+        expected = manifest.files.get(path, {}).get("bytes")
+        if dst.exists() and (expected is None or dst.stat().st_size == expected):
+            skipped += 1
+            continue
+        hf_hub_download(hf.repo_id, path, repo_type="dataset", revision=rev, token=hf.token,
+                        local_dir=local.root, force_download=True)
+        done += 1
+        log.info("synced %s", path)
+    (local.root / MANIFEST_PATH).parent.mkdir(parents=True, exist_ok=True)
+    (local.root / MANIFEST_PATH).write_text(manifest.to_json())
+    return {"downloaded": done, "up_to_date": skipped, "revision": rev, "hours": len(manifest.hours)}
+
+
+def _day_of(path: str):
+    """``data/hourly/year=2026/month=10/day=07.parquet`` -> date(2026, 10, 7)."""
+    from datetime import date
+
+    parts = dict(p.split("=") for p in path.removesuffix(".parquet").split("/") if "=" in p)
+    return date(int(parts["year"]), int(parts["month"]), int(parts["day"]))
 
 
 def open_store(local: bool = False) -> Store:

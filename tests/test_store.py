@@ -119,3 +119,11 @@ def test_write_hours_redoes_the_merge_after_a_conflict(tmp_path):
     day = pq.read_table(tmp_path / "lake" / day_path(h1))
     assert sorted(day["title"].to_pylist()) == ["A", "B"]
     assert store.read_manifest().present() == {h1, h2}
+
+
+def test_day_of_path():
+    from datetime import date
+
+    from lookedup.store import _day_of
+
+    assert _day_of("data/hourly/year=2026/month=10/day=07.parquet") == date(2026, 10, 7)
