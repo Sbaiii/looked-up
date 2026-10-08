@@ -92,10 +92,9 @@ def cmd_coverage(a):
     store = open_store(a.local)
     present = sorted(store.read_manifest().present())[-a.hours:]
     with tempfile.TemporaryDirectory() as tmp:
-        for ts in present:
-            store.fetch(hour_path(ts), Path(tmp))
+        paths = [str(store.fetch(hour_path(ts), Path(tmp))) for ts in present]
         sl = store.fetch(SITELINKS_PATH, Path(tmp)) or f"{lake_root(a.local)}/{SITELINKS_PATH}"
-        rows = join_coverage(f"{tmp}/data/hourly/*/*/*/*.parquet", str(sl))
+        rows = join_coverage(paths, str(sl))
     lines = ["| Lang | Views | Matched to a QID | Coverage |", "|---|---|---|---|"]
     lines += [f"| {l} | {v:,} | {m:,} | {p} % |" for l, v, m, p in rows]
     tot_v, tot_m = sum(r[1] for r in rows), sum(r[2] for r in rows)

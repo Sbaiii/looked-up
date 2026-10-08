@@ -81,10 +81,11 @@ def build_sitelinks(langs: list[str], out: Path, dump: Path | None = None) -> di
     return counts
 
 
-def join_coverage(hourly_glob: str, sitelinks: str) -> list[tuple[str, int, int, float]]:
-    """Per language: (lang, views, views matched to a QID, % matched) over the given hours."""
+def join_coverage(hourly_files: list[str], sitelinks: str) -> list[tuple[str, int, int, float]]:
+    """Per language: (lang, views, views matched to a QID, % matched) over the given hourly files."""
+    files = ", ".join("'" + f.replace("'", "''") + "'" for f in hourly_files)
     rows = db.connect().sql(f"""
-        WITH h AS (SELECT lang, title, views_desktop + views_mobile AS v FROM read_parquet('{hourly_glob}'))
+        WITH h AS (SELECT lang, title, views_desktop + views_mobile AS v FROM read_parquet([{files}]))
         SELECT h.lang, sum(v)::BIGINT AS views, sum(v) FILTER (WHERE s.qid IS NOT NULL)::BIGINT AS matched
         FROM h LEFT JOIN read_parquet('{sitelinks}') s USING (lang, title)
         GROUP BY 1 ORDER BY views DESC
