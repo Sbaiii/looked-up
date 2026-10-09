@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: lake
+    description: The Looked Up lake (local mirror via `python -m lookedup.cli sync`, or hf:// paths).
+    tables:
+      - name: hourly
+        description: One Parquet file per UTC day; one row per (ts_hour_start, lang, title) with >= 5 views.
+        meta:
+          external_location: "{{ var('lake_root') }}/data/hourly/*/*/*.parquet"
+      - name: sitelinks
+        description: (lang, title) -> numeric Wikidata QID for the 30 active languages.
+        meta:
+          external_location: "{{ var('lake_root') }}/data/wikidata/sitelinks.parquet"
