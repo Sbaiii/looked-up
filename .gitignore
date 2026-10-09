@@ -23,3 +23,8 @@ data/*
 .tmp/
 .venv
 .venv.nosync/
+
+# Node (vendored files are copied into app/vendor/ by `npm run vendor`)
+node_modules/
+test-results/
+playwright-report/
