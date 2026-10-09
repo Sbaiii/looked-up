@@ -12,6 +12,7 @@ Commands:
   push          upload a local lake (data/lake/) to Hugging Face
   compact       migrate a local lake from hourly files to daily files (one-off)
   card          upload dataset/README.md as the Hugging Face dataset card
+  relocate-data move the old in-repo data/ directory to LOOKEDUP_DATA_DIR (default ~/looked-up-data)
   sync          download day files, manifest and sitelinks from Hugging Face into data/lake/
   baselines     build data/baselines/day=D.parquet for production scoring (daily)
   score         score ingested hours into spikes, events and data/latest.json (hourly)
@@ -172,6 +173,12 @@ def cmd_card(a):
     log.info("dataset card uploaded from %s", DATASET_CARD)
 
 
+def cmd_relocate_data(a):
+    from lookedup.relocate import relocate
+
+    print(json.dumps(relocate(skip=tuple(a.skip)), indent=1))
+
+
 def cmd_sync(a):
     from lookedup.store import HFStore, LocalStore, sync_to_local
 
@@ -296,6 +303,8 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("warehouse", cmd_warehouse, local=False)
     sp.add_argument("--hf", action="store_true", help="read the lake from hf:// instead of data/lake/")
     sp.add_argument("dbt_args", nargs=argparse.REMAINDER, help="dbt command and flags (default: build)")
+    sp = add("relocate-data", cmd_relocate_data, local=False)
+    sp.add_argument("--skip", action="append", default=[], help="relative path prefix to leave behind")
     sp = add("sync", cmd_sync, local=False)
     sp.add_argument("--from", dest="start", required=True, help="first day to mirror (YYYY-MM-DD)")
     sp.add_argument("--no-sitelinks", action="store_true")
