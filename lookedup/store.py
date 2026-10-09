@@ -245,6 +245,28 @@ class HFStore:
     def head(self) -> str:
         return self.api.dataset_info(self.repo_id).sha
 
+    def used_storage(self) -> int:
+        """Bytes the repo occupies on the Hub, including the history of large files."""
+        return self.api.dataset_info(self.repo_id, expand=["usedStorage"]).used_storage
+
+    def delete_prefix(self, prefix: str, message: str) -> list[str]:
+        """Delete every file under ``prefix`` in one commit; returns the deleted paths."""
+        from huggingface_hub import CommitOperationDelete
+
+        paths = [p for p in self.api.list_repo_files(self.repo_id, repo_type="dataset") if p.startswith(prefix)]
+        if paths:
+            self.api.create_commit(self.repo_id, repo_type="dataset", commit_message=message,
+                                   operations=[CommitOperationDelete(path_in_repo=p) for p in paths])
+        return paths
+
+    def squash_history(self, message: str) -> None:
+        """Rewrite the repo history into a single commit (frees storage held by old file versions).
+
+        Irreversible: earlier revisions become unreachable. Writers using an older parent commit get
+        a conflict and redo their merge (write_hours), so nothing in flight is lost.
+        """
+        self.api.super_squash_history(self.repo_id, repo_type="dataset", commit_message=message)
+
     def upload_card(self, path: Path) -> None:
         """Upload the dataset card (the repo README) without touching data or manifest."""
         self.api.upload_file(path_or_fileobj=str(path), path_in_repo="README.md", repo_id=self.repo_id,

@@ -14,7 +14,8 @@ Commands:
   card          upload dataset/README.md as the Hugging Face dataset card
   relocate-data move the old in-repo data/ directory to LOOKEDUP_DATA_DIR (default ~/looked-up-data)
   sync          download day files, manifest and sitelinks from Hugging Face into data/lake/
-  baselines     build data/baselines/day=D.parquet for production scoring (daily)
+  baselines     build the day's production baselines into LOOKEDUP_BASELINES_DIR (daily, never uploaded)
+  hub           Hub maintenance: --drop-prefix PATH, --squash (rewrites dataset history), storage report
   score         score ingested hours into spikes, events and data/latest.json (hourly)
   ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
   evaluate      run the pre-registered Phase 2 evaluation (writes docs/analysis/)
@@ -195,7 +196,22 @@ def cmd_baselines(a):
     from lookedup.store import open_store
 
     day = date.fromisoformat(a.day) if a.day else utcnow().date()
-    print(json.dumps(build_baselines(open_store(a.local), day), indent=1))
+    print(json.dumps(build_baselines(open_store(a.local), day), indent=1))  # local only (ADR 0018)
+
+
+def cmd_hub(a):
+    from lookedup.store import HFStore
+
+    hf = HFStore(create=True)
+    before = hf.used_storage()
+    res = {"used_storage_before": before}
+    if a.drop_prefix:
+        res["deleted"] = hf.delete_prefix(a.drop_prefix, f"data: remove {a.drop_prefix} (moved off the Hub, ADR 0018)")
+    if a.squash:
+        hf.squash_history("data: squash history (monthly maintenance, ADR 0018)")
+        res["squashed"] = True
+    res["used_storage_after"] = hf.used_storage()
+    print(json.dumps(res, indent=1))
 
 
 def cmd_score(a):
@@ -295,6 +311,9 @@ def main(argv: list[str] | None = None) -> None:
     add("card", cmd_card, local=False)
     sp = add("baselines", cmd_baselines)
     sp.add_argument("--day", help="UTC day to build baselines for (default: today)")
+    sp = add("hub", cmd_hub, local=False)
+    sp.add_argument("--drop-prefix", help="delete every Hub file under this prefix")
+    sp.add_argument("--squash", action="store_true", help="super-squash the dataset history (irreversible)")
     sp = add("score", cmd_score)
     sp.add_argument("--hour", help="score exactly this hour start (UTC), e.g. 2026-10-08T14:00")
     sp.add_argument("--max-hours", type=int, default=MAX_HOURS_PER_RUN)
