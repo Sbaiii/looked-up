@@ -115,6 +115,16 @@ main pages and titles with > 1,000 views and < 5 % mobile.
 | 29 | `bg` | Bulgarian | български | 0.5 M | 69 % |
 | 30 | `hi` | Hindi | हिन्दी | 0.5 M | 86 % |
 
+## Attention events (derived)
+
+Every hour, new hours are also scored for **attention events**: one entity spiking in at least 3 languages within
+6 hours, measured against its own 28-day baseline. The spike files, event files and `data/latest.json` (last 24 h,
+top 50, labels in the 30 languages) are described in the
+[data model](https://github.com/Sbaiii/looked-up/blob/main/docs/data_model.md#scoring-outputs-phase-2-adr-0014).
+The definitions were pre-registered and evaluated honestly; the
+[Phase 2 results](https://github.com/Sbaiii/looked-up/blob/main/docs/analysis/phase2_results.md) report what the
+detector does and doesn't capture.
+
 ## Update frequency and provenance
 
 - **Hourly.** A GitHub Actions job runs at :45 every hour and ingests every published hour of the last 72 h that is
