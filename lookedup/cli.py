@@ -17,6 +17,7 @@ Commands:
   baselines     build the day's production baselines into LOOKEDUP_BASELINES_DIR (daily, never uploaded)
   hub           Hub maintenance: --drop-prefix PATH, --squash (rewrites dataset history), storage report
   score         score ingested hours into spikes, events and data/latest.json (hourly)
+  app-export    write the web app's JSON (data/app/): hourly live files, or --backfill every day
   ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
   evaluate      run the pre-registered Phase 2 evaluation (writes docs/analysis/)
   evaluate-v2   run the pre-registered Phase 2b evaluation against deaths, earthquakes and matches
@@ -223,6 +224,28 @@ def cmd_score(a):
     print(json.dumps(score(open_store(a.local), max_hours=a.max_hours, hours=hours), indent=1))
 
 
+def cmd_app_export(a):
+    from lookedup.store import open_store
+
+    if a.backfill:
+        from lookedup.app_export import APP_PREFIX, backfill
+        from lookedup.scorer import _commit
+        from lookedup.settings import DATA_DIR
+
+        store = open_store(a.local)
+        out = DATA_DIR / "app"
+        res = backfill(store, out)
+        print(json.dumps(res, indent=1))
+        if a.upload:
+            files = {str(f.relative_to(out)): f for f in sorted((out / APP_PREFIX).rglob("*.json"))}
+            _commit(store, files, f"data: app exports backfill, {res['days']} day files")
+            log.info("uploaded %d app files", len(files))
+        return
+    from lookedup.app_export import export_live
+
+    print(json.dumps(export_live(open_store(a.local)), indent=1))
+
+
 def cmd_ground_truth(a):
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -324,6 +347,9 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("score", cmd_score)
     sp.add_argument("--hour", help="score exactly this hour start (UTC), e.g. 2026-10-08T14:00")
     sp.add_argument("--max-hours", type=int, default=MAX_HOURS_PER_RUN)
+    sp = add("app-export", cmd_app_export)
+    sp.add_argument("--backfill", action="store_true", help="every day from the warehouse and the lake mirror")
+    sp.add_argument("--upload", action="store_true", help="with --backfill: commit the files to the lake")
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")
