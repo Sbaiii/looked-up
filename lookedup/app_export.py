@@ -15,6 +15,7 @@ production spike files for live hours (the hourly job).
 
 from __future__ import annotations
 
+import gzip
 import json
 import logging
 import re
@@ -63,10 +64,17 @@ def _iso(ts: datetime) -> str:
 
 
 def dump(payload: dict, path: Path) -> int:
+    """Write ``path`` and a gzipped twin ``path.gz``: the Hub serves files uncompressed, so the app fetches
+    the .gz copy and inflates it in the browser (ADR 0022). Returns the uncompressed size."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    path.write_text(text, encoding="utf-8")
-    return len(text.encode())
+    data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()
+    path.write_bytes(data)
+    Path(f"{path}.gz").write_bytes(gzip.compress(data, compresslevel=9, mtime=0))
+    return len(data)
+
+
+def with_gz(files: dict[str, Path]) -> dict[str, Path]:
+    return {**files, **{f"{k}.gz": Path(f"{v}.gz") for k, v in files.items()}}
 
 
 # ---------------------------------------------------------------- selection and payloads
@@ -404,5 +412,5 @@ def export_live(store, now: datetime | None = None, languages: list[str] | None 
         stats = _update_stats(_read_json(store, f"{APP_PREFIX}/stats.json", tmp / "st"), summaries, now, languages)
         dump(stats, out / APP_PREFIX / "stats.json")
         files[f"{APP_PREFIX}/stats.json"] = out / APP_PREFIX / "stats.json"
-        _commit(store, files, f"data: app exports, {len(recent)} event(s) in the last 24 h")
+        _commit(store, with_gz(files), f"data: app exports, {len(recent)} event(s) in the last 24 h")
     return {"today_events": len(recent), "days": sorted(summaries)}

@@ -237,7 +237,7 @@ def cmd_app_export(a):
         res = backfill(store, out)
         print(json.dumps(res, indent=1))
         if a.upload:
-            files = {str(f.relative_to(out)): f for f in sorted((out / APP_PREFIX).rglob("*.json"))}
+            files = {str(f.relative_to(out)): f for f in sorted((out / APP_PREFIX).rglob("*.json*"))}
             _commit(store, files, f"data: app exports backfill, {res['days']} day files")
             log.info("uploaded %d app files", len(files))
         return

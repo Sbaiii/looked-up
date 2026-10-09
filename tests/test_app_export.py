@@ -78,3 +78,12 @@ def test_stats_merge_replaces_days_and_keeps_ninety(monkeypatch):
     assert [r["day"] for r in new["timeline"]] == ["2026-10-08", "2026-10-09"]
     assert new["events"] == 8 and new["per_language"]["en"]["lead_share"] == 1.0
     assert new["schema_version"] == ax.SCHEMA_VERSION
+
+
+def test_dump_writes_a_gzipped_twin(tmp_path):
+    import gzip
+    import json
+    n = ax.dump({"schema_version": 1, "x": "é"}, tmp_path / "a.json")
+    assert json.loads(gzip.decompress((tmp_path / "a.json.gz").read_bytes())) == {"schema_version": 1, "x": "é"}
+    assert n == len((tmp_path / "a.json").read_bytes())
+    assert set(ax.with_gz({"data/app/a.json": tmp_path / "a.json"})) == {"data/app/a.json", "data/app/a.json.gz"}
