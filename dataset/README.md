@@ -43,6 +43,7 @@ One day is one file, so reading a single day is fastest:
 data/hourly/year=YYYY/month=MM/day=DD.parquet   all ingested hours of one UTC day
 data/wikidata/sitelinks.parquet                 (lang, title) -> Wikidata QID
 data/manifest.json                              every hour present, with row count, source and ingestion time
+data/app/{today,stats}.json, data/app/days/*.json   small JSON for the web app (+ .json.gz twins)
 ```
 
 ## Schema
@@ -117,8 +118,9 @@ main pages and titles with > 1,000 views and < 5 % mobile.
 
 ## Attention events (derived)
 
-Every hour, new hours are also scored for **attention events**: one entity spiking in at least 3 languages within
-6 hours, measured against its own 28-day baseline. The spike files, event files and `data/latest.json` (last 24 h,
+Every hour, new hours are also scored for **attention events**: one entity spiking in at least 2 languages within
+6 hours, measured against its own 28-day baseline. Each event has a **tier**: noticed (≥ 2 languages), international
+(≥ 5) or planetary (≥ 20). The evaluated Phase 2 definition used ≥ 3 languages. The spike files, event files and `data/latest.json` (last 24 h,
 top 50 multi-language events plus a separate `single_language_events` list, labels in the 30 languages) are
 described in the
 [data model](https://github.com/Sbaiii/looked-up/blob/main/docs/data_model.md#scoring-outputs-phase-2-adr-0014).
@@ -130,6 +132,10 @@ deaths, earthquakes and matches.
 - **Single-language events.** An event whose lead language holds ≥ 95 % of its excess views has
   `event_class = single_language`. Such events are kept, not filtered: they mean "attention from one community",
   not "false". No topic is blocklisted.
+
+The web app [sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/) reads `data/app/` directly from
+this dataset. The schema is described in the
+[data model](https://github.com/Sbaiii/looked-up/blob/main/docs/data_model.md#app-exports-dataapp-phase-3-adr-0022).
 
 ## Update frequency and provenance
 
