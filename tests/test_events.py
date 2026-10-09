@@ -69,3 +69,13 @@ def test_ablation_parameters(min_langs, expected):
     con = _spikes([(1, "es", 0, 50), (1, "en", 1, 30), (1, "fr", 2, 12)])
     p = EventParams(min_languages=min_langs, window_hours=6, breadth_hours=24, new_event_gap_hours=24, r3_threshold=8)
     assert len(_events(con, p)[0]) == expected
+
+
+def test_episodes_are_deterministic_with_simultaneous_spikes():
+    """Several languages in the same hour must not split an episode, whatever the input order."""
+    rows = [(1, l, 0, 20) for l in ("de", "en", "es")] + [(1, l, 30, 20) for l in ("de", "en", "es", "fr")]
+    results = set()
+    for order in (rows, rows[::-1], rows[3:] + rows[:3]):
+        events, _ = _events(_spikes(order))
+        results.add(tuple((e["start_hour"], e["breadth"]) for e in events))
+    assert results == {((T0, 3), (T0 + timedelta(hours=30), 4))}

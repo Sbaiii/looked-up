@@ -29,11 +29,12 @@ def events_sql(spikes: str, p: EventParams, scored: str | None = None) -> tuple[
             SELECT qid, lang, ts_hour_start, surprise FROM {spikes}
             WHERE qid IS NOT NULL AND surprise >= {p.r3_threshold}
         ), ordered AS (
-            SELECT *, lag(ts_hour_start) OVER (PARTITION BY qid ORDER BY ts_hour_start) AS prev_ts FROM s
+            -- (ts_hour_start, lang) is unique within a QID: a total order keeps both windows consistent
+            SELECT *, lag(ts_hour_start) OVER (PARTITION BY qid ORDER BY ts_hour_start, lang) AS prev_ts FROM s
         ), episodes AS (
             SELECT *, sum(CASE WHEN prev_ts IS NULL OR ts_hour_start - prev_ts >= INTERVAL {gap} HOUR
                                THEN 1 ELSE 0 END)
-                      OVER (PARTITION BY qid ORDER BY ts_hour_start ROWS UNBOUNDED PRECEDING) AS episode
+                      OVER (PARTITION BY qid ORDER BY ts_hour_start, lang ROWS UNBOUNDED PRECEDING) AS episode
             FROM ordered
         ), windows AS (
             SELECT a.qid, a.episode, a.ts_hour_start AS window_start, count(DISTINCT b.lang) AS n_langs
