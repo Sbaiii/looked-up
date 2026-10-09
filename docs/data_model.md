@@ -102,6 +102,23 @@ refreshed monthly. Redirects and articles newer than the dump don't match. Cover
 - **Bots inside `user` traffic.** Use the mobile share to spot them (ADR 0005).
 - **Redirects are not resolved.** Views count the requested title. Redirect titles do not join to Wikidata.
 
+## Scoring outputs (Phase 2, ADR 0014)
+
+Written by the production scorer (`daily.yml`, then `hourly.yml` after each ingest). They are derived from the
+hourly files and can be rebuilt at any time.
+
+| Path | Grain | Contents |
+|---|---|---|
+| `data/baselines/day=YYYY-MM-DD.parquet` | (lang, title, hour_of_day) | baseline median/MAD for that day's day type (slots with a non-zero median only), plus one prior row per language (`title` null); last 3 days kept |
+| `data/spikes/year=YYYY/month=MM/day=DD.parquet` | (hour, lang, title) | scored candidates passing R1 or R2 with surprise ≥ 6: views, baseline, surprise, `r1`, `r2`, `is_automated`, `qid` |
+| `data/events/year=YYYY/month=MM/day=DD.parquet` | event | attention events by start day (primary configuration): `event_id`, `qid`, `start_hour`, `lead_lang`, `breadth`, `peak_intensity`, `excess_views`, spread lags, `languages` |
+| `data/events/languages/year=YYYY/month=MM/day=DD.parquet` | (event, lang) | first spike, `spread_lag_hours`, peak and excess views per language |
+| `data/latest.json` | — | events of the last 24 h, top 50 by breadth then intensity, with labels in the 30 languages and a category, for the frontend |
+| `data/scoring_state.json` | — | hours already scored (the scorer is idempotent and self-healing) |
+
+Definitions are in [prereg_phase2.md](prereg_phase2.md) and ADR 0015. The warehouse version, with tests and the
+90-day history, is described in [warehouse.md](warehouse.md).
+
 ## Query it from DuckDB (5 lines)
 
 ```python
