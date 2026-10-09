@@ -35,45 +35,33 @@ export function capable() {
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function largestRing(geom) {
-    const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
-    let best = null;
-    let bestArea = -1;
-    for (const poly of polys) {
-        const ring = poly[0];
-        let a = 0;
-        let cx = 0;
-        let cy = 0;
-        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-            const f = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
-            a += f; cx += (ring[j][0] + ring[i][0]) * f; cy += (ring[j][1] + ring[i][1]) * f;
-        }
-        if (Math.abs(a) > bestArea) { bestArea = Math.abs(a); best = a ? [cx / (3 * a), cy / (3 * a)] : ring[0]; }
-    }
-    return best;
-}
-
 async function loadGeo() {
-    const [topo, lg] = await Promise.all([
-        fetch('data/countries-110m.json').then((r) => r.json()),
+    const [world, lg] = await Promise.all([
+        fetch('data/world-2d.json').then((r) => r.json()),
         fetch('data/language_geo.json').then((r) => r.json()),
-        window.topojson ? null : loadScript('vendor/topojson-client.min.js'),
     ]);
-    const fc = window.topojson.feature(topo, topo.objects.countries);
-    const features = fc.features
-        .filter((f) => f.id !== '010')                                        // Antarctica
-        .map((f) => ({ ...f, key: f.id ?? (f.properties.name === 'Kosovo' ? 'XKS' : f.properties.name) }));
     const langOf = new Map();                                                  // country -> [languages]
     for (const [code, keys] of Object.entries(lg.languages)) {
         for (const k of keys) langOf.set(k, [...(langOf.get(k) || []), code]);
     }
-    const byKey = new Map(features.map((f) => [f.key, f]));
+    const centroids = new Map(world.countries.map((c) => [c.k, c.c]));
     const anchors = {};
-    for (const [code, key] of Object.entries(lg.anchors)) {
-        const f = byKey.get(key);
-        if (f) anchors[code] = largestRing(f.geometry);
-    }
-    return { features, langOf, languages: lg.languages, anchors };
+    for (const [code, key] of Object.entries(lg.anchors)) if (centroids.has(key)) anchors[code] = centroids.get(key);
+    return { world, langOf, languages: lg.languages, anchors, features: null };
+}
+
+/** GeoJSON countries for the globe, converted only when the globe is requested. */
+async function globeFeatures() {
+    if (geo.features) return geo.features;
+    const [topo] = await Promise.all([
+        fetch('data/countries-110m.json').then((r) => r.json()),
+        window.topojson ? null : loadScript('vendor/topojson-client.min.js'),
+    ]);
+    const { featureKey } = await import('./projection.js');
+    geo.features = window.topojson.feature(topo, topo.objects.countries).features
+        .filter((f) => f.id !== '010')
+        .map((f) => ({ ...f, key: featureKey(f) }));
+    return geo.features;
 }
 
 function hexToRgb(h) {
@@ -129,7 +117,7 @@ export function show(ev, { animate = true } = {}) {
 let globeLoading = null;
 async function useGlobe() {
     if (mode === 'globe') return;
-    globeLoading ||= Promise.all([import('./globe.js'), window.Globe ? null : loadScript('vendor/globe.gl.min.js')])
+    globeLoading ||= Promise.all([import('./globe.js'), window.Globe ? null : loadScript('vendor/globe.gl.min.js'), globeFeatures()])
         .catch((e) => { globeLoading = null; throw e; });
     const [{ createGlobe }] = await globeLoading;
     if (mode === 'globe') return;
