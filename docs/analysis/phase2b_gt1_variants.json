@@ -1,0 +1,22 @@
+{
+ "literal_window/all": {
+  "n": 489,
+  "detected": 159,
+  "recall": 0.3252
+ },
+ "literal_window/person_link": {
+  "n": 470,
+  "detected": 158,
+  "recall": 0.3362
+ },
+ "early_24h/all": {
+  "n": 489,
+  "detected": 161,
+  "recall": 0.3292
+ },
+ "early_24h/person_link": {
+  "n": 470,
+  "detected": 160,
+  "recall": 0.3404
+ }
+}
