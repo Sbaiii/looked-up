@@ -1,0 +1,143 @@
+{
+ "config": {
+  "r3": 8.0,
+  "min_languages": 3,
+  "window_hours": 6
+ },
+ "gt1": {
+  "entries_total": 587,
+  "out_of_window": 98,
+  "n": 489,
+  "detected": 159,
+  "recall": 0.32515337423312884,
+  "verdict_h1b_1": "rejected",
+  "by_languages": {
+   "5-9": {
+    "n": 304,
+    "detected": 69,
+    "recall": 0.22697368421052633
+   },
+   "10-19": {
+    "n": 133,
+    "detected": 62,
+    "recall": 0.46616541353383456
+   },
+   ">=20": {
+    "n": 52,
+    "detected": 28,
+    "recall": 0.5384615384615384
+   }
+  },
+  "ablation": {
+   "n2": {
+    "n": 489,
+    "detected": 276,
+    "recall": 0.5644171779141104
+   },
+   "n5": {
+    "n": 489,
+    "detected": 45,
+    "recall": 0.09202453987730061
+   },
+   "n3": {
+    "n": 489,
+    "detected": 159,
+    "recall": 0.32515337423312884
+   }
+  },
+  "by_class": {
+   "multi_language": 151,
+   "single_language": 8
+  },
+  "delay_from_announcement": {
+   "n": 146,
+   "median": -1.0,
+   "p25": -2.0,
+   "p75": 0.0,
+   "min": -33.0,
+   "max": 25.0,
+   "share_le_4h": 0.8698630136986302
+  }
+ },
+ "gt2": {
+  "quakes": 22,
+  "m65_plus": {
+   "n": 9,
+   "detected": 3,
+   "recall": 0.3333333333333333
+  },
+  "m60_65": {
+   "n": 13,
+   "detected": 1,
+   "recall": 0.07692307692307693
+  },
+  "m65_plus_article_only": {
+   "n": 9,
+   "detected": 1,
+   "recall": 0.1111111111111111
+  },
+  "with_article": 7,
+  "verdict_h1b_2": "rejected",
+  "ablation_m65": {
+   "n2": {
+    "n": 9,
+    "detected": 3,
+    "recall": 0.3333333333333333
+   },
+   "n5": {
+    "n": 9,
+    "detected": 2,
+    "recall": 0.2222222222222222
+   },
+   "n3": {
+    "n": 9,
+    "detected": 3,
+    "recall": 0.3333333333333333
+   }
+  },
+  "h5_delay": {
+   "n": 4,
+   "median": 0.0,
+   "p25": 0.0,
+   "p75": 0.0,
+   "min": 0.0,
+   "max": 1.0,
+   "share_le_4h": 1.0
+  },
+  "verdict_h5": "inconclusive (< 5 detected)",
+  "h2b": {
+   "qualifying": 4,
+   "lead_is_country_language": 2,
+   "share": 0.5
+  },
+  "verdict_h2b": "inconclusive (< 5 qualifying)"
+ },
+ "gt3": {
+  "n": 2,
+  "detected": 2,
+  "recall": 1.0,
+  "excluded": 14,
+  "excluded_reasons": {
+   "out of the scored period": 14
+  },
+  "not_candidates": "Wimbledon finals (11-12 Jul) and US Open finals: no Wikipedia kick-off time in their articles; Champions League qualifiers: no match articles",
+  "ablation": {
+   "n2": {
+    "n": 2,
+    "detected": 2,
+    "recall": 1.0
+   },
+   "n5": {
+    "n": 2,
+    "detected": 2,
+    "recall": 1.0
+   },
+   "n3": {
+    "n": 2,
+    "detected": 2,
+    "recall": 1.0
+   }
+  },
+  "verdict_h1b_3": "inconclusive (< 5 matches)"
+ }
+}

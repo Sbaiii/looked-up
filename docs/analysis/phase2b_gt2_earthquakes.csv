@@ -1,0 +1,23 @@
+usgs_id,origin,mag,place,article_qid,place_qids,country,country_languages,detected,detected_article_only,detected_24h,start_hour,lead_lang,breadth,event_class,delay_h,lead_is_country_language,detected_n2,detected_n5
+us7000t1bu,2026-07-17 14:48:39.881000,7.3,"60 km WSW of Puerto Madero, Mexico",140616464,781553 96,419,es,False,False,False,,,,,,,False,False
+us7000t1cc,2026-07-17 15:20:06.584000,6.4,"96 km SW of Puerto Madero, Mexico",140616464,781553 96,419,es,False,False,False,,,,,,,False,False
+us7000t37a,2026-07-24 21:37:51.634000,6,"63 km WSW of Sola, Vanuatu",,298604 686,686,en fr,False,False,False,,,,,,,False,False
+us6000tgb9,2026-07-28 07:27:14.658000,6.8,"The 2026 Kumamoto Region, Japan Earthquake",140735282,,17,ja,True,True,True,2026-07-28 07:00:00,ja,3,multi_language,0.0,True,True,False
+us6000ti6x,2026-08-05 04:14:06.079000,6.3,"32 km SW of Sarangani, Philippines",,13877 928,928,en,False,False,False,,,,,,,False,False
+us6000ti8i,2026-08-05 07:43:23.574000,6.3,south of the Kermadec Islands,,,,,False,False,False,,,,,,,False,False
+us6000tjl2,2026-08-10 12:34:28.009000,7.4,"2 km SE of San José del Palmar, Colombia",140984463,1654797 739,739,es,True,False,True,2026-08-10 12:00:00,es,3,multi_language,0.0,True,True,True
+us6000tk74,2026-08-12 11:47:12.188000,6,South Sandwich Islands region,,,,,False,False,False,,,,,,,False,False
+us6000tkt2,2026-08-14 21:58:21.561000,7.8,"66 km NNW of Ende, Indonesia",141072401,10564895 252,252,id,True,False,True,2026-08-14 22:00:00,es,6,multi_language,1.0,False,True,False
+us6000tkuc,2026-08-14 22:28:37.743000,6.1,"62 km N of Ende, Indonesia",141072401,10564895 252,252,id,True,False,True,2026-08-14 22:00:00,es,6,multi_language,0.0,False,True,False
+us6000tkyk,2026-08-15 10:54:51.798000,6.9,"9 km WNW of Pematangsiantar, Indonesia",,5979 252,252,id,False,False,False,,,,,,,False,True
+us6000tl4w,2026-08-16 03:20:19.914000,6.1,"63 km NNE of Port-Olry, Vanuatu",,1050300 686,686,en fr,False,False,False,,,,,,,True,False
+us6000tm81,2026-08-20 18:00:18.508000,6.7,"35 km ENE of Tambo, Peru",141137094,2391450 419,419,es,False,False,False,,,,,,,False,False
+us6000tmrw,2026-08-22 08:22:37.731000,6.2,Scotia Sea,,204703,,,False,False,False,,,,,,,False,False
+us6000tmz6,2026-08-23 13:44:53.389000,6,"32 km SSW of Honchō, Japan",,5892069 17,17,ja,False,False,False,,,,,,,False,False
+us6000tn41,2026-08-24 14:10:17.347000,6,"211 km NNE of Lospalos, Timor Leste",,1017098 574,574,pt,False,False,False,,,,,,,False,False
+us7000tdrv,2026-09-02 23:46:56.213000,6.2,South Sandwich Islands region,,,,,False,False,False,,,,,,,False,False
+us7000tdvt,2026-09-03 11:17:21.717000,6.3,"89 km SSW of Nikolski, Alaska",,15458148 797,30,en es,False,False,False,,,,,,,False,False
+us7000tgrk,2026-09-11 21:23:55.815000,6.5,"121 km NNE of Teluknaga, Indonesia",,1924778 252,252,id,False,False,False,,,,,,,False,False
+us7000ti1p,2026-09-17 14:19:52.472000,6.5,"177 km W of Nikolski, Alaska",,15458148 797,30,en es,False,False,False,,,,,,,False,False
+us7000tiqc,2026-09-20 09:17:35.624000,6.4,"49 km NNE of Kainantu, Papua New Guinea",,4208534 691,691,en,False,False,False,,,,,,,False,False
+us6000txpi,2026-09-25 21:23:03.309000,6.6,"80 km ENE of Tadine, New Caledonia",,9729 33788,142,fr,False,False,False,,,,,,,False,False
