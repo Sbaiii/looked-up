@@ -2,14 +2,15 @@ name: hourly ingest
 
 on:
   schedule:
-    # :45 leaves room for the ~2h14 median publication lag plus Actions' own scheduling delay;
-    # each run catches up every missing hour of the last 72 h, so late or dropped runs are harmless.
-    - cron: "45 * * * *"
+    # An uncommon minute: GitHub drops scheduled jobs at busy times (top and bottom of the hour),
+    # and dropped 6 of 8 runs at :45. Each run catches up every missing hour of the last 7 days,
+    # 12 at a time, so late or dropped runs are harmless. trigger.yml offers an external path (ADR 0017).
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       max_hours:
         description: "Max hours to ingest in this run"
-        default: "6"
+        default: "12"
 
 concurrency:
   group: lake-writer-hourly
@@ -21,7 +22,7 @@ permissions:
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
     steps:
@@ -43,7 +44,7 @@ jobs:
           fi
       - name: Ingest missing hours
         if: steps.token.outputs.present == 'true'
-        run: python -m lookedup.cli hourly --max-hours "${{ inputs.max_hours || '6' }}"
+        run: python -m lookedup.cli hourly --max-hours "${{ inputs.max_hours || '12' }}"
       - name: Score ingested hours (spikes, events, latest.json)
         if: steps.token.outputs.present == 'true'
-        run: python -m lookedup.cli score --max-hours 6
+        run: python -m lookedup.cli score --max-hours 12
