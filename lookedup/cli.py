@@ -13,6 +13,7 @@ Commands:
   compact       migrate a local lake from hourly files to daily files (one-off)
   card          upload dataset/README.md as the Hugging Face dataset card
   sync          download day files, manifest and sitelinks from Hugging Face into data/lake/
+  ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
   warehouse     run dbt on the warehouse (e.g. `warehouse build`), thresholds from config/analytics.yml
 """
 
@@ -176,6 +177,17 @@ def cmd_sync(a):
     print(json.dumps(res, indent=1))
 
 
+def cmd_ground_truth(a):
+    from lookedup.analytics.config import load
+    from lookedup.evaluation.ground_truth import build
+    from lookedup.settings import DATA_DIR, LOCAL_LAKE_DIR, SITELINKS_PATH
+
+    cfg = load()
+    res = build(cfg.period_start, cfg.period_end, LOCAL_LAKE_DIR / SITELINKS_PATH,
+                DATA_DIR / "warehouse" / "entity_claims.parquet", DATA_DIR / "eval" / "current_events.parquet", cfg)
+    print(json.dumps(res, indent=1))
+
+
 def cmd_warehouse(a):
     from lookedup.warehouse import run
 
@@ -241,6 +253,7 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--batch", type=int, default=3, help="days per Hub commit")
     add("compact", cmd_compact, local=False)
     add("card", cmd_card, local=False)
+    add("ground-truth", cmd_ground_truth, local=False)
     sp = add("warehouse", cmd_warehouse, local=False)
     sp.add_argument("--hf", action="store_true", help="read the lake from hf:// instead of data/lake/")
     sp.add_argument("dbt_args", nargs=argparse.REMAINDER, help="dbt command and flags (default: build)")
