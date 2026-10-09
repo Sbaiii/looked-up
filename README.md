@@ -17,8 +17,9 @@ storage. CC0 data in, open data out.
 **Live, scoring hourly.** GitHub Actions adds each newly published hour of 30 Wikipedias to the public dataset
 [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up). After each ingest it scores the hour
 for **attention events**: one entity spiking in ≥ 3 languages within 6 hours against its own 28-day baseline. It
-writes `data/latest.json` with the last 24 h of events. A daily job at 03:30 UTC refreshes the baselines. The lake
-holds every hour since 9 Jul 2026.
+writes `data/latest.json` with the last 24 h of events (multi-language events, plus a separate list of
+single-language events). A daily job at 03:30 UTC refreshes the baselines, kept in the Actions cache. The lake
+holds every hour since 9 Jul 2026. Operations: [docs/ops.md](docs/ops.md).
 
 **Phase 2, in one paragraph.** The definitions were pre-registered before any code
 ([prereg](docs/prereg_phase2.md)) and evaluated against Wikipedia's Current events portal
@@ -29,6 +30,16 @@ holds every hour since 9 Jul 2026.
   deaths than for sports.
 - The portal and reading attention measure different things. 25 of the 30 largest events the portal misses are
   real, mostly deaths, which the portal's daily pages don't list, and the World Cup final.
+**Phase 2b, in one paragraph.** A second pre-registration ([prereg](docs/prereg_phase2b.md)) tested sudden,
+timestamped events ([results](docs/analysis/phase2b_results.md)):
+
+- 32.5 % of notable deaths were detected within 24 h: 23 % for people with articles in 5–9 languages, 54 % for
+  people with 20 or more.
+- 3 of 9 M6.5+ earthquakes were detected within 6 h.
+- Both in-period World Cup matches were detected at kick-off.
+- When it fires, it fires in the trigger's hour: median 0 h after a quake, −1 h relative to the first death edit.
+- H1b was rejected for deaths and quakes. The other tests had too few items to conclude.
+
 - The analytics code lives in [`lookedup/analytics`](lookedup/analytics) and the dbt warehouse in
   [`warehouse/`](warehouse) ([docs](docs/warehouse.md)).
 
@@ -60,20 +71,23 @@ python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 .venv/bin/pytest                                              # tests (also run in CI)
 
 huggingface-cli login                                         # or export HF_TOKEN=... (never commit it)
-.venv/bin/python -m lookedup.cli hourly                       # ingest missing hours of the last 72 h
+.venv/bin/python -m lookedup.cli hourly                       # ingest missing hours of the last 7 days
 .venv/bin/python -m lookedup.backfill --from 2026-07-09 --to 2026-10-06   # resumable backfill
 .venv/bin/python -m lookedup.cli validate -n 3                # backfill vs hourly dumps, must be identical
 .venv/bin/python -m lookedup.cli wikidata                     # rebuild Wikidata sitelinks
 .venv/bin/python -m lookedup.cli languages                    # re-rank languages over the last 7 days
-.venv/bin/python -m lookedup.cli push                         # upload a local lake (data/lake/) + dataset card
+.venv/bin/python -m lookedup.cli push                         # upload a local lake ($LOOKEDUP_DATA_DIR/lake) + dataset card
 .venv/bin/python -m lookedup.cli sync --from 2026-07-09       # mirror the lake locally (for the warehouse)
 .venv/bin/python -m lookedup.cli warehouse build              # dbt build: spikes, events, tests
 .venv/bin/python -m lookedup.cli evaluate                     # pre-registered Phase 2 evaluation
+.venv/bin/python -m lookedup.cli evaluate-v2                  # pre-registered Phase 2b evaluation
 .venv/bin/python -m lookedup.cli baselines && .venv/bin/python -m lookedup.cli score   # production scoring
 ```
 
-Add `--local` to write to `data/lake/` instead of Hugging Face. Workflows:
-[`hourly.yml`](.github/workflows/hourly.yml) (every hour at :45: ingest, then score),
+Add `--local` to write to `~/looked-up-data/lake` (or `$LOOKEDUP_DATA_DIR`, kept outside iCloud) instead of Hugging Face. Workflows:
+[`hourly.yml`](.github/workflows/hourly.yml) (every hour at :17: ingest, then score),
+[`trigger.yml`](.github/workflows/trigger.yml) (external backup trigger),
+[`hub-maintenance.yml`](.github/workflows/hub-maintenance.yml) (monthly history squash),
 [`daily.yml`](.github/workflows/daily.yml) (baselines, 03:30 UTC),
 [`wikidata-monthly.yml`](.github/workflows/wikidata-monthly.yml),
 [`backfill.yml`](.github/workflows/backfill.yml) (manual, parallel date chunks) and
