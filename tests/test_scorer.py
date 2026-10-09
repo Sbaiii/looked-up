@@ -65,3 +65,25 @@ def test_score_waits_for_baselines_or_recomputes_one_day(lake):
     out = scorer.score(lake, now=now, max_hours=6, langs=["en", "es", "fr"], baselines_dir=bl)   # recompute on miss
     assert out["scored_hours"][0] == f"{D:%Y-%m-%d}T00"
     assert scorer.baselines_file(D, bl).exists()
+
+
+def test_bucketed_baselines_equal_single_pass():
+    """Building baselines in hash buckets gives exactly the single-pass result."""
+    import duckdb
+
+    from lookedup.analytics.config import load
+    from lookedup.analytics.production import daily_baselines_sql
+
+    cfg = load()
+    con = duckdb.connect()
+    con.execute("""CREATE TABLE src AS
+        SELECT TIMESTAMP '2026-09-02 00:00' - to_days(d) + to_hours(h) AS ts_hour_start,
+               (TIMESTAMP '2026-09-02 00:00' - to_days(d))::DATE AS day, h AS hour_of_day,
+               (isodow(TIMESTAMP '2026-09-02 00:00' - to_days(d)) - 1) IN (5, 6) AS is_weekend,
+               'en' AS lang, 'T' || t AS title, 5 + (t * 7 + d * 3 + h) % 40 AS views
+        FROM range(1, 29) r1(d), range(0, 24, 6) r2(h), range(0, 40) r3(t)""")
+    one = set(con.sql(daily_baselines_sql("src", D, cfg)).fetchall())
+    many = set()
+    for i in range(4):
+        many |= set(con.sql(daily_baselines_sql("src", D, cfg, bucket=(i, 4), include_prior=(i == 0))).fetchall())
+    assert len(one) > 100 and one == many

@@ -18,12 +18,15 @@ from lookedup.analytics.config import AnalyticsConfig
 from lookedup.analytics.scoring import observation_counts, prior_sql
 
 
-def daily_baselines_sql(src: str, day: date, cfg: AnalyticsConfig, restrict: str | None = None) -> str:
+def daily_baselines_sql(src: str, day: date, cfg: AnalyticsConfig, restrict: str | None = None,
+                        bucket: tuple[int, int] | None = None, include_prior: bool = True) -> str:
     """Baseline slots for every (lang, title, hour_of_day) with a non-zero median on ``day``'s day type.
 
     Plus one row per language with ``title IS NULL`` carrying the language prior. ``restrict``
     (a relation of lang, title) limits the slots to those titles; each title's slots depend only
     on its own history, so the result for those titles is unchanged (used for spot checks).
+    ``bucket=(i, n)`` keeps titles with hash(lang, title) % n = i, so callers can build the slots
+    in n smaller passes with bounded memory and spill (ADR 0018).
     """
     b = cfg.baseline
     n = observation_counts(day, cfg)
@@ -39,6 +42,7 @@ def daily_baselines_sql(src: str, day: date, cfg: AnalyticsConfig, restrict: str
             SELECT lang, title, hour_of_day, views FROM {src}
             WHERE day >= DATE '{lo}' AND day < DATE '{day}' {dt_filter}
             {f"AND (lang, title) IN (SELECT lang, title FROM {restrict})" if restrict else ""}
+            {f"AND hash(lang || '|' || title) % {bucket[1]} = {bucket[0]}" if bucket else ""}
         ), present AS (
             SELECT lang, title, hour_of_day FROM lb GROUP BY ALL HAVING 2 * count(*) >= {n_use}
         ), slots AS (
@@ -54,10 +58,10 @@ def daily_baselines_sql(src: str, day: date, cfg: AnalyticsConfig, restrict: str
         SELECT DATE '{day}' AS day, lang, title, hour_of_day, baseline_median, baseline_mad,
                '{level}' AS baseline_level, {n_use} AS n_obs
         FROM stats WHERE baseline_median > 0 OR baseline_mad > 0
-        UNION ALL
+        {f"""UNION ALL
         SELECT DATE '{day}' AS day, lang, NULL AS title, NULL AS hour_of_day, prior_median, prior_mad,
                'prior' AS baseline_level, NULL AS n_obs
-        FROM ({prior_sql(src, day, cfg)})
+        FROM ({prior_sql(src, day, cfg)})""" if include_prior else ""}
     """
 
 

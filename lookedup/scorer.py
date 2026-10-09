@@ -43,6 +43,7 @@ log = logging.getLogger(__name__)
 STATE_PATH = "data/scoring_state.json"
 LATEST_PATH = "data/latest.json"
 KEEP_BASELINE_DAYS = 3
+BASELINE_BUCKETS = 16
 
 
 def baselines_file(day: date, directory: Path = BASELINES_DIR) -> Path:
@@ -105,7 +106,11 @@ def build_baselines(store: Store, day: date, directory: Path = BASELINES_DIR) ->
             raise RuntimeError(f"no day files before {day}")
         con = db.connect()
         _stg_view(con, files)
-        table = db.arrow(con.sql(daily_baselines_sql("src", day, cfg)))
+        # BASELINE_BUCKETS passes over disjoint sets of titles keep memory and spill bounded (ADR 0018)
+        parts = [db.arrow(con.sql(daily_baselines_sql("src", day, cfg, bucket=(i, BASELINE_BUCKETS),
+                                                      include_prior=(i == 0))))
+                 for i in range(BASELINE_BUCKETS)]
+        table = pa.concat_tables(parts)
         out = baselines_file(day, directory)
         size = write_parquet(table, out)
     for old in directory.glob("day=*.parquet"):
