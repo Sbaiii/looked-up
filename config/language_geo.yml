@@ -232,6 +232,37 @@ languages:
   - BGR
   hi:
   - IND
+anchors:
+  en: USA
+  ja: JPN
+  de: DEU
+  ru: RUS
+  fr: FRA
+  es: MEX
+  it: ITA
+  zh: CHN
+  pt: BRA
+  pl: POL
+  fa: IRN
+  nl: NLD
+  ar: EGY
+  tr: TUR
+  id: IDN
+  sv: SWE
+  ko: KOR
+  cs: CZE
+  fi: FIN
+  uk: UKR
+  he: ISR
+  vi: VNM
+  hu: HUN
+  el: GRC
+  th: THA
+  ro: ROU
+  'no': NOR
+  sr: SRB
+  bg: BGR
+  hi: IND
 countries:
   ABW:
     name: Aruba
