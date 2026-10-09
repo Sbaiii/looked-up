@@ -1,0 +1,114 @@
+{
+  "locale": "es-ES",
+  "meta": {
+    "title": "Looked Up: lo que el mundo consultó, hora a hora",
+    "description": "Lo que la humanidad consultó hoy y en los últimos 90 días, en 30 idiomas de Wikipedia, actualizado cada hora a partir de las visitas públicas."
+  },
+  "nav": { "today": "Hoy", "timeline": "Días", "languages": "Idiomas", "briefing": "Resumen", "about": "Acerca de" },
+  "ui": {
+    "skip": "Ir al contenido", "theme": "Cambiar tema", "language": "Idioma de la interfaz", "utc": "UTC",
+    "error": "No se pudieron cargar los datos. Inténtalo más tarde.", "loading": "Cargando…",
+    "updated": "Actualizado {time}"
+  },
+  "hero": {
+    "kicker": "fig. 00 · últimas 24 horas",
+    "title": "Hoy el mundo consultó",
+    "empty": "Ningún evento se ha propagado todavía a dos idiomas en las últimas 24 horas.",
+    "counter": { "one": "{n} idioma en {within}", "other": "{n} idiomas en {within}" },
+    "replay": "Repetir la propagación",
+    "led_by": "primero en {lang}"
+  },
+  "within": { "zero": "menos de una hora", "one": "{n} hora", "other": "{n} horas" },
+  "tier": { "noticed": "Notado", "international": "Internacional", "planetary": "Planetario" },
+  "tier_help": {
+    "noticed": "Pico en 2 a 4 idiomas",
+    "international": "Pico en 5 a 19 idiomas",
+    "planetary": "Pico en 20 idiomas o más"
+  },
+  "event": {
+    "languages": { "one": "{n} idioma", "other": "{n} idiomas" },
+    "first_spike": "Primer pico a las {time} UTC",
+    "lead": "Primero: {lang}",
+    "wiki": "Wikipedia en {lang}",
+    "spark": "Visitas en todos los idiomas, desde 24 horas antes hasta 24 horas después del primer pico",
+    "show": "Ver en el mapa",
+    "more": "Ver más",
+    "category": {
+      "death": "Fallecimiento", "human": "Persona", "sports": "Deportes", "entertainment": "Entretenimiento",
+      "disaster": "Desastre", "politics": "Política", "place": "Lugar", "organization": "Organización",
+      "science_tech": "Ciencia y tecnología", "other": "Otro"
+    }
+  },
+  "timeline": {
+    "kicker": "fig. 01 · últimos 90 días",
+    "title": "Elige un día",
+    "standfirst": "Cada barra es un día: cuántos eventos se propagaron a dos idiomas o más.",
+    "slider": "Día",
+    "prev": "Día anterior",
+    "next": "Día siguiente",
+    "today": "Hoy",
+    "count": { "one": "{n} evento", "other": "{n} eventos" },
+    "filter": "Mostrar",
+    "all": "Todos los niveles",
+    "intl": "Internacional o más",
+    "planet": "Solo planetario",
+    "empty": "Ningún evento coincide con este filtro ese día."
+  },
+  "languages": {
+    "kicker": "fig. 02 · por idioma",
+    "title": "Lo que consultó cada comunidad lingüística",
+    "standfirst": "Los principales eventos del día elegido en un idioma, y lo que solo esa comunidad consultó.",
+    "choose": "Idioma",
+    "top": "Principales eventos",
+    "only": "Solo aquí",
+    "only_help": "Atención de una sola comunidad: al menos el 95 % de las visitas adicionales vino de este idioma.",
+    "none": "Nada para este idioma ese día."
+  },
+  "briefing": {
+    "kicker": "fig. 03 · el día en palabras",
+    "title": "Resumen",
+    "lead": "El {date} el mundo consultó {label}: {breadth} en {within}, primero en {lang}; {excess}.",
+    "lead_death": "El {date} el mundo consultó {label} tras la noticia de su muerte: {breadth} en {within}, primero en {lang}; {excess}.",
+    "excess_big": "{n} de visitas más de lo habitual",
+    "excess_small": "{n} visitas más de lo habitual",
+    "fastest": "Propagación más rápida: {label}, {breadth} en {within}.",
+    "widest": "Más idiomas: {label}, {breadth}.",
+    "non_english": "Mayor evento no liderado por el inglés: {label}, primero en {lang}, {excess}.",
+    "quiet": "Un día tranquilo: ningún evento se propagó a dos idiomas.",
+    "note": "Escrito automáticamente a partir de los datos del día, con la misma plantilla cada día."
+  },
+  "map": {
+    "label": "Mapa de la atención por idioma para {label}",
+    "idle": "Mapa de la atención por idioma",
+    "caption": "Vemos idiomas, no países. Cada país toma el color de la atención más fuerte entre sus idiomas.",
+    "globe": "Globo 3D",
+    "flat": "Mapa plano",
+    "less": "menos",
+    "more": "más"
+  },
+  "about": {
+    "kicker": "fig. 04 · cómo funciona",
+    "title": "Acerca de",
+    "lines": [
+      "Wikimedia publica cada hora cuántas veces se lee cada artículo de Wikipedia.",
+      "Looked Up lee las 30 ediciones más grandes, que reúnen el 98,5 % de las visitas humanas.",
+      "Cada artículo se compara con sus últimos 28 días a la misma hora.",
+      "Un pico es un salto repentino muy por encima de esa referencia.",
+      "Wikidata une el mismo tema entre idiomas: Lisbon, Lisboa y リスボン cuentan como uno.",
+      "Un evento es un tema con pico en dos idiomas o más en seis horas.",
+      "Los niveles dicen hasta dónde llegó: notado (2+), internacional (5+), planetario (20+).",
+      "Se actualiza cada hora, unas tres horas por detrás del tiempo real, al ritmo de la publicación de los datos."
+    ],
+    "limits_title": "Lo que no puede ver",
+    "limits": [
+      "Retraso: Wikimedia publica cada hora unas dos horas después de que termine, así que los eventos más recientes tienen unas tres horas.",
+      "Idiomas, no países: un pico en español puede venir de México, España o Estados Unidos.",
+      "Sesgo de fama: las personas conocidas y los grandes espectáculos se propagan; las noticias locales rara vez salen de su idioma.",
+      "30 idiomas: reúnen el 98,5 % de las visitas humanas, pero comunidades enteras fuera de ellos son invisibles aquí."
+    ],
+    "links": "Datos: {dataset}. Código y métodos: {repo}.",
+    "dataset": "el conjunto de datos abierto en Hugging Face",
+    "repo": "el repositorio de GitHub",
+    "privacy": "Sin cookies ni rastreo. Tu tema e idioma se guardan en tu navegador."
+  }
+}

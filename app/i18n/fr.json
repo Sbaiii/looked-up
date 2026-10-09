@@ -1,0 +1,114 @@
+{
+  "locale": "fr-FR",
+  "meta": {
+    "title": "Looked Up : ce que le monde a consulté, heure par heure",
+    "description": "Ce que l'humanité a consulté aujourd'hui et ces 90 derniers jours, dans 30 langues de Wikipédia, mis à jour chaque heure à partir des consultations publiques."
+  },
+  "nav": { "today": "Aujourd'hui", "timeline": "Jours", "languages": "Langues", "briefing": "Résumé", "about": "À propos" },
+  "ui": {
+    "skip": "Aller au contenu", "theme": "Changer de thème", "language": "Langue de l'interface", "utc": "UTC",
+    "error": "Les données n'ont pas pu être chargées. Réessayez plus tard.", "loading": "Chargement…",
+    "updated": "Mis à jour {time}"
+  },
+  "hero": {
+    "kicker": "fig. 00 · dernières 24 heures",
+    "title": "Aujourd'hui, le monde a consulté",
+    "empty": "Aucun événement ne s'est encore propagé à deux langues ces dernières 24 heures.",
+    "counter": { "one": "{n} langue en {within}", "other": "{n} langues en {within}" },
+    "replay": "Rejouer la propagation",
+    "led_by": "d'abord en {lang}"
+  },
+  "within": { "zero": "moins d'une heure", "one": "{n} heure", "other": "{n} heures" },
+  "tier": { "noticed": "Remarqué", "international": "International", "planetary": "Planétaire" },
+  "tier_help": {
+    "noticed": "Pic dans 2 à 4 langues",
+    "international": "Pic dans 5 à 19 langues",
+    "planetary": "Pic dans 20 langues ou plus"
+  },
+  "event": {
+    "languages": { "one": "{n} langue", "other": "{n} langues" },
+    "first_spike": "Premier pic à {time} UTC",
+    "lead": "En tête : {lang}",
+    "wiki": "Wikipédia en {lang}",
+    "spark": "Consultations toutes langues confondues, de 24 heures avant à 24 heures après le premier pic",
+    "show": "Afficher sur la carte",
+    "more": "Afficher plus",
+    "category": {
+      "death": "Décès", "human": "Personne", "sports": "Sport", "entertainment": "Divertissement",
+      "disaster": "Catastrophe", "politics": "Politique", "place": "Lieu", "organization": "Organisation",
+      "science_tech": "Sciences et techniques", "other": "Autre"
+    }
+  },
+  "timeline": {
+    "kicker": "fig. 01 · 90 derniers jours",
+    "title": "Choisissez un jour",
+    "standfirst": "Chaque barre est un jour : le nombre d'événements propagés à deux langues ou plus.",
+    "slider": "Jour",
+    "prev": "Jour précédent",
+    "next": "Jour suivant",
+    "today": "Aujourd'hui",
+    "count": { "one": "{n} événement", "other": "{n} événements" },
+    "filter": "Afficher",
+    "all": "Tous les niveaux",
+    "intl": "International et plus",
+    "planet": "Planétaire seulement",
+    "empty": "Aucun événement ne correspond à ce filtre ce jour-là."
+  },
+  "languages": {
+    "kicker": "fig. 02 · par langue",
+    "title": "Ce que chaque communauté linguistique a consulté",
+    "standfirst": "Les principaux événements du jour choisi dans une langue, et ce que seule cette communauté a consulté.",
+    "choose": "Langue",
+    "top": "Principaux événements",
+    "only": "Seulement ici",
+    "only_help": "Attention d'une seule communauté : au moins 95 % des consultations supplémentaires viennent de cette langue.",
+    "none": "Rien pour cette langue ce jour-là."
+  },
+  "briefing": {
+    "kicker": "fig. 03 · la journée en mots",
+    "title": "Résumé",
+    "lead": "Le {date}, le monde a consulté {label} : {breadth} en {within}, d'abord en {lang} ; {excess}.",
+    "lead_death": "Le {date}, le monde a consulté {label} après l'annonce de sa mort : {breadth} en {within}, d'abord en {lang} ; {excess}.",
+    "excess_big": "{n} de consultations de plus que d'habitude",
+    "excess_small": "{n} consultations de plus que d'habitude",
+    "fastest": "Propagation la plus rapide : {label}, {breadth} en {within}.",
+    "widest": "Le plus de langues : {label}, {breadth}.",
+    "non_english": "Plus grand événement hors anglais : {label}, d'abord en {lang}, {excess}.",
+    "quiet": "Journée calme : aucun événement ne s'est propagé à deux langues.",
+    "note": "Rédigé automatiquement à partir des données du jour, avec le même modèle chaque jour."
+  },
+  "map": {
+    "label": "Carte de l'attention par langue pour {label}",
+    "idle": "Carte de l'attention par langue",
+    "caption": "Nous voyons des langues, pas des pays. Un pays prend la couleur de l'attention la plus forte parmi ses langues.",
+    "globe": "Globe 3D",
+    "flat": "Carte plane",
+    "less": "moins",
+    "more": "plus"
+  },
+  "about": {
+    "kicker": "fig. 04 · fonctionnement",
+    "title": "À propos",
+    "lines": [
+      "Wikimedia publie chaque heure le nombre de lectures de chaque article de Wikipédia.",
+      "Looked Up lit les 30 plus grandes éditions, qui portent 98,5 % des consultations humaines.",
+      "Chaque article est comparé à ses 28 derniers jours, à la même heure.",
+      "Un pic est un saut soudain, très au-dessus de cette référence.",
+      "Wikidata relie un même sujet entre les langues : Lisbon, Lisboa et リスボン comptent pour un.",
+      "Un événement est un sujet en pic dans au moins deux langues en six heures.",
+      "Les niveaux disent jusqu'où il s'est propagé : remarqué (2+), international (5+), planétaire (20+).",
+      "Mise à jour chaque heure, avec environ trois heures de retard, au rythme de la publication des données."
+    ],
+    "limits_title": "Ce qu'il ne voit pas",
+    "limits": [
+      "Le retard : Wikimedia publie chaque heure environ deux heures après sa fin, donc les événements les plus récents ont environ trois heures.",
+      "Des langues, pas des pays : un pic en espagnol peut venir du Mexique, d'Espagne ou des États-Unis.",
+      "Le biais de célébrité : les personnes connues et les grands spectacles se propagent ; l'actualité locale quitte rarement sa langue.",
+      "30 langues : elles portent 98,5 % des consultations humaines, mais des communautés entières au-delà restent invisibles ici."
+    ],
+    "links": "Données : {dataset}. Code et méthodes : {repo}.",
+    "dataset": "le jeu de données ouvert sur Hugging Face",
+    "repo": "le dépôt GitHub",
+    "privacy": "Ni cookies ni pistage. Votre thème et votre langue restent dans votre navigateur."
+  }
+}

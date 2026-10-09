@@ -1,0 +1,114 @@
+{
+  "locale": "en-GB",
+  "meta": {
+    "title": "Looked Up: what the world looked up, hour by hour",
+    "description": "What humanity looked up today and over the last 90 days, across 30 Wikipedia languages, updated every hour from public pageviews."
+  },
+  "nav": { "today": "Today", "timeline": "Days", "languages": "Languages", "briefing": "Briefing", "about": "About" },
+  "ui": {
+    "skip": "Skip to content", "theme": "Switch theme", "language": "Interface language", "utc": "UTC",
+    "error": "The data could not be loaded. Please try again later.", "loading": "Loading…",
+    "updated": "Updated {time}"
+  },
+  "hero": {
+    "kicker": "fig. 00 · last 24 hours",
+    "title": "Today the world looked up",
+    "empty": "No event has spread to two languages in the last 24 hours yet.",
+    "counter": { "one": "{n} language in {within}", "other": "{n} languages in {within}" },
+    "replay": "Replay the spread",
+    "led_by": "led by {lang}"
+  },
+  "within": { "zero": "under an hour", "one": "{n} hour", "other": "{n} hours" },
+  "tier": { "noticed": "Noticed", "international": "International", "planetary": "Planetary" },
+  "tier_help": {
+    "noticed": "Spiking in 2 to 4 languages",
+    "international": "Spiking in 5 to 19 languages",
+    "planetary": "Spiking in 20 languages or more"
+  },
+  "event": {
+    "languages": { "one": "{n} language", "other": "{n} languages" },
+    "first_spike": "First spike {time} UTC",
+    "lead": "Lead: {lang}",
+    "wiki": "Wikipedia in {lang}",
+    "spark": "Views across all languages, from 24 hours before to 24 hours after the first spike",
+    "show": "Show on the map",
+    "more": "Show more",
+    "category": {
+      "death": "Death", "human": "Person", "sports": "Sports", "entertainment": "Entertainment",
+      "disaster": "Disaster", "politics": "Politics", "place": "Place", "organization": "Organisation",
+      "science_tech": "Science & tech", "other": "Other"
+    }
+  },
+  "timeline": {
+    "kicker": "fig. 01 · last 90 days",
+    "title": "Pick a day",
+    "standfirst": "Every bar is one day: how many events spread to two languages or more.",
+    "slider": "Day",
+    "prev": "Previous day",
+    "next": "Next day",
+    "today": "Today",
+    "count": { "one": "{n} event", "other": "{n} events" },
+    "filter": "Show",
+    "all": "All tiers",
+    "intl": "International and up",
+    "planet": "Planetary only",
+    "empty": "No event matches this filter on this day."
+  },
+  "languages": {
+    "kicker": "fig. 02 · by language",
+    "title": "What each language community looked up",
+    "standfirst": "The top events of the selected day in one language, and what only that community looked up.",
+    "choose": "Language",
+    "top": "Top events",
+    "only": "Only here",
+    "only_help": "Attention from one community: at least 95 % of the extra views came from this language.",
+    "none": "Nothing for this language on this day."
+  },
+  "briefing": {
+    "kicker": "fig. 03 · the day in words",
+    "title": "Briefing",
+    "lead": "On {date} the world looked up {label}: {breadth} in {within}, led by {lang}; {excess}.",
+    "lead_death": "On {date} the world looked up {label} after news of their death: {breadth} in {within}, led by {lang}; {excess}.",
+    "excess_big": "{n} more views than usual",
+    "excess_small": "{n} more views than usual",
+    "fastest": "Fastest spread: {label}, {breadth} in {within}.",
+    "widest": "Most languages: {label}, {breadth}.",
+    "non_english": "Biggest event not led by English: {label}, led by {lang}, {excess}.",
+    "quiet": "A quiet day: no event spread to two languages.",
+    "note": "Written automatically from the day's data, with the same template every day."
+  },
+  "map": {
+    "label": "Map of attention by language for {label}",
+    "idle": "Map of attention by language",
+    "caption": "We see languages, not countries. A country is coloured by the strongest attention among its languages.",
+    "globe": "3D globe",
+    "flat": "Flat map",
+    "less": "less",
+    "more": "more"
+  },
+  "about": {
+    "kicker": "fig. 04 · how it works",
+    "title": "About",
+    "lines": [
+      "Wikimedia publishes how often every Wikipedia article is read, every hour.",
+      "Looked Up reads the 30 largest editions, which carry 98.5 % of human article views.",
+      "Each article is compared with its own last 28 days at the same hour.",
+      "A spike is a sudden jump far above that baseline.",
+      "Wikidata joins the same topic across languages, so Lisbon, Lisboa and リスボン count as one.",
+      "An event is one topic spiking in two languages or more within six hours.",
+      "Tiers say how far it spread: noticed (2+), international (5+), planetary (20+).",
+      "It updates every hour, about three hours behind real time, because that is when the data is published."
+    ],
+    "limits_title": "What it cannot see",
+    "limits": [
+      "Delay: Wikimedia publishes each hour about two hours after it ends, so the newest events are about three hours old.",
+      "Languages, not countries: a spike in Spanish could come from Mexico, Spain or the United States.",
+      "Fame bias: widely known people and spectacles spread; local news rarely leaves its language.",
+      "30 languages: they carry 98.5 % of human views, but entire communities beyond them are invisible here."
+    ],
+    "links": "Data: {dataset}. Code and methods: {repo}.",
+    "dataset": "the open dataset on Hugging Face",
+    "repo": "the GitHub repository",
+    "privacy": "No cookies, no tracking. Your theme and language choice stay in your browser."
+  }
+}
