@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Looked Up: what the world looked up, hour by hour</title>
+    <meta name="description"
+        content="What humanity looked up today and over the last 90 days, across 30 Wikipedia languages, updated every hour from public pageviews.">
+    <meta name="author" content="Abdellah Sbai Atta Allah">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#08090b">
+
+    <!-- Theme before first paint: dark by default, light only if chosen. No cookies, no tracking. -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('lookedup_theme');
+                if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { /* storage blocked: keep dark */ }
+        })();
+    </script>
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Looked Up: what the world looked up, hour by hour">
+    <meta property="og:description"
+        content="Hour by hour, which topics suddenly drew attention across 30 Wikipedia languages, and how fast it spread.">
+
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preconnect" href="https://huggingface.co" crossorigin>
+    <link rel="modulepreload" href="js/main.js">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <a class="skip visually-hidden-focusable" href="#main" data-i18n="ui.skip">Skip to content</a>
+
+    <header class="header">
+        <div class="header__inner">
+            <a class="brand" href="./" aria-label="Looked Up">
+                <span class="brand__mark" aria-hidden="true"></span>
+                <span class="brand__name">Looked Up</span>
+            </a>
+            <nav class="nav" aria-label="Sections">
+                <a href="#today" data-i18n="nav.today">Today</a>
+                <a href="#days" data-i18n="nav.timeline">Days</a>
+                <a href="#languages" data-i18n="nav.languages">Languages</a>
+                <a href="#briefing" data-i18n="nav.briefing">Briefing</a>
+                <a href="#about" data-i18n="nav.about">About</a>
+            </nav>
+            <div class="controls">
+                <div class="langswitch" role="group" data-i18n-aria="ui.language" aria-label="Interface language">
+                    <button type="button" data-ui-lang="en" lang="en">EN</button>
+                    <button type="button" data-ui-lang="fr" lang="fr">FR</button>
+                    <button type="button" data-ui-lang="es" lang="es">ES</button>
+                </div>
+                <button type="button" class="theme" id="theme" data-i18n-aria="ui.theme" aria-label="Switch theme">
+                    <span aria-hidden="true" class="theme__icon"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main" class="layout">
+        <section class="hero" id="today" aria-labelledby="hero-title">
+            <p class="meta" data-i18n="hero.kicker">fig. 00 · last 24 hours</p>
+            <h1 class="hero__title display" id="hero-title" data-i18n="hero.title">Today the world looked up</h1>
+            <div class="hero__event" id="hero-event" aria-live="polite">
+                <p class="hero__label skeleton" id="hero-label">&nbsp;</p>
+                <p class="hero__counter num" id="hero-counter">&nbsp;</p>
+                <p class="hero__sub" id="hero-sub">&nbsp;</p>
+            </div>
+            <div class="hero__actions">
+                <button type="button" class="btn" id="replay" data-i18n="hero.replay" hidden>Replay the spread</button>
+            </div>
+            <p class="updated meta" id="updated"></p>
+        </section>
+        <aside class="layout__viz" aria-label="Map">
+            <figure class="viz">
+                <div class="viz__stage" id="viz" role="img" aria-label="Map of attention by language"></div>
+                <figcaption class="viz__caption">
+                    <span class="viz__now" id="viz-now"></span>
+                    <span class="legend" aria-hidden="true"><span data-i18n="map.less">less</span><i class="legend__ramp"></i><span data-i18n="map.more">more</span></span>
+                    <span class="viz__note" data-i18n="map.caption">We see languages, not countries.</span>
+                </figcaption>
+                <button type="button" class="btn btn--small viz__mode" id="viz-mode" hidden data-i18n="map.globe">3D globe</button>
+            </figure>
+        </aside>
+
+        <div class="layout__content">
+
+            <section class="fig" id="days" aria-labelledby="days-title">
+                <div class="fig__head">
+                    <p class="meta" data-i18n="timeline.kicker">fig. 01 · last 90 days</p>
+                    <h2 class="fig__title" id="days-title" data-i18n="timeline.title">Pick a day</h2>
+                    <p class="fig__standfirst" data-i18n="timeline.standfirst">Every bar is one day.</p>
+                </div>
+                <div class="scrubber">
+                    <svg class="scrubber__bars" id="bars" aria-hidden="true" preserveAspectRatio="none"></svg>
+                    <div class="scrubber__row">
+                        <button type="button" class="btn btn--icon" id="prev-day" data-i18n-aria="timeline.prev" aria-label="Previous day">&larr;</button>
+                        <label class="visually-hidden" for="day-slider" data-i18n="timeline.slider">Day</label>
+                        <input type="range" id="day-slider" min="0" max="0" value="0" step="1">
+                        <button type="button" class="btn btn--icon" id="next-day" data-i18n-aria="timeline.next" aria-label="Next day">&rarr;</button>
+                    </div>
+                    <p class="scrubber__out" aria-live="polite"><output id="day-out" for="day-slider"></output> · <span id="day-count"></span></p>
+                </div>
+                <div class="filters" role="radiogroup" data-i18n-aria="timeline.filter" aria-label="Show">
+                    <button type="button" role="radio" aria-checked="true" data-tier="noticed" data-i18n="timeline.all">All tiers</button>
+                    <button type="button" role="radio" aria-checked="false" data-tier="international" data-i18n="timeline.intl">International and up</button>
+                    <button type="button" role="radio" aria-checked="false" data-tier="planetary" data-i18n="timeline.planet">Planetary only</button>
+                </div>
+                <ol class="cards" id="cards"></ol>
+                <button type="button" class="btn btn--wide" id="more" data-i18n="event.more" hidden>Show more</button>
+            </section>
+
+            <section class="fig" id="languages" aria-labelledby="langs-title">
+                <div class="fig__head">
+                    <p class="meta" data-i18n="languages.kicker">fig. 02 · by language</p>
+                    <h2 class="fig__title" id="langs-title" data-i18n="languages.title">What each language community looked up</h2>
+                    <p class="fig__standfirst" data-i18n="languages.standfirst"></p>
+                </div>
+                <label class="field">
+                    <span class="meta" data-i18n="languages.choose">Language</span>
+                    <select id="lang-select"></select>
+                </label>
+                <div class="langpanel">
+                    <div>
+                        <h3 class="h3" data-i18n="languages.top">Top events</h3>
+                        <ol class="mini" id="lang-top"></ol>
+                    </div>
+                    <div>
+                        <h3 class="h3" data-i18n="languages.only">Only here</h3>
+                        <p class="help" data-i18n="languages.only_help"></p>
+                        <ol class="mini" id="lang-only"></ol>
+                    </div>
+                </div>
+            </section>
+
+            <section class="fig" id="briefing" aria-labelledby="brief-title">
+                <div class="fig__head">
+                    <p class="meta" data-i18n="briefing.kicker">fig. 03 · the day in words</p>
+                    <h2 class="fig__title" id="brief-title" data-i18n="briefing.title">Briefing</h2>
+                </div>
+                <p class="briefing__date meta" id="brief-date"></p>
+                <p class="briefing__text" id="brief-text"></p>
+                <ul class="facts" id="brief-facts"></ul>
+                <p class="help" data-i18n="briefing.note"></p>
+            </section>
+
+            <section class="fig" id="about" aria-labelledby="about-title">
+                <div class="fig__head">
+                    <p class="meta" data-i18n="about.kicker">fig. 04 · how it works</p>
+                    <h2 class="fig__title" id="about-title" data-i18n="about.title">About</h2>
+                </div>
+                <ol class="about__lines" id="about-lines"></ol>
+                <h3 class="h3" data-i18n="about.limits_title">What it cannot see</h3>
+                <ul class="about__limits" id="about-limits"></ul>
+                <p class="about__links" id="about-links"></p>
+                <p class="help" data-i18n="about.privacy"></p>
+            </section>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <p class="meta">Looked Up · <a href="https://huggingface.co/datasets/Sbaiiiiii/looked-up">Hugging Face</a> · <a
+                href="https://github.com/Sbaiii/looked-up">GitHub</a> · <a href="https://sbaiii.com/">sbaiii.com</a></p>
+    </footer>
+
+    <noscript><p class="noscript">Looked Up needs JavaScript to load its hourly data.</p></noscript>
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
