@@ -119,6 +119,35 @@ hourly files and can be rebuilt at any time.
 Definitions are in [prereg_phase2.md](prereg_phase2.md) and ADR 0015. The warehouse version, with tests and the
 90-day history, is described in [warehouse.md](warehouse.md).
 
+## App exports (`data/app/`, Phase 3, ADR 0022)
+
+Small JSON files for the web app, each with `schema_version: 1` and a gzipped twin (`*.json.gz`). The Hub serves
+files uncompressed, so the app inflates the twin in the browser.
+
+| File | Content |
+|---|---|
+| `data/app/today.json` | events that started in the last 24 h (`kind: today`, `last_hour`) |
+| `data/app/days/YYYY-MM-DD.json` | events that started on one UTC day (`kind: day`), from 16 Jul 2026 |
+| `data/app/stats.json` | per-day summaries for 90 days, totals, `per_language` (events, lead, excess, only_here, lead_share), `tiers`, `timeline` (events per start hour, per day) |
+
+A day file publishes three sets of events:
+- the top 200 multi-language events by breadth;
+- each language's top 5;
+- up to 10 single-language events per lead language.
+
+`summary` counts all of the day's events. An event has these fields:
+
+| Field | Meaning |
+|---|---|
+| `id`, `qid`, `start` | event id, Wikidata QID, first window hour (UTC) |
+| `tier` | `noticed` (≥ 2 languages), `international` (≥ 5), `planetary` (≥ 20) (ADR 0021) |
+| `class` | `multi_language` or `single_language` (ADR 0019) |
+| `breadth`, `lead`, `spread_h` | spiking languages within 24 h, lead language, hours to the last language |
+| `excess`, `peak`, `category` | extra views over baseline, peak surprise, coarse category (`death`, `sports`, …) |
+| `labels`, `urls` | label and Wikipedia URL in every one of our languages that has an article |
+| `langs[]` | `lang`, `first` (first spike hour), `lag` (hours after start), `surprise`, `excess` |
+| `spark` | 48 hourly totals across languages, from start − 24 h to start + 23 h; `null` = not ingested yet |
+
 ## Query it from DuckDB (5 lines)
 
 ```python
