@@ -151,9 +151,10 @@ def scored_candidates_sql(src: str, day: date, cfg: AnalyticsConfig, prior: str,
             LEFT JOIN hist p3 ON p3.lang = st.lang AND p3.title = st.title AND p3.ts_hour_start = st.ts_hour_start - INTERVAL 3 HOUR
         ), scored AS (
             SELECT l.*,
-                   CASE WHEN baseline_level = 'prior' THEN pr.prior_median
+                   -- a language without a prior (empty sample; never seen on real wikis) falls back to 0
+                   CASE WHEN baseline_level = 'prior' THEN coalesce(pr.prior_median, 0)
                         ELSE list_aggregate(padded, 'median')::DOUBLE END AS baseline_median,
-                   CASE WHEN baseline_level = 'prior' THEN pr.prior_mad
+                   CASE WHEN baseline_level = 'prior' THEN coalesce(pr.prior_mad, 0)
                         ELSE list_aggregate(padded, 'mad')::DOUBLE END AS baseline_mad,
                    list_aggregate([v_m1, v_m2, v_m3], 'median')::DOUBLE AS prev3_median
             FROM lagged l LEFT JOIN {prior} pr ON pr.lang = l.lang
