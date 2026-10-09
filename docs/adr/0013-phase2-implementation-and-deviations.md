@@ -73,3 +73,13 @@ The **primary analysis keeps the registered filter.** In addition, results are r
   (share of non-events flagged, and events wrongly flagged) and the event count.
 
 S1 is reported next to the primary configuration, never instead of it.
+
+## Second sensitivity analysis, declared before results (S2)
+
+- **Observation (2026-10-09, before any metric was computed):** the pre-registered "major" set includes common
+  nouns linked from bullet text, such as `tennis` (Q847) in "In tennis, …". It also includes ongoing topics linked
+  almost every day ("2026 Iran war"). Neither is an event that should start a spike on that day, and the
+  generic-class list (countries, continents, …) doesn't remove them.
+- The **primary H1 verdict keeps the registered definition.** In addition, recall is reported on a subset fixed now:
+- **S2 = story headers only:** major pairs whose link comes from a **depth-1 bullet**, the portal's own story titles,
+  e.g. `*[[2026 Colombia earthquake]]`.
