@@ -89,10 +89,21 @@ Duplicates are harmless: the hourly job is idempotent, and its concurrency group
 - Hub storage, 2026-10-09:
   - **4,962,899,645 bytes before** (101 commits).
   - After removing `data/baselines/` and one `super_squash_history`: **1 commit**, all 104 files intact.
+    The first hourly run afterwards added 2 commits (ingest, score) and no baselines.
+  - Read again 2026-10-09 07:00 UTC: 4,971,796,434 bytes, not yet recounted after the squash.
   - The storage figure updates up to 36 h after a squash. Read it with
     `python -m lookedup.cli hub` (no flags just reports storage).
 - **Risk of squashing:** the dataset repo's history is rewritten into one commit. Old revisions and links pinned to
   commit hashes stop working, and it can't be undone. Current data is untouched.
+
+## Local disk (2026-10-09, `df -h /Users`)
+
+| When | Used | Free |
+|---|---:|---:|
+| Before ADR 0016 (2026-10-08 21:23 UTC, lake and spill inside the repo) | 395 GiB | 30 GiB |
+| After moving to `~/looked-up-data`, spill capped (2026-10-09 07:00 UTC, lake mirror re-sync in progress) | 372 GiB | 51 GiB |
+
+The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are leftovers that can be deleted by hand.
 
 ## Runbook
 
