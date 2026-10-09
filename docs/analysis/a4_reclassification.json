@@ -1,0 +1,157 @@
+{
+ "events_before": 11127,
+ "events_after": 11127,
+ "same_ids": 11127,
+ "by_class": {
+  "multi_language": 10616,
+  "single_language": 511
+ },
+ "single_by_category": [
+  [
+   "sports",
+   182
+  ],
+  [
+   "entertainment",
+   142
+  ],
+  [
+   "human",
+   97
+  ],
+  [
+   "other",
+   73
+  ],
+  [
+   "death",
+   13
+  ],
+  [
+   "organization",
+   2
+  ],
+  [
+   "disaster",
+   2
+  ]
+ ],
+ "single_by_lead": [
+  [
+   "en",
+   379
+  ],
+  [
+   "it",
+   35
+  ],
+  [
+   "de",
+   32
+  ],
+  [
+   "ja",
+   30
+  ],
+  [
+   "fr",
+   18
+  ],
+  [
+   "es",
+   3
+  ],
+  [
+   "pl",
+   3
+  ],
+  [
+   "fa",
+   2
+  ]
+ ],
+ "single_breadth": [
+  [
+   3.0,
+   10
+  ]
+ ],
+ "creampie": [
+  [
+   "single_language",
+   0.988
+  ]
+ ],
+ "examples": [
+  [
+   "Yuri Nakamura",
+   "ja",
+   4,
+   0.981,
+   "entertainment"
+  ],
+  [
+   "creampie",
+   "ja",
+   3,
+   0.988,
+   "other"
+  ],
+  [
+   "Case Keenum",
+   "en",
+   5,
+   0.983,
+   "sports"
+  ],
+  [
+   "Haruka Fukuhara",
+   "ja",
+   4,
+   0.978,
+   "entertainment"
+  ],
+  [
+   "Perez Hilton",
+   "en",
+   9,
+   0.951,
+   "entertainment"
+  ],
+  [
+   "Joshua Kushner",
+   "en",
+   7,
+   0.969,
+   "human"
+  ],
+  [
+   null,
+   "en",
+   5,
+   0.974,
+   "human"
+  ],
+  [
+   "Shelley Fabares",
+   "en",
+   6,
+   0.97,
+   "death"
+  ],
+  [
+   "Ryan Fox",
+   "en",
+   3,
+   0.993,
+   "sports"
+  ],
+  [
+   "Ry\u014dtar\u014d Shimizu",
+   "ja",
+   3,
+   0.968,
+   "death"
+  ]
+ ]
+}
