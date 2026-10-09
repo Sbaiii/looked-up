@@ -74,3 +74,6 @@ jobs:
         with:
           path: ~/looked-up-data/baselines
           key: baselines-${{ steps.day.outputs.day }}
+      - name: Export app data (data/app/ on the Hub, ADR 0022)
+        if: steps.token.outputs.present == 'true'
+        run: python -m lookedup.cli app-export
