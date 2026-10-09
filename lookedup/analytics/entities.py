@@ -54,12 +54,63 @@ def parse_entity(e: dict) -> dict:
     return out
 
 
+SPARQL = "https://query.wikidata.org/sparql"
+
+
+def _sparql(query: str) -> list[dict]:
+    for attempt in range(5):
+        try:
+            r = session().post(SPARQL, data={"query": query}, timeout=120,
+                               headers={"Accept": "application/sparql-results+json"})
+            r.raise_for_status()
+            return r.json()["results"]["bindings"]
+        except (requests.RequestException, ValueError) as e:
+            if attempt == 4:
+                raise
+            log.warning("sparql failed (%s), retry %d", e, attempt + 1)
+            time.sleep(5 * (attempt + 1))
+    return []
+
+
+def fetch_claims_sparql(qids: list[int], batch: int = 500) -> list[dict]:
+    """Same output as the wbgetentities path, via the Wikidata Query Service (much lighter)."""
+    rows = []
+    for i in range(0, len(qids), batch):
+        chunk = qids[i:i + batch]
+        values = " ".join(f"wd:Q{q}" for q in chunk)
+        claims: dict[int, dict] = {q: {p: [] for p in PROPS} for q in chunk}
+        props = " ".join(f"wdt:{p}" for p in PROPS)
+        for b in _sparql(f"SELECT ?item ?p ?v WHERE {{ VALUES ?item {{ {values} }} VALUES ?p {{ {props} }} ?item ?p ?v . }}"):
+            q = int(b["item"]["value"].rsplit("/Q", 1)[1])
+            prop = b["p"]["value"].rsplit("/", 1)[1]
+            v = b["v"]["value"]
+            if prop == "P570":
+                claims[q]["P570"].append(v[:10])
+            elif "/entity/Q" in v:
+                claims[q][prop].append(int(v.rsplit("/Q", 1)[1]))
+        labels = {int(b["item"]["value"].rsplit("/Q", 1)[1]): b["l"]["value"] for b in _sparql(
+            f"SELECT ?item ?l WHERE {{ VALUES ?item {{ {values} }} ?item rdfs:label ?l . FILTER(lang(?l) = 'en') }}")}
+        for q in chunk:
+            rows.append({"qid": q, "label_en": labels.get(q), "claims_json": json.dumps(claims[q])})
+        log.info("claims (sparql): %d/%d fetched", min(i + batch, len(qids)), len(qids))
+        time.sleep(1)
+    return rows
+
+
 def fetch_claims(qids: Iterable[int], cache: Path, batch: int = 50) -> pa.Table:
-    """Claims for ``qids``, fetching only those missing from the Parquet ``cache``."""
+    """Claims for ``qids``, fetching only those missing from the Parquet ``cache``.
+
+    Uses the Query Service in batches of 500; falls back to wbgetentities if it fails.
+    """
     have = pq.read_table(cache) if cache.exists() else SCHEMA.empty_table()
     known = set(have["qid"].to_pylist())
     todo = sorted(set(int(q) for q in qids) - known)
-    rows: list[dict] = []
+    try:
+        rows = fetch_claims_sparql(todo)
+        todo = []
+    except requests.RequestException as e:
+        log.warning("query service unavailable (%s), using wbgetentities", e)
+        rows = []
     for i in range(0, len(todo), batch):
         ids = "|".join(f"Q{q}" for q in todo[i:i + batch])
         for attempt in range(5):
