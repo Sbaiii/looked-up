@@ -166,8 +166,9 @@ def labels_for(qids: list[int], langs: list[str]) -> dict[int, dict[str, str]]:
     return out
 
 
-def score(store: Store, now: datetime | None = None, max_hours: int = 6, langs: list[str] | None = None) -> dict:
-    """Score unscored ingested hours of the last 48 h; rebuild recent events and latest.json."""
+def score(store: Store, now: datetime | None = None, max_hours: int = 6, langs: list[str] | None = None,
+          hours: list[datetime] | None = None) -> dict:
+    """Score unscored ingested hours of the last 48 h (or exactly ``hours``); rebuild events and latest.json."""
     from lookedup.languages import active_codes
 
     cfg = load()
@@ -179,7 +180,10 @@ def score(store: Store, now: datetime | None = None, max_hours: int = 6, langs: 
         state = _read_json(store, STATE_PATH, tmp / "state")
         scored = set(state.get("scored_hours", []))
         horizon = now - timedelta(hours=48)
-        pending = sorted(ts for ts in manifest.present() if ts >= horizon and f"{ts:%Y-%m-%dT%H}" not in scored)
+        if hours:
+            pending = sorted(ts for ts in hours if ts in manifest.present())
+        else:
+            pending = sorted(ts for ts in manifest.present() if ts >= horizon and f"{ts:%Y-%m-%dT%H}" not in scored)
         bfiles = {d: store.fetch(baselines_path(d), tmp / "b") for d in sorted({ts.date() for ts in pending})}
         for d, f in bfiles.items():
             if f is None:

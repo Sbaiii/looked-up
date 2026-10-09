@@ -13,6 +13,8 @@ Commands:
   compact       migrate a local lake from hourly files to daily files (one-off)
   card          upload dataset/README.md as the Hugging Face dataset card
   sync          download day files, manifest and sitelinks from Hugging Face into data/lake/
+  baselines     build data/baselines/day=D.parquet for production scoring (daily)
+  score         score ingested hours into spikes, events and data/latest.json (hourly)
   ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
   warehouse     run dbt on the warehouse (e.g. `warehouse build`), thresholds from config/analytics.yml
 """
@@ -177,6 +179,23 @@ def cmd_sync(a):
     print(json.dumps(res, indent=1))
 
 
+def cmd_baselines(a):
+    from lookedup.dumps import utcnow
+    from lookedup.scorer import build_baselines
+    from lookedup.store import open_store
+
+    day = date.fromisoformat(a.day) if a.day else utcnow().date()
+    print(json.dumps(build_baselines(open_store(a.local), day), indent=1))
+
+
+def cmd_score(a):
+    from lookedup.scorer import score
+    from lookedup.store import open_store
+
+    hours = [_hour(a.hour)] if a.hour else None
+    print(json.dumps(score(open_store(a.local), max_hours=a.max_hours, hours=hours), indent=1))
+
+
 def cmd_ground_truth(a):
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -253,6 +272,11 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--batch", type=int, default=3, help="days per Hub commit")
     add("compact", cmd_compact, local=False)
     add("card", cmd_card, local=False)
+    sp = add("baselines", cmd_baselines)
+    sp.add_argument("--day", help="UTC day to build baselines for (default: today)")
+    sp = add("score", cmd_score)
+    sp.add_argument("--hour", help="score exactly this hour start (UTC), e.g. 2026-10-08T14:00")
+    sp.add_argument("--max-hours", type=int, default=6)
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("warehouse", cmd_warehouse, local=False)
     sp.add_argument("--hf", action="store_true", help="read the lake from hf:// instead of data/lake/")
