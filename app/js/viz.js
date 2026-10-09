@@ -126,10 +126,13 @@ export function show(ev, { animate = true } = {}) {
     describe(ev);
 }
 
+let globeLoading = null;
 async function useGlobe() {
     if (mode === 'globe') return;
-    const { createGlobe } = await import('./globe.js');
-    if (!window.Globe) await loadScript('vendor/globe.gl.min.js');
+    globeLoading ||= Promise.all([import('./globe.js'), window.Globe ? null : loadScript('vendor/globe.gl.min.js')])
+        .catch((e) => { globeLoading = null; throw e; });
+    const [{ createGlobe }] = await globeLoading;
+    if (mode === 'globe') return;
     renderer?.destroy();
     stage.classList.add('is-globe');
     renderer = createGlobe(stage, geo);
