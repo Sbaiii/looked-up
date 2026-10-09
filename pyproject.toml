@@ -21,6 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+warehouse = ["dbt-duckdb>=1.9", "scipy>=1.11", "matplotlib>=3.8"]
 
 [project.scripts]
 lookedup = "lookedup.cli:main"

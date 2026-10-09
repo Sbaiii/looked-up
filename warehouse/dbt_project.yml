@@ -1,0 +1,24 @@
+name: lookedup
+version: "0.1.0"
+config-version: 2
+profile: lookedup
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages", "logs"]
+
+# Thresholds are NOT defined here: `python -m lookedup.cli warehouse` passes them from
+# config/analytics.yml (pre-registered) as vars, together with the lake location.
+vars:
+  lake_root: "{{ env_var('LOOKEDUP_LAKE_ROOT', '../data/lake') }}"
+
+models:
+  lookedup:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table

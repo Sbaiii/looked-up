@@ -1,0 +1,12 @@
+lookedup:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('LOOKEDUP_WAREHOUSE_DB', '../data/warehouse/lookedup.duckdb') }}"
+      threads: 1
+      extensions: [httpfs, parquet]
+      settings:
+        memory_limit: "{{ env_var('LOOKEDUP_DUCKDB_MEMORY', '8GB') }}"
+        preserve_insertion_order: false
+        enable_progress_bar: false
