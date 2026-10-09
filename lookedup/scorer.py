@@ -227,7 +227,8 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
         days = sorted({now.date() - timedelta(days=1), now.date()})
         spike_files = [files.get(spikes_path(d)) or store.fetch(spikes_path(d), tmp / "s2") for d in days]
         spike_files = [p for p in spike_files if p]
-        latest = {"generated_at": f"{now:%Y-%m-%dT%H:%M:%SZ}", "window_hours": 24, "events": []}
+        latest = {"generated_at": f"{now:%Y-%m-%dT%H:%M:%SZ}", "window_hours": 24, "events": [],
+                  "single_language_events": []}
         if spike_files:
             paths = ", ".join(f"'{p}'" for p in spike_files)
             con.execute(f"""CREATE OR REPLACE VIEW sp AS SELECT * FROM read_parquet([{paths}], union_by_name = true)
@@ -243,7 +244,10 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
                     out = tmp / "out" / pathf(d)
                     write_parquet(tbl.filter(mask), out)
                     files[pathf(d)] = out
-            latest["events"] = _latest(events, now, cfg, langs, tmp)
+            all_recent = _latest(events, now, cfg, langs, tmp)
+            # ADR 0019: single-language events are kept but listed separately
+            latest["events"] = [e for e in all_recent if e["event_class"] != "single_language"][:50]
+            latest["single_language_events"] = [e for e in all_recent if e["event_class"] == "single_language"][:50]
         out = tmp / "latest.json"
         out.write_text(json.dumps(latest, ensure_ascii=False, indent=1))
         files[LATEST_PATH] = out
@@ -260,7 +264,6 @@ def _latest(events: pa.Table, now: datetime, cfg, langs: list[str], tmp: Path) -
     rows = [dict(zip(events.column_names, r)) for r in zip(*(events[c].to_pylist() for c in events.column_names))]
     rows = [r for r in rows if r["start_hour"] >= now - timedelta(hours=24)]
     rows.sort(key=lambda r: (-r["breadth"], -r["peak_intensity"]))
-    rows = rows[:50]
     if not rows:
         return []
     qids = [r["qid"] for r in rows]
@@ -275,6 +278,7 @@ def _latest(events: pa.Table, now: datetime, cfg, langs: list[str], tmp: Path) -
         out.append({"qid": f"Q{r['qid']}", "start_hour": f"{r['start_hour']:%Y-%m-%dT%H}:00Z",
                     "lead_lang": r["lead_lang"], "breadth": r["breadth"],
                     "peak_intensity": round(r["peak_intensity"], 1), "excess_views": int(r["excess_views"] or 0),
-                    "languages": r["languages"], "category": cat,
+                    "languages": r["languages"], "category": cat, "event_class": r.get("event_class"),
+                    "lead_excess_share": round(r.get("lead_excess_share") or 0, 3),
                     "labels": {l: t for l, t in sorted(labels.get(r["qid"], {}).items())}})
     return out
