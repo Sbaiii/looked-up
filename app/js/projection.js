@@ -35,7 +35,8 @@ export function centroid(geom) {
     let best = null;
     let bestArea = -1;
     for (const poly of polygons(geom)) {
-        const ring = poly[0];
+        let ring = poly[0];
+        if (ring.some((pt, i) => i && Math.abs(pt[0] - ring[i - 1][0]) > 180)) ring = ring.map(([x, y]) => [x < 0 ? x + 360 : x, y]);
         let a = 0;
         let cx = 0;
         let cy = 0;
@@ -45,6 +46,7 @@ export function centroid(geom) {
         }
         if (Math.abs(a) > bestArea) { bestArea = Math.abs(a); best = a ? [cx / (3 * a), cy / (3 * a)] : ring[0]; }
     }
+    if (best && best[0] > 180) best = [best[0] - 360, best[1]];
     return best && best.map((v) => Math.round(v * 100) / 100);
 }
 
