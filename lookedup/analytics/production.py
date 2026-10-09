@@ -18,10 +18,12 @@ from lookedup.analytics.config import AnalyticsConfig
 from lookedup.analytics.scoring import observation_counts, prior_sql
 
 
-def daily_baselines_sql(src: str, day: date, cfg: AnalyticsConfig) -> str:
+def daily_baselines_sql(src: str, day: date, cfg: AnalyticsConfig, restrict: str | None = None) -> str:
     """Baseline slots for every (lang, title, hour_of_day) with a non-zero median on ``day``'s day type.
 
-    Plus one row per language with ``title IS NULL`` carrying the language prior.
+    Plus one row per language with ``title IS NULL`` carrying the language prior. ``restrict``
+    (a relation of lang, title) limits the slots to those titles; each title's slots depend only
+    on its own history, so the result for those titles is unchanged (used for spot checks).
     """
     b = cfg.baseline
     n = observation_counts(day, cfg)
@@ -36,6 +38,7 @@ def daily_baselines_sql(src: str, day: date, cfg: AnalyticsConfig) -> str:
         WITH lb AS (
             SELECT lang, title, hour_of_day, views FROM {src}
             WHERE day >= DATE '{lo}' AND day < DATE '{day}' {dt_filter}
+            {f"AND (lang, title) IN (SELECT lang, title FROM {restrict})" if restrict else ""}
         ), present AS (
             SELECT lang, title, hour_of_day FROM lb GROUP BY ALL HAVING 2 * count(*) >= {n_use}
         ), slots AS (
@@ -66,8 +69,13 @@ def score_hour_sql(src: str, baselines: str, day: date, hour: int, cfg: Analytic
     s, a = cfg.spike, cfg.automation
     ts = f"TIMESTAMP '{day} {hour:02d}:00:00'"
     return f"""
-        WITH cand AS (
+        WITH cand AS MATERIALIZED (
             SELECT * FROM {src} WHERE ts_hour_start = {ts} AND views >= {s.min_views}
+        ), near AS MATERIALIZED (
+            -- the candidates' own rows of the previous 24 h: one small table for every lag
+            SELECT ts_hour_start, lang, title, views FROM {src}
+            WHERE ts_hour_start >= {ts} - INTERVAL 24 HOUR AND ts_hour_start < {ts}
+              AND (lang, title) IN (SELECT lang, title FROM cand)
         ), known AS (
             SELECT DISTINCT lang, title FROM {baselines} WHERE title IS NOT NULL
         ), b AS (
@@ -77,19 +85,25 @@ def score_hour_sql(src: str, baselines: str, day: date, hour: int, cfg: Analytic
             LEFT JOIN known k ON k.lang = c.lang AND k.title = c.title
             LEFT JOIN {baselines} sl ON sl.lang = c.lang AND sl.title = c.title AND sl.hour_of_day = c.hour_of_day
             LEFT JOIN {baselines} pr ON pr.lang = c.lang AND pr.title IS NULL
+        ), probes AS (
+            SELECT c.lang, c.title, o.k, c.ts_hour_start - to_hours(o.k) AS ts_probe
+            FROM cand c CROSS JOIN (VALUES (24), (1), (2), (3)) o(k)
+        ), lags AS (
+            SELECT p.lang, p.title,
+                   coalesce(max(n.views) FILTER (WHERE p.k = 24), 0) AS views_yesterday,
+                   coalesce(max(n.views) FILTER (WHERE p.k = 1), 0) AS v_m1,
+                   coalesce(max(n.views) FILTER (WHERE p.k = 2), 0) AS v_m2,
+                   coalesce(max(n.views) FILTER (WHERE p.k = 3), 0) AS v_m3
+            FROM probes p LEFT JOIN near n ON n.lang = p.lang AND n.title = p.title AND n.ts_hour_start = p.ts_probe
+            GROUP BY ALL
         ), lagged AS (
             SELECT b.*,
                    CASE WHEN unseen THEN coalesce(prior_median, 0) ELSE coalesce(slot_median, 0) END AS baseline_median,
                    CASE WHEN unseen THEN coalesce(prior_mad, 0) ELSE coalesce(slot_mad, 0) END AS baseline_mad,
                    CASE WHEN unseen THEN 'prior' ELSE coalesce(slot_level, 'zero') END AS baseline_level,
-                   coalesce(y.views, 0) AS views_yesterday,
-                   list_aggregate([coalesce(p1.views, 0), coalesce(p2.views, 0), coalesce(p3.views, 0)], 'median')::DOUBLE
-                       AS prev3_median
-            FROM b
-            LEFT JOIN {src} y  ON y.lang = b.lang AND y.title = b.title AND y.ts_hour_start = b.ts_hour_start - INTERVAL 24 HOUR
-            LEFT JOIN {src} p1 ON p1.lang = b.lang AND p1.title = b.title AND p1.ts_hour_start = b.ts_hour_start - INTERVAL 1 HOUR
-            LEFT JOIN {src} p2 ON p2.lang = b.lang AND p2.title = b.title AND p2.ts_hour_start = b.ts_hour_start - INTERVAL 2 HOUR
-            LEFT JOIN {src} p3 ON p3.lang = b.lang AND p3.title = b.title AND p3.ts_hour_start = b.ts_hour_start - INTERVAL 3 HOUR
+                   lg.views_yesterday,
+                   list_aggregate([lg.v_m1, lg.v_m2, lg.v_m3], 'median')::DOUBLE AS prev3_median
+            FROM b JOIN lags lg ON lg.lang = b.lang AND lg.title = b.title
         ), flags AS (
             SELECT lang, title,
                    sum(views) AS day_views_so_far,
