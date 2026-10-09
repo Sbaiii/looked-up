@@ -1,0 +1,7 @@
+# Phase 2b additions (ADR 0019, docs/prereg_phase2b.md). config/analytics.yml (pre-registered for
+# Phase 2) stays unchanged; values here are read on top of it.
+
+event:
+  # An event whose lead language holds >= this share of the event's excess views is classified
+  # "single_language": kept, but listed separately from multi-language events (ADR 0019).
+  single_language_share: 0.95

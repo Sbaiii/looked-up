@@ -12,6 +12,7 @@ import yaml
 from lookedup.settings import CONFIG_DIR
 
 ANALYTICS_FILE = CONFIG_DIR / "analytics.yml"
+ANALYTICS_V2_FILE = CONFIG_DIR / "analytics_v2.yml"  # Phase 2b additions, read on top (ADR 0019)
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ class EventParams:
     breadth_hours: int
     new_event_gap_hours: int
     r3_threshold: float
+    single_language_share: float = 0.95
 
 
 @dataclass(frozen=True)
@@ -64,9 +66,11 @@ class AnalyticsConfig:
     @property
     def event(self) -> EventParams:
         e = self.raw["event"]
+        v2 = self.raw.get("v2", {}).get("event", {})
         return EventParams(min_languages=e["min_languages"], window_hours=e["window_hours"],
                            breadth_hours=e["breadth_hours"], new_event_gap_hours=e["new_event_gap_hours"],
-                           r3_threshold=self.raw["spike"]["r3_threshold"])
+                           r3_threshold=self.raw["spike"]["r3_threshold"],
+                           single_language_share=v2.get("single_language_share", 0.95))
 
     def event_variant(self, **changes) -> EventParams:
         """Event parameters with ablation overrides (r3_threshold, min_languages, window_hours)."""
@@ -79,5 +83,8 @@ class AnalyticsConfig:
 
 
 @lru_cache(maxsize=4)
-def load(path: Path = ANALYTICS_FILE) -> AnalyticsConfig:
-    return AnalyticsConfig(raw=yaml.safe_load(Path(path).read_text(encoding="utf-8")))
+def load(path: Path = ANALYTICS_FILE, v2_path: Path = ANALYTICS_V2_FILE) -> AnalyticsConfig:
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    if Path(v2_path).exists():
+        raw["v2"] = yaml.safe_load(Path(v2_path).read_text(encoding="utf-8")) or {}
+    return AnalyticsConfig(raw=raw)
