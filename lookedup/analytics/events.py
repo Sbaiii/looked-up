@@ -78,6 +78,8 @@ def events_sql(spikes: str, p: EventParams, scored: str | None = None) -> tuple[
         JOIN lead ld USING (qid, start_hour)
         LEFT JOIN excess ex USING (qid, start_hour, lang)
     """
+    # ADR 0021: tier by breadth, highest threshold first
+    tier_sql = "CASE " + " ".join(f"WHEN count(*) >= {n} THEN '{name}'" for name, n in p.tiers) + " END AS tier"
     events = f"""
         WITH el AS ({langs})
         SELECT event_id, qid, start_hour,
@@ -91,7 +93,8 @@ def events_sql(spikes: str, p: EventParams, scored: str | None = None) -> tuple[
                -- ADR 0019: share of excess views held by the lead language
                coalesce(sum(excess_views) FILTER (WHERE is_lead) / nullif(sum(excess_views), 0), 0) AS lead_excess_share,
                CASE WHEN coalesce(sum(excess_views) FILTER (WHERE is_lead) / nullif(sum(excess_views), 0), 0)
-                         >= {p.single_language_share} THEN 'single_language' ELSE 'multi_language' END AS event_class
+                         >= {p.single_language_share} THEN 'single_language' ELSE 'multi_language' END AS event_class,
+               {tier_sql}
         FROM el GROUP BY event_id, qid, start_hour
     """
     return events, langs

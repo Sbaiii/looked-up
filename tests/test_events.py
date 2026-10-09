@@ -93,3 +93,22 @@ def test_single_language_events_are_classified():
     cls = {e["qid"]: (e["event_class"], round(e["lead_excess_share"], 3)) for e in events}
     assert cls[1][0] == "single_language" and cls[1][1] >= 0.95
     assert cls[2][0] == "multi_language"
+
+
+def test_tiers_follow_breadth():
+    langs = ["en", "fr", "de", "es", "it", "ja", "zh", "ru", "pt", "pl", "nl", "ar", "fa", "tr", "id", "sv", "ko",
+             "cs", "fi", "uk", "he"]
+    rows = [(1, l, 0, 20) for l in langs[:2]] + [(2, l, 0, 20) for l in langs[:5]] + [(3, l, 1, 20) for l in langs[:20]]
+    p = EventParams(min_languages=2, window_hours=6, breadth_hours=24, new_event_gap_hours=24, r3_threshold=8)
+    events, _ = _events(_spikes(rows), p)
+    assert {e["qid"]: (e["breadth"], e["tier"]) for e in events} == {
+        1: (2, "noticed"), 2: (5, "international"), 3: (20, "planetary")}
+
+
+def test_product_config_lowers_min_languages_only():
+    from lookedup.analytics.config import load
+    cfg = load()
+    assert cfg.event.min_languages == 3                        # pre-registered primary, unchanged
+    assert cfg.product_event.min_languages == 2
+    assert cfg.product_event.window_hours == cfg.event.window_hours
+    assert dict(cfg.tiers) == {"planetary": 20, "international": 5, "noticed": 2}
