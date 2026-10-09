@@ -16,6 +16,7 @@ Commands:
   baselines     build data/baselines/day=D.parquet for production scoring (daily)
   score         score ingested hours into spikes, events and data/latest.json (hourly)
   ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
+  evaluate      run the pre-registered Phase 2 evaluation (writes docs/analysis/)
   warehouse     run dbt on the warehouse (e.g. `warehouse build`), thresholds from config/analytics.yml
 """
 
@@ -207,6 +208,17 @@ def cmd_ground_truth(a):
     print(json.dumps(res, indent=1))
 
 
+def cmd_evaluate(a):
+    from lookedup.evaluation import run
+
+    if a.audit_sample:
+        print(run.audit_sample(), "units written to docs/analysis/h3_sample.csv")
+    elif a.audit_score:
+        print(json.dumps(run.audit_score(), indent=1))
+    else:
+        print(json.dumps(run.evaluate(), indent=1, default=str))
+
+
 def cmd_warehouse(a):
     from lookedup.warehouse import run
 
@@ -278,6 +290,9 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--hour", help="score exactly this hour start (UTC), e.g. 2026-10-08T14:00")
     sp.add_argument("--max-hours", type=int, default=6)
     add("ground-truth", cmd_ground_truth, local=False)
+    sp = add("evaluate", cmd_evaluate, local=False)
+    sp.add_argument("--audit-sample", action="store_true")
+    sp.add_argument("--audit-score", action="store_true")
     sp = add("warehouse", cmd_warehouse, local=False)
     sp.add_argument("--hf", action="store_true", help="read the lake from hf:// instead of data/lake/")
     sp.add_argument("dbt_args", nargs=argparse.REMAINDER, help="dbt command and flags (default: build)")
