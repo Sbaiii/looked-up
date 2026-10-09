@@ -58,8 +58,18 @@ jobs:
       - name: Score ingested hours (spikes, events, latest.json)
         if: steps.token.outputs.present == 'true'
         run: python -m lookedup.cli score --max-hours 12
+      - name: Check for recomputed baselines
+        id: recomputed
+        if: steps.token.outputs.present == 'true' && steps.baselines.outputs.cache-hit != 'true'
+        # hashFiles() only sees the workspace, and the baselines live in ~/looked-up-data
+        run: |
+          if [ -f "$HOME/looked-up-data/baselines/day=${{ steps.day.outputs.day }}.parquet" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Save recomputed baselines (cache miss only)
-        if: steps.token.outputs.present == 'true' && steps.baselines.outputs.cache-hit != 'true' && hashFiles(format('{0}/looked-up-data/baselines/day={1}.parquet', env.HOME, steps.day.outputs.day)) != ''
+        if: steps.recomputed.outputs.exists == 'true'
         uses: actions/cache/save@v4
         with:
           path: ~/looked-up-data/baselines
