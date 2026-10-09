@@ -185,7 +185,7 @@ button { background: none; border: none; cursor: pointer; }
     .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: auto 1fr; }
     .hero, .layout__content { grid-column: 1; }
     .layout__viz { grid-column: 2; grid-row: 1 / 3; padding-top: clamp(1.5rem, 6vh, 5rem); }
-    .viz { position: sticky; top: 4.5rem; }
+    .layout__viz .viz { position: sticky; top: 4.5rem; }   /* beats the base .viz rule below */
 }
 
 /* Hero */
@@ -293,7 +293,7 @@ select {
     aspect-ratio: 2 / 1; width: 100%; border: 1px solid var(--rule); border-radius: 12px;
     background: radial-gradient(ellipse at 50% 40%, var(--paper-2), var(--paper)); overflow: hidden;
 }
-.viz__stage.is-globe { aspect-ratio: 1 / 1; max-height: 78vh; margin-inline: auto; }
+.viz__stage.is-globe { aspect-ratio: 1 / 1; width: min(100%, calc(100svh - 12rem)); margin-inline: auto; }
 .viz__stage svg { width: 100%; height: 100%; display: block; }
 .viz__stage canvas { display: block; }
 .country { fill: var(--land); stroke: var(--paper); stroke-width: 0.4; transition: fill 0.5s ease; }
