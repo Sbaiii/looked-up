@@ -8,6 +8,7 @@ portal date (new event articles). Otherwise None (the pair is skipped).
 from __future__ import annotations
 
 import re
+import time
 from datetime import date, datetime
 
 from lookedup.dumps import session
@@ -23,6 +24,7 @@ def infobox_time(wikitext: str) -> datetime | None:
 
 
 def _api(params: dict) -> dict:
+    time.sleep(0.35)  # stay under Wikimedia's 200 requests/minute for identified clients
     r = session().get("https://en.wikipedia.org/w/api.php", params={**params, "format": "json", "formatversion": 2},
                       timeout=60)
     r.raise_for_status()
