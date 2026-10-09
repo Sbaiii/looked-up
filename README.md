@@ -14,12 +14,33 @@ storage. CC0 data in, open data out.
 
 ## Status
 
+**Live app: [sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/).** What the world looked up today and
+over the last 90 days, across 30 languages, in English, French and Spanish. The app has a map coloured by language,
+the spread of each event from language to language, a day scrubber, per-language top lists and a daily briefing.
+
+| Desktop | Phone |
+|---|---|
+| <img src="docs/screenshots/desktop-day.png" alt="Looked Up on desktop: 25 August, Dolly Parton spreading to 29 languages on the globe" width="560"> | <img src="docs/screenshots/phone-today.png" alt="Looked Up on a phone: today's top event and the flat map" width="200"> |
+| <img src="docs/screenshots/desktop-today.png" alt="The hero: today the world looked up" width="560"> | <img src="docs/screenshots/phone-briefing.png" alt="The automatic briefing for 25 August" width="200"> |
+
 **Live, scoring hourly.** GitHub Actions adds each newly published hour of 30 Wikipedias to the public dataset
 [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up). After each ingest it scores the hour
-for **attention events**: one entity spiking in ≥ 3 languages within 6 hours against its own 28-day baseline. It
-writes `data/latest.json` with the last 24 h of events (multi-language events, plus a separate list of
-single-language events). A daily job at 03:30 UTC refreshes the baselines, kept in the Actions cache. The lake
-holds every hour since 9 Jul 2026. Operations: [docs/ops.md](docs/ops.md).
+for **attention events**: one entity spiking in ≥ 2 languages within 6 hours against its own 28-day baseline.
+- **Tiers** grade events by breadth: noticed ≥ 2, international ≥ 5, planetary ≥ 20 languages
+  ([ADR 0021](docs/adr/0021-product-tiers.md)).
+- Single-language events have their own list.
+- It writes `data/latest.json` and the app's JSON under `data/app/`
+  ([ADR 0022](docs/adr/0022-app-data-exports.md)).
+- A daily job at 03:30 UTC refreshes the baselines, which are kept in the Actions cache.
+- The lake holds every hour since 9 Jul 2026. Operations: [docs/ops.md](docs/ops.md).
+
+The app ([`app/`](app/)) is plain HTML, CSS and JavaScript with no build step and no tracking.
+- The 3D globe ([globe.gl](https://github.com/vasturiano/globe.gl), vendored) loads only after the first
+  interaction. Devices without WebGL, or low-end ones, keep the flat SVG map.
+- The globe is coloured by language, not country ([ADR 0023](docs/adr/0023-language-geography.md)).
+- Pages deploys it from `app/` on push. Data comes straight from the Hub, which allows CORS.
+- Lighthouse on the live site: mobile 93 / 100 / 100 / 100, desktop 100 / 100 / 100 / 100 (performance,
+  accessibility, best practices, SEO).
 
 **Phase 2, in one paragraph.** The definitions were pre-registered before any code
 ([prereg](docs/prereg_phase2.md)) and evaluated against Wikipedia's Current events portal
@@ -82,11 +103,15 @@ huggingface-cli login                                         # or export HF_TOK
 .venv/bin/python -m lookedup.cli evaluate                     # pre-registered Phase 2 evaluation
 .venv/bin/python -m lookedup.cli evaluate-v2                  # pre-registered Phase 2b evaluation
 .venv/bin/python -m lookedup.cli baselines && .venv/bin/python -m lookedup.cli score   # production scoring
+.venv/bin/python -m lookedup.cli app-export [--backfill --upload]   # app JSON (data/app/), hourly or every day
+npm ci && npm run serve                                       # preview the app on http://localhost:4173/
+npx playwright test                                           # app smoke tests (also run in CI)
 ```
 
 Add `--local` to write to `~/looked-up-data/lake` (or `$LOOKEDUP_DATA_DIR`, kept outside iCloud) instead of Hugging Face. Workflows:
 [`hourly.yml`](.github/workflows/hourly.yml) (every hour at :17: ingest, then score),
 [`trigger.yml`](.github/workflows/trigger.yml) (external backup trigger),
+[`pages.yml`](.github/workflows/pages.yml) (deploys `app/` to GitHub Pages),
 [`hub-maintenance.yml`](.github/workflows/hub-maintenance.yml) (monthly history squash),
 [`daily.yml`](.github/workflows/daily.yml) (baselines, 03:30 UTC),
 [`wikidata-monthly.yml`](.github/workflows/wikidata-monthly.yml),
