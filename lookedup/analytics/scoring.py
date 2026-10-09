@@ -100,18 +100,18 @@ def scored_candidates_sql(src: str, day: date, cfg: AnalyticsConfig, prior: str,
     hour_filter = f"AND hour_of_day IN ({', '.join(str(h) for h in hours)})" if hours else ""
     min_obs = b["min_observations"]
     return f"""
-        WITH cand AS (
+        WITH cand AS MATERIALIZED (
             SELECT ts_hour_start, day, hour_of_day, is_weekend, lang, title,
                    views, views_desktop, views_mobile, mobile_share
             FROM {src}
             WHERE day = {_d(day)} AND views >= {s.min_views} {hour_filter}
         ), keys AS (
             SELECT DISTINCT lang, title FROM cand
-        ), hist AS (
+        ), hist AS MATERIALIZED (
             SELECT h.ts_hour_start, h.day, h.hour_of_day, h.is_weekend, h.lang, h.title, h.views
             FROM {src} h SEMI JOIN keys USING (lang, title)
             WHERE h.day >= {_d(lo - timedelta(days=1))} AND h.day <= {_d(day)}
-        ), lookback AS (
+        ), lookback AS MATERIALIZED (
             SELECT * FROM hist WHERE day >= {_d(lo)} AND day < {_d(day)}
         ), seen AS (
             SELECT DISTINCT lang, title FROM lookback
@@ -140,15 +140,21 @@ def scored_candidates_sql(src: str, day: date, cfg: AnalyticsConfig, prior: str,
                    CASE WHEN n_dt >= {min_obs} THEN list_resize(vals_dt, n_dt, 0)
                         ELSE list_resize(vals_h, n_h, 0) END AS padded
             FROM base b
+        ), probes AS (
+            -- one lookup per (candidate, offset): yesterday's hour and the previous 3 hours, joined once
+            SELECT c.lang, c.title, c.ts_hour_start, o.k, c.ts_hour_start - to_hours(o.k) AS ts_probe
+            FROM cand c CROSS JOIN (VALUES (24), (1), (2), (3)) o(k)
+        ), lags AS (
+            SELECT p.lang, p.title, p.ts_hour_start,
+                   coalesce(max(h.views) FILTER (WHERE p.k = 24), 0) AS views_yesterday,
+                   coalesce(max(h.views) FILTER (WHERE p.k = 1), 0) AS v_m1,
+                   coalesce(max(h.views) FILTER (WHERE p.k = 2), 0) AS v_m2,
+                   coalesce(max(h.views) FILTER (WHERE p.k = 3), 0) AS v_m3
+            FROM probes p LEFT JOIN hist h ON h.lang = p.lang AND h.title = p.title AND h.ts_hour_start = p.ts_probe
+            GROUP BY ALL
         ), lagged AS (
-            SELECT st.*,
-                   coalesce(y.views, 0) AS views_yesterday,
-                   coalesce(p1.views, 0) AS v_m1, coalesce(p2.views, 0) AS v_m2, coalesce(p3.views, 0) AS v_m3
-            FROM stats st
-            LEFT JOIN hist y  ON y.lang = st.lang AND y.title = st.title AND y.ts_hour_start = st.ts_hour_start - INTERVAL 24 HOUR
-            LEFT JOIN hist p1 ON p1.lang = st.lang AND p1.title = st.title AND p1.ts_hour_start = st.ts_hour_start - INTERVAL 1 HOUR
-            LEFT JOIN hist p2 ON p2.lang = st.lang AND p2.title = st.title AND p2.ts_hour_start = st.ts_hour_start - INTERVAL 2 HOUR
-            LEFT JOIN hist p3 ON p3.lang = st.lang AND p3.title = st.title AND p3.ts_hour_start = st.ts_hour_start - INTERVAL 3 HOUR
+            SELECT st.*, lg.views_yesterday, lg.v_m1, lg.v_m2, lg.v_m3
+            FROM stats st JOIN lags lg ON lg.lang = st.lang AND lg.title = st.title AND lg.ts_hour_start = st.ts_hour_start
         ), scored AS (
             SELECT l.*,
                    -- a language without a prior (empty sample; never seen on real wikis) falls back to 0
