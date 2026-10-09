@@ -40,6 +40,23 @@ jobs:
           else
             echo "present=true" >> "$GITHUB_OUTPUT"
           fi
-      - name: Build baselines from the previous 28 days
+      - name: Day
+        id: day
+        run: |
+          d="${{ inputs.day }}"; [ -n "$d" ] || d="$(date -u +%F)"
+          echo "day=$d" >> "$GITHUB_OUTPUT"
+      - name: Restore cached baselines (previous days)
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/looked-up-data/baselines
+          key: baselines-${{ steps.day.outputs.day }}
+          restore-keys: baselines-
+      - name: Build baselines from the previous 28 days (local, never uploaded; ADR 0018)
         if: steps.token.outputs.present == 'true'
-        run: python -m lookedup.cli baselines ${{ inputs.day && format('--day {0}', inputs.day) || '' }}
+        run: python -m lookedup.cli baselines --day "${{ steps.day.outputs.day }}"
+      - name: Save baselines to the Actions cache
+        if: steps.token.outputs.present == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/looked-up-data/baselines
+          key: baselines-${{ steps.day.outputs.day }}

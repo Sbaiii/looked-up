@@ -45,6 +45,22 @@ jobs:
       - name: Ingest missing hours
         if: steps.token.outputs.present == 'true'
         run: python -m lookedup.cli hourly --max-hours "${{ inputs.max_hours || '12' }}"
+      - name: Day
+        id: day
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - name: Restore cached baselines
+        id: baselines
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/looked-up-data/baselines
+          key: baselines-${{ steps.day.outputs.day }}
+          restore-keys: baselines-
       - name: Score ingested hours (spikes, events, latest.json)
         if: steps.token.outputs.present == 'true'
         run: python -m lookedup.cli score --max-hours 12
+      - name: Save recomputed baselines (cache miss only)
+        if: steps.token.outputs.present == 'true' && steps.baselines.outputs.cache-hit != 'true' && hashFiles(format('{0}/looked-up-data/baselines/day={1}.parquet', env.HOME, steps.day.outputs.day)) != ''
+        uses: actions/cache/save@v4
+        with:
+          path: ~/looked-up-data/baselines
+          key: baselines-${{ steps.day.outputs.day }}
