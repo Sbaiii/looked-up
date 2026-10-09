@@ -1,0 +1,101 @@
+unit_id,label,note
+u001,event,sustained: peak 36% of the day
+u002,non_event,"isolated burst: peak 96% of the day, next hour 2.2% of peak"
+u003,event,sustained: peak 53% of the day
+u004,unsure,"peak 63% of the day, next hours [0.04, 0.02, 0.02] of peak"
+u005,event,sustained: peak 35% of the day
+u006,non_event,"isolated burst: peak 98% of the day, next hour 1.2% of peak"
+u007,event,sustained: peak 50% of the day
+u008,event,sustained: peak 24% of the day
+u009,event,sustained: peak 29% of the day
+u010,non_event,"isolated burst: peak 97% of the day, next hour 1.8% of peak"
+u011,event,sustained: peak 44% of the day
+u012,event,sustained: peak 48% of the day
+u013,event,sustained: peak 38% of the day
+u014,non_event,"isolated burst: peak 98% of the day, next hour 0.8% of peak"
+u015,unsure,"peak 93% of the day, next hours [0.05, 0.01, 0.0] of peak"
+u016,unsure,"peak 76% of the day, next hours [0.13, 0.04, 0.02] of peak"
+u017,event,sustained: peak 54% of the day
+u018,event,sustained: peak 13% of the day
+u019,event,sustained: peak 14% of the day
+u020,event,sustained: peak 38% of the day
+u021,event,sustained: peak 48% of the day
+u022,event,sustained: peak 12% of the day
+u023,event,sustained: peak 20% of the day
+u024,event,sustained: peak 43% of the day
+u025,event,sustained: peak 31% of the day
+u026,event,sustained: peak 21% of the day
+u027,event,sustained: peak 20% of the day
+u028,event,sustained: peak 26% of the day
+u029,event,sustained: peak 41% of the day
+u030,unsure,"peak 70% of the day, next hours [0.24, 0.06, 0.02] of peak"
+u031,event,sustained: peak 14% of the day
+u032,event,sustained: peak 50% of the day
+u033,event,sustained: peak 16% of the day
+u034,non_event,"isolated burst: peak 100% of the day, next hour 0.0% of peak"
+u035,event,sustained: peak 18% of the day
+u036,unsure,"peak 70% of the day, next hours [0.23, 0.06, 0.02] of peak"
+u037,event,sustained: peak 40% of the day
+u038,event,sustained: peak 35% of the day
+u039,unsure,"peak 77% of the day, next hours [0.15, 0.05, 0.03] of peak"
+u040,event,sustained: peak 25% of the day
+u041,event,sustained: peak 53% of the day
+u042,non_event,"isolated burst: peak 94% of the day, next hour 4.2% of peak"
+u043,event,sustained: peak 58% of the day
+u044,unsure,"peak 82% of the day, next hours [0.09, 0.03, 0.01] of peak"
+u045,event,sustained: peak 38% of the day
+u046,unsure,"peak 69% of the day, next hours [0.31, 0.05, 0.02] of peak"
+u047,event,sustained: peak 48% of the day
+u048,unsure,"peak 71% of the day, next hours [0.06, 0.03, 0.02] of peak"
+u049,event,sustained: peak 36% of the day
+u050,event,sustained: peak 46% of the day
+u051,non_event,computing-cookie page with 1.25 M views in a day: implausible human target
+u052,event,sustained: peak 45% of the day
+u053,unsure,"peak 68% of the day, next hours [0.1, 0.02, 0.01] of peak"
+u054,event,sustained: peak 21% of the day
+u055,event,sustained: peak 51% of the day
+u056,event,sustained: peak 44% of the day
+u057,event,sustained: peak 48% of the day
+u058,unsure,"peak 90% of the day, next hours [0.07, 0.02, 0.01] of peak"
+u059,event,sustained: peak 55% of the day
+u060,unsure,"peak 73% of the day, next hours [0.11, 0.06, 0.03] of peak"
+u061,event,sustained: peak 43% of the day
+u062,event,sustained: peak 19% of the day
+u063,event,sustained: peak 32% of the day
+u064,event,sustained: peak 53% of the day
+u065,event,sustained: peak 11% of the day
+u066,event,sustained: peak 39% of the day
+u067,event,sustained: peak 30% of the day
+u068,event,sustained: peak 32% of the day
+u069,event,sustained: peak 34% of the day
+u070,event,sustained: peak 19% of the day
+u071,unsure,"peak 70% of the day, next hours [0.12, 0.06, 0.04] of peak"
+u072,event,sustained: peak 16% of the day
+u073,event,sustained: peak 17% of the day
+u074,unsure,"peak 79% of the day, next hours [0.12, 0.05, 0.03] of peak"
+u075,non_event,"isolated burst: peak 90% of the day, next hour 4.9% of peak"
+u076,event,sustained: peak 33% of the day
+u077,unsure,"peak 62% of the day, next hours [0.15, 0.09, 0.06] of peak"
+u078,event,sustained: peak 12% of the day
+u079,unsure,"peak 81% of the day, next hours [0.08, 0.04, 0.03] of peak"
+u080,unsure,"peak 69% of the day, next hours [0.04, 0.03, 0.01] of peak"
+u081,unsure,"peak 76% of the day, next hours [0.13, 0.05, 0.03] of peak"
+u082,event,sustained: peak 59% of the day
+u083,unsure,"peak 73% of the day, next hours [0.14, 0.07, 0.04] of peak"
+u084,event,sustained: peak 21% of the day
+u085,unsure,"peak 83% of the day, next hours [0.09, 0.03, 0.02] of peak"
+u086,unsure,"peak 73% of the day, next hours [0.06, 0.04, 0.03] of peak"
+u087,event,sustained: peak 30% of the day
+u088,event,sustained: peak 32% of the day
+u089,unsure,"peak 62% of the day, next hours [0.29, 0.05, 0.03] of peak"
+u090,unsure,"peak 61% of the day, next hours [0.11, 0.03, 0.01] of peak"
+u091,unsure,"peak 69% of the day, next hours [0.11, 0.08, 0.05] of peak"
+u092,unsure,"peak 79% of the day, next hours [0.06, 0.02, 0.01] of peak"
+u093,event,sustained: peak 13% of the day
+u094,non_event,"isolated burst: peak 95% of the day, next hour 2.6% of peak"
+u095,event,sustained: peak 25% of the day
+u096,event,sustained: peak 27% of the day
+u097,event,sustained: peak 37% of the day
+u098,unsure,"peak 62% of the day, next hours [0.39, 0.12, 0.05] of peak"
+u099,unsure,"peak 61% of the day, next hours [0.14, 0.13, 0.08] of peak"
+u100,event,sustained: peak 59% of the day
