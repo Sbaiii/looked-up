@@ -119,17 +119,25 @@ main pages and titles with > 1,000 views and < 5 % mobile.
 
 Every hour, new hours are also scored for **attention events**: one entity spiking in at least 3 languages within
 6 hours, measured against its own 28-day baseline. The spike files, event files and `data/latest.json` (last 24 h,
-top 50, labels in the 30 languages) are described in the
+top 50 multi-language events plus a separate `single_language_events` list, labels in the 30 languages) are
+described in the
 [data model](https://github.com/Sbaiii/looked-up/blob/main/docs/data_model.md#scoring-outputs-phase-2-adr-0014).
 The definitions were pre-registered and evaluated honestly; the
 [Phase 2 results](https://github.com/Sbaiii/looked-up/blob/main/docs/analysis/phase2_results.md) report what the
-detector does and doesn't capture.
+detector does and doesn't capture, and the
+[Phase 2b results](https://github.com/Sbaiii/looked-up/blob/main/docs/analysis/phase2b_results.md) test it against
+deaths, earthquakes and matches.
+- **Single-language events.** An event whose lead language holds ≥ 95 % of its excess views has
+  `event_class = single_language`. Such events are kept, not filtered: they mean "attention from one community",
+  not "false". No topic is blocklisted.
 
 ## Update frequency and provenance
 
-- **Hourly.** A GitHub Actions job runs at :45 every hour and ingests every published hour of the last 72 h that is
-  still missing. Wikimedia publishes each hourly dump ≈ 2 h 15 min (median) after the hour ends, so the newest hour
+- **Hourly.** A GitHub Actions job runs at :17 every hour (with an external trigger as backup) and ingests every
+  published hour of the last 7 days that is still missing, up to 12 per run. Wikimedia publishes each hourly dump ≈ 2 h 15 min (median) after the hour ends, so the newest hour
   is usually 2–3 h old.
+- **Repository history is squashed monthly** to keep storage bounded. Pin a file by its path and date, not by a
+  commit hash: old revisions disappear after each squash. Current data is never affected.
 - **History** is backfilled from Wikimedia's daily `pageview_complete` files (`source = pageview_complete` in the
   manifest). Live hours come from the hourly dumps (`source = hourly_dump`).
 - **Known caveat:** for the same hour, the two sources agree on ≈ 99.999 % of rows. `pageview_complete` misses
