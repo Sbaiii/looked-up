@@ -20,3 +20,6 @@ data/
 
 # DuckDB spill files
 .tmp/
+.venv
+.venv.nosync/
+.venv.icloud-old/
