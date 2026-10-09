@@ -1,0 +1,45 @@
+name: daily baselines
+
+on:
+  schedule:
+    # 03:30 UTC: yesterday's last hours are usually published by ~02:15 (median lag) and ingested at 02:45
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "UTC day to build baselines for (default: today)"
+        required: false
+
+concurrency:
+  group: lake-writer-daily
+  cancel-in-progress: false
+
+permissions:
+  contents: read  # pipelines write to the lake on Hugging Face, never to this repo
+
+jobs:
+  baselines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e .
+      - name: Check HF token
+        id: token
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::warning title=HF_TOKEN missing::Repository secret HF_TOKEN is not set; skipping. Add it with: gh secret set HF_TOKEN -R ${{ github.repository }}"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build baselines from the previous 28 days
+        if: steps.token.outputs.present == 'true'
+        run: python -m lookedup.cli baselines ${{ inputs.day && format('--day {0}', inputs.day) || '' }}
