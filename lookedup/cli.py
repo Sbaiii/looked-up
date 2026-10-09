@@ -31,6 +31,8 @@ import tempfile
 from datetime import date, datetime
 from pathlib import Path
 
+from lookedup.settings import MAX_HOURS_PER_RUN, WINDOW_HOURS
+
 log = logging.getLogger("lookedup")
 
 
@@ -261,8 +263,8 @@ def main(argv: list[str] | None = None) -> None:
         return sp
 
     sp = add("hourly", cmd_hourly)
-    sp.add_argument("--window", type=int, default=72)
-    sp.add_argument("--max-hours", type=int, default=6)
+    sp.add_argument("--window", type=int, default=WINDOW_HOURS)
+    sp.add_argument("--max-hours", type=int, default=MAX_HOURS_PER_RUN)
     sp = add("backfill", cmd_backfill)
     sp.add_argument("--from", dest="start", required=True)
     sp.add_argument("--to", dest="end", required=True)
@@ -295,7 +297,7 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--day", help="UTC day to build baselines for (default: today)")
     sp = add("score", cmd_score)
     sp.add_argument("--hour", help="score exactly this hour start (UTC), e.g. 2026-10-08T14:00")
-    sp.add_argument("--max-hours", type=int, default=6)
+    sp.add_argument("--max-hours", type=int, default=MAX_HOURS_PER_RUN)
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")

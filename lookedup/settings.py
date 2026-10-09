@@ -36,6 +36,7 @@ SITELINKS_PATH = "data/wikidata/sitelinks.parquet"
 
 # D4: keep an hourly row when views_desktop + views_mobile >= MIN_VIEWS.
 MIN_VIEWS = 5
-# D6: self-healing window and per-run cap.
-WINDOW_HOURS = 72
-MAX_HOURS_PER_RUN = 6
+# D6 / ADR 0017: self-healing window and per-run cap. GitHub drops many scheduled runs
+# (2 scheduled runs in ~8 h observed), so each run looks back 7 days and catches up 12 hours.
+WINDOW_HOURS = 7 * 24
+MAX_HOURS_PER_RUN = 12

@@ -33,7 +33,7 @@ from lookedup.analytics.events import events_sql
 from lookedup.analytics.production import daily_baselines_sql, score_hour_sql
 from lookedup.dumps import session, utcnow
 from lookedup.store import Manifest, Store, StoreConflict, day_path, write_parquet
-from lookedup.settings import DATA_DIR
+from lookedup.settings import DATA_DIR, MAX_HOURS_PER_RUN, WINDOW_HOURS
 
 log = logging.getLogger(__name__)
 
@@ -166,7 +166,7 @@ def labels_for(qids: list[int], langs: list[str]) -> dict[int, dict[str, str]]:
     return out
 
 
-def score(store: Store, now: datetime | None = None, max_hours: int = 6, langs: list[str] | None = None,
+def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_PER_RUN, langs: list[str] | None = None,
           hours: list[datetime] | None = None) -> dict:
     """Score unscored ingested hours of the last 48 h (or exactly ``hours``); rebuild events and latest.json."""
     from lookedup.languages import active_codes
@@ -179,7 +179,7 @@ def score(store: Store, now: datetime | None = None, max_hours: int = 6, langs: 
         tmp = Path(tmpd)
         state = _read_json(store, STATE_PATH, tmp / "state")
         scored = set(state.get("scored_hours", []))
-        horizon = now - timedelta(hours=48)
+        horizon = now - timedelta(hours=WINDOW_HOURS)
         if hours:
             pending = sorted(ts for ts in hours if ts in manifest.present())
         else:
@@ -247,7 +247,7 @@ def score(store: Store, now: datetime | None = None, max_hours: int = 6, langs: 
         out.write_text(json.dumps(latest, ensure_ascii=False, indent=1))
         files[LATEST_PATH] = out
         scored |= {f"{ts:%Y-%m-%dT%H}" for ts in done}
-        cutoff = f"{now - timedelta(days=3):%Y-%m-%dT%H}"
+        cutoff = f"{now - timedelta(hours=WINDOW_HOURS + 24):%Y-%m-%dT%H}"
         st = tmp / "state.json"
         st.write_text(json.dumps({"scored_hours": sorted(s for s in scored if s >= cutoff)}, indent=1))
         files[STATE_PATH] = st
