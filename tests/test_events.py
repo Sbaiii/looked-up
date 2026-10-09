@@ -79,3 +79,17 @@ def test_episodes_are_deterministic_with_simultaneous_spikes():
         events, _ = _events(_spikes(order))
         results.add(tuple((e["start_hour"], e["breadth"]) for e in events))
     assert results == {((T0, 3), (T0 + timedelta(hours=30), 4))}
+
+
+def test_single_language_events_are_classified():
+    con = duckdb.connect()
+    con.execute("CREATE TABLE spikes(qid INTEGER, lang VARCHAR, ts_hour_start TIMESTAMP, surprise DOUBLE, "
+                "views INTEGER, baseline_median DOUBLE)")
+    rows = [(1, "ja", 0, 6534, 63000, 50.0), (1, "en", 3, 50, 500, 100.0), (1, "zh", 4, 31, 300, 100.0),   # ja-only
+            (2, "es", 0, 40, 5000, 100.0), (2, "en", 1, 30, 4000, 100.0), (2, "fr", 2, 20, 3000, 100.0)]  # shared
+    con.executemany("INSERT INTO spikes VALUES (?, ?, ?, ?, ?, ?)",
+                    [(q, l, T0 + timedelta(hours=h), s, v, b) for q, l, h, s, v, b in rows])
+    events, _ = _events(con)
+    cls = {e["qid"]: (e["event_class"], round(e["lead_excess_share"], 3)) for e in events}
+    assert cls[1][0] == "single_language" and cls[1][1] >= 0.95
+    assert cls[2][0] == "multi_language"
