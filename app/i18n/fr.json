@@ -12,7 +12,7 @@
   },
   "hero": {
     "kicker": "fig. 00 · dernières 24 heures",
-    "title": "Aujourd'hui, le monde a consulté",
+    "title": "Aujourd'hui, le monde s'est intéressé à",
     "empty": "Aucun événement ne s'est encore propagé à deux langues ces dernières 24 heures.",
     "counter": { "one": "{n} langue en {within}", "other": "{n} langues en {within}" },
     "replay": "Rejouer la propagation",
@@ -67,8 +67,8 @@
   "briefing": {
     "kicker": "fig. 03 · la journée en mots",
     "title": "Résumé",
-    "lead": "Le {date}, le monde a consulté {label} : {breadth} en {within}, d'abord en {lang} ; {excess}.",
-    "lead_death": "Le {date}, le monde a consulté {label} après l'annonce de sa mort : {breadth} en {within}, d'abord en {lang} ; {excess}.",
+    "lead": "Le {date}, le monde s'est intéressé à {label} : {breadth} en {within}, d'abord en {lang} ; {excess}.",
+    "lead_death": "Le {date}, le monde s'est intéressé à {label} après l'annonce de sa mort : {breadth} en {within}, d'abord en {lang} ; {excess}.",
     "excess_big": "{n} de consultations de plus que d'habitude",
     "excess_small": "{n} consultations de plus que d'habitude",
     "fastest": "Propagation la plus rapide : {label}, {breadth} en {within}.",

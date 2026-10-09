@@ -12,7 +12,7 @@
   },
   "hero": {
     "kicker": "fig. 00 · últimas 24 horas",
-    "title": "Hoy el mundo consultó",
+    "title": "Hoy el mundo se fijó en",
     "empty": "Ningún evento se ha propagado todavía a dos idiomas en las últimas 24 horas.",
     "counter": { "one": "{n} idioma en {within}", "other": "{n} idiomas en {within}" },
     "replay": "Repetir la propagación",
@@ -67,8 +67,8 @@
   "briefing": {
     "kicker": "fig. 03 · el día en palabras",
     "title": "Resumen",
-    "lead": "El {date} el mundo consultó {label}: {breadth} en {within}, primero en {lang}; {excess}.",
-    "lead_death": "El {date} el mundo consultó {label} tras la noticia de su muerte: {breadth} en {within}, primero en {lang}; {excess}.",
+    "lead": "El {date} el mundo se fijó en {label}: {breadth} en {within}, primero en {lang}; {excess}.",
+    "lead_death": "El {date} el mundo se fijó en {label} tras la noticia de su muerte: {breadth} en {within}, primero en {lang}; {excess}.",
     "excess_big": "{n} de visitas más de lo habitual",
     "excess_small": "{n} visitas más de lo habitual",
     "fastest": "Propagación más rápida: {label}, {breadth} en {within}.",
