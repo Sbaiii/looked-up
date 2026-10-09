@@ -103,3 +103,97 @@ def lead_language_bars(rows: list[tuple[str, int]], out: Path, top: int = 15) ->
     ax.grid(axis="y", visible=False)
     fig.savefig(out, dpi=160)
     plt.close(fig)
+
+
+def deaths_by_languages(rows: list[dict], out: Path) -> None:
+    """GT1: share of deaths detected, by how many of our 30 languages have an article (with the 2/3/5 ablation)."""
+    buckets = [("5–9", 5, 9), ("10–19", 10, 19), ("20–30", 20, 30)]
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+    width = 0.26
+    for k, (key, colour, label) in enumerate((("detected_n2", MUTED, "≥ 2 languages"), ("detected", ACCENT, "≥ 3 (primary)"),
+                                               ("detected_n5", INK, "≥ 5 languages"))):
+        ys = []
+        for _, lo, hi in buckets:
+            sub = [r for r in rows if lo <= int(r["n_languages"]) <= hi]
+            ys.append(100 * sum(r[key] == "True" for r in sub) / len(sub))
+        xs = [i + (k - 1) * width for i in range(len(buckets))]
+        ax.bar(xs, ys, width=width, color=colour, label=label)
+        if key == "detected":
+            for x, y in zip(xs, ys):
+                ax.text(x, y + 1.5, f"{y:.0f} %", ha="center", fontsize=8.5, color=ACCENT)
+    ns = [sum(lo <= int(r["n_languages"]) <= hi for r in rows) for _, lo, hi in buckets]
+    ax.set_xticks(range(len(buckets)), [f"{b[0]} languages\n(n = {n})" for b, n in zip(buckets, ns)])
+    ax.axhline(60, color=GRID)
+    ax.set_ylim(0, 100)
+    ax.set_ylabel("deaths detected within 24 h (%)", color=INK)
+    ax.legend(frameon=False, fontsize=8.5, loc="upper left")
+    fig.tight_layout(rect=(0, 0, 1, 0.86))
+    _style(ax, "Only widely known deaths draw multi-language attention",
+           "GT1: Wikipedia death lists, Jul–Sep 2026; pre-registered target 60 % (grey line)")
+    ax.grid(axis="x", visible=False)
+    fig.savefig(out, dpi=160)
+    plt.close(fig)
+
+
+def quakes_timeline(rows: list[dict], out: Path) -> None:
+    """GT2: every M6+ earthquake by origin time and magnitude, detected within 6 h or not."""
+    from datetime import datetime
+
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+    for det, colour, label in ((True, ACCENT, "detected within 6 h"), (False, MUTED, "not detected")):
+        sub = [r for r in rows if (r["detected"] == "True") == det]
+        ax.scatter([datetime.fromisoformat(r["origin"]) for r in sub], [float(r["mag"]) for r in sub],
+                   s=[30 + 25 * (float(r["mag"]) - 6) ** 2 * 4 for r in sub], color=colour, label=label, zorder=3,
+                   edgecolor="white", linewidth=0.6)
+        for r in sub:
+            if det:
+                ax.annotate(r["place"].split(",")[-1].replace("Earthquake", "").strip()[:20], (datetime.fromisoformat(r["origin"]), float(r["mag"])),
+                            textcoords="offset points", xytext=(6, 4), fontsize=7.5, color=ACCENT)
+    ax.axhline(6.5, color=GRID)
+    ax.set_ylabel("magnitude (USGS)", color=INK)
+    ax.legend(frameon=False, fontsize=8.5, loc="upper right")
+    fig.autofmt_xdate()
+    fig.tight_layout(rect=(0, 0, 1, 0.86))
+    big = [r for r in rows if float(r["mag"]) >= 6.5]
+    _style(ax, f"{sum(r['detected'] == 'True' for r in big)} of {len(big)} M6.5+ earthquakes became attention events",
+           "GT2: USGS M ≥ 6.0, 16 Jul – 7 Oct 2026; detection within 6 h of origin, any target")
+    fig.savefig(out, dpi=160)
+    plt.close(fig)
+
+
+def matches_timeline(rows: list[dict], out: Path) -> None:
+    """GT3: kick-off vs first spiking hour for the matches inside the scored period."""
+    from datetime import datetime
+
+    fig, ax = plt.subplots(figsize=(7, 3.0))
+    for i, r in enumerate(rows):
+        ko = datetime.fromisoformat(r["kickoff"])
+        ax.scatter([0], [i], color=INK, marker="|", s=300, zorder=3)
+        if r["start_hour"]:
+            d = (datetime.fromisoformat(r["start_hour"]) - ko.replace(minute=0)).total_seconds() / 3600
+            ax.scatter([d], [i], color=ACCENT, s=60, zorder=3)
+            ax.annotate(f"{d:+.0f} h, {r['breadth']} languages", (d, i), textcoords="offset points", xytext=(8, -3),
+                        fontsize=8.5, color=ACCENT)
+    ax.set_yticks(range(len(rows)), [r["teams"].replace(" national football team", "") for r in rows], fontsize=8.5)
+    ax.set_xlim(-3, 3)
+    ax.set_xlabel("hours relative to kick-off (black)", color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.78))
+    _style(ax, "Both in-window World Cup matches were detected at kick-off",
+           "GT3: only 2 of 16 knockout matches fall inside the scored period (from 16 Jul)")
+    ax.grid(axis="y", visible=False)
+    fig.savefig(out, dpi=160)
+    plt.close(fig)
+
+
+def delay_histogram(values: list[float], out: Path, title: str, subtitle: str, xlabel: str) -> None:
+    fig, ax = plt.subplots(figsize=(7, 3.4))
+    lo, hi = int(min(values)), int(max(values)) + 1
+    ax.hist(values, bins=range(max(lo, -12), min(hi, 13) + 1), color=ACCENT, edgecolor="white")
+    ax.axvline(0, color=INK, linewidth=1)
+    ax.set_xlabel(xlabel, color=INK)
+    ax.set_ylabel("deaths", color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.84))
+    _style(ax, title, subtitle)
+    ax.grid(axis="x", visible=False)
+    fig.savefig(out, dpi=160)
+    plt.close(fig)
