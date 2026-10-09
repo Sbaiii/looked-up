@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import logging
+import shutil
 import time
 from collections.abc import Callable
 from datetime import date, timedelta
 
+from lookedup.settings import DATA_DIR
+
 log = logging.getLogger(__name__)
+
+STAGING = DATA_DIR / "warehouse" / "staging"
 
 
 def days_between(start: date, end: date) -> list[date]:
@@ -23,20 +28,25 @@ def pending_days(session, this, is_incremental: bool, start: date, end: date) ->
 
 
 def run_by_day(session, days: list[date], sql_for_day: Callable[[date], str], name: str):
-    """Materialise sql_for_day(d) for each day into temp table ``name``; returns that relation."""
-    first = True
+    """Write sql_for_day(d) for each day to its own Parquet file and return one relation over them.
+
+    Writing day by day keeps memory flat (accumulating ~23 M rows in a temp table ran out of
+    memory); dbt then streams the files into the incremental table.
+    """
+    out_dir = STAGING / name
+    shutil.rmtree(out_dir, ignore_errors=True)
+    out_dir.mkdir(parents=True)
+    files = []
     for d in days:
         t0 = time.monotonic()
-        sql = sql_for_day(d)
-        if first:
-            session.execute(f"create or replace temp table {name} as {sql}")
-            first = False
-        else:
-            session.execute(f"insert into {name} {sql}")
+        f = out_dir / f"day={d:%Y-%m-%d}.parquet"
+        session.execute(f"copy ({sql_for_day(d)}) to '{f}' (format parquet, compression zstd)")
+        files.append(f)
         log.info("%s: %s in %.1fs", name, d, time.monotonic() - t0)
-    if first:  # nothing to do: an empty relation with the right columns
-        session.execute(f"create or replace temp table {name} as select * from ({sql_for_day(date(2000, 1, 1))}) limit 0")
-    return session.table(name)
+    if not files:  # nothing to do: an empty relation with the right columns
+        return session.sql(f"select * from ({sql_for_day(date(2000, 1, 1))}) limit 0")
+    paths = ", ".join(f"'{f}'" for f in files)
+    return session.sql(f"select * from read_parquet([{paths}])")
 
 
 def prepare_event_inputs(dbt, session, suffix: str) -> tuple[str, str]:
