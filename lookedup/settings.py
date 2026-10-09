@@ -17,6 +17,9 @@ NAMESPACES_FILE = CONFIG_DIR / "namespaces.json"
 DATA_DIR = Path(os.environ.get("LOOKEDUP_DATA_DIR", Path.home() / "looked-up-data")).expanduser()
 LEGACY_DATA_DIR = ROOT / "data"  # pre-ADR 0016 location; `cli relocate-data` moves it to DATA_DIR
 
+# Production baselines (ADR 0018): a local directory persisted by GitHub Actions' cache, never the lake.
+BASELINES_DIR = Path(os.environ.get("LOOKEDUP_BASELINES_DIR", DATA_DIR / "baselines")).expanduser()
+
 # DuckDB spill: every connection writes temp files here and may never use more than this (ADR 0016).
 DUCKDB_TEMP_DIR = Path(os.environ.get("LOOKEDUP_DUCKDB_TEMP_DIR", DATA_DIR / "tmp" / "duckdb")).expanduser()
 DUCKDB_MAX_TEMP = os.environ.get("LOOKEDUP_DUCKDB_MAX_TEMP", "20GiB")

@@ -40,10 +40,12 @@ def lake(tmp_path, monkeypatch):
 
 
 def test_baselines_then_score_produces_an_event(lake):
-    res = scorer.build_baselines(lake, D)
-    assert res["day_files"] == 3 and (lake.root / scorer.baselines_path(D)).exists()
+    res = scorer.build_baselines(lake, D, directory=lake.root / "bl")
+    assert res["day_files"] == 3 and scorer.baselines_file(D, lake.root / "bl").exists()
+    assert not (lake.root / "data" / "baselines").exists()          # never written to the lake
     now = datetime.combine(D, datetime.min.time()) + timedelta(hours=14)
-    out = scorer.score(lake, now=now, max_hours=12, langs=["en", "es", "fr"])
+    out = scorer.score(lake, now=now, max_hours=12, langs=["en", "es", "fr"], baselines_dir=lake.root / "bl",
+                       recompute=False)
     assert len(out["scored_hours"]) == 12
     latest = json.loads((lake.root / scorer.LATEST_PATH).read_text())
     [ev] = latest["events"]
@@ -51,12 +53,15 @@ def test_baselines_then_score_produces_an_event(lake):
     assert ev["category"] == "disaster" and ev["labels"]["fr"] == "Séisme X"
     assert (lake.root / scorer.events_path(D)).exists() and (lake.root / scorer.spikes_path(D)).exists()
     # idempotent: a second run has nothing new to score
-    assert scorer.score(lake, now=now, max_hours=12, langs=["en", "es", "fr"])["scored_hours"] == []
+    assert scorer.score(lake, now=now, max_hours=12, langs=["en", "es", "fr"], baselines_dir=lake.root / "bl",
+                        recompute=False)["scored_hours"] == []
 
 
-def test_score_waits_for_baselines(lake):
+def test_score_waits_for_baselines_or_recomputes_one_day(lake):
     now = datetime.combine(D, datetime.min.time()) + timedelta(hours=14)
-    assert scorer.score(lake, now=now, max_hours=6, langs=["en", "es", "fr"])["scored_hours"] == []
-    scorer.build_baselines(lake, D)
-    out = scorer.score(lake, now=now, max_hours=6, langs=["en", "es", "fr"])
-    assert out["scored_hours"][0] == f"{D:%Y-%m-%d}T00"   # only hours of days with baselines
+    bl = lake.root / "bl"
+    assert scorer.score(lake, now=now, max_hours=6, langs=["en", "es", "fr"], baselines_dir=bl,
+                        recompute=False)["scored_hours"] == []
+    out = scorer.score(lake, now=now, max_hours=6, langs=["en", "es", "fr"], baselines_dir=bl)   # recompute on miss
+    assert out["scored_hours"][0] == f"{D:%Y-%m-%d}T00"
+    assert scorer.baselines_file(D, bl).exists()

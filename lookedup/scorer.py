@@ -2,15 +2,18 @@
 
 Lake paths (written only through lookedup.store, never git):
 
-    data/baselines/day=YYYY-MM-DD.parquet           baseline slots for that day (daily.yml, 03:30 UTC)
     data/spikes/year=YYYY/month=MM/day=DD.parquet   scored spike candidates (R1 or R2, R3 >= lowest ablation)
     data/events/year=YYYY/month=MM/day=DD.parquet   attention events by start day (primary config)
     data/events/languages/year=YYYY/month=MM/day=DD.parquet   one row per (event, language)
     data/latest.json                                last 24 h of events, top 50 by breadth then intensity
     data/scoring_state.json                         hours already scored
 
-Self-healing like ingestion: each run scores every ingested hour of the last 48 h not yet
-scored (at most ``max_hours``), provided that day's baselines exist.
+Baselines are NOT stored in the lake (ADR 0018): they live in a local directory
+(``BASELINES_DIR``) that GitHub Actions persists with actions/cache, keyed by date. A missing
+day is recomputed from the lake (at most one day per run) and never uploaded.
+
+Self-healing like ingestion: each run scores every ingested hour of the catch-up window not
+yet scored (at most ``max_hours``), provided that day's baselines exist or can be recomputed.
 """
 
 from __future__ import annotations
@@ -33,7 +36,7 @@ from lookedup.analytics.events import events_sql
 from lookedup.analytics.production import daily_baselines_sql, score_hour_sql
 from lookedup.dumps import session, utcnow
 from lookedup.store import Manifest, Store, StoreConflict, day_path, write_parquet
-from lookedup.settings import DATA_DIR, MAX_HOURS_PER_RUN, WINDOW_HOURS
+from lookedup.settings import BASELINES_DIR, DATA_DIR, MAX_HOURS_PER_RUN, WINDOW_HOURS
 
 log = logging.getLogger(__name__)
 
@@ -42,8 +45,8 @@ LATEST_PATH = "data/latest.json"
 KEEP_BASELINE_DAYS = 3
 
 
-def baselines_path(day: date) -> str:
-    return f"data/baselines/day={day:%Y-%m-%d}.parquet"
+def baselines_file(day: date, directory: Path = BASELINES_DIR) -> Path:
+    return directory / f"day={day:%Y-%m-%d}.parquet"
 
 
 def spikes_path(day: date) -> str:
@@ -67,29 +70,27 @@ def _stg_view(con, files: list[Path], name: str = "src") -> None:
         FROM read_parquet([{paths}])""")
 
 
-def _commit(store: Store, files: dict[str, Path], message: str, deletes: list[str] | None = None) -> None:
+def _commit(store: Store, files: dict[str, Path], message: str) -> None:
     """Commit non-manifest files (scoring outputs). The manifest is passed through unchanged."""
     for attempt in range(5):
         try:
             store.commit(files, Manifest(), message, parent=store.head())
-            break
+            return
         except StoreConflict:
             time.sleep(2 * (attempt + 1))
-    else:
-        raise RuntimeError(f"could not commit: {message}")
-    if deletes and hasattr(store, "api"):
-        from huggingface_hub import CommitOperationDelete
-
-        ops = [CommitOperationDelete(path_in_repo=p) for p in deletes]
-        store.api.create_commit(store.repo_id, operations=ops, commit_message="data: drop old baselines",
-                                repo_type="dataset")
+    raise RuntimeError(f"could not commit: {message}")
 
 
-def build_baselines(store: Store, day: date) -> dict:
-    """data/baselines/day=D.parquet from the 28 day files before ``day``; drops older baseline files."""
+def build_baselines(store: Store, day: date, directory: Path = BASELINES_DIR) -> dict:
+    """Baselines for ``day`` from the 28 day files before it, written to ``directory`` (never uploaded).
+
+    Files older than KEEP_BASELINE_DAYS are pruned from ``directory``.
+    """
     cfg = load()
     lo = day - timedelta(days=cfg.baseline["lookback_days"])
     manifest = store.read_manifest()
+    directory.mkdir(parents=True, exist_ok=True)
+    t0 = time.monotonic()
     with tempfile.TemporaryDirectory() as tmp:
         files = []
         d = lo
@@ -104,23 +105,15 @@ def build_baselines(store: Store, day: date) -> dict:
             raise RuntimeError(f"no day files before {day}")
         con = db.connect()
         _stg_view(con, files)
-        # the prior and the slots use the same period start as the warehouse, clipped to available files
-        t0 = time.monotonic()
         table = db.arrow(con.sql(daily_baselines_sql("src", day, cfg)))
-        out = Path(tmp) / "baselines.parquet"
+        out = baselines_file(day, directory)
         size = write_parquet(table, out)
-        old = [baselines_path(day - timedelta(days=k)) for k in range(KEEP_BASELINE_DAYS, KEEP_BASELINE_DAYS + 7)]
-        existing = [p for p in old if _exists(store, p)]
-        _commit(store, {baselines_path(day): out}, f"data: baselines for {day}", deletes=existing)
-    log.info("baselines %s: %d slots, %d bytes, %d day files, %.0fs", day, table.num_rows, size, len(files),
-             time.monotonic() - t0)
-    return {"day": str(day), "rows": table.num_rows, "bytes": size, "day_files": len(files)}
-
-
-def _exists(store: Store, path: str) -> bool:
-    if hasattr(store, "api"):
-        return store.api.file_exists(store.repo_id, path, repo_type="dataset")
-    return (store.root / path).exists()
+    for old in directory.glob("day=*.parquet"):
+        if old.stem.split("=")[1] < f"{day - timedelta(days=KEEP_BASELINE_DAYS):%Y-%m-%d}":
+            old.unlink()
+    log.info("baselines %s: %d slots, %d bytes, %d day files, %.0fs -> %s", day, table.num_rows, size, len(files),
+             time.monotonic() - t0, out)
+    return {"day": str(day), "rows": table.num_rows, "bytes": size, "day_files": len(files), "path": str(out)}
 
 
 def _read_json(store: Store, path: str, tmp: Path) -> dict:
@@ -167,7 +160,8 @@ def labels_for(qids: list[int], langs: list[str]) -> dict[int, dict[str, str]]:
 
 
 def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_PER_RUN, langs: list[str] | None = None,
-          hours: list[datetime] | None = None) -> dict:
+          hours: list[datetime] | None = None, baselines_dir: Path = BASELINES_DIR,
+          recompute: bool = True) -> dict:
     """Score unscored ingested hours of the last 48 h (or exactly ``hours``); rebuild events and latest.json."""
     from lookedup.languages import active_codes
 
@@ -184,10 +178,17 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
             pending = sorted(ts for ts in hours if ts in manifest.present())
         else:
             pending = sorted(ts for ts in manifest.present() if ts >= horizon and f"{ts:%Y-%m-%dT%H}" not in scored)
-        bfiles = {d: store.fetch(baselines_path(d), tmp / "b") for d in sorted({ts.date() for ts in pending})}
-        for d, f in bfiles.items():
-            if f is None:
-                log.warning("no baselines for %s yet: its hours will be scored after the daily job", d)
+        bfiles: dict[date, Path | None] = {}
+        recomputed = 0
+        for d in sorted({ts.date() for ts in pending}, reverse=True):  # newest day first
+            f = baselines_file(d, baselines_dir)
+            if not f.exists() and recompute and recomputed < 1:
+                log.info("no cached baselines for %s: recomputing from the lake", d)
+                build_baselines(store, d, baselines_dir)
+                recomputed += 1
+            bfiles[d] = f if f.exists() else None
+            if bfiles[d] is None:
+                log.warning("no baselines for %s yet: its hours will be scored by a later run", d)
         todo = [ts for ts in pending if bfiles[ts.date()]][:max_hours]
         con = db.connect()
         new_spikes: dict[date, list[pa.Table]] = {}
