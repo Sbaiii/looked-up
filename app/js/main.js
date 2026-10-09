@@ -124,6 +124,7 @@ function card(ev) {
 /* ---------------------------------------------------------------- hero */
 
 function heroCounter(n, lag, ev) {
+    if (ev.id !== state.today?.events?.[0]?.id) return;   // only the hero's own event drives its counter
     $('hero-counter').textContent = t('hero.counter', { n, within: within(lag) });
     if (n === ev.langs.length) $('hero-counter').textContent = t('hero.counter', { n: ev.breadth, within: within(ev.spread_h) });
 }
