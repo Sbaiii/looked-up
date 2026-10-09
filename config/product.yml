@@ -1,0 +1,12 @@
+# Phase 3 product configuration (ADR 0021). Read on top of config/analytics.yml, which stays the
+# pre-registered definition of the evaluated "primary" events (min_languages 3).
+
+event:
+  # The product shows every event spiking in >= 2 languages within the 6 h window, graded by tier.
+  min_languages: 2
+
+# Tier by breadth (languages spiking within 24 h of the event start), highest first.
+tiers:
+  planetary: 20
+  international: 5
+  noticed: 2

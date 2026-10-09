@@ -13,6 +13,8 @@ from lookedup.settings import CONFIG_DIR
 
 ANALYTICS_FILE = CONFIG_DIR / "analytics.yml"
 ANALYTICS_V2_FILE = CONFIG_DIR / "analytics_v2.yml"  # Phase 2b additions, read on top (ADR 0019)
+PRODUCT_FILE = CONFIG_DIR / "product.yml"  # Phase 3 product settings: min languages and tiers (ADR 0021)
+DEFAULT_TIERS = (("planetary", 20), ("international", 5), ("noticed", 2))
 
 
 @dataclass(frozen=True)
@@ -33,6 +35,7 @@ class EventParams:
     new_event_gap_hours: int
     r3_threshold: float
     single_language_share: float = 0.95
+    tiers: tuple[tuple[str, int], ...] = DEFAULT_TIERS  # (name, min breadth), highest first (ADR 0021)
 
 
 @dataclass(frozen=True)
@@ -70,7 +73,18 @@ class AnalyticsConfig:
         return EventParams(min_languages=e["min_languages"], window_hours=e["window_hours"],
                            breadth_hours=e["breadth_hours"], new_event_gap_hours=e["new_event_gap_hours"],
                            r3_threshold=self.raw["spike"]["r3_threshold"],
-                           single_language_share=v2.get("single_language_share", 0.95))
+                           single_language_share=v2.get("single_language_share", 0.95), tiers=self.tiers)
+
+    @property
+    def tiers(self) -> tuple[tuple[str, int], ...]:
+        t = self.raw.get("product", {}).get("tiers")
+        return tuple(sorted(t.items(), key=lambda kv: -kv[1])) if t else DEFAULT_TIERS
+
+    @property
+    def product_event(self) -> EventParams:
+        """Event parameters of the public product: the primary ones with ``min_languages`` from product.yml."""
+        pe = self.raw.get("product", {}).get("event", {})
+        return replace(self.event, **pe)
 
     def event_variant(self, **changes) -> EventParams:
         """Event parameters with ablation overrides (r3_threshold, min_languages, window_hours)."""
@@ -83,8 +97,11 @@ class AnalyticsConfig:
 
 
 @lru_cache(maxsize=4)
-def load(path: Path = ANALYTICS_FILE, v2_path: Path = ANALYTICS_V2_FILE) -> AnalyticsConfig:
+def load(path: Path = ANALYTICS_FILE, v2_path: Path = ANALYTICS_V2_FILE,
+         product_path: Path = PRODUCT_FILE) -> AnalyticsConfig:
     raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     if Path(v2_path).exists():
         raw["v2"] = yaml.safe_load(Path(v2_path).read_text(encoding="utf-8")) or {}
+    if Path(product_path).exists():
+        raw["product"] = yaml.safe_load(Path(product_path).read_text(encoding="utf-8")) or {}
     return AnalyticsConfig(raw=raw)
