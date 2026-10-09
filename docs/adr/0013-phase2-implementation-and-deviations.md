@@ -83,3 +83,20 @@ S1 is reported next to the primary configuration, never instead of it.
 - The **primary H1 verdict keeps the registered definition.** In addition, recall is reported on a subset fixed now:
 - **S2 = story headers only:** major pairs whose link comes from a **depth-1 bullet**, the portal's own story titles,
   e.g. `*[[2026 Colombia earthquake]]`.
+
+## Deviations and decisions made during evaluation (logged after results)
+
+None of these change a threshold, a definition or a hypothesis verdict. They are recorded so nothing is silent.
+
+- **E1. H3 labelling operationalisation.** The committed rubric was turned into a numeric rule on day 0's series before
+  the verdicts were joined. A first rule based on the median of day −1 was discarded before labelling: quiet
+  articles have a median of 0–1. Details: [docs/analysis/h3_rubric.md](../analysis/h3_rubric.md).
+- **E2. Two sources for Wikidata claims.**
+  - Ground-truth entities were fetched with `wbgetentities` (all statement ranks).
+  - Event entities (24,356 QIDs) were fetched with the Query Service (`wdt:`, best rank only), because the API path
+    would have taken over 3 hours.
+  - Spot checks agreed on 3 of 4 entities; Paris differed in lower-ranked P31/P17 values.
+- **E3. Category coverage.** Categories use direct P31 values without subclass traversal, as registered. Many teams
+  ("baseball team", football-club subclasses) end up in `other`. H4 is judged as registered, with this limitation stated.
+- **E4. Production agreement** was measured on 6 hours of 2026-10-06 instead of a full day, to keep the local run
+  within memory.
