@@ -102,6 +102,12 @@ models:
               arguments:
                 values: ["death", "human", "sports", "entertainment", "disaster", "politics", "place",
                          "organization", "science_tech", "other"]
+      - name: event_class
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["multi_language", "single_language"]
       - name: qid
         tests:
           - relationships:
