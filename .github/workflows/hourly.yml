@@ -44,3 +44,6 @@ jobs:
       - name: Ingest missing hours
         if: steps.token.outputs.present == 'true'
         run: python -m lookedup.cli hourly --max-hours "${{ inputs.max_hours || '6' }}"
+      - name: Score ingested hours (spikes, events, latest.json)
+        if: steps.token.outputs.present == 'true'
+        run: python -m lookedup.cli score --max-hours 6
