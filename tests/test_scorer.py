@@ -49,7 +49,7 @@ def test_baselines_then_score_produces_an_event(lake):
     assert len(out["scored_hours"]) == 12
     latest = json.loads((lake.root / scorer.LATEST_PATH).read_text())
     [ev] = latest["events"]
-    assert ev["qid"] == "Q42" and ev["lead_lang"] == "es" and ev["breadth"] == 3
+    assert ev["qid"] == "Q42" and ev["lead_lang"] == "es" and ev["breadth"] == 3 and ev["tier"] == "noticed"
     assert ev["category"] == "disaster" and ev["labels"]["fr"] == "Séisme X"
     assert (lake.root / scorer.events_path(D)).exists() and (lake.root / scorer.spikes_path(D)).exists()
     # idempotent: a second run has nothing new to score

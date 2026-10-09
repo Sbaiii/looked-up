@@ -3,7 +3,7 @@
 Lake paths (written only through lookedup.store, never git):
 
     data/spikes/year=YYYY/month=MM/day=DD.parquet   scored spike candidates (R1 or R2, R3 >= lowest ablation)
-    data/events/year=YYYY/month=MM/day=DD.parquet   attention events by start day (primary config)
+    data/events/year=YYYY/month=MM/day=DD.parquet   attention events by start day (product config, ADR 0021)
     data/events/languages/year=YYYY/month=MM/day=DD.parquet   one row per (event, language)
     data/latest.json                                last 24 h of events, top 50 by breadth then intensity
     data/scoring_state.json                         hours already scored
@@ -238,7 +238,8 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
             paths = ", ".join(f"'{p}'" for p in spike_files)
             con.execute(f"""CREATE OR REPLACE VIEW sp AS SELECT * FROM read_parquet([{paths}], union_by_name = true)
                             WHERE NOT is_automated AND qid IS NOT NULL""")
-            ev_sql, el_sql = events_sql("sp", cfg.event, scored="sp")
+            # ADR 0021: the product shows events in >= 2 languages, graded by tier
+            ev_sql, el_sql = events_sql("sp", cfg.product_event, scored="sp")
             events = db.arrow(con.sql(ev_sql))
             ev_langs = db.arrow(con.sql(el_sql))
             for d in days:
@@ -281,7 +282,7 @@ def _latest(events: pa.Table, now: datetime, cfg, langs: list[str], tmp: Path) -
         is_human = int(cfg.raw["human_class"][1:]) in c.get("P31", [])
         cat = "death" if is_human and died_near(c, r["start_hour"].date(), cfg) else classify(c, cfg)
         out.append({"qid": f"Q{r['qid']}", "start_hour": f"{r['start_hour']:%Y-%m-%dT%H}:00Z",
-                    "lead_lang": r["lead_lang"], "breadth": r["breadth"],
+                    "lead_lang": r["lead_lang"], "breadth": r["breadth"], "tier": r.get("tier"),
                     "peak_intensity": round(r["peak_intensity"], 1), "excess_views": int(r["excess_views"] or 0),
                     "languages": r["languages"], "category": cat, "event_class": r.get("event_class"),
                     "lead_excess_share": round(r.get("lead_excess_share") or 0, 3),
