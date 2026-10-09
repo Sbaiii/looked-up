@@ -41,28 +41,35 @@ def open_context(warehouse_db, current_events, cfg: AnalyticsConfig) -> Context:
     con.execute(f"ATTACH '{warehouse_db}' AS wh (READ_ONLY)")
     con.execute(f"CREATE VIEW gt AS SELECT * FROM read_parquet('{current_events}')")
     con.execute("CREATE VIEW spikes_ok AS SELECT * FROM wh.main.int_spikes WHERE NOT is_automated")
+    # S1 (ADR 0013): automation filter with the flat rule switched off (low-mobile rule only)
+    con.execute("CREATE VIEW spikes_s1 AS SELECT * FROM wh.main.int_spikes WHERE NOT is_low_mobile")
     # major (date, qid) pairs in the evaluation period, one row per pair (+ the sections it appears in)
     con.execute(f"""CREATE TABLE majors AS
         SELECT date, qid, list(DISTINCT section ORDER BY section) AS sections, any_value(link_title) AS title
         FROM gt WHERE is_major AND date BETWEEN DATE '{cfg.eval_start}' AND DATE '{cfg.period_end}'
         GROUP BY date, qid""")
+    # S2 (ADR 0013): story headers only (depth-1 bullets)
+    con.execute(f"""CREATE TABLE majors_s2 AS
+        SELECT date, qid, list(DISTINCT section ORDER BY section) AS sections, any_value(link_title) AS title
+        FROM gt WHERE is_major AND depth = 1 AND date BETWEEN DATE '{cfg.eval_start}' AND DATE '{cfg.period_end}'
+        GROUP BY date, qid""")
     con.execute("CREATE TABLE portal_qids AS SELECT DISTINCT date, qid FROM gt WHERE qid IS NOT NULL")
     return Context(con, cfg)
 
 
-def variant_events(ctx: Context, p: EventParams, name: str) -> str:
+def variant_events(ctx: Context, p: EventParams, name: str, spikes: str = "spikes_ok") -> str:
     """Materialise the events of one parameter set as table ``name`` (no excess views)."""
-    ev, _ = events_sql("spikes_ok", p)
+    ev, _ = events_sql(spikes, p)
     ctx.con.execute(f"CREATE OR REPLACE TABLE {name} AS {ev}")
     return name
 
 
-def recall(ctx: Context, events: str, window_h: int) -> dict:
+def recall(ctx: Context, events: str, window_h: int, majors: str = "majors") -> dict:
     """Share of major (date, qid) pairs with an event start in [date - w, date + 24h + w)."""
     r = ctx.con.execute(f"""
         WITH hit AS (
             SELECT m.date, m.qid, bool_or(e.qid IS NOT NULL) AS detected
-            FROM majors m LEFT JOIN {events} e ON e.qid = m.qid
+            FROM {majors} m LEFT JOIN {events} e ON e.qid = m.qid
              AND e.start_hour >= m.date::TIMESTAMP - INTERVAL {window_h} HOUR
              AND e.start_hour <  m.date::TIMESTAMP + INTERVAL 24 HOUR + INTERVAL {window_h} HOUR
             GROUP BY ALL
