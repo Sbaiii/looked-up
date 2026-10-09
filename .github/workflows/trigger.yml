@@ -1,0 +1,27 @@
+name: external trigger
+
+# Second path to start the hourly job when GitHub's scheduler drops runs (ADR 0017).
+# An external pinger (cron-job.org, see docs/ops.md) POSTs a repository_dispatch event of type
+# "hourly-tick"; this workflow then dispatches hourly.yml. The hourly job is idempotent, so
+# duplicate ticks only cost a short no-op run.
+on:
+  repository_dispatch:
+    types: [hourly-tick]
+
+concurrency:
+  group: external-trigger
+  cancel-in-progress: true
+
+permissions:
+  contents: read  # pipelines write to the lake on Hugging Face, never to this repo
+  actions: write  # needed to dispatch hourly.yml
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch the hourly job
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run hourly.yml --repo "${{ github.repository }}"
