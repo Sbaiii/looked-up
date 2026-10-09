@@ -298,6 +298,7 @@ function buildDays() {
 function renderAll(animate) {
     renderHero(animate);
     renderBars();
+    $('day-slider').value = state.index;
     $('day-out').textContent = dayLabel(state.days[state.index]);
     $('day-slider').setAttribute('aria-valuetext', dayLabel(state.days[state.index]));
     renderDay();
