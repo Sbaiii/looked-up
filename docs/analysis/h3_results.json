@@ -1,0 +1,22 @@
+{
+ "labels": {
+  "event": 64,
+  "non_event": 9,
+  "unsure": 27
+ },
+ "non_events_flagged": 2,
+ "non_events": 9,
+ "share_non_events_flagged": 0.2222222222222222,
+ "events_wrongly_flagged": 1,
+ "events": 64,
+ "share_events_wrongly_flagged": 0.015625,
+ "by_rule": {
+  "is_low_mobile": 2,
+  "is_flat": 0
+ },
+ "by_rule_events": {
+  "is_low_mobile": 1,
+  "is_flat": 0
+ },
+ "verdict": "inconclusive (fewer than 20 non-events)"
+}
