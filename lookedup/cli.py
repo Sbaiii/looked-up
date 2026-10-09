@@ -19,6 +19,7 @@ Commands:
   score         score ingested hours into spikes, events and data/latest.json (hourly)
   ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
   evaluate      run the pre-registered Phase 2 evaluation (writes docs/analysis/)
+  evaluate-v2   run the pre-registered Phase 2b evaluation against deaths, earthquakes and matches
   warehouse     run dbt on the warehouse (e.g. `warehouse build`), thresholds from config/analytics.yml
 """
 
@@ -244,6 +245,12 @@ def cmd_evaluate(a):
         print(json.dumps(run.evaluate(), indent=1, default=str))
 
 
+def cmd_evaluate_v2(a):
+    from lookedup.evaluation import run_v2
+
+    print(json.dumps(run_v2.evaluate(refresh=a.refresh), indent=1, default=str))
+
+
 def cmd_warehouse(a):
     from lookedup.warehouse import run
 
@@ -321,6 +328,8 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")
     sp.add_argument("--audit-score", action="store_true")
+    sp = add("evaluate-v2", cmd_evaluate_v2, local=False)
+    sp.add_argument("--refresh", action="store_true", help="refetch the ground truths")
     sp = add("warehouse", cmd_warehouse, local=False)
     sp.add_argument("--hf", action="store_true", help="read the lake from hf:// instead of data/lake/")
     sp.add_argument("dbt_args", nargs=argparse.REMAINDER, help="dbt command and flags (default: build)")
