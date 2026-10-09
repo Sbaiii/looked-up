@@ -1,0 +1,220 @@
+{
+ "config": {
+  "r3_threshold": 8.0,
+  "min_languages": 3,
+  "window_hours": 6
+ },
+ "events_eval_period": 11127,
+ "events_total": 11127,
+ "major_pairs": 8461,
+ "h1": {
+  "recall_6h": {
+   "pairs": 8461,
+   "detected": 366,
+   "recall": 0.04325729819170311
+  },
+  "recall_24h": {
+   "pairs": 8461,
+   "detected": 462,
+   "recall": 0.05460347476657605
+  },
+  "verdict": "rejected"
+ },
+ "precision": {
+  "events": 11127,
+  "in_portal": 498,
+  "precision_proxy": 0.044755998921542195
+ },
+ "lead_counts": [
+  [
+   "en",
+   2960
+  ],
+  [
+   "de",
+   1306
+  ],
+  [
+   "fr",
+   1215
+  ],
+  [
+   "es",
+   1082
+  ],
+  [
+   "it",
+   966
+  ],
+  [
+   "ja",
+   497
+  ],
+  [
+   "nl",
+   429
+  ],
+  [
+   "pl",
+   382
+  ],
+  [
+   "ru",
+   379
+  ],
+  [
+   "pt",
+   292
+  ],
+  [
+   "tr",
+   235
+  ],
+  [
+   "sv",
+   194
+  ],
+  [
+   "zh",
+   153
+  ],
+  [
+   "no",
+   139
+  ],
+  [
+   "fi",
+   109
+  ],
+  [
+   "ar",
+   100
+  ],
+  [
+   "el",
+   97
+  ],
+  [
+   "cs",
+   96
+  ],
+  [
+   "uk",
+   82
+  ],
+  [
+   "fa",
+   77
+  ],
+  [
+   "hu",
+   62
+  ],
+  [
+   "ko",
+   52
+  ],
+  [
+   "he",
+   42
+  ],
+  [
+   "id",
+   34
+  ],
+  [
+   "vi",
+   33
+  ],
+  [
+   "sr",
+   31
+  ],
+  [
+   "ro",
+   31
+  ],
+  [
+   "th",
+   25
+  ],
+  [
+   "bg",
+   19
+  ],
+  [
+   "hi",
+   8
+  ]
+ ],
+ "s1_no_flat_rule": {
+  "events": 11135,
+  "recall_6h": {
+   "pairs": 8461,
+   "detected": 366,
+   "recall": 0.04325729819170311
+  },
+  "recall_24h": {
+   "pairs": 8461,
+   "detected": 462,
+   "recall": 0.05460347476657605
+  },
+  "precision": {
+   "events": 11135,
+   "in_portal": 498,
+   "precision_proxy": 0.04472384373596767
+  }
+ },
+ "s2_story_headers": {
+  "pairs": 2473,
+  "recall_6h": {
+   "pairs": 2473,
+   "detected": 97,
+   "recall": 0.039223615042458554
+  },
+  "recall_24h": {
+   "pairs": 2473,
+   "detected": 124,
+   "recall": 0.05014152850788516
+  }
+ },
+ "h4": {
+  "n_a": 267,
+  "n_b": 6387,
+  "median_a": 2.5,
+  "median_b": 1.0,
+  "U": 1289164.0,
+  "p_value": 1.0,
+  "verdict": "rejected"
+ },
+ "h2": {
+  "matched_events": 464,
+  "geolocatable": 189,
+  "lead_is_official": 77,
+  "share": 0.4074074074074074,
+  "geolocatable_non_english_countries": 134,
+  "share_non_english_countries": 0.3656716417910448,
+  "base_rate_lead_en": 0.26601959198346364,
+  "verdict": "rejected"
+ },
+ "ablation_winner": {
+  "r3_threshold": 12,
+  "min_languages": 3,
+  "window_hours": 12,
+  "events": 10294,
+  "recall_6h": 0.04373005554898948,
+  "recall_24h": 0.05413071740928968,
+  "precision_proxy": 0.047600544006217216,
+  "harmonic_mean": 0.05065604338876786,
+  "primary": false,
+  "winner": true
+ },
+ "delays": {
+  "n": 12,
+  "median": 8.0,
+  "p25": 0.0,
+  "p75": 17.0,
+  "share_le_6h": 0.25,
+  "share_negative": 0.16666666666666666
+ }
+}

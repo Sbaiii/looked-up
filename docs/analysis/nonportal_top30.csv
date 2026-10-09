@@ -1,0 +1,31 @@
+event_id,qid,label_en,category,start_hour,lead_lang,breadth,peak_intensity,excess_views,languages
+Q171571@20260817T02,171571,Hayden Panettiere,death,2026-08-17 02:00:00,en,28,17230.2,14445115.0,en ar bg cs de el es fi fr he hu it ja nl no pl pt ro ru sv tr uk vi zh fa id sr th
+Q180453@20260825T17,180453,,death,2026-08-25 17:00:00,en,29,45425.2,10452570.5,de en es fi fr he nl no sv ar bg cs el fa hu it ja pl pt ro ru sr tr uk zh vi id ko th
+Q52392@20260826T15,52392,Tim Curry,death,2026-08-26 15:00:00,en,25,20322.5,5371097.0,cs de en es fi fr he hu it ja nl no pl pt ru sv uk zh ar bg el fa ro sr tr
+Q5358224@20260914T12,5358224,Yuri Nakamura,entertainment,2026-09-14 12:00:00,ja,4,65401.8,3699014.0,en ja zh ko
+Q18797@20260817T03,18797,Wladimir Klitschko,sports,2026-08-17 03:00:00,en,22,7314.0,2124465.0,de en es fi fr hu it nl pt ru sv cs he ja no pl uk bg el ro tr fa
+Q615@20260719T18,615,Lionel Messi,sports,2026-07-19 18:00:00,no,29,96.2,1914606.5,bg cs de el en es fa fi fr hu id it ja nl no pl pt ro ru sr sv th tr uk ar he ko vi zh
+Q34424@20260719T17,34424,,entertainment,2026-07-19 17:00:00,es,29,2276.2,1712300.0,es pt ar cs de el en fa fr hu it nl pl ro sv tr fi he ja no uk zh bg id ko ru sr th vi
+Q44297797@20260719T19,44297797,Ferran Torres,sports,2026-07-19 19:00:00,it,29,4557.0,1691508.5,de en it ja nl ar bg cs el es fa fi fr he hu id ko no pl pt ro ru sv tr vi zh sr th uk
+Q2550990@20260817T03,2550990,,entertainment,2026-08-17 03:00:00,es,11,14427.0,1647239.0,de en es fr it pt sv ja uk ar tr
+Q107349023@20260814T19,107349023,Jason Arday,death,2026-08-14 19:00:00,es,6,2381.0,1501192.5,de en es cs nl fr
+Q630170@20260719T19,630170,Leandro Paredes,sports,2026-07-19 19:00:00,ja,29,3720.0,1350757.0,fr it ja ru ar bg cs de el en es fa fi he hu id ko nl no pl pt ro sr sv th tr uk vi zh
+Q125970@20260727T07,125970,Keigo Higashino,death,2026-07-27 07:00:00,ja,8,7656.4,1308480.0,en fr ja ko zh vi de id
+Q152832@20260720T14,152832,Kevin Keegan,death,2026-07-20 14:00:00,en,28,7154.4,1220722.5,cs de el en es fa fi fr he hu it ja nl no pl pt ro ru sv th zh ar bg id sr tr uk vi
+Q910625@20260827T09,910625,,death,2026-08-27 09:00:00,en,16,13169.1,1159299.5,en de es fi fr it ja nl no pl pt ru sv zh cs he
+Q231178@20260903T09,231178,,death,2026-09-03 09:00:00,es,15,5771.2,1155676.5,en es sv de fi fr he it nl pl pt cs el ru ja
+Q833304@20260817T19,833304,creampie,other,2026-08-17 19:00:00,ja,3,6534.2,1146226.5,ja en zh
+Q220010@20260729T08,220010,Glen Hansard,death,2026-07-29 08:00:00,en,12,8187.2,1042148.0,en de sv cs es fr it nl pl pt ru hu
+Q109595960@20260721T12,109595960,Kaylee Hottle,death,2026-07-21 12:00:00,en,9,19468.0,996100.0,en es fr ja sv zh de pt ar
+Q2896228@20260928T01,2896228,Pac,death,2026-09-28 01:00:00,es,10,9315.0,946313.0,ar de en es fr it ja pt vi ru
+Q9648@20260716T00,9648,Falkland Islands,other,2026-07-16 00:00:00,no,29,472.0,936665.0,ar de en es fa fr id ja nl no ru sv th tr vi zh ko pl fi he it bg el hu ro cs sr uk pt
+Q22082505@20260719T18,22082505,Marc Hagit Cucurella,sports,2026-07-19 18:00:00,no,28,296.0,925362.5,fi no ar cs de el en es fa fr he hu id it ja ko nl pl pt ro ru sr sv th tr uk vi zh
+Q104414736@20260719T18,104414736,Nico Williams,sports,2026-07-19 18:00:00,de,28,1927.0,909007.5,de en it ja nl pl pt ru sv ar bg cs el es fa fi fr he hu id no ro tr uk vi zh ko th
+Q5048309@20260928T20,5048309,Case Keenum,sports,2026-09-28 20:00:00,en,5,3823.6,900587.0,en de es fr pt
+Q21621066@20260813T14,21621066,Prichard Colón jr,death,2026-08-13 14:00:00,es,12,4488.0,849677.0,en es fr it pl tr sr sv uk fa ar id
+Q449077@20260915T10,449077,Catherine Ringer,death,2026-09-15 10:00:00,fr,6,7748.4,794103.0,de en fr es it nl
+Q4687588@20261002T12,4687588,Haruka Fukuhara,entertainment,2026-10-02 12:00:00,ja,4,5431.0,787085.0,en ja zh es
+Q318108@20260805T00,318108,Perez Hilton,entertainment,2026-08-05 00:00:00,en,9,4713.9,760932.0,en es de fr pt ja nl sv fa
+Q199801@20260921T02,199801,Cindy Crawford,entertainment,2026-09-21 02:00:00,en,21,1609.0,747152.5,en de es sv el fr hu it nl pl ru zh bg ja cs pt sr tr uk ro he
+Q2899571@20260718T23,2899571,list of FIFA World Cup finals,other,2026-07-18 23:00:00,pl,20,60.6,740947.0,de pl zh vi ja ru el en fi fr id it ko pt ro tr uk ar fa he
+Q982784@20260729T07,982784,,death,2026-07-29 07:00:00,fr,15,47912.0,727659.0,fr de en ru el es fi hu it nl no pt sv uk tr
