@@ -126,3 +126,35 @@ models:
               arguments:
                 to: ref('fct_attention_events')
                 field: event_id
+
+  - name: fct_app_events
+    description: Attention events under the product configuration (ADR 0021), with tier.
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: breadth
+        tests: [not_null]
+      - name: tier
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["noticed", "international", "planetary"]
+      - name: event_class
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["multi_language", "single_language"]
+
+  - name: fct_app_event_languages
+    description: One row per (product event, spiking language) with spread lag.
+    columns:
+      - name: event_lang_id
+        tests: [unique, not_null]
+      - name: event_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('fct_app_events')
+                field: event_id
