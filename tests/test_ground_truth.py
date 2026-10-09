@@ -31,3 +31,14 @@ def test_parse_day_sections_entries_links():
 def test_parse_ignores_files_and_categories():
     links = parse_day("'''Sports'''\n*[[File:X.jpg]] [[Category:Y]] [[Real Madrid CF|Real Madrid]]\n", DAY)
     assert [(l.section, l.title) for l in links] == [("Sports", "Real Madrid CF")]
+
+
+def test_committed_sample_is_consistent():
+    import csv
+
+    rows = list(csv.DictReader(open(Path(__file__).parent / "fixtures" / "current_events_sample.csv", encoding="utf-8")))
+    assert len(rows) == 50
+    for r in rows:
+        major = r["is_major"] == "true"
+        if major:  # major = resolved, not generic, >= 3 of our languages
+            assert r["qid"] and r["is_generic"] == "false" and int(r["n_languages"]) >= 3
