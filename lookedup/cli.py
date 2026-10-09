@@ -13,6 +13,7 @@ Commands:
   compact       migrate a local lake from hourly files to daily files (one-off)
   card          upload dataset/README.md as the Hugging Face dataset card
   sync          download day files, manifest and sitelinks from Hugging Face into data/lake/
+  warehouse     run dbt on the warehouse (e.g. `warehouse build`), thresholds from config/analytics.yml
 """
 
 from __future__ import annotations
@@ -175,6 +176,13 @@ def cmd_sync(a):
     print(json.dumps(res, indent=1))
 
 
+def cmd_warehouse(a):
+    from lookedup.warehouse import run
+
+    if not run(a.dbt_args or ["build"], hf=a.hf):
+        sys.exit(1)
+
+
 def cmd_compact(a):
     from lookedup.compact import compact_local
     from lookedup.settings import LOCAL_LAKE_DIR
@@ -233,6 +241,9 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--batch", type=int, default=3, help="days per Hub commit")
     add("compact", cmd_compact, local=False)
     add("card", cmd_card, local=False)
+    sp = add("warehouse", cmd_warehouse, local=False)
+    sp.add_argument("--hf", action="store_true", help="read the lake from hf:// instead of data/lake/")
+    sp.add_argument("dbt_args", nargs=argparse.REMAINDER, help="dbt command and flags (default: build)")
     sp = add("sync", cmd_sync, local=False)
     sp.add_argument("--from", dest="start", required=True, help="first day to mirror (YYYY-MM-DD)")
     sp.add_argument("--no-sitelinks", action="store_true")
