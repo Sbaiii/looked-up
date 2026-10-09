@@ -112,6 +112,7 @@ body::before {
 }
 
 body > * { position: relative; z-index: 1; }
+[hidden] { display: none !important; }
 
 a { color: inherit; text-underline-offset: 0.18em; }
 button, select, input { font: inherit; color: inherit; }
