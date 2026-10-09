@@ -24,7 +24,7 @@ def model(dbt, session):
     loose = cfg.event_variant(r3_threshold=min(ab["r3_threshold"]), min_languages=min(ab["min_languages"]),
                               window_hours=max(ab["window_hours"]))
     events, _ = build_events(session, "_spikes_dim_ok", loose)
-    qids = [r[0] for r in events.project("distinct qid").fetchall()]
+    qids = [r[0] for r in events.project("qid").distinct().fetchall()]
     claims = fetch_claims(qids, DATA_DIR / "warehouse" / "entity_claims.parquet")
     wanted = set(qids)
     rows = []
