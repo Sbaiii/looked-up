@@ -8,7 +8,7 @@ from lookedup.analytics.events import build_events
 def model(dbt, session):
     dbt.config(materialized="table")
     cfg = load()
-    spikes, scored = prepare_event_inputs(dbt, session, "el")
+    spikes, scored = prepare_event_inputs(session, dbt.ref("int_spikes"), dbt.ref("int_baselines"), "el")
     _, langs = build_events(session, spikes, cfg.event, scored=scored)
     langs.create_view("_langs_el", replace=True)
     dbt.ref("stg_sitelinks").create_view("_sitelinks_el", replace=True)

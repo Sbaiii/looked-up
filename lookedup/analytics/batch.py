@@ -49,13 +49,14 @@ def run_by_day(session, days: list[date], sql_for_day: Callable[[date], str], na
     return session.sql(f"select * from read_parquet([{paths}])")
 
 
-def prepare_event_inputs(dbt, session, suffix: str) -> tuple[str, str]:
+def prepare_event_inputs(session, spikes_rel, baselines_rel, suffix: str) -> tuple[str, str]:
     """Views shared by the event marts: non-automated spikes, and scored rows of spiking QIDs.
 
-    Returns (spikes_view, scored_table) names for lookedup.analytics.events.build_events.
+    The model files pass ``dbt.ref(...)`` relations in, because dbt only sees refs written in
+    the model file itself. Returns (spikes_view, scored_table) names for build_events.
     """
-    dbt.ref("int_spikes").create_view(f"_spikes_{suffix}", replace=True)
-    dbt.ref("int_baselines").create_view(f"_baselines_{suffix}", replace=True)
+    spikes_rel.create_view(f"_spikes_{suffix}", replace=True)
+    baselines_rel.create_view(f"_baselines_{suffix}", replace=True)
     session.execute(f"create or replace temp view _ok_{suffix} as select * from _spikes_{suffix} where not is_automated")
     session.execute(f"""create or replace temp table _scored_{suffix} as
         select b.ts_hour_start, b.lang, b.views, b.baseline_median, k.qid
