@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 
 import duckdb
 
+from lookedup import db
 from lookedup.analytics.config import AnalyticsConfig, EventParams
 from lookedup.analytics.events import events_sql
 
@@ -36,8 +37,7 @@ class Context:
 
 
 def open_context(warehouse_db, current_events, cfg: AnalyticsConfig) -> Context:
-    con = duckdb.connect()
-    con.execute("SET enable_progress_bar = false")
+    con = db.connect()
     con.execute(f"ATTACH '{warehouse_db}' AS wh (READ_ONLY)")
     con.execute(f"CREATE VIEW gt AS SELECT * FROM read_parquet('{current_events}')")
     con.execute("CREATE VIEW spikes_ok AS SELECT * FROM wh.main.int_spikes WHERE NOT is_automated")

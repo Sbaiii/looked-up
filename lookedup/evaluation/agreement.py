@@ -13,9 +13,7 @@ from lookedup.settings import LOCAL_LAKE_DIR
 def production_vs_batch(warehouse_db, day: date, hours: list[int], lake_dir=LOCAL_LAKE_DIR) -> dict:
     cfg = load()
     con = db.connect()
-    spill = LOCAL_LAKE_DIR.parent / "warehouse" / "tmp"
-    spill.mkdir(parents=True, exist_ok=True)
-    con.execute(f"SET memory_limit = '7GB'; SET temp_directory = '{spill}'; SET preserve_insertion_order = false")
+    con.execute("SET memory_limit = '7GB'; SET preserve_insertion_order = false")
     con.execute(f"ATTACH '{warehouse_db}' AS wh (READ_ONLY)")
     # only the files needed: 28 lookback days for the baselines, plus the scored day
     from datetime import timedelta

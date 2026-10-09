@@ -16,7 +16,7 @@ import os
 
 from lookedup.analytics.config import load
 from lookedup.languages import active_codes
-from lookedup.settings import DATA_DIR, HF_REPO_ID, LOCAL_LAKE_DIR, ROOT
+from lookedup.settings import DATA_DIR, DUCKDB_MAX_TEMP, DUCKDB_TEMP_DIR, HF_REPO_ID, LOCAL_LAKE_DIR, ROOT
 
 log = logging.getLogger(__name__)
 
@@ -45,6 +45,9 @@ def run(args: list[str], hf: bool = False) -> bool:
     WAREHOUSE_DB.parent.mkdir(parents=True, exist_ok=True)
     os.environ["LOOKEDUP_LAKE_ROOT"] = lake_root
     os.environ["LOOKEDUP_WAREHOUSE_DB"] = str(WAREHOUSE_DB)
+    DUCKDB_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    os.environ["LOOKEDUP_DUCKDB_TEMP_DIR"] = str(DUCKDB_TEMP_DIR)
+    os.environ["LOOKEDUP_DUCKDB_MAX_TEMP"] = DUCKDB_MAX_TEMP
     full = args + ["--project-dir", str(WAREHOUSE_DIR), "--profiles-dir", str(WAREHOUSE_DIR),
                    "--vars", json.dumps(dbt_vars(lake_root))]
     log.info("dbt %s (lake: %s)", " ".join(args), lake_root)

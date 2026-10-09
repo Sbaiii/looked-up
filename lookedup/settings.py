@@ -12,7 +12,14 @@ DATASET_CARD = ROOT / "dataset" / "README.md"
 NAMESPACES_FILE = CONFIG_DIR / "namespaces.json"
 
 # Local working directories (git-ignored). Raw dumps are transient.
-DATA_DIR = Path(os.environ.get("LOOKEDUP_DATA_DIR", ROOT / "data"))
+# Data lives OUTSIDE the repository (ADR 0016): the repo sits in ~/Desktop, which iCloud evicts.
+# Override with LOOKEDUP_DATA_DIR (CI runners use their default home directory).
+DATA_DIR = Path(os.environ.get("LOOKEDUP_DATA_DIR", Path.home() / "looked-up-data")).expanduser()
+LEGACY_DATA_DIR = ROOT / "data"  # pre-ADR 0016 location; `cli relocate-data` moves it to DATA_DIR
+
+# DuckDB spill: every connection writes temp files here and may never use more than this (ADR 0016).
+DUCKDB_TEMP_DIR = Path(os.environ.get("LOOKEDUP_DUCKDB_TEMP_DIR", DATA_DIR / "tmp" / "duckdb")).expanduser()
+DUCKDB_MAX_TEMP = os.environ.get("LOOKEDUP_DUCKDB_MAX_TEMP", "20GiB")
 RAW_DIR = DATA_DIR / "raw"
 LOCAL_LAKE_DIR = DATA_DIR / "lake"
 

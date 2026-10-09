@@ -1,14 +1,23 @@
-"""DuckDB connections configured for batch jobs (no progress bar in logs)."""
+"""DuckDB connections configured for batch jobs: no progress bar, bounded spill (ADR 0016)."""
 
 from __future__ import annotations
 
 import duckdb
 
+from lookedup.settings import DUCKDB_MAX_TEMP, DUCKDB_TEMP_DIR
 
-def connect() -> duckdb.DuckDBPyConnection:
-    con = duckdb.connect()
+
+def configure(con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConnection:
+    """Apply the project-wide limits to any connection (spill directory and size cap)."""
+    DUCKDB_TEMP_DIR.mkdir(parents=True, exist_ok=True)
     con.execute("SET enable_progress_bar = false")
+    con.execute(f"SET temp_directory = '{DUCKDB_TEMP_DIR}'")
+    con.execute(f"SET max_temp_directory_size = '{DUCKDB_MAX_TEMP}'")
     return con
+
+
+def connect(database: str = ":memory:", read_only: bool = False) -> duckdb.DuckDBPyConnection:
+    return configure(duckdb.connect(database, read_only=read_only))
 
 
 def arrow(rel):

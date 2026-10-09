@@ -10,3 +10,5 @@ lookedup:
         memory_limit: "{{ env_var('LOOKEDUP_DUCKDB_MEMORY', '8GB') }}"
         preserve_insertion_order: false
         enable_progress_bar: false
+        temp_directory: "{{ env_var('LOOKEDUP_DUCKDB_TEMP_DIR', '/tmp/lookedup-duckdb') }}"
+        max_temp_directory_size: "{{ env_var('LOOKEDUP_DUCKDB_MAX_TEMP', '20GiB') }}"
