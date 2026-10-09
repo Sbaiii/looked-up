@@ -1,0 +1,122 @@
+version: 2
+
+models:
+  - name: stg_hourly
+    description: Typed hourly article views (desktop, mobile, total, mobile share) with calendar fields.
+    columns:
+      - name: ts_hour_start
+        tests: [not_null]
+      - name: lang
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: "{{ var('languages') }}"
+      - name: title
+        tests: [not_null]
+      - name: views
+        tests: [not_null]
+
+  - name: stg_sitelinks
+    description: (lang, title) -> numeric Wikidata QID.
+    columns:
+      - name: qid
+        tests: [not_null]
+
+  - name: stg_manifest_hours
+    description: Hours listed in data/manifest.json, with row counts and source.
+    config:
+      lake_root: "{{ var('lake_root') }}"
+    columns:
+      - name: ts_hour_start
+        tests: [unique, not_null]
+      - name: source
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["hourly_dump", "pageview_complete"]
+
+  - name: int_automation_flags
+    description: (lang, title, day) rows with >= 500 views that day and the automation flags (prereg §2).
+    columns:
+      - name: flag_id
+        tests: [unique, not_null]
+      - name: is_automated
+        tests: [not_null]
+
+  - name: int_language_priors
+    description: Per scored day and language, the prior median/MAD used for unseen entities.
+    columns:
+      - name: prior_median
+        tests: [not_null]
+
+  - name: int_baselines
+    description: Every article-hour with >= 100 views in the evaluation period, with baseline, R1/R2 inputs and surprise.
+    columns:
+      - name: candidate_id
+        tests: [unique, not_null]
+      - name: baseline_level
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["day_type", "hour", "prior"]
+      - name: surprise
+        tests: [not_null]
+
+  - name: int_spikes
+    description: Candidate rows passing R1 or R2 with surprise >= the lowest ablation threshold; is_spike = primary rule.
+    columns:
+      - name: spike_id
+        tests: [unique, not_null]
+      - name: entity_key
+        tests: [not_null]
+
+  - name: dim_entities
+    description: Entities that can form events (loosest ablation), with labels in the 30 languages and a coarse class.
+    columns:
+      - name: qid
+        tests: [unique, not_null]
+      - name: entity_class
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["human", "sports", "entertainment", "disaster", "politics", "place", "organization",
+                         "science_tech", "other"]
+
+  - name: fct_attention_events
+    description: Attention events under the primary configuration (prereg §2).
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: lead_lang
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: "{{ var('languages') }}"
+      - name: breadth
+        tests: [not_null]
+      - name: category
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["death", "human", "sports", "entertainment", "disaster", "politics", "place",
+                         "organization", "science_tech", "other"]
+      - name: qid
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_entities')
+                field: qid
+
+  - name: fct_event_languages
+    description: One row per (event, spiking language) with spread lag.
+    columns:
+      - name: event_lang_id
+        tests: [unique, not_null]
+      - name: event_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('fct_attention_events')
+                field: event_id
