@@ -1,0 +1,18 @@
+{
+ "day": "2026-10-06",
+ "hours": [
+  10,
+  12,
+  14,
+  16,
+  18,
+  20
+ ],
+ "batch_spikes": 8389,
+ "production_spikes": 7063,
+ "both": 7059,
+ "share_of_batch_reproduced": 0.8414590535224699,
+ "share_of_production_in_batch": 0.9994336684128557,
+ "baseline_slots": 402688,
+ "seconds": 17
+}
