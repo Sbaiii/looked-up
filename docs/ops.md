@@ -24,9 +24,11 @@ caches). Re-create the lake mirror with `python -m lookedup.cli sync --from 2026
 |---|---|---|
 | `hourly.yml` | cron **`17 * * * *`**, `workflow_dispatch`, and dispatched by `trigger.yml` | ingest missing hours of the last **7 days** (≤ 12/run), restore baselines from the cache, score (≤ 12 hours/run), save recomputed baselines on a cache miss, then `cli app-export` (`data/app/`, ADR 0022) |
 | `trigger.yml` | `repository_dispatch` type `hourly-tick` | dispatches `hourly.yml`; the second path for when GitHub drops scheduled runs (ADR 0017) |
-| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` (`retrain` input) | build today's baselines from the previous 28 day files, save them to the Actions cache; **Mondays: retrain the forecast models** (`cli forecast-retrain`, ADR 0029) |
+| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` (`retrain` input) | build today's baselines from the previous 28 day files, save them to the Actions cache; **score the live bursts of two days ago** (`cli live-score`, H10); **Mondays: retrain the forecast models** (`cli forecast-retrain`, ADR 0029) |
 | `wikidata-monthly.yml` | cron `30 6 8 * *` | rebuild `data/wikidata/sitelinks.parquet` |
 | `pages.yml` | push to `app/**`, `workflow_dispatch` | deploy `app/` to GitHub Pages ([sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/)); data is read from the Hub at runtime, so hourly updates need no redeploy |
+| `live.yml` | cron `23 * * * *`, `workflow_dispatch`, and queued by every `hourly.yml` run | the **live layer** in shifts of 5 h 42 min: consumes EventStreams, publishes `data/live/` every 5 min, hands state to the next shift (ADR 0030) |
+| `space.yml` | push to `live/**`, `workflow_dispatch` | deploys `live/` to the Space `Sbaiiiiii/looked-up-live` once it exists; warns otherwise |
 | `hub-maintenance.yml` | cron `41 4 2 * *`, `workflow_dispatch` | **squash the dataset repo's history** (`cli hub --squash`) and report storage |
 | `backfill.yml` | manual | parallel resumable backfill from `pageview_complete` |
 | `tests.yml` | push, PR | pytest |
@@ -106,6 +108,51 @@ Duplicates are harmless: the hourly job is idempotent, and its concurrency group
 
 The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are leftovers that can be deleted by hand.
 
+## Live layer (Phase 5, ADR 0030)
+
+- **What it is.** One EventStreams `recentchange` connection.
+  - It keeps human edits and new pages in namespace 0 of our 30 Wikipedias, and drops maintenance edits.
+  - It detects edit bursts and groups them by Wikidata item.
+  - It stores **no user data**: editors are counted through a salted hash that lives only inside its 30-minute
+    window.
+- **Where it runs today:** GitHub Actions shifts (`live.yml`). Docker Spaces need a paid plan.
+  - Each shift publishes, every 5 minutes:
+    - `data/live/live.json` (the last 60 minutes);
+    - `data/live/stats.json` (the last 24 h);
+    - `data/live/bursts/YYYY-MM-DD.jsonl` (raw bursts: language, title, time, counts, QID).
+  - `data/live/state.json.gz` and `qids.json` carry state to the next shift, which resumes with `Last-Event-ID`.
+- **Continuity:**
+  - One shift runs while another waits in the `live-layer` concurrency group.
+  - The hourly cron, and every `hourly.yml` run, queue a waiting shift.
+  - The existing cron-job.org pinger already dispatches `hourly.yml` at :40, so **no new pinger job is needed** while
+    the layer runs in Actions.
+- **Gaps are visible.**
+  - `status.gap_minutes` is how much of the last 60 minutes the stream did not cover (cold start, outage).
+  - The app shows a quiet "resting" line when `live.json` is older than 15 minutes or the gap is the full hour.
+- **If a Space becomes available** (Hugging Face PRO):
+  1. Create `Sbaiiiiii/looked-up-live` with the Docker SDK. `space.yml` deploys `live/` on the next push, or run it
+     by hand.
+  2. Free Spaces **sleep after 48 h without traffic**, and their disk is wiped on restart. On wake-up the service
+     replays the last 60 minutes (`since`) and reports the uncovered minutes in `gap_minutes`.
+  3. Add a cron-job.org job, every hour, `GET` (no headers needed):
+     **`https://sbaiiiiii-looked-up-live.hf.space/health`**
+  4. Point the app at it with `?live=https://sbaiiiiii-looked-up-live.hf.space/live.json`, or change `DEFAULT` in
+     `app/js/live.js`. Then disable `live.yml`.
+- **H10 accumulation.** `daily.yml` runs `cli live-score`. It scores the bursts of two days ago against the lake's
+  reading events and appends to `data/live/lead_time.csv` on the Hub. Pipelines never commit to the repo, so the
+  file lives on the lake.
+
+## Warehouse refresh (weekly, by hand; ADR 0031)
+
+The local warehouse covers the registered period only (to 7 Oct) unless refreshed:
+
+```bash
+.venv/bin/python -m lookedup.cli refresh-warehouse          # mirror new day files, dbt build to yesterday
+```
+
+Measured: about 4 minutes and 6 GB peak memory for two new days. It needs the existing warehouse file and the lake
+mirror, so it doesn't run on GitHub runners.
+
 ## Runbook
 
 | Symptom | Check | Fix |
@@ -116,4 +163,5 @@ The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are lefto
 | Disk filling during a DuckDB run | `du -sh ~/looked-up-data/tmp/duckdb` | capped at 20 GiB by design; lower `LOOKEDUP_DUCKDB_MAX_TEMP` if needed |
 | App shows stale data | `data/app/today.json` `generated_at` on the Hub; the hourly log's "Export app data" step | `gh workflow run hourly.yml`; full rebuild: `python -m lookedup.cli app-export --backfill --upload` (needs the warehouse and a lake mirror) |
 | Forecasts missing in the app | `data/models/models.json` on the Hub; the hourly log for "forecasts failed" | `gh workflow run daily.yml -f retrain=true`; the export never fails because of forecasts |
+| Right-now strip says "resting" | `data/live/live.json` `generated_at` and `status`; Actions → `live layer` runs | `gh workflow run live.yml`; check `HF_TOKEN`; a shift resumes from `data/live/state.json.gz` |
 | Hub storage growing | `python -m lookedup.cli hub` | `gh workflow run hub-maintenance.yml` |
