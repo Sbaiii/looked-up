@@ -27,6 +27,7 @@ CATEGORICAL = ["lead_lang", "entity_class"]
 FEATURES = NUMERIC + CATEGORICAL
 MONOTONE_UP = {"breadth_t", "max_surprise_t", "sum_surprise_t", "excess_t", "n_sitelinks"}
 LEAKY = {"n_sitelinks", "is_death"}       # declared leakage risks (sensitivity model without them)
+AUXILIARY = ["excess_hour_t", "hours_since_peak"]   # baseline inputs, not model features
 
 
 def snapshot_sql(events: str, spikes: str, views: str, dims: str, offsets=OFFSETS, targets: bool = False,
@@ -91,7 +92,8 @@ def snapshot_sql(events: str, spikes: str, views: str, dims: str, offsets=OFFSET
                    max(p.surprise) FILTER (WHERE p.surprise >= {R3}) AS max_surprise_t,
                    sum(p.surprise) FILTER (WHERE p.surprise >= {R3}) AS sum_surprise_t,
                    sum(p.ex) AS excess_t,
-                   sum(p.ex) FILTER (WHERE p.lang = s.lead_lang) AS lead_ex
+                   sum(p.ex) FILTER (WHERE p.lang = s.lead_lang) AS lead_ex,
+                   coalesce(sum(p.ex) FILTER (WHERE p.ts_hour_start = s.T), 0) AS excess_hour_t
             FROM snaps s JOIN sp p ON p.event_id = s.event_id AND p.ts_hour_start <= s.T
             GROUP BY ALL
         ), newl AS (
@@ -116,9 +118,10 @@ def snapshot_sql(events: str, spikes: str, views: str, dims: str, offsets=OFFSET
                    ln(1 + coalesce(max(v.views) FILTER (WHERE v.ts_hour_start = s.T), 0))
                      - ln(1 + coalesce(max(v.views) FILTER (WHERE v.ts_hour_start = s.T - INTERVAL 2 HOUR), 0)) AS views_slope,
                    coalesce(max(v.views), 0) AS peak_views_so_far,
-                   coalesce(sum(v.lead_views) / nullif(sum(v.views), 0), 0) AS lead_views_share
+                   coalesce(sum(v.lead_views) / nullif(sum(v.views), 0), 0) AS lead_views_share,
+                   coalesce(date_diff('hour', arg_max(v.ts_hour_start, v.views), s.T), 0) AS hours_since_peak
             FROM snaps s LEFT JOIN vsnap v ON v.event_id = s.event_id AND v.k = s.k
-            GROUP BY ALL
+            GROUP BY s.event_id, s.k, s.T
         ){target_ctes}
         SELECT s.event_id || '#' || s.k AS snapshot_id, s.event_id, s.qid, s.k AS offset_h, s.start_hour, s.t0,
                s.T AS snapshot_ts, s.lead_lang, coalesce(d.entity_class, 'other') AS entity_class,
@@ -129,7 +132,8 @@ def snapshot_sql(events: str, spikes: str, views: str, dims: str, offsets=OFFSET
                date_diff('hour', s.start_hour, s.T) AS hours_since_start,
                (s.category = 'death')::INT AS is_death, hour(s.T) AS hour_utc, isodow(s.T) - 1 AS weekday,
                coalesce(d.n_languages, 0) AS n_sitelinks,
-               vf.views_t, vf.views_slope, vf.peak_views_so_far, vf.lead_views_share{target_cols}
+               vf.views_t, vf.views_slope, vf.peak_views_so_far, vf.lead_views_share,
+               coalesce(a.excess_hour_t, 0) AS excess_hour_t, vf.hours_since_peak, s.category{target_cols}
         FROM snaps s
         LEFT JOIN agg a ON a.event_id = s.event_id AND a.k = s.k
         LEFT JOIN newl n ON n.event_id = s.event_id AND n.k = s.k
