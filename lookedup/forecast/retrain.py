@@ -72,20 +72,26 @@ def live_week(store, monday: date, tmp: Path) -> pa.Table | None:
 
 
 def train_all(rows: list[dict], params: dict, cutoff: datetime) -> tuple[dict, dict]:
-    """Fit every model on rows starting before cutoff - 10 d; Platt on [cutoff - 10 d, cutoff)."""
-    cal_lo = cutoff - timedelta(days=CALIBRATION_DAYS)
-    fit_rows = [r for r in rows if r["start_hour"] < cal_lo]
-    cal_rows = [r for r in rows if cal_lo <= r["start_hour"] < cutoff]
+    """Fit every M1 model on rows before the calibration window, Platt-calibrate on the window [cutoff - N d, cutoff).
+
+    N is 10 days, widened in 10-day steps (up to 40) until the window holds >= 5 positives: planetary events
+    are rare enough that 10 days can contain none (ADR 0029)."""
     models, specs = {}, {}
     for target in T.TARGETS:
         for off in T.OFFSETS:
             key = f"{target}_t{off}"
-            tr, ca = T.m1_rows(fit_rows, target, off), T.m1_rows(cal_rows, target, off)
+            for days in range(CALIBRATION_DAYS, 4 * CALIBRATION_DAYS + 1, CALIBRATION_DAYS):
+                cal_lo = cutoff - timedelta(days=days)
+                ca = T.m1_rows([r for r in rows if cal_lo <= r["start_hour"] < cutoff], target, off)
+                if T.labels(ca, target).sum() >= 5:
+                    break
+            tr = T.m1_rows([r for r in rows if r["start_hour"] < cal_lo], target, off)
             enc = T.Encoder.fit(tr)
             booster = T.fit(enc.matrix(tr), T.labels(tr, target), enc, params[key], "binary")
             ab = T.platt(T.score(booster, enc.matrix(ca)), T.labels(ca, target))
             models[key] = booster
-            specs[key] = {"kind": "m1", "target": target, "offset_h": off, "encoder": enc.to_json(), "platt": list(ab)}
+            specs[key] = {"kind": "m1", "target": target, "offset_h": off, "encoder": enc.to_json(), "platt": list(ab),
+                          "calibration_days": days, "calibration_positives": int(T.labels(ca, target).sum())}
     for target in T.M2_TARGETS:
         key = f"m2_{target}"
         tr = T.m2_rows([r for r in rows if r["start_hour"] < cutoff], target)
