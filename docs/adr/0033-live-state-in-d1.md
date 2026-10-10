@@ -1,6 +1,6 @@
 # 0033 — Live-layer state in D1, five poll groups
 
-- Status: accepted (builds on ADR 0032)
+- Status: accepted, **frozen** on 2026-10-10 (builds on ADR 0032). No further CPU work unless Cloudflare starts rejecting runs.
 - Date: 2026-10-10
 
 ## Context
@@ -80,3 +80,51 @@ cache.
 - `wrangler tail` showed `GET /health` from `Mozilla/4.0 (compatible; cron-job.org; http://cron-job.org/abuse/)` at
   14:00, 14:10 and 14:20 UTC.
 - D1 counts these GETs in `pings`, and `/health` reports them as `pinger_today`.
+
+## Final round (the last three changes) and freeze
+
+1. **English polls alone.** Six groups: en, plus five groups balanced by measured edits per 5 minutes (113–116 rows
+   each, `worker/src/groups.json`).
+   - One group runs per minute, so each wiki is polled every **6** minutes.
+   - The window state is stored **per 5-minute slot** (`slots`, one row per slot, rolling 70 minutes, old rows
+     deleted) for every group: it fits the write budget easily.
+2. **Compact encoding.**
+   - Each slot row stores its article keys once, then a flat `[edits, bitsHigh, bitsLow]` array.
+   - A small meta row holds poll positions, baselines and the few per-article extras.
+   - The per-title hourly counts are gone: the hourly baseline is rebuilt from the slots.
+   - Measured on the same 30-minute English sample (1,572 articles, `worker/test/fixtures/`):
+
+   | Layout | Size |
+   |---|---|
+   | v5 group blob, read and rewritten every run | 100.8 KB |
+   | New slot rows read (whole window) | 68 KB |
+   | New meta row | 2 KB |
+   | New writes per steady run (latest slot + meta) | 13.7 KB |
+
+3. **Summary row per group.** `/health`, `/stats.json` and `/live.json` read only these and the bursts table. `/health`
+   now costs **3–6 ms** of CPU, down from 7–12 ms.
+
+### Final measurements (30-minute tail, 15:27–15:57 UTC, 30 polls, all `ok`)
+
+| Group | Wikis | Steady CPU per run (ms) | Median | p95 | Rows per poll |
+|---|---|---|---:|---:|---|
+| 0 | en | 11, 15, 16, 17 | 15.5 | 17 | 399–488 |
+| 1 | fr uk hu sv sr | 9, 9, 10, 12 | 9.5 | 12 | 136–177 |
+| 2 | de pt ar vi ro bg | 10, 10, 11, 14 | 10.5 | 14 | 137–148 |
+| 3 | ja pl nl fa id no | 8, 9, 9, 10 | 9.0 | 10 | 94–120 |
+| 4 | ru zh ko tr el hi | 9, 9, 10, 10 | 9.5 | 10 | 93–129 |
+| 5 | it es he fi cs th | 9, 10, 10, 11 | 10.0 | 11 | 143–195 |
+
+- **All steady runs:** median 10 ms, p95 16 ms. Cold first runs: median 11 ms, max 15 ms.
+- **D1 rows written:** 4.4 per poll, about **6,400 a day**, against the free 100,000 (6 %).
+
+### Where it stands against the 10 ms limit
+
+**Not met. Tolerated in practice.**
+
+- About half the runs are at or under 10 ms.
+- The English group stays at 11–17 ms, because one poll fetches about 450 edits.
+- Cloudflare has rejected **none** of the **85 polls tailed on 2026-10-10**, including runs up to 76 ms under the
+  earlier layouts, and none of the HTTP requests.
+- The Worker is frozen as it is. The daily job warns if `/health` reports a full-hour gap, `connected: false` or
+  no answer. That is the signal that would reopen this.
