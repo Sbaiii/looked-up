@@ -175,5 +175,20 @@
     "gain": "smaller error than a simple decay rule, for the attention left in the next 24 hours",
     "chart": "Predicted probability (across) against what happened (up), test days; dot size = number of events",
     "summary": "An hour after an event is first seen in two languages, the model sorts the ones that will reach five languages well (AUC {auc} on 17 days it never saw), and its probabilities are roughly honest, slightly overconfident in the middle. Fame alone is not enough: how many Wikipedias have an article explains only a fifth of what the model knows. What matters most is how much reading is already happening, how wide it already is, and the hour of the day. It predicts the attention left in the next 24 hours better than a simple decay rule, but not the moment attention fades. Planetary forecasts rest on very few past cases and are shown only above 30 %."
+  },
+  "live": {
+    "kicker": "Right now · editors are updating",
+    "note": "Readers' numbers arrive about 3 hours later.",
+    "since": "first burst {n} min ago",
+    "languages": "editing in {langs}",
+    "single": "Busiest single-language edits",
+    "quiet": "No article is being rushed in two languages right now.",
+    "resting": "The live layer is resting; editors' signals will be back shortly.",
+    "gap": "Partial view: the last {n} minutes are still filling in."
+  },
+  "next": {
+    "title": "Most likely to spread next",
+    "item": "{p} chance of going international",
+    "note": "Forecast, not a fact (fig. 05)."
   }
 }

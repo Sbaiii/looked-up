@@ -175,5 +175,20 @@
     "gain": "d'erreur en moins qu'une simple règle de décroissance, pour l'attention restante sur 24 heures",
     "chart": "Probabilité prévue (en abscisse) contre ce qui s'est passé (en ordonnée), jours de test ; taille du point = nombre d'événements",
     "summary": "Une heure après qu'un événement apparaît dans deux langues, le modèle repère bien ceux qui atteindront cinq langues (AUC {auc} sur 17 jours jamais vus), et ses probabilités sont à peu près honnêtes, un peu trop confiantes au milieu. La célébrité seule ne suffit pas : le nombre de Wikipédias ayant un article n'explique qu'un cinquième de ce que sait le modèle. Ce qui compte le plus, c'est le volume de lecture déjà en cours, l'étendue déjà atteinte et l'heure de la journée. Il prévoit mieux qu'une simple règle de décroissance l'attention restante sur 24 heures, mais pas le moment où elle retombe. Les prévisions planétaires reposent sur très peu de cas passés et ne s'affichent qu'au-dessus de 30 %."
+  },
+  "live": {
+    "kicker": "En ce moment · les contributeurs mettent à jour",
+    "note": "Les chiffres des lecteurs arrivent environ 3 heures plus tard.",
+    "since": "premier pic il y a {n} min",
+    "languages": "en cours de modification en {langs}",
+    "single": "Modifications les plus intenses dans une seule langue",
+    "quiet": "Aucun article n'est modifié en urgence dans deux langues en ce moment.",
+    "resting": "La couche en direct est au repos ; les signaux des contributeurs reviennent bientôt.",
+    "gap": "Vue partielle : les {n} dernières minutes se remplissent encore."
+  },
+  "next": {
+    "title": "Les plus susceptibles de se propager",
+    "item": "{p} de chances de devenir international",
+    "note": "Prévision, pas un fait (fig. 05)."
   }
 }

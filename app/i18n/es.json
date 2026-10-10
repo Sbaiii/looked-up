@@ -175,5 +175,20 @@
     "gain": "menos error que una simple regla de decaimiento, para la atención restante en 24 horas",
     "chart": "Probabilidad prevista (horizontal) frente a lo que pasó (vertical), días de prueba; tamaño del punto = número de eventos",
     "summary": "Una hora después de que un evento aparece en dos idiomas, el modelo distingue bien los que llegarán a cinco idiomas (AUC {auc} en 17 días que nunca vio), y sus probabilidades son más o menos honestas, algo confiadas de más en la zona media. La fama sola no basta: cuántas Wikipedias tienen un artículo explica solo una quinta parte de lo que sabe el modelo. Lo que más pesa es cuánta lectura hay ya, cuán amplia es ya y la hora del día. Prevé la atención restante en 24 horas mejor que una simple regla de decaimiento, pero no el momento en que decae. Las previsiones planetarias se basan en muy pocos casos pasados y solo se muestran por encima del 30 %."
+  },
+  "live": {
+    "kicker": "Ahora mismo · los editores están actualizando",
+    "note": "Las cifras de los lectores llegan unas 3 horas más tarde.",
+    "since": "primer pico hace {n} min",
+    "languages": "editándose en {langs}",
+    "single": "Ediciones más intensas en un solo idioma",
+    "quiet": "Ningún artículo se está actualizando con prisa en dos idiomas ahora mismo.",
+    "resting": "La capa en directo está en reposo; las señales de los editores volverán pronto.",
+    "gap": "Vista parcial: los últimos {n} minutos aún se están completando."
+  },
+  "next": {
+    "title": "Los más propensos a propagarse",
+    "item": "{p} de probabilidad de volverse internacional",
+    "note": "Previsión, no un hecho (fig. 05)."
   }
 }
