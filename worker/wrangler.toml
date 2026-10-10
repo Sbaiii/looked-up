@@ -1,0 +1,12 @@
+# Looked Up live layer (ADR 0032). The KV namespace id is filled in by .github/workflows/worker.yml at deploy time
+# (it creates the namespace on first deploy); nothing secret lives here.
+name = "looked-up-live"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "LIVE"
+id = "KV_NAMESPACE_ID"
