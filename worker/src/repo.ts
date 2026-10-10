@@ -3,12 +3,14 @@
 
 import type { Burst, Item } from './core';
 
-export interface GroupRow { g: number; version: number; polled_at: number; state: string }
+export interface SlotRow { s: number; data: string }
+export interface Window { meta: string | null; slots: SlotRow[] }
+export interface Save { g: number; now: number; meta: string; summary: string; slots: SlotRow[]; bursts: Burst[]; dropBefore: number }
 
 export interface Repo {
-  loadGroup(g: number): Promise<GroupRow | null>;
-  loadGroups(): Promise<GroupRow[]>;
-  saveGroup(row: GroupRow): Promise<void>;
+  loadWindow(g: number, since: number): Promise<Window>;
+  save(w: Save): Promise<number>;                     // returns D1 rows written (incl. deleted slots)
+  summaries(): Promise<string[]>;
   addBursts(bursts: Burst[]): Promise<void>;
   bursts(since: number): Promise<Burst[]>;
   pruneBursts(before: number): Promise<number>;
@@ -19,18 +21,33 @@ export interface Repo {
 export class D1Repo implements Repo {
   constructor(private db: D1Database) {}
 
-  async loadGroup(g: number): Promise<GroupRow | null> {
-    return this.db.prepare('SELECT g, version, polled_at, state FROM group_state WHERE g = ?').bind(g).first<GroupRow>();
+  async loadWindow(g: number, since: number): Promise<Window> {
+    const [meta, slots] = await this.db.batch([
+      this.db.prepare('SELECT data FROM group_meta WHERE g = ?').bind(g),
+      this.db.prepare('SELECT s, data FROM slots WHERE g = ? AND s >= ? ORDER BY s').bind(g, since),
+    ]);
+    return { meta: (meta.results[0] as { data: string } | undefined)?.data ?? null, slots: slots.results as SlotRow[] };
   }
 
-  async loadGroups(): Promise<GroupRow[]> {
-    return (await this.db.prepare('SELECT g, version, polled_at, state FROM group_state ORDER BY g').all<GroupRow>()).results;
+  /** One batch: touched slots, meta, summary, new bursts, and the slots that left the window. */
+  async save(w: Save): Promise<number> {
+    const slot = this.db.prepare(`INSERT INTO slots (g, s, data) VALUES (?, ?, ?)
+      ON CONFLICT (g, s) DO UPDATE SET data = excluded.data`);
+    const burst = this.db.prepare('INSERT INTO bursts (lang, title, ts, kind, edits_30m, editors_30m, qid) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const res = await this.db.batch([
+      ...w.slots.map((r) => slot.bind(w.g, r.s, r.data)),
+      this.db.prepare(`INSERT INTO group_meta (g, polled_at, data) VALUES (?, ?, ?)
+        ON CONFLICT (g) DO UPDATE SET polled_at = excluded.polled_at, data = excluded.data`).bind(w.g, w.now, w.meta),
+      this.db.prepare(`INSERT INTO summary (g, polled_at, data) VALUES (?, ?, ?)
+        ON CONFLICT (g) DO UPDATE SET polled_at = excluded.polled_at, data = excluded.data`).bind(w.g, w.now, w.summary),
+      ...w.bursts.map((b) => burst.bind(b.lang, b.title, b.ts, b.kind, b.edits_30m, b.editors_30m, b.qid)),
+      this.db.prepare('DELETE FROM slots WHERE g = ? AND s < ?').bind(w.g, w.dropBefore),
+    ]);
+    return res.reduce((n, r) => n + (r.meta.changes ?? 0), 0);
   }
 
-  async saveGroup(r: GroupRow): Promise<void> {
-    await this.db.prepare(`INSERT INTO group_state (g, version, polled_at, state) VALUES (?, ?, ?, ?)
-      ON CONFLICT (g) DO UPDATE SET version = excluded.version, polled_at = excluded.polled_at, state = excluded.state`)
-      .bind(r.g, r.version, r.polled_at, r.state).run();
+  async summaries(): Promise<string[]> {
+    return (await this.db.prepare('SELECT data FROM summary ORDER BY g').all<{ data: string }>()).results.map((r) => r.data);
   }
 
   async addBursts(bursts: Burst[]): Promise<void> {
