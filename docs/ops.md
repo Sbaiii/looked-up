@@ -24,7 +24,7 @@ caches). Re-create the lake mirror with `python -m lookedup.cli sync --from 2026
 |---|---|---|
 | `hourly.yml` | cron **`17 * * * *`**, `workflow_dispatch`, and dispatched by `trigger.yml` | ingest missing hours of the last **7 days** (≤ 12/run), restore baselines from the cache, score (≤ 12 hours/run), save recomputed baselines on a cache miss, then `cli app-export` (`data/app/`, ADR 0022) |
 | `trigger.yml` | `repository_dispatch` type `hourly-tick` | dispatches `hourly.yml`; the second path for when GitHub drops scheduled runs (ADR 0017) |
-| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` | build today's baselines from the previous 28 day files, save them to the Actions cache |
+| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` (`retrain` input) | build today's baselines from the previous 28 day files, save them to the Actions cache; **Mondays: retrain the forecast models** (`cli forecast-retrain`, ADR 0029) |
 | `wikidata-monthly.yml` | cron `30 6 8 * *` | rebuild `data/wikidata/sitelinks.parquet` |
 | `pages.yml` | push to `app/**`, `workflow_dispatch` | deploy `app/` to GitHub Pages ([sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/)); data is read from the Hub at runtime, so hourly updates need no redeploy |
 | `hub-maintenance.yml` | cron `41 4 2 * *`, `workflow_dispatch` | **squash the dataset repo's history** (`cli hub --squash`) and report storage |
@@ -115,4 +115,5 @@ The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are lefto
 | Local reads time out | `stat -f %b <file>` = 0 means an iCloud-evicted file | keep data in `~/looked-up-data`; move the repo out of `~/Desktop` |
 | Disk filling during a DuckDB run | `du -sh ~/looked-up-data/tmp/duckdb` | capped at 20 GiB by design; lower `LOOKEDUP_DUCKDB_MAX_TEMP` if needed |
 | App shows stale data | `data/app/today.json` `generated_at` on the Hub; the hourly log's "Export app data" step | `gh workflow run hourly.yml`; full rebuild: `python -m lookedup.cli app-export --backfill --upload` (needs the warehouse and a lake mirror) |
+| Forecasts missing in the app | `data/models/models.json` on the Hub; the hourly log for "forecasts failed" | `gh workflow run daily.yml -f retrain=true`; the export never fails because of forecasts |
 | Hub storage growing | `python -m lookedup.cli hub` | `gh workflow run hub-maintenance.yml` |
