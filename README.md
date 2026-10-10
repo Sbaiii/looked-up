@@ -30,6 +30,14 @@ over the last 90 days, across 30 languages, in English, French and Spanish.
 | A day | <img src="docs/screenshots/desktop-day.png" alt="25 August: Dolly Parton on the globe, 29 languages" width="520"> | <img src="docs/screenshots/phone-day.png" alt="Phone day view with the day's briefing sentence" width="180"> |
 | Languages | <img src="docs/screenshots/desktop-languages.png" alt="What Japanese readers looked up on 25 August" width="520"> | <img src="docs/screenshots/phone-languages.png" alt="Phone language panel for Japanese" width="180"> |
 
+**Phase 4, forecasting.** Pre-registered ([prereg](docs/prereg_phase4.md), [results](docs/analysis/phase4_results.md)):
+- **Will it go international?** An hour after detection: AUC 0.875 on 17 unseen days, roughly calibrated (H6 supported).
+- **Fame alone** gets only 20 % of the model's PR AUC (H7 rejected). The early reading matters more.
+- **Attention left in the next 24 h:** 26 % smaller error than a decay rule (H8 supported). The fade time isn't
+  better than a rule.
+- **In the app:** open events get a "Spreading" badge at ≥ 50 % and a fade ETA. Models retrain on Mondays
+  (`data/models/` on the Hub).
+
 **Live, scoring hourly.** GitHub Actions adds each newly published hour of 30 Wikipedias to the public dataset
 [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up). After each ingest it scores the hour
 for **attention events**: one entity spiking in ≥ 2 languages within 6 hours against its own 28-day baseline.
@@ -115,6 +123,9 @@ huggingface-cli login                                         # or export HF_TOK
 .venv/bin/python -m lookedup.cli app-export [--backfill --upload]   # app JSON (data/app/), hourly or every day
 npm ci && npm run serve                                       # preview the app on http://localhost:4173/
 npm run test:unit && npx playwright test                      # app unit and smoke tests (also run in CI)
+.venv/bin/pip install -e ".[forecast]"                        # LightGBM + scikit-learn for Phase 4
+.venv/bin/python -m lookedup.cli forecast-evaluate            # pre-registered backtest (scores the test set once)
+.venv/bin/python -m lookedup.cli forecast-retrain             # production models -> data/models/ (Mondays in CI)
 ```
 
 Add `--local` to write to `~/looked-up-data/lake` (or `$LOOKEDUP_DATA_DIR`, kept outside iCloud) instead of Hugging Face. Workflows:
