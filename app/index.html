@@ -73,6 +73,15 @@
         </div>
     </header>
 
+    <section class="livestrip" id="right-now" aria-labelledby="live-kicker" aria-live="polite">
+        <div class="livestrip__inner">
+            <p class="livestrip__head"><span class="pulse" aria-hidden="true"></span><span class="meta" id="live-kicker" data-i18n="live.kicker">Right now · editors are updating</span></p>
+            <ol class="livestrip__list" id="live-list"></ol>
+            <p class="livestrip__state help" id="live-state"></p>
+            <p class="livestrip__note help" data-i18n="live.note">Readers' numbers arrive about 3 hours later.</p>
+        </div>
+    </section>
+
     <main id="main" class="layout">
         <section class="hero" id="today" aria-labelledby="hero-title">
             <p class="meta" id="hero-kicker">fig. 00 · last 24 hours</p>
@@ -83,6 +92,11 @@
                 <p class="hero__counter num" id="hero-counter">&nbsp;</p>
                 <p class="hero__sub" id="hero-sub">&nbsp;</p>
                 <p class="hero__brief" id="hero-brief"></p>
+                <div class="next" id="next" hidden>
+                    <h2 class="next__title meta" data-i18n="next.title">Most likely to spread next</h2>
+                    <ol class="next__list" id="next-list"></ol>
+                    <p class="help" data-i18n="next.note">Forecast, not a fact (fig. 05).</p>
+                </div>
             </div>
             <div class="hero__actions">
                 <button type="button" class="btn" id="replay" data-i18n="hero.replay" hidden>Replay the spread</button>

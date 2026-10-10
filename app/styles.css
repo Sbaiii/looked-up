@@ -175,6 +175,24 @@ button { background: none; border: none; cursor: pointer; }
 
 @media (min-width: 900px) { .nav { display: flex; } }
 
+/* "Right now" strip (Phase 5): reserved height, so arriving data never shifts the page */
+.livestrip { border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--paper-2) 70%, transparent); }
+.livestrip__inner { max-width: var(--max); margin-inline: auto; padding: 0.7rem var(--gutter) 0.6rem; min-height: 6.2rem; }
+.livestrip__head { display: flex; align-items: center; gap: 0.55rem; }
+.pulse { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #ff5c5c; box-shadow: 0 0 0 0 rgba(255, 92, 92, 0.6); animation: pulse 2s infinite; }
+.livestrip.is-resting .pulse { background: var(--faint); animation: none; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 92, 92, 0.55); } 70% { box-shadow: 0 0 0 0.6rem rgba(255, 92, 92, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 92, 92, 0); } }
+.livestrip__list { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; margin: 0.45rem 0 0.2rem; }
+.livestrip__list li { display: grid; gap: 0.05rem; min-width: 12rem; max-width: 26rem; }
+.livestrip__list strong { font-weight: 700; }
+.livestrip__list span { color: var(--muted); font-size: 0.82rem; }
+.livestrip__state:empty { display: none; }
+.livestrip__note { font-size: 0.78rem; }
+.next { margin-top: 1.1rem; }
+.next__title { margin-bottom: 0.4rem; }
+.next__list { list-style: none; display: grid; gap: 0.25rem; margin-bottom: 0.3rem; }
+.next__list span { color: var(--muted); }
+
 /* Layout: content and a sticky map on wide screens; stacked on phones */
 .layout {
     max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter);
@@ -363,5 +381,6 @@ body { padding-bottom: calc(3.3rem + env(safe-area-inset-bottom)); }
 
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
+    .pulse { animation: none; }
     .country { transition: none; }
 }
