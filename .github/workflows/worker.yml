@@ -1,6 +1,6 @@
 name: live worker
 
-# Tests and deploys the live layer on Cloudflare Workers (ADR 0032). Needs the repository secrets
+# Tests and deploys the live layer on Cloudflare Workers (ADR 0032, D1 storage ADR 0033). Needs the repository secrets
 # CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID; without them the deploy step only warns (tests still run).
 on:
   push:
@@ -49,6 +49,14 @@ jobs:
             id=$(npx wrangler kv namespace list | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const n=JSON.parse(s).find(x=>x.title==='looked-up-live-LIVE'||x.title==='LIVE');process.stdout.write(n?n.id:'')})")
           fi
           sed -i "s/KV_NAMESPACE_ID/$id/" wrangler.toml
+      - name: Find or create the D1 database, fill in its id and apply migrations (ADR 0033)
+        if: steps.cf.outputs.present == 'true'
+        run: |
+          find_db() { npx wrangler d1 list --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const n=JSON.parse(s).find(x=>x.name==='looked-up-live');process.stdout.write(n?n.uuid:'')})"; }
+          id=$(find_db)
+          if [ -z "$id" ]; then npx wrangler d1 create looked-up-live; id=$(find_db); fi
+          sed -i "s/D1_DATABASE_ID/$id/" wrangler.toml
+          npx wrangler d1 migrations apply looked-up-live --remote
       - name: Deploy
         if: steps.cf.outputs.present == 'true'
         run: npx wrangler deploy
