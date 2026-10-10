@@ -133,21 +133,34 @@ describe('replay', () => {
 });
 
 describe('CPU budget (ADR 0032 fallback)', () => {
-  it('five groups of six cover the 30 wikis exactly once, one per minute, and merge back for reading', async () => {
+  it('six groups: English alone, 29 wikis balanced, one group per minute', async () => {
     const { groupAt } = await import('../src/index');
-    const { GROUPS, merge } = await import('../src/core');
+    const { GROUPS } = await import('../src/core');
     const at = (min: number) => groupAt(Date.UTC(2026, 9, 10, 12, min));
-    expect([0, 1, 2, 3, 4, 5, 9, 58].map(at)).toEqual([0, 1, 2, 3, 4, 0, 4, 3]);
-    const all = GROUPS.flat();
-    expect(GROUPS.map((g) => g.length)).toEqual([6, 6, 6, 6, 6]);
-    expect(new Set(all)).toEqual(new Set(LANGUAGES as string[]));
-    expect(GROUPS[0][0]).toBe('en');
-    const a = emptyState(); const b = emptyState();
-    addEdit(a, 'en', rc('X', 0, 'alice'), SALT); addEdit(b, 'fr', rc('Y', 0, 'bob'), SALT);
-    a.groupPolledAt = { 0: T0 }; b.groupPolledAt = { 1: T0 };
-    const m = merge([a, b]);
-    expect(Object.keys(m.articles).sort()).toEqual(['en|X', 'fr|Y']);
-    expect(Object.keys(m.groupPolledAt)).toEqual(['0', '1']);
+    expect([0, 1, 5, 6, 59].map(at)).toEqual([0, 1, 5, 0, 5]);
+    expect(GROUPS.length).toBe(6);
+    expect(GROUPS[0]).toEqual(['en']);
+    expect(new Set(GROUPS.flat())).toEqual(new Set(LANGUAGES as string[]));
+    expect(GROUPS.flat().length).toBe(30);
+  });
+
+  it('slot rows and the meta row round-trip the window state; the hourly baseline comes from the slots', async () => {
+    const { encodeSlot, encodeMeta, decodeState, rollHours, SLOT_S } = await import('../src/core');
+    const s = emptyState();
+    const h0 = Math.floor(T0 / 3600) * 3600;
+    // hour 1: article A 3 edits, B 1 edit -> median 2
+    for (const [dt, u] of [[60, 'alice'], [120, 'bob'], [700, 'carol']] as const) addEdit(s, 'en', rc('A', h0 - T0 + dt, u), SALT);
+    addEdit(s, 'en', rc('B', h0 - T0 + 900, 'dave', 'new'), SALT);
+    s.hour = Math.floor(h0 / 3600);
+    const rows = [...s.touched!].map((s0) => ({ s: s0, data: encodeSlot(s, s0) }));
+    const back = decodeState(encodeMeta(s, h0 + 1000), rows);
+    expect(back.articles['en|A'].sl.map((x) => x[1])).toEqual(s.articles['en|A'].sl.map((x) => x[1]));
+    expect(back.articles['en|B'].c).toBe(h0 + 900);                          // creation kept in the meta extras
+    expect(JSON.stringify(back)).not.toMatch(/alice|bob|carol|dave/);
+    rollHours(back, h0 + 3600 + 60);
+    expect(back.medians.en).toEqual([2]);
+    expect(rows.every((r) => r.s % SLOT_S === 0)).toBe(true);
+    expect(decodeState('{"v":5}', rows).articles).toEqual({});                // outdated meta: fresh state
   });
 
   it('a busy poll stays cheap: 1,300 edits processed quickly, compact state', () => {

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { convertV4MiniflareOptions, Miniflare } from 'miniflare';
 import { D1Repo, QidCache } from '../src/repo';
-import { persisted, emptyState, type Burst } from '../src/core';
+import { emptyState, type Burst } from '../src/core';
 
 let mf: Miniflare;
 let db: D1Database;
@@ -15,8 +15,10 @@ beforeAll(async () => {
     script: 'export default { fetch() { return new Response("ok") } }', d1Databases: ['DB'], kvNamespaces: ['LIVE'] }));
   db = (await mf.getD1Database('DB')) as unknown as D1Database;
   kv = (await mf.getKVNamespace('LIVE')) as unknown as KVNamespace;
-  const sql = readFileSync(new URL('../migrations/0001_init.sql', import.meta.url), 'utf8');
-  for (const stmt of sql.replace(/--.*$/gm, '').split(';').map((x) => x.trim()).filter(Boolean)) await db.prepare(stmt).run();
+  for (const f of ['0001_init.sql', '0002_slots_meta_summary.sql']) {
+    const sql = readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8');
+    for (const stmt of sql.replace(/--.*$/gm, '').split(';').map((x) => x.trim()).filter(Boolean)) await db.prepare(stmt).run();
+  }
 });
 
 afterAll(async () => { await mf?.dispose(); });
@@ -25,13 +27,18 @@ const burst = (lang: string, ts: number, qid: string | null = null): Burst =>
   ({ lang, title: `T ${lang}`, ts, kind: 'window', edits_30m: 5, editors_30m: 3, qid });
 
 describe('D1Repo', () => {
-  it('upserts one row per group', async () => {
+  it('saves touched slots, meta and summary in one batch, reads the window and drops old slots', async () => {
     const repo = new D1Repo(db);
-    await repo.saveGroup({ g: 2, version: 5, polled_at: T0, state: '{"a":1}' });
-    await repo.saveGroup({ g: 2, version: 5, polled_at: T0 + 60, state: '{"a":2}' });
-    expect(await repo.loadGroup(2)).toEqual({ g: 2, version: 5, polled_at: T0 + 60, state: '{"a":2}' });
-    expect(await repo.loadGroup(3)).toBeNull();
-    expect((await repo.loadGroups()).map((r) => r.g)).toEqual([2]);
+    const base = { g: 4, now: T0, meta: '{"v":6}', summary: '{"pa":1}', bursts: [] as Burst[] };
+    await repo.save({ ...base, slots: [{ s: T0 - 4200, data: 'old' }, { s: T0 - 300, data: 'a' }], dropBefore: 0 });
+    let w = await repo.loadWindow(4, T0 - 3600);
+    expect(w.meta).toBe('{"v":6}');
+    expect(w.slots.map((r) => r.data)).toEqual(['a']);                      // the 70-min-old slot is outside the window
+    const written = await repo.save({ ...base, now: T0 + 60, slots: [{ s: T0 - 300, data: 'b' }], dropBefore: T0 - 4200 + 1 });
+    expect(written).toBe(4);                                                 // 1 slot + meta + summary + 1 deleted
+    w = await repo.loadWindow(4, 0);
+    expect(w.slots).toEqual([{ s: T0 - 300, data: 'b' }]);
+    expect(await repo.summaries()).toEqual(['{"pa":1}']);
   });
 
   it('stores bursts, reads them by time and prunes the old ones', async () => {
@@ -85,19 +92,32 @@ describe('poll with D1 state', () => {
     const s1 = await poll(env as any, T0 + 120, 1, repo);
     expect(s1.bursts.length).toBe(0);
     const s2 = await poll(env as any, T0 + 420, 1, repo);
-    expect(s2.bursts.map((b) => [b.lang, b.title, b.qid])).toEqual([[lang, 'Story', 'Q7']]);   // resumed from D1
-    const row = await repo.loadGroup(1);
-    expect(row!.state).not.toMatch(/alice|bob|carol|dave|erin|frank/);
-    expect(JSON.parse(row!.state).bursts).toBeUndefined();
+    expect(s2.bursts.map((b) => [b.lang, b.title, b.qid])).toEqual([[lang, 'Story', 'Q7']]);   // resumed from D1 slots
+    const w = await repo.loadWindow(1, 0);
+    expect(w.slots.length).toBe(2);
+    expect(JSON.stringify(w)).not.toMatch(/alice|bob|carol|dave|erin|frank/);
     const v = await view(env as any, T0 + 430, repo);
     expect(v.bursts.some((b) => b.title === 'Story' && b.qid === 'Q7')).toBe(true);
     expect(v.items.Q7.labels.en).toBe('Story');
+    expect(v.counts![`${lang}|Story`][1]).toBe(6);                         // counts come from the summary row
+    expect(v.articles).toEqual({});                                         // never the full states
     vi.unstubAllGlobals();
   });
 
-  it('persisted() drops bursts, QIDs and items', () => {
-    const s = emptyState();
-    s.bursts.push(burst('en', T0));
-    expect(Object.keys(persisted(s))).not.toContain('bursts');
+  it('compact encoding is smaller than the v5 group blob for the same state', async () => {
+    const { addEdit, encodeSlot, encodeMeta } = await import('../src/core');
+    const st = emptyState();
+    const sample = JSON.parse(readFileSync(new URL('./fixtures/en_recentchanges.json', import.meta.url), 'utf8')) as any[];
+    for (const r of sample) addEdit(st, 'en', r, 's');
+    const now = Math.max(...sample.map((r) => Date.parse(r.timestamp) / 1000));
+    const v5 = JSON.stringify({ ...st, bursts: undefined, touched: undefined });   // the pre-change layout
+    const rows = [...st.touched!].map((s0) => encodeSlot(st, s0));
+    const meta = encodeMeta(st, now);
+    const newest = rows[rows.length - 1].length + meta.length;              // what a steady run rewrites
+    console.log(JSON.stringify({ articles: Object.keys(st.articles).length, v5_bytes: v5.length,
+      slot_rows_bytes: rows.reduce((n, r) => n + r.length, 0), meta_bytes: meta.length, steady_write_bytes: newest }));
+    expect(rows.reduce((n, r) => n + r.length, 0) + meta.length).toBeLessThan(v5.length);
+    expect(newest).toBeLessThan(v5.length / 3);
   });
+
 });
