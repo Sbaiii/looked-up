@@ -1,0 +1,6 @@
+actual_excess_24h,breadth_t,event_id,final_breadth,label,n_sitelinks,p_international,predicted_excess_24h,snapshot,went_international,why
+,3,Q11649@20260928T00,7,Nirvana,29,0.757,,2026-09-28 01:00:00,1,confident hit
+,4,Q185088@20261005T07,4,People's Party,29,0.717,,2026-10-05 08:00:00,0,false alarm
+,2,Q139039620@20261005T13,5,2026 FIFA ASEAN Cup,8,0.0,,2026-10-05 14:00:00,1,missed
+,2,Q30942350@20260924T11,2,Wang Manyu,14,0.005,,2026-09-24 13:00:00,0,median call
+675392,,Q199801@20260921T02,21,Cindy Crawford,,,543568,2026-09-21 06:00:00,,largest attention left
