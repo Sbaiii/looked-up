@@ -153,7 +153,8 @@
     "links": "Données : {dataset}. Code et méthodes : {repo}.",
     "dataset": "le jeu de données ouvert sur Hugging Face",
     "repo": "le dépôt GitHub",
-    "privacy": "Ni cookies ni pistage. Votre thème et votre langue restent dans votre navigateur."
+    "privacy": "Ni cookies ni pistage. Votre thème et votre langue restent dans votre navigateur.",
+    "live": "Les contributeurs suivent les lecteurs : sur 2 000 événements de septembre et octobre, les pics de modifications sont arrivés en médiane 1 h 46 après le premier pic de lecture, mais environ 1 h 26 avant la publication des chiffres de consultation."
   },
   "titles": {
     "today": "Looked Up : ce que le monde a consulté aujourd'hui",
@@ -177,8 +178,8 @@
     "summary": "Une heure après qu'un événement apparaît dans deux langues, le modèle repère bien ceux qui atteindront cinq langues (AUC {auc} sur 17 jours jamais vus), et ses probabilités sont à peu près honnêtes, un peu trop confiantes au milieu. La célébrité seule ne suffit pas : le nombre de Wikipédias ayant un article n'explique qu'un cinquième de ce que sait le modèle. Ce qui compte le plus, c'est le volume de lecture déjà en cours, l'étendue déjà atteinte et l'heure de la journée. Il prévoit mieux qu'une simple règle de décroissance l'attention restante sur 24 heures, mais pas le moment où elle retombe. Les prévisions planétaires reposent sur très peu de cas passés et ne s'affichent qu'au-dessus de 30 %."
   },
   "live": {
-    "kicker": "En ce moment · les contributeurs mettent à jour",
-    "note": "Les chiffres des lecteurs arrivent environ 3 heures plus tard.",
+    "kicker": "En ce moment · les contributeurs confirment",
+    "note": "Les lecteurs arrivent généralement en premier ; les contributeurs suivent dans les deux heures environ, et leurs modifications sont visibles avant la publication des chiffres de lecture.",
     "since": "premier pic il y a {n} min",
     "languages": "en cours de modification en {langs}",
     "single": "Modifications les plus intenses dans une seule langue",

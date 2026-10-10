@@ -153,7 +153,8 @@
     "links": "Data: {dataset}. Code and methods: {repo}.",
     "dataset": "the open dataset on Hugging Face",
     "repo": "the GitHub repository",
-    "privacy": "No cookies, no tracking. Your theme and language choice stay in your browser."
+    "privacy": "No cookies, no tracking. Your theme and language choice stay in your browser.",
+    "live": "Editors follow readers: in 2,000 September–October events, edit bursts came a median 1 h 46 min after the first reading spike, yet about 1 h 26 min before the pageview numbers were published."
   },
   "titles": {
     "today": "Looked Up: what the world looked up today",
@@ -177,8 +178,8 @@
     "summary": "An hour after an event is first seen in two languages, the model sorts the ones that will reach five languages well (AUC {auc} on 17 days it never saw), and its probabilities are roughly honest, slightly overconfident in the middle. Fame alone is not enough: how many Wikipedias have an article explains only a fifth of what the model knows. What matters most is how much reading is already happening, how wide it already is, and the hour of the day. It predicts the attention left in the next 24 hours better than a simple decay rule, but not the moment attention fades. Planetary forecasts rest on very few past cases and are shown only above 30 %."
   },
   "live": {
-    "kicker": "Right now · editors are updating",
-    "note": "Readers' numbers arrive about 3 hours later.",
+    "kicker": "Right now · editors are confirming",
+    "note": "Readers usually get there first; editors follow within about two hours, and their edits are visible before the reading numbers are published.",
     "since": "first burst {n} min ago",
     "languages": "editing in {langs}",
     "single": "Busiest single-language edits",

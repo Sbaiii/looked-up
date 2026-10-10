@@ -153,7 +153,8 @@
     "links": "Datos: {dataset}. Código y métodos: {repo}.",
     "dataset": "el conjunto de datos abierto en Hugging Face",
     "repo": "el repositorio de GitHub",
-    "privacy": "Sin cookies ni rastreo. Tu tema e idioma se guardan en tu navegador."
+    "privacy": "Sin cookies ni rastreo. Tu tema e idioma se guardan en tu navegador.",
+    "live": "Los editores siguen a los lectores: en 2.000 eventos de septiembre y octubre, los picos de edición llegaron en mediana 1 h 46 min después del primer pico de lectura, pero unas 1 h 26 min antes de que se publicaran las cifras de visitas."
   },
   "titles": {
     "today": "Looked Up: lo que el mundo consultó hoy",
@@ -177,8 +178,8 @@
     "summary": "Una hora después de que un evento aparece en dos idiomas, el modelo distingue bien los que llegarán a cinco idiomas (AUC {auc} en 17 días que nunca vio), y sus probabilidades son más o menos honestas, algo confiadas de más en la zona media. La fama sola no basta: cuántas Wikipedias tienen un artículo explica solo una quinta parte de lo que sabe el modelo. Lo que más pesa es cuánta lectura hay ya, cuán amplia es ya y la hora del día. Prevé la atención restante en 24 horas mejor que una simple regla de decaimiento, pero no el momento en que decae. Las previsiones planetarias se basan en muy pocos casos pasados y solo se muestran por encima del 30 %."
   },
   "live": {
-    "kicker": "Ahora mismo · los editores están actualizando",
-    "note": "Las cifras de los lectores llegan unas 3 horas más tarde.",
+    "kicker": "Ahora mismo · los editores están confirmando",
+    "note": "Los lectores suelen llegar primero; los editores los siguen en unas dos horas, y sus ediciones se ven antes de que se publiquen las cifras de lectura.",
     "since": "primer pico hace {n} min",
     "languages": "editándose en {langs}",
     "single": "Ediciones más intensas en un solo idioma",
