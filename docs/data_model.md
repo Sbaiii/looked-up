@@ -153,6 +153,28 @@ A day file publishes three sets of events:
 Day files keep the top 20 events by excess views as well, for the hero rule (ADR 0024). Each day also has a social card
 at `data/app/og/YYYY-MM-DD.png`, 1200×630 (ADR 0027).
 
+### Forecasts (Phase 4, ADR 0029)
+
+Open events (started < 24 h before the export) in `today.json` and the day files of today and yesterday carry a
+`forecast` object:
+
+| Field | Meaning |
+|---|---|
+| `offset_h` | snapshot used: 0, 1 or 3 h after detection (the second language's spike) |
+| `p_international`, `p_planetary` | calibrated probabilities, only for tiers not reached yet |
+| `predicted_excess_24h`, `fade_eta_hours`, `fade_eta` | M2 forecasts from t0 + 3 h on |
+| `model_version` | `data/models/models.json` version |
+
+`stats.json` carries `forecast`: the pre-registered backtest's AUC, PR AUC, Brier score, lift and calibration curve,
+plus the model version.
+
+## Forecast models (`data/models/`)
+
+- `models.json`: version, training window, and per model the LightGBM text file, feature encoder, Platt parameters
+  and size (all < 2.2 MB). It also holds the backtest summary.
+- `training/batch.parquet` is the warehouse feature table (16 Jul – 6 Oct). `training/live-<monday>.parquet` adds
+  one file per week.
+
 ## Query it from DuckDB (5 lines)
 
 ```python
