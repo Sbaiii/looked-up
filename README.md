@@ -38,9 +38,10 @@ over the last 90 days, across 30 languages, in English, French and Spanish.
 - **In the app:** open events get a "Spreading" badge at ≥ 50 % and a fade ETA. Models retrain on Mondays
   (`data/models/` on the Hub).
 
-**Phase 5, the live layer.** A consumer of Wikimedia EventStreams ([`live/`](live/), ADR 0030) shows what editors
-across the 30 Wikipedias are rushing to update right now: the app's "Right now" strip. It stores counts only,
-never users.
+**Phase 5, the live layer.** A Cloudflare Worker ([`worker/`](worker/), ADR 0032) polls the 30 Wikipedias'
+recent changes every 5 minutes. It shows what editors are confirming right now: the app's "Right now" strip. It
+stores counts only, never users, and the Python [`live/`](live/) package is the reference implementation of the
+rules.
 - **H9 rejected** ([results](docs/analysis/phase5_results.md)): readers lead editors. Edit bursts come a median
   1.8 h *after* the first reading spike, and only 7 % of events have one at all.
 - **Earlier than the data, though:** a burst is known about 1.5 h before the pageview dumps confirm the attention.
@@ -135,7 +136,8 @@ npm run test:unit && npx playwright test                      # app unit and smo
 .venv/bin/python -m lookedup.cli forecast-evaluate            # pre-registered backtest (scores the test set once)
 .venv/bin/python -m lookedup.cli forecast-retrain             # production models -> data/models/ (Mondays in CI)
 .venv/bin/python -m lookedup.cli refresh-warehouse            # extend the warehouse to yesterday (weekly, by hand)
-(cd live && ../.venv/bin/uvicorn lookedup_live.app:app --port 7860)   # the live layer locally: /live.json, /health
+(cd worker && npm ci && npm test)                              # the live Worker's tests (rules from config/live.yml)
+(cd live && ../.venv/bin/uvicorn lookedup_live.app:app --port 7860)   # the reference live layer locally
 ```
 
 Add `--local` to write to `~/looked-up-data/lake` (or `$LOOKEDUP_DATA_DIR`, kept outside iCloud) instead of Hugging Face. Workflows:
