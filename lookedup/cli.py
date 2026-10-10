@@ -18,6 +18,7 @@ Commands:
   hub           Hub maintenance: --drop-prefix PATH, --squash (rewrites dataset history), storage report
   score         score ingested hours into spikes, events and data/latest.json (hourly)
   app-export    write the web app's JSON (data/app/): hourly live files, or --backfill every day
+  forecast-evaluate   run the pre-registered Phase 4 backtest (scores the test set once)
   ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
   evaluate      run the pre-registered Phase 2 evaluation (writes docs/analysis/)
   evaluate-v2   run the pre-registered Phase 2b evaluation against deaths, earthquakes and matches
@@ -247,6 +248,13 @@ def cmd_app_export(a):
     print(json.dumps(export_live(open_store(a.local)), indent=1))
 
 
+def cmd_forecast_evaluate(a):
+    from lookedup.forecast.evaluate import run
+
+    res = run()
+    print(json.dumps({k: res[k] for k in ("split_sizes", "H6", "H7", "H8")}, indent=1, default=str))
+
+
 def cmd_ground_truth(a):
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -351,6 +359,7 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("app-export", cmd_app_export)
     sp.add_argument("--backfill", action="store_true", help="every day from the warehouse and the lake mirror")
     sp.add_argument("--upload", action="store_true", help="with --backfill: commit the files to the lake")
+    add("forecast-evaluate", cmd_forecast_evaluate, local=False)
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")
