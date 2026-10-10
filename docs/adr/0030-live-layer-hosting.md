@@ -16,7 +16,7 @@ sleeps after 15 minutes), Oracle Cloud and Cloud Run.
 ## Decision
 
 - **The code stays deployable as a Space.**
-  - `live/` is a self-contained FastAPI service with a `Dockerfile` (boots in seconds; uses about 120 MB of memory in
+  - `live/` is a self-contained FastAPI service with a `Dockerfile` (boots in about 1 s; 39 MB resident memory measured in
     the local run). It serves `/live.json`, `/stats.json`, `/bursts.json` and `/health`, with CORS for every origin
     and a 15-second cache.
   - `space.yml` pushes `live/` to the Space on every change. It only warns while the Space doesn't exist.
