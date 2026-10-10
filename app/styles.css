@@ -177,17 +177,21 @@ button { background: none; border: none; cursor: pointer; }
 
 /* "Right now" strip (Phase 5): reserved height, so arriving data never shifts the page */
 .livestrip { border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--paper-2) 70%, transparent); }
-.livestrip__inner { max-width: var(--max); margin-inline: auto; padding: 0.7rem var(--gutter) 0.6rem; min-height: 6.2rem; }
-.livestrip__head { display: flex; align-items: center; gap: 0.55rem; }
-.pulse { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #ff5c5c; box-shadow: 0 0 0 0 rgba(255, 92, 92, 0.6); animation: pulse 2s infinite; }
+.livestrip__inner { max-width: var(--max); margin-inline: auto; padding: 0.6rem var(--gutter) 0.5rem; height: 7.6rem; overflow: hidden; }
+.livestrip__head { display: flex; align-items: center; gap: 0.55rem; height: 1.2rem; }
+.pulse { flex: none; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #ff5c5c; box-shadow: 0 0 0 0 rgba(255, 92, 92, 0.6); animation: pulse 2s infinite; }
 .livestrip.is-resting .pulse { background: var(--faint); animation: none; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 92, 92, 0.55); } 70% { box-shadow: 0 0 0 0.6rem rgba(255, 92, 92, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 92, 92, 0); } }
-.livestrip__list { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; margin: 0.45rem 0 0.2rem; }
-.livestrip__list li { display: grid; gap: 0.05rem; min-width: 12rem; max-width: 26rem; }
-.livestrip__list strong { font-weight: 700; }
-.livestrip__list span { color: var(--muted); font-size: 0.82rem; }
-.livestrip__state:empty { display: none; }
-.livestrip__note { font-size: 0.78rem; }
+/* fixed height: one scrollable row of items, one-line texts, so arriving data never moves the page (CLS) */
+.livestrip__list { list-style: none; display: flex; flex-wrap: nowrap; gap: 1.4rem; overflow-x: auto; overflow-y: hidden;
+    height: 3.5rem; margin: 0.35rem 0 0.15rem; scrollbar-width: thin; }
+.livestrip__list li { flex: none; display: grid; align-content: start; width: min(17rem, 78vw); }
+.livestrip__list strong, .livestrip__list span, .livestrip__state, .livestrip__note {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.livestrip__list strong { font-weight: 700; line-height: 1.3; }
+.livestrip__list span { color: var(--muted); font-size: 0.8rem; line-height: 1.3; }
+.livestrip__state { height: 1.1rem; font-size: 0.82rem; }
+.livestrip__note { font-size: 0.76rem; height: 1rem; }
 .next { margin-top: 1.1rem; }
 .next__title { margin-bottom: 0.4rem; }
 .next__list { list-style: none; display: grid; gap: 0.25rem; margin-bottom: 0.3rem; }
