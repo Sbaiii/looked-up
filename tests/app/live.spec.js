@@ -2,7 +2,7 @@
 const { test, expect } = require('./fixtures');
 
 const ready = (page) => page.waitForSelector('html[data-ready="true"]');
-const LIVE = 'https://huggingface.co/datasets/Sbaiiiiii/looked-up/resolve/main/data/live/live.json*';
+const LIVE = 'https://looked-up-live.abdellahsbaisbai.workers.dev/live.json*';
 
 test('live: the strip lists live events with languages and minutes since the first burst', async ({ page }) => {
   await page.goto('./');
