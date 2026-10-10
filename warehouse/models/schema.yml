@@ -158,3 +158,20 @@ models:
               arguments:
                 to: ref('fct_app_events')
                 field: event_id
+
+  - name: fct_event_snapshots
+    description: Decision-time snapshots of multi-language product events with M1/M2 targets (prereg phase 4).
+    columns:
+      - name: snapshot_id
+        tests: [unique, not_null]
+      - name: offset_h
+        tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1, 3]
+      - name: event_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('fct_app_events')
+                field: event_id
