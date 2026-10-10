@@ -46,6 +46,8 @@ rules.
   1.8 h *after* the first reading spike, and only 7 % of events have one at all.
 - **Earlier than the data, though:** a burst is known about 1.5 h before the pageview dumps confirm the attention.
 - **H10** (do two-language bursts predict reading events?) accumulates daily on the lake.
+- **Known limitation:** the Worker's polls run at about 10 ms of CPU (p95 16 ms), over the free plan's 10 ms. No run
+  has been rejected so far (ADR 0033).
 
 **Live, scoring hourly.** GitHub Actions adds each newly published hour of 30 Wikipedias to the public dataset
 [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up). After each ingest it scores the hour
