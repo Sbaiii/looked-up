@@ -17,6 +17,7 @@ dependencies = [
     "requests>=2.31",
     "huggingface_hub>=0.25",
     "pyyaml>=6",
+    "pillow>=10",
 ]
 
 [project.optional-dependencies]
