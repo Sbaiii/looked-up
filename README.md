@@ -38,6 +38,14 @@ over the last 90 days, across 30 languages, in English, French and Spanish.
 - **In the app:** open events get a "Spreading" badge at ≥ 50 % and a fade ETA. Models retrain on Mondays
   (`data/models/` on the Hub).
 
+**Phase 5, the live layer.** A consumer of Wikimedia EventStreams ([`live/`](live/), ADR 0030) shows what editors
+across the 30 Wikipedias are rushing to update right now: the app's "Right now" strip. It stores counts only,
+never users.
+- **H9 rejected** ([results](docs/analysis/phase5_results.md)): readers lead editors. Edit bursts come a median
+  1.8 h *after* the first reading spike, and only 7 % of events have one at all.
+- **Earlier than the data, though:** a burst is known about 1.5 h before the pageview dumps confirm the attention.
+- **H10** (do two-language bursts predict reading events?) accumulates daily on the lake.
+
 **Live, scoring hourly.** GitHub Actions adds each newly published hour of 30 Wikipedias to the public dataset
 [`Sbaiiiiii/looked-up`](https://huggingface.co/datasets/Sbaiiiiii/looked-up). After each ingest it scores the hour
 for **attention events**: one entity spiking in ≥ 2 languages within 6 hours against its own 28-day baseline.
@@ -126,6 +134,8 @@ npm run test:unit && npx playwright test                      # app unit and smo
 .venv/bin/pip install -e ".[forecast]"                        # LightGBM + scikit-learn for Phase 4
 .venv/bin/python -m lookedup.cli forecast-evaluate            # pre-registered backtest (scores the test set once)
 .venv/bin/python -m lookedup.cli forecast-retrain             # production models -> data/models/ (Mondays in CI)
+.venv/bin/python -m lookedup.cli refresh-warehouse            # extend the warehouse to yesterday (weekly, by hand)
+(cd live && ../.venv/bin/uvicorn lookedup_live.app:app --port 7860)   # the live layer locally: /live.json, /health
 ```
 
 Add `--local` to write to `~/looked-up-data/lake` (or `$LOOKEDUP_DATA_DIR`, kept outside iCloud) instead of Hugging Face. Workflows:
