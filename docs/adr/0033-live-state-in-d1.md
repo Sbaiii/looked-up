@@ -43,6 +43,40 @@ cache.
 ## Consequences
 
 - Every minute runs a poll of 6 wikis, so every run does work.
-- The CPU target is p95 < 8 ms per poll, measured with `worker-observe.yml`. The results are below.
+- The CPU target was p95 < 8 ms per poll, measured with `worker-observe.yml`. **It was not met.** See below.
 - The unchanged burst logic is guarded by the 12 core tests. The repository layer and a full persisted poll are
   tested against a local D1 in miniflare (`worker/test/repo.test.ts`).
+
+## Measured (30-minute tail, 2026-10-10 13:52–14:22 UTC, 30 polls, all `ok`)
+
+| Group | Wikis | CPU per run, steady (ms) | p95 | Rows fetched per poll | State row |
+|---|---|---|---:|---|---:|
+| 0 | en es fa sv he ro | 11, 14, 16, 16, 16 | 16 | 311–412 (median 366) | 111 KB |
+| 1 | ja it nl ko vi no | 9, 11, 11, 12, 13 | 13 | 142–191 | 50 KB |
+| 2 | de zh ar cs hu sr | 8, 9, 9, 9, 10 | 10 | 117–154 | 42 KB |
+| 3 | ru pt tr fi el bg | 6, 7, 7, 7, 7 | 7 | 43–85 | 19 KB |
+| 4 | fr pl id uk th hi | 8, 9, 9, 11, 11 | 11 | 146–172 | 55 KB |
+
+- **All runs:** median 9 ms, p95 16 ms. The cold first runs: median 10 ms, max 15 ms. **Not under 10 ms.**
+- **D1 rows written:** about 66 an hour (one row per poll, plus new bursts), so about 1,600 a day against the free
+  100,000.
+- **`/health` used 7–12 ms CPU per request,** because it parses all five group rows.
+
+### Why D1 did not close the gap
+
+- **Group 0 holds English,** about 360 rows per poll over up to 3 pages. Its state row is 111 KB, and every run
+  parses and re-serialises it. The fixed per-call cost of D1 and KV, and the JSON work on that row, kept it at
+  11–16 ms. Groups with smaller wikis run at 7–10 ms.
+- So the cost is now per-row JSON and per-wiki volume, not the number of groups.
+- **Next options**, not taken here, pending the owner's decision:
+  1. Give English its own group, and split its state by 5-minute slot so a run only parses the current window.
+  2. Store articles in a binary layout instead of JSON.
+  3. Make `/health` read a tiny summary row instead of all five states.
+- **No switch to the paid plan.** Cloudflare has not throttled any run. Every one of 70+ tailed runs, up to 76 ms
+  earlier today, ended `ok`.
+
+### Pinger check
+
+- `wrangler tail` showed `GET /health` from `Mozilla/4.0 (compatible; cron-job.org; http://cron-job.org/abuse/)` at
+  14:00, 14:10 and 14:20 UTC.
+- D1 counts these GETs in `pings`, and `/health` reports them as `pinger_today`.
