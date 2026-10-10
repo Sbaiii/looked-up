@@ -1,13 +1,9 @@
-name: live layer
+name: live layer (disabled)
 
-# The live edit layer (Phase 5) in fixed-length shifts (ADR 0030): a free Docker Space now needs a paid plan, so the
-# consumer runs as a GitHub Actions job of ~5 h 45 min that publishes data/live/ to the lake every 5 minutes and
-# hands its state (no user data) to the next shift, which resumes the stream with Last-Event-ID.
-# Continuity: the concurrency group keeps one shift running and one queued; the hourly cron, and every hourly
-# ingest run (pinged externally), add a queued shift if none is waiting.
+# DISABLED (ADR 0032, superseding ADR 0030): chained always-on jobs conflict with GitHub's Actions usage terms and
+# put the hourly pipeline at risk. The live layer now runs on its own host (see docs/ops.md). This workflow is kept
+# for a one-off manual run only; nothing schedules or queues it any more.
 on:
-  schedule:
-    - cron: "23 * * * *"
   workflow_dispatch:
 
 concurrency:
