@@ -68,7 +68,15 @@ How the Worker works, and why:
   - a 470–530 KB state blob.
   - `/live.json` requests used 9–10 ms.
 - **That is over the free plan's 10 ms,** although Cloudflare still returned `ok`. So the following was applied:
-  - **The fallback:** two cron triggers (`*/5` and `2-59/5`), each polling 15 wikis. That makes 576 KV writes a day.
+  - **The fallback, extended to three groups** with **separate KV state per group**: en; ja de ru fr es it zh; the
+    other 22.
+    - The first attempt, two groups sharing one state, still measured 33 ms. Its `2-59/5` trigger never fired.
+    - Explicit minute lists (`0,5,…`, `2,7,…`, `4,9,…`) start each group in turn, every 5 minutes.
+    - Each poll parses and writes only its own group's state: 864 KV writes a day.
+    - Reads merge the three states. Live events, which span groups, are counted on the merged view. The Worker's
+      `live_events_per_hour_week` therefore covers the 72 h of bursts it keeps, and the full week comes from the
+      daily snapshots on the lake.
+    - The cold-start lookback is 10 min instead of 30.
   - **No BigInt:** editor bitmaps are two 32-bit numbers. Distinct editors are computed only once an article has
     enough edits to qualify, which most never reach.
   - **A compact state:** slots are arrays, hourly counts are keyed by short title hashes, and articles that never
