@@ -80,3 +80,20 @@ jobs:
       - name: Score the live bursts of two days ago (Phase 5, H10 accumulates on the lake)
         if: steps.token.outputs.present == 'true'
         run: python -m lookedup.cli live-score || echo "::warning::live-score failed"
+      - name: Check the live Worker's health (ADR 0033)
+        if: vars.LIVE_URL != ''
+        env:
+          LIVE_URL: ${{ vars.LIVE_URL }}
+        run: |
+          # gap_minutes is capped at 60 (the whole live window), so ">= 60", not connected, or no answer all warn.
+          body=$(curl -s --max-time 20 "$LIVE_URL/health" || true)
+          echo "health: $body"
+          verdict=$(printf '%s' "$body" | python3 -c "import json,sys
+          try:
+              h = json.load(sys.stdin)
+              print('ok' if h.get('connected') and h.get('gap_minutes', 60) < 60 else 'gap=%s connected=%s' % (h.get('gap_minutes'), h.get('connected')))
+          except Exception:
+              print('no answer')")
+          if [ "$verdict" != "ok" ]; then
+            echo "::warning title=Live Worker not healthy::$verdict (see docs/ops.md, Live layer)"
+          fi
