@@ -1,0 +1,34 @@
+{
+ "H9": {
+  "events": 2000,
+  "with_burst": 134,
+  "share_with_burst": 0.067,
+  "median_lead_minutes": -106.0,
+  "p25": -294.5,
+  "p75": -43.25,
+  "share_lead_positive": 0.07462686567164178,
+  "by_category": {
+   "death": {
+    "n": 35,
+    "median": -53
+   },
+   "entertainment": {
+    "n": 11,
+    "median": -29
+   },
+   "human": {
+    "n": 25,
+    "median": -144
+   },
+   "other": {
+    "n": 31,
+    "median": -177
+   },
+   "sports": {
+    "n": 30,
+    "median": -123.0
+   }
+  },
+  "verdict": "rejected"
+ }
+}
