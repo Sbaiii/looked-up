@@ -114,12 +114,14 @@ def short(text: str, n: int = DESC_MAX) -> str:
 
 
 def event_obj(e: dict, langs: list[dict], titles: dict[str, str], spark: list[int] | None,
-              category: str | None, text: tuple[dict, str | None] | None = None) -> dict:
+              category: str | None, text: tuple[dict, str | None] | None = None, forecast: dict | None = None) -> dict:
     rows = sorted(langs, key=lambda r: (r["spread_lag_hours"], r["lang"]))
     desc, gender = text or ({}, None)
     extra = {"desc": {l: short(desc[l]) for l in UI_LANGUAGES if desc.get(l)}}
     if gender:
         extra["gender"] = gender
+    if forecast:
+        extra["forecast"] = forecast   # Phase 4: open events only, never for a reached tier
     return {
         "id": e["event_id"], "qid": f"Q{e['qid']}", "start": _iso(e["start_hour"]),
         "tier": e["tier"], "class": e["event_class"], "breadth": e["breadth"], "lead": e["lead_lang"],
@@ -157,17 +159,19 @@ def summary(events: list[dict], langs: dict[str, list[dict]]) -> dict:
 
 def period_payload(kind: str, events: list[dict], langs: dict[str, list[dict]], titles: dict[int, dict[str, str]],
                    sparks: dict[str, list[int]], categories: dict[int, str], generated_at: datetime,
-                   texts: dict[int, tuple[dict, str | None]] | None = None, **extra) -> dict:
+                   texts: dict[int, tuple[dict, str | None]] | None = None, forecasts: dict | None = None,
+                   **extra) -> dict:
     multi, single = select(events, langs)
     texts = texts or {}
+    forecasts = forecasts or {}
     obj = lambda e: event_obj(e, langs.get(e["event_id"], []), titles.get(e["qid"], {}), sparks.get(e["event_id"]),
-                              categories.get(e["qid"]), texts.get(e["qid"]))
+                              categories.get(e["qid"]), texts.get(e["qid"]), forecasts.get(e["event_id"]))
     return {"schema_version": SCHEMA_VERSION, "kind": kind, "generated_at": f"{generated_at:%Y-%m-%dT%H:%M:%SZ}",
             **extra, "summary": summary(events, langs),
             "events": [obj(e) for e in multi], "single_language_events": [obj(e) for e in single]}
 
 
-def stats_payload(days: dict[str, dict], generated_at: datetime, languages: list[str]) -> dict:
+def stats_payload(days: dict[str, dict], generated_at: datetime, languages: list[str], forecast: dict | None = None) -> dict:
     """Totals over the per-day summaries of the last STATS_DAYS days."""
     keys = sorted(days)[-STATS_DAYS:]
     days = {k: days[k] for k in keys}
@@ -190,6 +194,7 @@ def stats_payload(days: dict[str, dict], generated_at: datetime, languages: list
         "timeline": [{"day": k, "hourly": s["hourly"], "tiers": s["tiers"], "single_language": s["single_language"]}
                      for k, s in days.items()],
         "days": days,
+        **({"forecast": forecast} if forecast else {}),
     }
 
 
@@ -324,6 +329,30 @@ def texts_live(events: list[dict]) -> dict[int, tuple[dict, str | None]]:
                                        active_codes()))
 
 
+def live_forecasts(con, store, events, now, last_hour, hourly_files, titles, tmp) -> tuple[dict, dict]:
+    """Phase 4: forecasts for open events (empty until models are published). Never fails the export."""
+    try:
+        from lookedup.forecast.predict import entity_classes, forecast_open, live_relations, load_models
+
+        manifest, models = load_models(store, tmp / "models")
+        if not models or last_hour is None:
+            return {}, manifest
+        open_ev = [e for e in events if e["start_hour"] >= now - timedelta(hours=24) and e["event_class"] != "single_language"]
+        missing = {e["qid"] for e in open_ev} - set(titles)
+        all_titles = titles | (titles_from_api(missing, _languages()) if missing else {})
+        live_relations(con, open_ev, categories_for(open_ev), entity_classes({e["qid"] for e in open_ev}), all_titles,
+                       hourly_files)
+        return forecast_open(con, open_ev, now, last_hour, manifest, models), manifest
+    except Exception:  # forecasts are an extra: the hourly export must still publish
+        log.exception("forecasts failed; exporting without them")
+        return {}, {}
+
+
+def _languages() -> list[str]:
+    from lookedup.languages import active_codes
+    return active_codes()
+
+
 def by_day(events: list[dict]) -> dict[date, list[dict]]:
     out: dict[date, list[dict]] = defaultdict(list)
     for e in events:
@@ -333,9 +362,10 @@ def by_day(events: list[dict]) -> dict[date, list[dict]]:
 
 def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, list[dict]],
               titles: dict[int, dict[str, str]], categories: dict[int, str], hourly_files: list[Path],
-              now: datetime, last_hour: datetime | None = None, texts: dict | None = None) -> dict:
+              now: datetime, last_hour: datetime | None = None, texts: dict | None = None,
+              forecasts: dict | None = None) -> dict:
     sparks = sparklines(con, hourly_files, published(events, langs), titles, last_hour)
-    payload = period_payload("day", events, langs, titles, sparks, categories, now, texts, date=f"{d:%Y-%m-%d}")
+    payload = period_payload("day", events, langs, titles, sparks, categories, now, texts, forecasts, date=f"{d:%Y-%m-%d}")
     size = dump(payload, out_dir / day_file(d))
     from lookedup.og import render_day  # ADR 0027: one Open Graph card per day
 
@@ -345,17 +375,19 @@ def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, 
     return payload["summary"]
 
 
-def _today_payload(con, events, langs, titles, categories, hourly_files, now, last_hour, texts=None) -> dict:
+def _today_payload(con, events, langs, titles, categories, hourly_files, now, last_hour, texts=None,
+                   forecasts=None) -> dict:
     recent = [e for e in events if e["start_hour"] >= now - timedelta(hours=24)]
     sparks = sparklines(con, hourly_files, published(recent, langs), titles, last_hour)
-    return period_payload("today", recent, langs, titles, sparks, categories, now, texts, window_hours=24,
+    return period_payload("today", recent, langs, titles, sparks, categories, now, texts, forecasts, window_hours=24,
                           last_hour=_iso(last_hour) if last_hour else None)
 
 
-def _update_stats(old: dict, summaries: dict[str, dict], now: datetime, languages: list[str]) -> dict:
+def _update_stats(old: dict, summaries: dict[str, dict], now: datetime, languages: list[str],
+                  forecast: dict | None = None) -> dict:
     days = dict(old.get("days", {})) if old.get("schema_version") == SCHEMA_VERSION else {}
     days.update(summaries)
-    return stats_payload(days, now, languages)
+    return stats_payload(days, now, languages, forecast or old.get("forecast"))
 
 
 def backfill(store, out_dir: Path, now: datetime | None = None, languages: list[str] | None = None) -> dict:
@@ -445,18 +477,20 @@ def export_live(store, now: datetime | None = None, languages: list[str] | None 
         titles = titles_from_api({e["qid"] for e in pub.values()}, languages)
         categories = categories_for(list(pub.values()))
         texts = texts_live(list(pub.values()))
+        forecasts, manifest = live_forecasts(con, store, events, now, last_hour, hourly_files, titles, tmp)
         out = tmp / "out"
         files: dict[str, Path] = {}
         summaries = {}
         for d in (today - timedelta(days=1), today):
             summaries[f"{d:%Y-%m-%d}"] = write_day(con, out, d, days.get(d, []), langs_by, titles, categories,
-                                                   hourly_files, now, last_hour, texts)
+                                                   hourly_files, now, last_hour, texts, forecasts)
             files[day_file(d)] = out / day_file(d)
             files[og_file(d)] = out / og_file(d)
-        dump(_today_payload(con, events, langs_by, titles, categories, hourly_files, now, last_hour, texts),
+        dump(_today_payload(con, events, langs_by, titles, categories, hourly_files, now, last_hour, texts, forecasts),
              out / APP_PREFIX / "today.json")
         files[f"{APP_PREFIX}/today.json"] = out / APP_PREFIX / "today.json"
-        stats = _update_stats(_read_json(store, f"{APP_PREFIX}/stats.json", tmp / "st"), summaries, now, languages)
+        fc = ({**manifest["backtest"], "model_version": manifest["version"]} if manifest.get("backtest") else None)
+        stats = _update_stats(_read_json(store, f"{APP_PREFIX}/stats.json", tmp / "st"), summaries, now, languages, fc)
         dump(stats, out / APP_PREFIX / "stats.json")
         files[f"{APP_PREFIX}/stats.json"] = out / APP_PREFIX / "stats.json"
         json_files = {k: v for k, v in files.items() if k.endswith(".json")}
