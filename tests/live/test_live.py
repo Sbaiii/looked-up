@@ -65,19 +65,33 @@ def test_baseline_raises_the_bar_on_a_busy_wiki():
     assert next(i for i, b in enumerate(out) if b) == 15         # needs 2 x edits >= 8 x 4 -> 16 edits
 
 
-def test_new_article_rule():
+def test_new_article_rule_needs_two_editors():
     d = B.Detector()
+    d.add("fr", "Solo", T0, "a", is_new=True)
+    assert all(d.add("fr", "Solo", T0 + 600 * i, "a") is None for i in range(1, 6))   # one author: not attention
     d.add("fr", "Nouveau", T0, "a", is_new=True)
-    out = [d.add("fr", "Nouveau", T0 + 600 * i, "a") for i in range(1, 5)]
+    out = [d.add("fr", "Nouveau", T0 + 600 * i, u) for i, u in enumerate("abab", start=1)]
     assert out[-1] is not None and out[-1].kind == "new"
 
 
-def test_qid_grouping_needs_two_languages_within_30_minutes():
+def test_qid_grouping_needs_two_languages_within_120_minutes():
     mk = lambda lang, ts, qid: B.Burst(lang, "t", T0 + ts, "window", 5, 3, qid)
-    events = B.live_events([mk("en", 0, "Q1"), mk("fr", 1700, "Q1"), mk("de", 0, "Q2"), mk("es", 2000, "Q2"),
-                            mk("ja", 0, "Q3"), mk("ja", 100, "Q3"), mk("it", 0, None)])
-    assert [e["qid"] for e in events] == ["Q1"]
-    assert events[0]["ts"] == T0 + 1700 and set(events[0]["languages"]) == {"en", "fr"}
+    events = B.live_events([mk("en", 0, "Q1"), mk("fr", 1700, "Q1"), mk("de", 0, "Q2"), mk("es", 7000, "Q2"),
+                            mk("ja", 0, "Q3"), mk("ja", 100, "Q3"), mk("it", 0, None), mk("pt", 0, "Q4"), mk("pl", 7300, "Q4")])
+    assert sorted(e["qid"] for e in events) == ["Q1", "Q2"]                 # Q4: 2 h 2 min apart, Q3: one language
+    q1 = next(e for e in events if e["qid"] == "Q1")
+    assert q1["ts"] == T0 + 1700 and set(q1["languages"]) == {"en", "fr"}
+
+
+def test_single_bursts_rank_by_editors_then_edits_and_live_events_are_counted_hourly():
+    e = Engine()
+    now = T0 + 3600
+    e.detector.bursts.extend([B.Burst("en", "A", now - 600, "window", 9, 3), B.Burst("fr", "B", now - 500, "window", 5, 5),
+                              B.Burst("de", "C", now - 400, "window", 6, 3)])
+    assert [b["title"] for b in e.live(now=now)["single_language_bursts"]] == ["B", "A", "C"]
+    e.detector.bursts.extend([B.Burst("en", "X", now - 300, "window", 5, 3, "Q9"), B.Burst("es", "X", now - 200, "window", 5, 3, "Q9")])
+    st = e.stats(now=now)
+    assert st["live_events_24h"] == 1 and sum(st["live_events_per_hour_week"].values()) == 1
 
 
 def test_engine_payload_reports_gaps_and_live_events():

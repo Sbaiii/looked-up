@@ -14,9 +14,12 @@ from pathlib import Path
 from lookedup_live.bursts import Burst, Detector, live_events
 from lookedup_live.filters import language
 from lookedup_live.qids import UI, Resolver
+from lookedup_live.rules import RULES
 
 SCHEMA_VERSION = 1
-LIVE_WINDOW_S = 3600
+LIVE_WINDOW_S = RULES["live_window_minutes"] * 60
+SINGLES_SHOWN = RULES["single_bursts_shown"]
+HOURLY_KEEP = RULES["hourly_counts_hours"]
 
 
 def iso(ts: float | None) -> str | None:
@@ -45,6 +48,7 @@ class Engine:
         self.received: deque = deque()               # receipt times of all events (last 60 s)
         self.kept: deque = deque()
         self.langs_seen: dict[str, float] = {}
+        self.live_seen: dict[str, str] = {}          # "qid|ts" -> hour key, to count live events per hour (a week)
 
     # ------------------------------------------------------------ ingest
 
@@ -126,22 +130,34 @@ class Engine:
                     "breadth": len(langs), "labels": labels, "desc": desc,
                     "languages": [{"lang": l, "title": titles[l], "first_burst": iso(ev["languages"][l].ts),
                                    **self.detector.counts(l, titles[l], now)} for l in langs]})
+            # ADR 0032: rank single-language bursts by distinct editors, then edits; show the top 5
+            single = [b for b in recent if not any(b.qid == e["qid"] for e in events)]
+            single.sort(key=lambda b: (-b.editors_30m, -b.edits_30m, -b.ts))
             singles = [{"lang": b.lang, "title": b.title, "qid": b.qid, "first_burst": iso(b.ts), "kind": b.kind,
-                        **self.detector.counts(b.lang, b.title, now)}
-                       for b in sorted(recent, key=lambda b: -b.ts) if not any(b.qid == e["qid"] for e in events)][:20]
+                        "editors_at_burst": b.editors_30m, "edits_at_burst": b.edits_30m,
+                        **self.detector.counts(b.lang, b.title, now)} for b in single[:SINGLES_SHOWN]]
             return {"schema_version": SCHEMA_VERSION, "generated_at": iso(now), "window_minutes": 60,
                     "status": self.status(now), "events": events, "single_language_bursts": singles}
+
+    def _count_live(self, now: float) -> None:
+        """Remember every live event once, by its hour, for a week (to judge the rules, ADR 0032)."""
+        for e in live_events(list(self.detector.bursts)):
+            self.live_seen.setdefault(f"{e['qid']}|{e['ts']}", iso(e["ts"] - e["ts"] % 3600)[:13])
+        cutoff = iso(now - HOURLY_KEEP * 3600)[:13]
+        self.live_seen = {k: h for k, h in self.live_seen.items() if h >= cutoff}
 
     def stats(self, now: float | None = None) -> dict:
         now = now or time.time()
         with self.lock:
+            self._count_live(now)
             day = [b for b in self.detector.bursts if b.ts > now - 86400]
             per_hour = Counter(iso(b.ts - b.ts % 3600)[:13] for b in day)
-            live_hour = Counter(iso(e["ts"] - e["ts"] % 3600)[:13] for e in live_events(day))
+            live_hour = Counter(h for h in self.live_seen.values() if h >= iso(now - 86400)[:13])
             return {"schema_version": SCHEMA_VERSION, "generated_at": iso(now), "status": self.status(now),
                     "bursts_per_hour": dict(sorted(per_hour.items())), "live_events_per_hour": dict(sorted(live_hour.items())),
                     "bursts_per_language": dict(Counter(b.lang for b in day).most_common()),
-                    "bursts_24h": len(day), "live_events_24h": sum(live_hour.values())}
+                    "bursts_24h": len(day), "live_events_24h": sum(live_hour.values()),
+                    "live_events_per_hour_week": dict(sorted(Counter(self.live_seen.values()).items()))}
 
     def bursts_since(self, since: float) -> list[dict]:
         with self.lock:
@@ -158,7 +174,7 @@ class Engine:
             d = {"saved_at": now, "last_event_id": self.last_event_id, "last_event_at": self.last_event_at,
                  "covered_since": self.covered_since, "articles": arts,
                  "baselines": {l: list(m) for l, m in self.detector.baselines.medians.items()},
-                 "bursts": [b.to_json() for b in self.detector.bursts]}
+                 "bursts": [b.to_json() for b in self.detector.bursts], "live_seen": self.live_seen}
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
         with gzip.open(tmp, "wt") as f:
@@ -185,4 +201,5 @@ class Engine:
                 self.detector.baselines.medians[l].extend(m)
             for b in d.get("bursts", []):
                 self.detector.bursts.append(Burst(**b))
+            self.live_seen.update(d.get("live_seen", {}))
         return True

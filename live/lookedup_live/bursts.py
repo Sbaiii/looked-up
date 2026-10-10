@@ -12,18 +12,21 @@ import statistics
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, field
 
-WINDOW_S = {"10m": 600, "30m": 1800, "60m": 3600}
-BURST_EDITS = 5
-BURST_EDITORS = 3
-BURST_RATIO = 8.0
-NEW_ARTICLE_EDITS = 5
-NEW_ARTICLE_WINDOW_S = 3600
-DEFAULT_BASELINE = 1.0           # median edits per edited article-hour before 24 h of own history (conservative)
-BASELINE_HOURS = 7 * 24
-MIN_BASELINE_HOURS = 24
-COOLDOWN_S = 6 * 3600            # an article bursts at most once per 6 h
-GROUP_WINDOW_S = 1800            # live event: same QID bursting in >= 2 languages within 30 min
-KEEP_BURSTS_S = 72 * 3600
+from lookedup_live.rules import RULES
+
+WINDOW_S = {f"{m}m": m * 60 for m in RULES["windows_minutes"]}
+BURST_EDITS = RULES["burst"]["edits"]
+BURST_EDITORS = RULES["burst"]["editors"]
+BURST_RATIO = RULES["burst"]["ratio"]
+NEW_ARTICLE_EDITS = RULES["new_article"]["edits"]
+NEW_ARTICLE_EDITORS = RULES["new_article"]["editors"]       # ADR 0032: >= 2 distinct editors
+NEW_ARTICLE_WINDOW_S = RULES["new_article"]["window_minutes"] * 60
+DEFAULT_BASELINE = RULES["baseline"]["default"]               # conservative, before 24 h of own history
+BASELINE_HOURS = RULES["baseline"]["hours"]
+MIN_BASELINE_HOURS = RULES["baseline"]["min_hours"]
+COOLDOWN_S = RULES["cooldown_hours"] * 3600
+GROUP_WINDOW_S = RULES["live_event_window_minutes"] * 60     # ADR 0032: 120 min (was 30)
+KEEP_BURSTS_S = RULES["keep_bursts_hours"] * 3600
 
 _SALT = os.urandom(16)
 
@@ -119,9 +122,10 @@ class Detector:
         kind = None
         if edits30 >= BURST_EDITS and editors30 >= BURST_EDITORS and 2 * edits30 >= BURST_RATIO * self.baselines.get(lang):
             kind = "window"
-        elif art.created_at is not None and ts - art.created_at <= NEW_ARTICLE_WINDOW_S \
-                and sum(1 for t, _ in art.edits if t >= art.created_at) >= NEW_ARTICLE_EDITS:
-            kind = "new"
+        elif art.created_at is not None and ts - art.created_at <= NEW_ARTICLE_WINDOW_S:
+            since = [(t, h) for t, h in art.edits if t >= art.created_at]
+            if len(since) >= NEW_ARTICLE_EDITS and len({h for _, h in since if h}) >= NEW_ARTICLE_EDITORS:
+                kind = "new"
         if kind is None:
             return None
         art.last_burst = ts
@@ -147,7 +151,7 @@ class Detector:
 
 
 def live_events(bursts: list[Burst], window_s: int = GROUP_WINDOW_S) -> list[dict]:
-    """Group bursts by QID: a live event is a QID bursting in >= 2 languages within 30 minutes.
+    """Group bursts by QID: a live event is a QID bursting in >= 2 languages within the live-event window (120 min).
 
     Returns one dict per live event: qid, ts (the second language's burst), first_burst, languages {lang: burst}."""
     by_qid: dict[str, list[Burst]] = defaultdict(list)

@@ -1,5 +1,5 @@
 """Which recentchange events count (docs/prereg_phase5.md): our 30 Wikipedias, namespace 0, human edits and page
-creations, no maintenance edits. The pattern list is fixed by the pre-registration."""
+creations, no maintenance edits. The pattern list is fixed by the pre-registration (config/live.yml)."""
 
 from __future__ import annotations
 
@@ -7,16 +7,13 @@ import json
 import re
 from pathlib import Path
 
+from lookedup_live.rules import RULES
+
 LANGUAGES: list[str] = json.loads((Path(__file__).parent / "languages.json").read_text())
 WIKIS = {f"{code.replace('-', '_')}wiki": code for code in LANGUAGES}
 
-MAINTENANCE = re.compile(
-    r"\brevert|\bundo\b|\bundid\b|\brollback\b|^rv\b|\brv\s|reverted edits|undid revision|"
-    r"\bAWB\b|\bHotCat\b|\bTwinkle\b|\bhuggle\b|\bIABot\b|InternetArchiveBot|\bWPCleaner\b|"
-    r"^\s*\{\{[^}]*\}\}\s*$|\btypos?\b|fix typo|copyedit",
-    re.IGNORECASE,
-)
-REVERT_TAGS = {"mw-reverted", "mw-rollback", "mw-undo", "mw-manual-revert"}
+MAINTENANCE = re.compile("|".join(RULES["maintenance_patterns"]), re.IGNORECASE)
+REVERT_TAGS = set(RULES["revert_tags"])
 
 
 def is_maintenance(comment: str | None) -> bool:
