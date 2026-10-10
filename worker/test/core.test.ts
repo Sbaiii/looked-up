@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
-import { addEdit, counted, distinct, emptyState, isMaintenance, LANGUAGES, liveEvents, livePayload, orBits, RULES,
+import { addEdit, counted, distinct, emptyState, isMaintenance, LANGUAGES, liveEvents, livePayload, RULES,
   statsPayload, countLive, windowCounts, type Burst, type RC } from '../src/core';
 
 const T0 = 1_791_000_000;
@@ -41,7 +41,8 @@ describe('editor sketch', () => {
     expect(w.edits).toBe(4);
     expect(w.editors).toBe(3);
     expect(JSON.stringify(s)).not.toMatch(/alice|bob|carol/);
-    expect(distinct(orBits(['0000000000000001', '0000000000000002']))).toBe(2);
+    expect(distinct([0, 3])).toBe(2);
+    expect(distinct([1, 0])).toBe(1);
   });
 });
 
@@ -88,7 +89,7 @@ describe('grouping and payloads', () => {
     const now = T0 + 3600;
     s.bursts = [mk('en', 3000, null, 3, 9), mk('fr', 3100, null, 5, 5), mk('de', 3200, null, 3, 6), mk('it', 3300, null, 3, 5),
       mk('nl', 3310, null, 3, 5), mk('sv', 3320, null, 3, 5), mk('es', 3400, 'Q9'), mk('pt', 3500, 'Q9')];
-    s.polledAt = now; s.coveredSince = now - 7200;
+    s.polledAt = now; s.groupPolledAt = { 0: now, 1: now }; s.coveredSince = now - 7200;
     const live = livePayload(s, now);
     expect(live.events.map((e) => e.qid)).toEqual(['Q9']);
     expect(live.single_language_bursts.map((b) => b.lang).slice(0, 3)).toEqual(['fr', 'en', 'de']);
@@ -102,7 +103,7 @@ describe('grouping and payloads', () => {
 
   it('reports a gap when polling stopped (the host slept)', () => {
     const s = emptyState();
-    s.polledAt = T0; s.coveredSince = T0 - 7200;
+    s.polledAt = T0; s.groupPolledAt = { 0: T0, 1: T0 }; s.coveredSince = T0 - 7200;
     expect(livePayload(s, T0 + 3 * 3600).status.gap_minutes).toBe(60);
     expect(livePayload(emptyState(), T0).status.gap_minutes).toBe(60);
   });
@@ -128,5 +129,27 @@ describe('replay', () => {
     expect(kept).toBeLessThan(lines.length);
     const live = livePayload(s, JSON.parse(lines.at(-1)!).timestamp);
     expect(live.schema_version).toBe(1);
+  });
+});
+
+describe('CPU budget (ADR 0032 fallback)', () => {
+  it('two cron groups cover the 30 wikis exactly once', async () => {
+    const { groupOf } = await import('../src/index');
+    expect(groupOf('*/5 * * * *')).toBe(0);
+    expect(groupOf('2-59/5 * * * *')).toBe(1);
+    const langs = LANGUAGES as string[];
+    const g0 = langs.filter((_, i) => i % 2 === 0); const g1 = langs.filter((_, i) => i % 2 === 1);
+    expect(g0.length + g1.length).toBe(30);
+    expect(new Set([...g0, ...g1]).size).toBe(30);
+  });
+
+  it('a busy poll stays cheap: 1,300 edits processed quickly, compact state', () => {
+    const s = emptyState();
+    const t0 = performance.now();
+    for (let i = 0; i < 1300; i++) addEdit(s, 'en', rc(`Page ${i % 900}`, i, `u${i % 400}`), SALT);
+    const ms = performance.now() - t0;
+    const bytes = JSON.stringify(s).length;
+    expect(ms).toBeLessThan(50);              // local proxy; the Worker budget is checked with `worker-observe.yml`
+    expect(bytes).toBeLessThan(120_000);
   });
 });
