@@ -9,6 +9,10 @@ on:
       day:
         description: "UTC day to build baselines for (default: today)"
         required: false
+      retrain:
+        description: "Retrain the forecast models now (otherwise Mondays only)"
+        type: boolean
+        default: false
 
 concurrency:
   group: lake-writer-daily
@@ -30,7 +34,7 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: pyproject.toml
-      - run: pip install -e .
+      - run: pip install -e ".[forecast]"
       - name: Check HF token
         id: token
         run: |
@@ -60,3 +64,11 @@ jobs:
         with:
           path: ~/looked-up-data/baselines
           key: baselines-${{ steps.day.outputs.day }}
+      - name: Retrain forecast models (Mondays, Phase 4)
+        if: steps.token.outputs.present == 'true' && (inputs.retrain || github.event_name == 'schedule')
+        run: |
+          if [ "${{ inputs.retrain }}" = "true" ] || [ "$(date -u +%u)" = "1" ]; then
+            python -m lookedup.cli forecast-retrain
+          else
+            echo "not Monday: no retrain"
+          fi
