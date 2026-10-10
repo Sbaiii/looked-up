@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import gzip
 import json
+import sys
 from pathlib import Path
 
-from lookedup_live import bursts as B
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "live"))   # the live service is its own package
+
+from lookedup_live import bursts as B  # noqa: E402
 from lookedup_live.engine import Engine
 from lookedup_live.filters import LANGUAGES, is_maintenance, language
 
