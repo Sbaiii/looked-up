@@ -21,6 +21,14 @@ const test = base.extend({
       return route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*' },
         contentType: gz ? 'application/gzip' : 'application/json', body: gz ? zlib.gzipSync(body) : body });
     });
+    // the live layer (Phase 5): times rewritten relative to now, so the strip sees a fresh feed
+    await page.route('https://huggingface.co/datasets/Sbaiiiiii/looked-up/resolve/main/data/live/live.json*', (route) => {
+      const now = Date.now();
+      const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, 'Z');
+      const body = fs.readFileSync(path.join(DIR, 'live.json'), 'utf8')
+        .replace(/"NOW"/g, `"${iso(now)}"`).replace(/"MINUS_(\d+)"/g, (_, m) => `"${iso(now - m * 60e3)}"`);
+      return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body });
+    });
     page.errors = errors;
     await use(page);
   },

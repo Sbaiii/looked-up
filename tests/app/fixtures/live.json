@@ -1,0 +1,14 @@
+{"schema_version":1,"generated_at":"NOW","window_minutes":60,
+ "status":{"connected":true,"started_at":"NOW","connected_since":"NOW","last_event_at":"NOW","events_per_s":29.9,"kept_per_s":2.1,
+           "languages_seen":["en","fr","de","es","ja"],"covered_since":"NOW","gap_minutes":0},
+ "events":[
+  {"qid":"Q16235017","first_burst":"MINUS_12","live_since":"MINUS_5","minutes_since_first_burst":12,"breadth":2,
+   "labels":{"en":"Saïdou Simporé","fr":"Saïdou Simporé"},"desc":{"en":"Burkinabé politician","fr":"homme politique burkinabé"},
+   "languages":[{"lang":"fr","title":"Saïdou_Simporé","first_burst":"MINUS_12","edits_10m":3,"edits_30m":7,"edits_60m":9,"editors_30m":4},
+                {"lang":"en","title":"Saïdou_Simporé","first_burst":"MINUS_5","edits_10m":4,"edits_30m":5,"edits_60m":5,"editors_30m":3}]},
+  {"qid":"Q42","first_burst":"MINUS_30","live_since":"MINUS_20","minutes_since_first_burst":30,"breadth":3,
+   "labels":{"en":"Comet Tsuchinshan"},"desc":{},
+   "languages":[{"lang":"ja","title":"紫金山・アトラス彗星","first_burst":"MINUS_30","edits_10m":1,"edits_30m":6,"edits_60m":8,"editors_30m":4},
+                {"lang":"en","title":"Comet","first_burst":"MINUS_25","edits_10m":2,"edits_30m":5,"edits_60m":6,"editors_30m":3},
+                {"lang":"de","title":"Komet","first_burst":"MINUS_20","edits_10m":2,"edits_30m":5,"edits_60m":5,"editors_30m":3}]}],
+ "single_language_bursts":[{"lang":"es","title":"Partido_Pueblo","qid":"Q141685600","first_burst":"MINUS_8","kind":"window","edits_10m":2,"edits_30m":5,"edits_60m":5,"editors_30m":3}]}
