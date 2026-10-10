@@ -2,7 +2,7 @@
 // URLs: #/today, #/day/YYYY-MM-DD, #/day/YYYY-MM-DD/event/Q123, #/lang/ja (history API, shareable).
 
 import * as i18n from './i18n.js';
-import { t, label, langNative, langName, within, compact, desc } from './i18n.js';
+import { t, label, langNative, langName, within, compact, desc, pct } from './i18n.js';
 import * as data from './data.js';
 import * as viz from './viz.js';
 import { compose, excessPhrase } from './briefing.js';
@@ -176,6 +176,74 @@ function badge(tier) {
     return el('span', { class: `badge badge--${tier}`, title: t(`tier_help.${tier}`), text: t(`tier.${tier}`) });
 }
 
+/* ---------------------------------------------------------------- forecasts (Phase 4) */
+
+const fmtAuc = (v) => new Intl.NumberFormat(i18n.current(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+
+/** Forecast lines for an event still open (< 24 h old) at the time of the latest export; null otherwise. */
+function forecastLine(ev) {
+    const f = ev.forecast;
+    if (!f || !state.today) return null;
+    const now = Date.parse(state.today.generated_at);
+    if (now - Date.parse(ev.start) >= 24 * 3600e3) return null;          // stale: no longer an open event
+    const bits = [];
+    const note = state.stats?.forecast ? t('forecast.note', { auc: fmtAuc(state.stats.forecast.auc_international_t1) }) : '';
+    if (f.p_international != null && f.p_international >= 0.5) {
+        bits.push(el('span', { class: 'badge badge--spreading', title: note, text: t('forecast.spreading') }));
+        bits.push(el('span', { text: t('forecast.p_international', { p: pct(f.p_international) }) }));
+    }
+    if (f.p_planetary != null && f.p_planetary >= 0.3) bits.push(el('span', { text: t('forecast.p_planetary', { p: pct(f.p_planetary) }) }));
+    if (f.fade_eta && Date.parse(f.fade_eta) > now) {
+        bits.push(el('span', { class: 'fade', text: t('forecast.fade', { time: i18n.hour(f.fade_eta) }) }));
+    }
+    return bits.length ? el('p', { class: 'card__forecast' }, ...bits) : null;
+}
+
+function renderForecastNote(shown) {
+    const note = $('forecast-note');
+    const fc = state.stats?.forecast;
+    note.hidden = !(shown && fc);
+    if (fc) note.textContent = t('forecast.note', { auc: fmtAuc(fc.auc_international_t1) });
+}
+
+function renderForecastSection() {
+    const fc = state.stats?.forecast;
+    const sec = $('forecast');
+    if (!fc) { sec.hidden = true; return; }
+    sec.hidden = false;
+    const stat = (value, text) => el('div', {}, el('dt', { text: value }), el('dd', { text }));
+    $('forecast-stats').replaceChildren(
+        stat(fmtAuc(fc.auc_international_t1), t('forecast.auc')),
+        stat(`${new Intl.NumberFormat(i18n.current(), { maximumFractionDigits: 1 }).format(fc.lift_top10_international_t1)}×`, t('forecast.lift')),
+        stat(pct(fc.m2_improvement_over_category_decay), t('forecast.gain')),
+    );
+    $('forecast-summary').textContent = t('forecast.summary', { auc: fmtAuc(fc.auc_international_t1) });
+    // calibration chart: inline SVG from stats.json
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = $('forecast-chart');
+    svg.setAttribute('aria-label', t('forecast.chart'));
+    const L = 34, B = 206, W = 270, H = 190;
+    const x = (v) => L + v * W;
+    const y = (v) => B - v * H;
+    const node = (tag, attrs, text) => {
+        const n = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+        if (text) n.textContent = text;
+        return n;
+    };
+    const kids = [node('line', { class: 'axis', x1: L, y1: B, x2: L + W, y2: B }), node('line', { class: 'axis', x1: L, y1: B, x2: L, y2: B - H }),
+        node('line', { class: 'diag', x1: x(0), y1: y(0), x2: x(1), y2: y(1) })];
+    for (const v of [0, 0.5, 1]) {
+        kids.push(node('text', { x: x(v), y: B + 14, 'text-anchor': 'middle' }, pct(v)));
+        kids.push(node('text', { x: L - 6, y: y(v) + 3, 'text-anchor': 'end' }, pct(v)));
+    }
+    const pts = fc.calibration_curve || [];
+    const maxN = Math.max(1, ...pts.map((p) => p.n));
+    kids.push(node('polyline', { class: 'line', points: pts.map((p) => `${x(p.mean_p)},${y(p.observed)}`).join(' ') }));
+    for (const p of pts) kids.push(node('circle', { class: 'pt', cx: x(p.mean_p), cy: y(p.observed), r: 2.5 + 6 * Math.sqrt(p.n / maxN) }));
+    svg.replaceChildren(...kids);
+}
+
 function card(ev) {
     const day = state.days[state.index];
     const li = el('li', { class: `card${ev.id === state.selected ? ' is-selected' : ''}`, 'data-id': ev.id, 'data-qid': ev.qid });
@@ -193,6 +261,7 @@ function card(ev) {
             el('span', { text: t('event.lead', { lang: langNative(ev.lead) }) }),
             el('span', { text: t('event.first_spike', { time: i18n.hour(ev.start) }) }),
             el('span', { text: t(`event.category.${ev.category}`) })),
+        forecastLine(ev),
         el('p', { class: 'card__links' }, ...wikiLinks(ev), copy),
     );
     return li;
@@ -348,6 +417,7 @@ function renderCards() {
     const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min);
     const ol = $('cards');
     ol.replaceChildren(...list.slice(0, state.shown).map(card));
+    renderForecastNote(!!ol.querySelector('.card__forecast'));
     if (!list.length) ol.append(el('li', { class: 'empty', text: t('timeline.empty') }));
     $('more').hidden = list.length <= state.shown;
 }
@@ -416,6 +486,7 @@ function buildDays() {
 
 function renderAll(animate) {
     renderHero(animate);
+    renderForecastSection();
     renderBars();
     $('day-slider').value = state.index;
     $('day-out').textContent = dayLabel(state.days[state.index]);
