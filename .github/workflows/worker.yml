@@ -1,0 +1,60 @@
+name: live worker
+
+# Tests and deploys the live layer on Cloudflare Workers (ADR 0032). Needs the repository secrets
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID; without them the deploy step only warns (tests still run).
+on:
+  push:
+    branches: [main]
+    paths: ["worker/**", "config/live.yml", "live/lookedup_live/languages.json", ".github/workflows/worker.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - name: Check Cloudflare secrets
+        id: cf
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning title=Cloudflare secrets missing::Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (see docs/ops.md, Live layer) to deploy the Worker."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Find or create the KV namespace and fill in its id (not committed)
+        if: steps.cf.outputs.present == 'true'
+        run: |
+          id=$(npx wrangler kv namespace list | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const n=JSON.parse(s).find(x=>x.title==='looked-up-live-LIVE'||x.title==='LIVE');process.stdout.write(n?n.id:'')})")
+          if [ -z "$id" ]; then
+            npx wrangler kv namespace create LIVE
+            id=$(npx wrangler kv namespace list | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const n=JSON.parse(s).find(x=>x.title==='looked-up-live-LIVE'||x.title==='LIVE');process.stdout.write(n?n.id:'')})")
+          fi
+          sed -i "s/KV_NAMESPACE_ID/$id/" wrangler.toml
+      - name: Set the editor-sketch salt once (random, never in the repo)
+        if: steps.cf.outputs.present == 'true'
+        run: |
+          if ! npx wrangler secret list 2>/dev/null | grep -q '"SALT"'; then
+            openssl rand -hex 24 | npx wrangler secret put SALT
+          fi
+      - name: Deploy
+        if: steps.cf.outputs.present == 'true'
+        run: npx wrangler deploy
