@@ -189,7 +189,12 @@ button { background: none; border: none; cursor: pointer; }
 }
 
 /* Hero */
-.hero { padding-block: clamp(1.5rem, 6vh, 5rem) clamp(2rem, 6vh, 4rem); }
+.hero { padding-block: clamp(1.5rem, 6vh, 5rem) clamp(2rem, 6vh, 4rem); display: flex; flex-direction: column; }
+/* Phones: the hero reserves the first screen, so text arriving with the data never pushes the map (CLS). */
+@media (max-width: 999px) {
+    .hero { min-height: calc(100svh - 7.5rem); }
+    .hero__actions { margin-top: auto; padding-top: 1.2rem; }
+}
 .hero__title { font-size: var(--t-display); margin: 0.8rem 0 1.2rem; max-width: 14ch; text-wrap: balance; }
 .hero__label {
     font-family: var(--display); font-weight: 800; font-size: clamp(1.8rem, 5vw, 3.4rem);
