@@ -68,8 +68,11 @@ How the Worker works, and why:
   - a 470–530 KB state blob.
   - `/live.json` requests used 9–10 ms.
 - **That is over the free plan's 10 ms,** although Cloudflare still returned `ok`. So the following was applied:
-  - **The fallback, extended to three groups** with **separate KV state per group**: en; ja de ru fr es it zh; the
-    other 22.
+  - **The fallback, extended to three groups** with **separate KV state per group**.
+    - First split: en; ja de ru fr es it zh; the other 22. It measured 5–7, 9–12 and 14–16 ms CPU per run.
+    - CPU tracks the number of API calls (≈ 0.5 ms each over ≈ 4 ms fixed) more than the rows. So the final split is
+      three groups of **10 wikis, dealt round-robin by rank**: en ru it pl ar sv fi vi th sr; ja fr zh fa tr ko uk
+      hu ro bg; de es pt nl id cs he el no hi.
     - The first attempt, two groups sharing one state, still measured 33 ms. Its `2-59/5` trigger never fired.
     - Three minute-list triggers (`0,5,…`, `2,7,…`, `4,9,…`) were deployed, but only one fired within 20 minutes;
       Cloudflare reported it as `*/5`.
