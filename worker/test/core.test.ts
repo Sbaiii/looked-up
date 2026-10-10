@@ -133,15 +133,14 @@ describe('replay', () => {
 });
 
 describe('CPU budget (ADR 0032 fallback)', () => {
-  it('three cron groups cover the 30 wikis exactly once and merge back for reading', async () => {
+  it('five groups of six cover the 30 wikis exactly once, one per minute, and merge back for reading', async () => {
     const { groupAt } = await import('../src/index');
     const { GROUPS, merge } = await import('../src/core');
     const at = (min: number) => groupAt(Date.UTC(2026, 9, 10, 12, min));
-    expect([0, 1, 2, 3, 4, 5, 7, 9, 58].map(at)).toEqual([0, null, 1, null, 2, 0, 1, 2, null]);
+    expect([0, 1, 2, 3, 4, 5, 9, 58].map(at)).toEqual([0, 1, 2, 3, 4, 0, 4, 3]);
     const all = GROUPS.flat();
-    expect(all.length).toBe(30);
+    expect(GROUPS.map((g) => g.length)).toEqual([6, 6, 6, 6, 6]);
     expect(new Set(all)).toEqual(new Set(LANGUAGES as string[]));
-    expect(GROUPS.map((g) => g.length)).toEqual([10, 10, 10]);
     expect(GROUPS[0][0]).toBe('en');
     const a = emptyState(); const b = emptyState();
     addEdit(a, 'en', rc('X', 0, 'alice'), SALT); addEdit(b, 'fr', rc('Y', 0, 'bob'), SALT);
