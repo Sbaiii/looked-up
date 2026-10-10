@@ -1,0 +1,66 @@
+{
+ "international_t0": {
+  "num_leaves": 11,
+  "learning_rate": 0.03548415963139574,
+  "n_estimators": 589,
+  "min_child_samples": 39,
+  "feature_fraction": 0.9850810013855715,
+  "lambda_l2": 9.12149490213412
+ },
+ "international_t1": {
+  "num_leaves": 53,
+  "learning_rate": 0.051422744084073484,
+  "n_estimators": 168,
+  "min_child_samples": 148,
+  "feature_fraction": 0.9039942120263534,
+  "lambda_l2": 3.928263070156258
+ },
+ "international_t3": {
+  "num_leaves": 53,
+  "learning_rate": 0.0557637833828107,
+  "n_estimators": 269,
+  "min_child_samples": 191,
+  "feature_fraction": 0.7936882444539568,
+  "lambda_l2": 9.765732281444103
+ },
+ "planetary_t0": {
+  "num_leaves": 26,
+  "learning_rate": 0.05026587266746012,
+  "n_estimators": 565,
+  "min_child_samples": 76,
+  "feature_fraction": 0.7391922025397853,
+  "lambda_l2": 3.038097283758537
+ },
+ "planetary_t1": {
+  "num_leaves": 38,
+  "learning_rate": 0.04532821780992615,
+  "n_estimators": 552,
+  "min_child_samples": 21,
+  "feature_fraction": 0.6436698341458049,
+  "lambda_l2": 1.206268938170888
+ },
+ "planetary_t3": {
+  "num_leaves": 8,
+  "learning_rate": 0.025368288164904558,
+  "n_estimators": 433,
+  "min_child_samples": 83,
+  "feature_fraction": 0.7017697853238218,
+  "lambda_l2": 3.3903262815562707
+ },
+ "m2_excess_next24": {
+  "num_leaves": 30,
+  "learning_rate": 0.04917142452188691,
+  "n_estimators": 753,
+  "min_child_samples": 38,
+  "feature_fraction": 0.8742709132051241,
+  "lambda_l2": 7.501952591077375
+ },
+ "m2_fade_hours": {
+  "num_leaves": 38,
+  "learning_rate": 0.04532821780992615,
+  "n_estimators": 552,
+  "min_child_samples": 21,
+  "feature_fraction": 0.6436698341458049,
+  "lambda_l2": 1.206268938170888
+ }
+}
