@@ -70,6 +70,23 @@
   - If 10–20 % of those burst in two languages within 30 minutes, that is 3–5 live events a day.
   - **100 scored live events would take ≈ 3–5 weeks.** Re-estimate after 7 days of collection.
 
+## Update (Phase 5b): new host and tuned rules (ADR 0032)
+
+- **Hosting.**
+  - The GitHub Actions shifts stopped on 2026-10-10 at 11:11 UTC (`live.yml` is manual only): chained always-on jobs
+    conflict with Actions' usage terms.
+  - Hugging Face Gradio Spaces also need a paid plan (402).
+  - The live layer now runs as a **Cloudflare Worker** that polls `recentchanges` every 5 minutes. Distinct editors
+    are counted with salted 64-bit sketches, so no user names are kept.
+- **Rules** (`config/live.yml`):
+  - new-article bursts need **≥ 2 distinct editors**;
+  - live events group bursts within **120 minutes** (was 30);
+  - the strip ranks single-language bursts by distinct editors (top 5);
+  - live events are counted per hour over a week, to judge the new rules.
+- **The hypotheses are unchanged.** H9 and H10 keep the pre-registered rules (`config/live_prereg_phase5.yml`). H10's
+  units now exclude single-author new-page bursts at the source, which is noted in its report.
+- **The strip now says "editors are confirming"** and explains that readers usually get there first.
+
 ## What we learned
 
 1. **The premise was half right.** Editors react in minutes, but on average to stories readers are already
