@@ -49,6 +49,10 @@ def day_file(d: date) -> str:
     return f"{APP_PREFIX}/days/{d:%Y-%m-%d}.json"
 
 
+def og_file(d: date) -> str:
+    return f"{APP_PREFIX}/og/{d:%Y-%m-%d}.png"
+
+
 def label_from_title(title: str) -> str:
     """'Mike_Burton_(swimmer)' -> 'Mike Burton'."""
     return _DISAMBIG.sub("", title.replace("_", " "))
@@ -333,6 +337,9 @@ def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, 
     sparks = sparklines(con, hourly_files, published(events, langs), titles, last_hour)
     payload = period_payload("day", events, langs, titles, sparks, categories, now, texts, date=f"{d:%Y-%m-%d}")
     size = dump(payload, out_dir / day_file(d))
+    from lookedup.og import render_day  # ADR 0027: one Open Graph card per day
+
+    render_day(d, payload["events"], out_dir / og_file(d))
     log.info("app day %s: %d events, %d published, %d bytes", d, len(events),
              len(payload["events"]) + len(payload["single_language_events"]), size)
     return payload["summary"]
@@ -445,11 +452,13 @@ def export_live(store, now: datetime | None = None, languages: list[str] | None 
             summaries[f"{d:%Y-%m-%d}"] = write_day(con, out, d, days.get(d, []), langs_by, titles, categories,
                                                    hourly_files, now, last_hour, texts)
             files[day_file(d)] = out / day_file(d)
+            files[og_file(d)] = out / og_file(d)
         dump(_today_payload(con, events, langs_by, titles, categories, hourly_files, now, last_hour, texts),
              out / APP_PREFIX / "today.json")
         files[f"{APP_PREFIX}/today.json"] = out / APP_PREFIX / "today.json"
         stats = _update_stats(_read_json(store, f"{APP_PREFIX}/stats.json", tmp / "st"), summaries, now, languages)
         dump(stats, out / APP_PREFIX / "stats.json")
         files[f"{APP_PREFIX}/stats.json"] = out / APP_PREFIX / "stats.json"
-        _commit(store, with_gz(files), f"data: app exports, {len(recent)} event(s) in the last 24 h")
+        json_files = {k: v for k, v in files.items() if k.endswith(".json")}
+        _commit(store, files | with_gz(json_files), f"data: app exports, {len(recent)} event(s) in the last 24 h")
     return {"today_events": len(recent), "days": sorted(summaries)}
