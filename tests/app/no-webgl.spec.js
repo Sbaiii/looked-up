@@ -13,3 +13,13 @@ test('the flat SVG map is used and the globe is not offered', async ({ page }) =
   await expect(page.locator('#viz canvas')).toHaveCount(0);
   expect(page.errors).toEqual([]);
 });
+
+test('replay restarts the spread on the flat map', async ({ page }) => {
+  await page.goto('./');
+  await page.waitForSelector('html[data-ready="true"]');
+  await page.waitForFunction(() => document.querySelectorAll('#viz .arc').length > 0, null, { timeout: 10000 });
+  await page.click('#replay');
+  const right = await page.evaluate(() => document.querySelectorAll('#viz .arc').length);
+  expect(right).toBe(0);                                   // cleared at once
+  await page.waitForFunction(() => document.querySelectorAll('#viz .arc').length > 0, null, { timeout: 10000 });
+});
