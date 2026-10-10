@@ -22,7 +22,7 @@ export interface Article { sl: Slot[]; c?: number; cb?: [number, number]; ce?: n
 export interface Burst { lang: string; title: string; ts: number; kind: 'window' | 'new'; edits_30m: number; editors_30m: number; qid: string | null }
 export interface Item { labels: Record<string, string>; desc: Record<string, string> }
 export interface State {
-  version: 4;
+  version: 5;
   articles: Record<string, Article>;          // "lang|title"
   bursts: Burst[];
   hour: number | null;
@@ -39,7 +39,7 @@ export interface State {
 }
 
 export function emptyState(): State {
-  return { version: 4, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
+  return { version: 5, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
     groupPolledAt: {}, groupStats: {}, coveredSince: null, qids: {}, items: {}, liveSeen: {} };
 }
 
@@ -198,10 +198,22 @@ export function gc(state: State, now: number): void {
 
 // ------------------------------------------------------------------ cron groups (CPU budget, ADR 0032)
 
-/** Wikis are polled in three groups of 10, dealt round-robin by rank (languages.json is ranked by views), so each
- * group gets a mix of large and small wikis. CPU per run tracks the number of API calls (≈ 0.5 ms each) more than
- * the rows, so equal counts balance the runs (measured: 5/12/16 ms with groups of 1/7/22 wikis). */
-export const GROUPS: string[][] = [0, 1, 2].map((g) => (LANGUAGES as string[]).filter((_, i) => i % 3 === g));
+/** Wikis are polled in five groups of 6, dealt round-robin by rank (languages.json is ranked by views), one group per
+ * minute (ADR 0033). CPU per run tracks the number of API calls (≈ 0.5 ms each) more than the rows, so equal,
+ * smaller groups keep every run short (measured with 3 groups of 10: 8–13 ms). */
+export const GROUP_COUNT = 5;
+export const GROUPS: string[][] = Array.from({ length: GROUP_COUNT }, (_, g) => (LANGUAGES as string[]).filter((_, i) => i % GROUP_COUNT === g));
+
+/** The persisted part of a group's state (D1 row): bursts, QIDs and items live elsewhere (ADR 0033). */
+export function persisted(s: State): Omit<State, 'bursts' | 'qids' | 'items' | 'liveSeen'> {
+  const { bursts: _b, qids: _q, items: _i, liveSeen: _l, ...rest } = s;
+  return rest;
+}
+
+export function fromPersisted(p: Partial<State> | null): State {
+  const s = emptyState();
+  return p && p.version === s.version ? { ...s, ...p, bursts: [], qids: {}, items: {}, liveSeen: {} } : s;
+}
 
 /** Merge the groups' states for reading (articles, bursts and caches are disjoint by wiki). */
 export function merge(states: State[]): State {
