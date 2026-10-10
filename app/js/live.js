@@ -5,7 +5,8 @@ import { t, langName, label as eventLabel } from './i18n.js';
 
 const DEFAULT = 'https://huggingface.co/datasets/Sbaiiiiii/looked-up/resolve/main/data/live/live.json';
 const param = new URLSearchParams(location.search).get('live');
-export const LIVE_URL = param && /^https:\/\/[a-z0-9-]+\.hf\.space\/live\.json$/.test(param) ? param : DEFAULT;
+// ADR 0032: the live host is a Cloudflare Worker (`*.workers.dev`); set DEFAULT to its /live.json once deployed
+export const LIVE_URL = param && /^https:\/\/[a-z0-9.-]+\.(workers\.dev|hf\.space)\/live\.json$/.test(param) ? param : DEFAULT;
 const STALE_MS = 15 * 60e3;
 const POLL_MS = 60e3;
 let last = null;
@@ -54,7 +55,7 @@ export function renderLive() {
     }
     if (!events.length) {
         state.textContent = t('live.quiet');
-        for (const b of (last.single_language_bursts || []).slice(0, 3)) {
+        for (const b of (last.single_language_bursts || []).slice(0, 5)) {     // ranked by editors (ADR 0032)
             const li = el('li');
             li.append(el('strong', b.title.replace(/_/g, ' ')),
                 el('span', `${langName(b.lang)} · ${t('live.since', { n: Math.max(0, Math.round((now - Date.parse(b.first_burst)) / 60e3)) })}`));
