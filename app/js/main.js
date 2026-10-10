@@ -1,14 +1,17 @@
 // Looked Up: one page, vanilla JS. Data: data/app/ on the Hugging Face dataset (ADR 0022).
+// URLs: #/today, #/day/YYYY-MM-DD, #/day/YYYY-MM-DD/event/Q123, #/lang/ja (history API, shareable).
 
 import * as i18n from './i18n.js';
-import { t, label, langName, within, compact } from './i18n.js';
+import { t, label, langNative, langName, within, compact, desc } from './i18n.js';
 import * as data from './data.js';
 import * as viz from './viz.js';
 import { compose, excessPhrase } from './briefing.js';
+import { pickDay, pickHero, rank } from './select.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 12;
 const TIER_RANK = { noticed: 0, international: 1, planetary: 2 };
+const KICKER = { 24: 'hero.kicker', 48: 'hero.kicker_48h', 168: 'hero.kicker_week' };
 
 const state = {
     days: [],          // [{iso, count, today?}]
@@ -16,6 +19,7 @@ const state = {
     payload: null,     // the selected day's file (or today.json)
     today: null,
     stats: null,
+    hero: { event: null, hours: 24 },
     tier: 'noticed',
     shown: PAGE,
     selected: null,    // event id on the map
@@ -23,6 +27,8 @@ const state = {
 };
 
 const safeUrl = (u) => (typeof u === 'string' && u.startsWith('https://') ? u : '#');
+const todayIso = () => state.today.generated_at.slice(0, 10);
+const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 
 function el(tag, attrs = {}, ...children) {
     const e = document.createElement(tag);
@@ -33,8 +39,75 @@ function el(tag, attrs = {}, ...children) {
         else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
         else e.setAttribute(k, v === true ? '' : v);
     }
-    e.append(...children.filter((c) => c != null));
+    e.append(...children.filter((c) => c != null && c !== ''));
     return e;
+}
+
+/* ---------------------------------------------------------------- URLs (F6) */
+
+const dayHash = (d) => (d.today ? '#/today' : `#/day/${d.iso}`);
+const eventHash = (d, ev) => `#/day/${d.iso}/event/${ev.qid}`;
+const absolute = (hash) => `${location.origin}${location.pathname}${hash}`;
+
+function setHash(hash, push = true) {
+    if (location.hash === hash) return;
+    history[push ? 'pushState' : 'replaceState'](null, '', hash);
+    updateTitle();
+}
+
+async function copyLink(hash, button) {
+    const url = absolute(hash);
+    try {
+        await navigator.clipboard.writeText(url);
+    } catch {
+        const tmp = el('input', { value: url });
+        document.body.append(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+    }
+    const old = button.textContent;
+    button.textContent = t('ui.copied');
+    setTimeout(() => { button.textContent = old; }, 1600);
+}
+
+function updateTitle() {
+    const h = location.hash;
+    let m;
+    if ((m = h.match(/^#\/day\/(\d{4}-\d{2}-\d{2})\/event\/(Q\d+)$/))) {
+        const ev = findByQid(m[2]);
+        document.title = t('titles.event', { label: ev ? label(ev) : m[2], date: i18n.day(m[1]) });
+    } else if ((m = h.match(/^#\/day\/(\d{4}-\d{2}-\d{2})$/))) {
+        document.title = t('titles.day', { date: i18n.day(m[1]) });
+    } else if ((m = h.match(/^#\/lang\/([a-z-]+)$/))) {
+        document.title = t('titles.lang', { lang: langName(m[1]) });
+    } else {
+        document.title = h === '#/today' ? t('titles.today') : t('meta.title');
+    }
+}
+
+function scrollTo(target) {
+    target?.scrollIntoView({ behavior: smooth(), block: 'start' });
+}
+
+/** Apply the URL to the page: used on load and on back/forward. */
+async function route({ scroll = true } = {}) {
+    const h = location.hash;
+    let m;
+    if ((m = h.match(/^#\/day\/(\d{4}-\d{2}-\d{2})(?:\/event\/(Q\d+))?$/))) {
+        let i = state.days.findIndex((d) => d.iso === m[1]);
+        if (i < 0) i = state.days.length - 1;
+        await selectDay(i, { qid: m[2], push: null });
+        if (scroll) scrollTo(m[2] ? document.querySelector('.card.is-selected') || $('days') : $('days'));
+    } else if ((m = h.match(/^#\/lang\/([a-z-]+)$/)) && (state.stats.languages || []).includes(m[1])) {
+        state.lang = m[1];
+        renderLanguages();
+        if (scroll) scrollTo($('languages'));
+    } else if (h === '#/today' || h === '' || h === '#') {
+        if (state.index !== state.days.length - 1) await selectDay(state.days.length - 1, { push: null });
+        if (h === '#/today' && scroll) scrollTo($('today'));
+    }
+    updateTitle();
 }
 
 /* ---------------------------------------------------------------- theme and language */
@@ -55,7 +128,7 @@ async function setLang(code) {
     document.querySelectorAll('[data-ui-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.uiLang === code)));
     renderAbout();
     viz.refreshLabels();
-    if (state.today) renderAll(false);
+    if (state.today) { renderAll(false); updateTitle(); }
 }
 
 /* ---------------------------------------------------------------- pieces */
@@ -104,48 +177,70 @@ function badge(tier) {
 }
 
 function card(ev) {
-    const li = el('li', { class: `card${ev.id === state.selected ? ' is-selected' : ''}`, 'data-id': ev.id });
+    const day = state.days[state.index];
+    const li = el('li', { class: `card${ev.id === state.selected ? ' is-selected' : ''}`, 'data-id': ev.id, 'data-qid': ev.qid });
     const title = el('h3', { class: 'card__title' },
-        el('button', { type: 'button', 'aria-label': `${label(ev)}: ${t('event.show')}`, onclick: () => select(ev, true), text: label(ev) }));
+        el('button', { type: 'button', 'aria-label': `${label(ev)}: ${t('event.show')}`, onclick: () => select(ev, { fromList: true, push: true }), text: label(ev) }));
+    const copy = el('button', { type: 'button', class: 'linkbtn', text: t('ui.copy') });
+    copy.addEventListener('click', () => copyLink(eventHash(day, ev), copy));
     li.append(
         title,
         sparkline(ev.spark),
+        desc(ev) ? el('p', { class: 'card__desc', text: desc(ev) }) : null,
         el('p', { class: 'card__meta' },
             badge(ev.tier),
             el('span', { text: t('event.languages', { n: ev.breadth }) }),
-            el('span', { text: t('event.lead', { lang: langName(ev.lead) }) }),
+            el('span', { text: t('event.lead', { lang: langNative(ev.lead) }) }),
             el('span', { text: t('event.first_spike', { time: i18n.hour(ev.start) }) }),
             el('span', { text: t(`event.category.${ev.category}`) })),
-        el('p', { class: 'card__links' }, ...wikiLinks(ev)),
+        el('p', { class: 'card__links' }, ...wikiLinks(ev), copy),
     );
     return li;
 }
 
-/* ---------------------------------------------------------------- hero */
+/* ---------------------------------------------------------------- hero (F1, F5) */
+
+async function chooseHero() {
+    const now = Date.parse(state.today.generated_at);
+    const base = new Date(`${todayIso()}T00:00:00Z`);
+    const dayIso = (k) => new Date(base.getTime() - k * 86400e3).toISOString().slice(0, 10);
+    const daysBack = async (n) => (await Promise.all(Array.from({ length: n }, (_, k) => data.dayFile(dayIso(k + 1)).catch(() => null))))
+        .flatMap((p) => (p ? p.events : []));
+    state.hero = await pickHero(async (hours) => {
+        if (hours === 24) return state.today.events;
+        return [...state.today.events, ...(await daysBack(hours === 48 ? 2 : 7))];
+    }, now);
+}
 
 function heroCounter(n, lag, ev) {
-    if (ev.id !== state.today?.events?.[0]?.id) return;   // only the hero's own event drives its counter
-    $('hero-counter').textContent = t('hero.counter', { n, within: within(lag) });
-    if (n === ev.langs.length) $('hero-counter').textContent = t('hero.counter', { n: ev.breadth, within: within(ev.spread_h) });
+    if (ev.id !== state.hero.event?.id) return;   // only the hero's own event drives its counter
+    $('hero-counter').textContent = n === ev.langs.length
+        ? t('hero.counter', { n: ev.breadth, within: within(ev.spread_h) })
+        : t('hero.counter', { n, within: within(lag) });
 }
 
 function renderHero(animate) {
-    const ev = state.today?.events?.[0];
+    const ev = state.hero.event;
     const lab = $('hero-label');
     lab.classList.remove('skeleton');
+    $('hero-kicker').textContent = t(KICKER[state.hero.hours] || KICKER[24]);
     $('replay').hidden = !ev;
+    const gen = state.today.generated_at;
+    $('updated').textContent = t('ui.updated', { utc: i18n.dateTime(gen), local: i18n.localTime(gen) });
+    $('hero-brief').textContent = compose(state.today, todayIso()).text;
     if (!ev) {
         lab.textContent = t('hero.empty');
+        $('hero-desc').textContent = '';
         $('hero-counter').textContent = '';
         $('hero-sub').textContent = '';
         return;
     }
     const url = (ev.urls || {})[i18n.current()] || (ev.urls || {})[ev.lead];
     lab.replaceChildren(url ? el('a', { href: safeUrl(url), rel: 'noopener', text: label(ev) }) : label(ev));
+    $('hero-desc').textContent = desc(ev);
     $('hero-counter').textContent = t('hero.counter', { n: ev.breadth, within: within(ev.spread_h) });
-    $('hero-sub').textContent = `${t(`tier.${ev.tier}`)} · ${t('hero.led_by', { lang: langName(ev.lead) })} · ${excessPhrase(ev.excess)}`;
-    if (state.today.generated_at) $('updated').textContent = t('ui.updated', { time: i18n.dateTime(state.today.generated_at) });
-    if (animate) select(ev, false, true);
+    $('hero-sub').textContent = `${t(`tier.${ev.tier}`)} · ${t('hero.led_by', { lang: langNative(ev.lead) })} · ${excessPhrase(ev.excess)}`;
+    if (animate) select(ev, { animate: true });
 }
 
 /* ---------------------------------------------------------------- map selection */
@@ -155,22 +250,32 @@ function reshow(animate) {
     if (ev) viz.show(ev, { animate });
 }
 
-function findEvent(id) {
-    for (const src of [state.payload, state.today]) {
-        const ev = src && [...(src.events || []), ...(src.single_language_events || [])].find((e) => e.id === id);
-        if (ev) return ev;
-    }
-    return null;
+function allEvents(src) {
+    return src ? [...(src.events || []), ...(src.single_language_events || [])] : [];
 }
 
-function select(ev, fromList, animate = true) {
+function findEvent(id) {
+    for (const src of [state.payload, state.today]) {
+        const ev = allEvents(src).find((e) => e.id === id);
+        if (ev) return ev;
+    }
+    return state.hero.event?.id === id ? state.hero.event : null;
+}
+
+function findByQid(qid) {
+    const evs = allEvents(state.payload).filter((e) => e.qid === qid);
+    return rank(evs)[0] || evs[0] || null;
+}
+
+function select(ev, { fromList = false, animate = true, push = false } = {}) {
     state.selected = ev.id;
     document.querySelectorAll('.card').forEach((c) => c.classList.toggle('is-selected', c.dataset.id === ev.id));
     viz.show(ev, { animate });
+    if (push) setHash(eventHash(state.days[state.index], ev));
     if (fromList) {
         const stage = $('viz');
         const r = stage.getBoundingClientRect();
-        if (r.bottom < 60 || r.top > innerHeight) stage.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+        if (r.bottom < 60 || r.top > innerHeight) stage.scrollIntoView({ behavior: smooth(), block: 'center' });
     }
 }
 
@@ -194,13 +299,15 @@ function dayLabel(d) {
     return d.today ? t('timeline.today') : i18n.dayShort(d.iso);
 }
 
-async function selectDay(index, { animate = false } = {}) {
+/** push: true = new history entry, false = replace (slider drags), null = leave the URL alone (routing). */
+async function selectDay(index, { qid = null, push = true } = {}) {
     state.index = Math.max(0, Math.min(state.days.length - 1, index));
     const d = state.days[state.index];
     $('day-slider').value = state.index;
     $('day-slider').setAttribute('aria-valuetext', dayLabel(d));
     $('day-out').textContent = dayLabel(d);
     renderBars();
+    if (push !== null) setHash(dayHash(d), push);
     try {
         state.payload = d.today ? state.today : await data.dayFile(d.iso);
     } catch {
@@ -208,19 +315,32 @@ async function selectDay(index, { animate = false } = {}) {
     }
     if (state.days[state.index] !== d) return;  // a newer selection won
     state.shown = PAGE;
-    renderDay();
-    if (!d.today || !animate) {
-        const first = state.payload.events?.[0];
-        if (first && !d.today) select(first, false, false);
+    const target = qid ? findByQid(qid) : null;
+    if (target && target.class !== 'single_language') {
+        const min = TIER_RANK[state.tier];
+        if (TIER_RANK[target.tier] < min) setTier('noticed');
+        const pos = state.payload.events.filter((e) => TIER_RANK[e.tier] >= TIER_RANK[state.tier]).findIndex((e) => e.id === target.id);
+        state.shown = Math.max(PAGE, Math.ceil((pos + 1) / PAGE) * PAGE);
     }
+    renderDay();
+    if (target) select(target, { animate: true });
+    else if (!d.today) { const ev = pickDay(state.payload.events); if (ev) select(ev, { animate: false }); }
+    else if (state.hero.event) select(state.hero.event, { animate: false });
 }
 
 function renderDay() {
     const p = state.payload;
+    const d = state.days[state.index];
     $('day-count').textContent = t('timeline.count', { n: p.summary?.events ?? p.events.length });
+    $('day-brief').textContent = compose(p, d.today ? todayIso() : d.iso).text;
     renderCards();
     renderLanguages();
     renderBriefing();
+}
+
+function setTier(tier) {
+    state.tier = tier;
+    document.querySelectorAll('.filters [data-tier]').forEach((x) => x.setAttribute('aria-checked', String(x.dataset.tier === tier)));
 }
 
 function renderCards() {
@@ -238,7 +358,7 @@ function renderLanguages() {
     const p = state.payload;
     const langs = state.stats?.languages || [];
     const sel = $('lang-select');
-    const names = langs.map((c) => [c, langName(c)]).sort((a, b) => a[1].localeCompare(b[1], i18n.current()));
+    const names = langs.map((c) => [c, langNative(c)]).sort((a, b) => a[1].localeCompare(b[1], i18n.current()));
     if (!state.lang) state.lang = langs.includes(i18n.current()) ? i18n.current() : 'en';
     sel.replaceChildren(...names.map(([c, n]) => el('option', { value: c, selected: c === state.lang, text: n })));
     const L = state.lang;
@@ -263,10 +383,11 @@ function renderLanguages() {
 
 function renderBriefing() {
     const d = state.days[state.index];
-    const iso = d.today ? state.today.generated_at.slice(0, 10) : d.iso;
+    const iso = d.today ? todayIso() : d.iso;
     const b = compose(state.payload, iso);
     $('brief-date').textContent = d.today ? t('timeline.today') : i18n.day(iso);
     $('brief-text').textContent = b.text;
+    $('brief-about').textContent = b.about;
     $('brief-facts').replaceChildren(...b.facts.map(([, text]) => el('li', { text })));
 }
 
@@ -285,14 +406,12 @@ function renderAbout() {
 /* ---------------------------------------------------------------- boot */
 
 function buildDays() {
-    const todayIso = state.today.generated_at.slice(0, 10);
     const days = (state.stats.timeline || [])
-        .filter((r) => r.day < todayIso)
+        .filter((r) => r.day < todayIso())
         .map((r) => ({ iso: r.day, count: (r.tiers.noticed || 0) + (r.tiers.international || 0) + (r.tiers.planetary || 0) }));
-    days.push({ iso: todayIso, count: state.today.summary?.events ?? state.today.events.length, today: true });
+    days.push({ iso: todayIso(), count: state.today.summary?.events ?? state.today.events.length, today: true });
     state.days = days;
-    const slider = $('day-slider');
-    slider.max = days.length - 1;
+    $('day-slider').max = days.length - 1;
 }
 
 function renderAll(animate) {
@@ -306,24 +425,27 @@ function renderAll(animate) {
 
 function wire() {
     document.querySelectorAll('[data-ui-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.uiLang)));
-    $('day-slider').addEventListener('input', (e) => selectDay(Number(e.target.value)));
+    $('day-slider').addEventListener('input', (e) => selectDay(Number(e.target.value), { push: false }));
+    $('day-slider').addEventListener('change', () => setHash(dayHash(state.days[state.index]), true));
     $('prev-day').addEventListener('click', () => selectDay(state.index - 1));
     $('next-day').addEventListener('click', () => selectDay(state.index + 1));
     $('bars').addEventListener('click', (e) => {
         const r = $('bars').getBoundingClientRect();
         selectDay(Math.floor(((e.clientX - r.left) / r.width) * state.days.length));
     });
+    $('copy-day').addEventListener('click', (e) => copyLink(dayHash(state.days[state.index]) === '#/today'
+        ? `#/day/${todayIso()}` : dayHash(state.days[state.index]), e.currentTarget));
     $('more').addEventListener('click', () => { state.shown += PAGE; renderCards(); });
-    $('replay').addEventListener('click', () => { const ev = state.today?.events?.[0]; if (ev) select(ev, false, true); });
-    $('lang-select').addEventListener('change', (e) => { state.lang = e.target.value; renderLanguages(); });
+    $('replay').addEventListener('click', () => { if (state.hero.event) select(state.hero.event, { animate: true }); });
+    $('lang-select').addEventListener('change', (e) => { state.lang = e.target.value; renderLanguages(); setHash(`#/lang/${state.lang}`); });
     document.querySelector('.filters').addEventListener('click', (e) => {
         const b = e.target.closest('[data-tier]');
         if (!b) return;
-        state.tier = b.dataset.tier;
-        document.querySelectorAll('.filters [data-tier]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+        setTier(b.dataset.tier);
         state.shown = PAGE;
         renderCards();
     });
+    addEventListener('popstate', () => { if (state.today) route({ scroll: true }); });
 }
 
 async function boot() {
@@ -341,9 +463,12 @@ async function boot() {
     buildDays();
     state.index = state.days.length - 1;
     state.payload = state.today;
+    await chooseHero();
     renderAll(false);
     await vizReady;
-    renderHero(true);
+    const deepLink = /^#\/(day|lang)\//.test(location.hash);
+    if (deepLink) await route({ scroll: true });
+    else { renderHero(true); updateTitle(); if (location.hash === '#/today') scrollTo($('today')); }
     document.documentElement.dataset.ready = 'true';
 }
 
