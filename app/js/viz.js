@@ -3,7 +3,8 @@
 // loaded lazily on capable devices after the first interaction, or on request.
 
 import { createMap2D } from './map2d.js';
-import { t, label, langName, within } from './i18n.js';
+import { t, label, langNative, within } from './i18n.js';
+import { scale, TICKS, tickLabel } from './scale.js';
 
 let geo = null;
 let renderer = null;
@@ -78,29 +79,39 @@ function ramp(x) {
     return `rgb(${c.join(',')})`;
 }
 
-/** Spread steps in lag order; each step colours only countries whose max rises (multi-language countries). */
+/** Spread steps in lag order. Colour = per-language peak surprise on the absolute scale (ADR 0025); each step
+ * colours only countries whose max rises (multi-language countries take the max, ADR 0023). */
 export function steps(ev, { animate }) {
     const rows = [...ev.langs].sort((a, b) => a.lag - b.lag || a.lang.localeCompare(b.lang));
-    const logs = rows.map((r) => Math.log10(1 + Math.max(r.excess, 0)));
-    const lo = Math.min(...logs);
-    const hi = Math.max(...logs);
     const best = new Map();
     const maxLag = Math.max(1, ...rows.map((r) => r.lag));
     return rows.map((r, i) => {
-        const v = hi > lo ? 0.2 + (0.8 * (logs[i] - lo)) / (hi - lo) : 1;
+        const v = scale(r.surprise);
         const countries = new Map();
         for (const key of geo.languages[r.lang] || []) {
-            if (!best.has(key) || best.get(key) < v) { best.set(key, v); countries.set(key, ramp(v)); }
+            if (!best.has(key) || best.get(key) < v) { best.set(key, v); countries.set(key, ramp(Math.max(v, 0.02))); }
         }
-        const delay = animate ? (i === 0 ? 150 : 400 + (rows.length > 1 ? (r.lag / maxLag) * 2400 : 0) + i * 60) : 0;
+        // at least 140 ms between languages, so a replay is visible even when every language spiked in one hour
+        const delay = animate ? 300 + Math.max(i * 140, (r.lag / maxLag) * 2400) : 0;
         return { lang: r.lang, lag: r.lag, delay, countries, anchor: geo.anchors[r.lang], value: v };
     });
+}
+
+function renderTicks() {
+    const box = document.getElementById('legend-ticks');
+    if (!box) return;
+    box.replaceChildren(...TICKS.map((v) => {
+        const s = document.createElement('span');
+        s.style.left = `${scale(v) * 100}%`;
+        s.textContent = tickLabel(v);
+        return s;
+    }));
 }
 
 function describe(ev) {
     stage.setAttribute('aria-label', t('map.label', { label: label(ev) }));
     const now = document.getElementById('viz-now');
-    if (now) now.textContent = `${label(ev)} · ${t('event.languages', { n: ev.breadth })} · ${t('hero.led_by', { lang: langName(ev.lead) })}`;
+    if (now) now.textContent = `${label(ev)} · ${t('event.languages', { n: ev.breadth })} · ${t('hero.led_by', { lang: langNative(ev.lead) })}`;
 }
 
 export function show(ev, { animate = true } = {}) {
@@ -148,6 +159,7 @@ export function refreshLabels() {
 export async function init(el, { counter } = {}) {
     stage = el;
     onCounter = counter || onCounter;
+    renderTicks();
     geo = await loadGeo();
     renderer = createMap2D(stage, geo);
     const btn = document.getElementById('viz-mode');

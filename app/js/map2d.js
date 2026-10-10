@@ -28,7 +28,9 @@ export function createMap2D(stage, geo) {
         timers.forEach(clearTimeout);
         timers = [];
         gArcs.replaceChildren();
+        svg.classList.add('is-reset');                // reset colours at once, so a replay starts from a blank map
         for (const p of paths.values()) p.style.fill = '';
+        requestAnimationFrame(() => requestAnimationFrame(() => svg.classList.remove('is-reset')));
     }
 
     function arc(from, to) {
