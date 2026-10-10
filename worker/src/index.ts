@@ -1,13 +1,15 @@
 // Looked Up live layer on Cloudflare Workers (ADR 0032, storage ADR 0033).
-//   Cron (every minute): minute m polls group m % 5 (5 groups of 6 wikis), so each wiki is polled every 5 minutes.
-//                        A run loads its group's window state from D1 (one row), applies the burst rules, resolves
-//                        QIDs of new bursts (KV cache, then Wikidata), saves the row and inserts the new bursts.
-//   HTTP: GET /live.json, /stats.json, /bursts.json, /health with CORS for every origin. /live.json and /stats.json
-//         are cached at the edge (15 s) and in KV (5 min / 30 min), and rendered from D1 when both miss.
+//   Cron (every minute): minute m polls group m % 6 (en alone + 5 balanced groups), so each wiki is polled every
+//                        6 minutes. A run loads its group's meta row and the last 70 minutes of slot rows from D1,
+//                        applies the burst rules, resolves QIDs of new bursts (KV cache, then Wikidata), and writes
+//                        back only the touched slots, its meta, its summary and the new bursts (one D1 batch).
+//   HTTP: GET /live.json, /stats.json, /bursts.json, /health with CORS for every origin. Reads use the per-group
+//         summary rows and the bursts table, never the full states; /live.json and /stats.json are also cached at
+//         the edge (15 s) and in KV (5 min / 30 min).
 // No user data is stored: editors become bits in a salted 64-bit sketch per 5-minute slot (core.ts).
 
-import { addEdit, counted, countLive, fromPersisted, gc, GROUP_COUNT, GROUPS, iso, livePayload, merge, persisted,
-  statsPayload, status, type Burst, type RC, type State } from './core';
+import { addEdit, counted, countLive, decodeState, encodeMeta, encodeSlot, fromSummaries, gc, GROUP_COUNT, GROUPS, iso,
+  livePayload, rollHours, statsPayload, status, summarize, WINDOW_LOAD_S, type Burst, type RC, type State, type Summary } from './core';
 import { D1Repo, QidCache, type Repo } from './repo';
 
 export interface Env { LIVE: KVNamespace; DB: D1Database; SALT?: string }
@@ -80,8 +82,8 @@ export async function resolveQids(bursts: Burst[], cache: QidCache, fetcher: typ
 }
 
 export async function poll(env: Env, now: number, group: number, repo: Repo = new D1Repo(env.DB)): Promise<State> {
-  const row = await repo.loadGroup(group);
-  const state = fromPersisted(row ? JSON.parse(row.state) : null);
+  const win = await repo.loadWindow(group, now - WINDOW_LOAD_S);
+  const state = decodeState(win.meta, win.slots);
   const salt = `${env.SALT || 'looked-up'}|${iso(now)!.slice(0, 10)}`;     // rotates daily
   const g = String(group);
   const last = state.groupPolledAt[g];
@@ -114,17 +116,21 @@ export async function poll(env: Env, now: number, group: number, repo: Repo = ne
   state.groupStats = { [g]: { fetched, kept, seconds: resumed ? now - last : FIRST_LOOKBACK_S, languages: [...langs].sort() } };
   state.groupPolledAt = { [g]: now };
   state.polledAt = now;
+  rollHours(state, now);
   const newBursts = state.bursts;
   if (newBursts.length) await resolveQids(newBursts, new QidCache(env.LIVE));
+  const touched = [...(state.touched || [])].map((s0) => ({ s: s0, data: encodeSlot(state, s0) }));
+  const summary = summarize(state, now);
   gc(state, now);
-  const blob = JSON.stringify(persisted(state));
-  await repo.saveGroup({ g: group, version: state.version, polled_at: now, state: blob });       // 1 D1 row write
-  await repo.addBursts(newBursts);
+  const meta = encodeMeta(state, now);
+  const written = await repo.save({ g: group, now, meta, summary: JSON.stringify(summary), slots: touched,
+    bursts: newBursts, dropBefore: now - WINDOW_LOAD_S });
   let pruned = 0;
   if (group === 0 && new Date(now * 1000).getUTCMinutes() < GROUP_COUNT) pruned = await repo.pruneBursts(now - KEEP_BURSTS_S);
   // one line per poll for `wrangler tail` (docs/ops.md): no titles, no users
   console.log(JSON.stringify({ poll: iso(now), group, fetched, kept, languages: langs.size, new_bursts: newBursts.length,
-    articles: Object.keys(state.articles).length, state_bytes: blob.length, d1_rows_written: 1 + newBursts.length + pruned }));
+    slots_read: win.slots.length, bytes_read: win.slots.reduce((n, r) => n + r.data.length, 0) + (win.meta?.length ?? 0),
+    slots_written: touched.length, meta_bytes: meta.length, d1_rows_written: written + pruned }));
   return state;
 }
 
@@ -134,16 +140,15 @@ function json(body: unknown, status = 200, maxAge = EDGE_CACHE_S): Response {
     'access-control-allow-methods': 'GET, OPTIONS', 'cache-control': `public, max-age=${maxAge}` } });
 }
 
-/** The merged view for reading: all group rows, bursts of the last 7 days, items of recent live QIDs. */
+/** The read view: the per-group summary rows, the bursts of the last 7 days and the items of recent live QIDs. */
 export async function view(env: Env, now: number, repo: Repo = new D1Repo(env.DB)): Promise<State> {
-  const rows = await repo.loadGroups();
-  const merged = merge(rows.map((r) => fromPersisted(JSON.parse(r.state))));
-  merged.bursts = await repo.bursts(now - KEEP_BURSTS_S);
+  const v = fromSummaries((await repo.summaries()).map((d) => JSON.parse(d) as Summary));
+  v.bursts = await repo.bursts(now - KEEP_BURSTS_S);
   const cache = new QidCache(env.LIVE);
-  const recent = new Set(merged.bursts.filter((b) => b.qid && b.ts > now - 3600).map((b) => b.qid as string));
-  for (const q of recent) { const it = await cache.item(q); if (it) merged.items[q] = it; }
-  countLive(merged, now);
-  return merged;
+  const recent = new Set(v.bursts.filter((b) => b.qid && b.ts > now - 3600).map((b) => b.qid as string));
+  for (const q of recent) { const it = await cache.item(q); if (it) v.items[q] = it; }
+  countLive(v, now);
+  return v;
 }
 
 async function cachedRender(path: string, env: Env, now: number): Promise<string> {
@@ -169,7 +174,7 @@ async function render(req: Request, env: Env, ctx: ExecutionContext): Promise<Re
     const ua = req.headers.get('user-agent') || '';
     const day = iso(now)!.slice(0, 10);
     if (/cron-job/i.test(ua)) ctx.waitUntil(repo.ping(day, now, ua));        // pinger check (ADR 0033)
-    const v = merge((await repo.loadGroups()).map((r) => fromPersisted(JSON.parse(r.state))));
+    const v = fromSummaries((await repo.summaries()).map((d) => JSON.parse(d) as Summary));   // small rows only
     const s = status(v, now);
     const p = await repo.pings(day);
     return json({ ok: true, connected: s.connected, last_poll_at: s.last_poll_at, gap_minutes: s.gap_minutes,
