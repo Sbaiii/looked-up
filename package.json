@@ -5,7 +5,8 @@
   "scripts": {
     "vendor": "node scripts/vendor.mjs",
     "serve": "node scripts/serve.mjs",
-    "test:app": "playwright test"
+    "test:app": "playwright test",
+    "test:unit": "node --test tests/app/unit/*.test.mjs"
   },
   "dependencies": {
     "globe.gl": "2.46.2",

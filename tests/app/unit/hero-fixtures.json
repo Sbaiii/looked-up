@@ -1,0 +1,19 @@
+{
+  "now": "2026-10-09T14:00:00Z",
+  "quiet_day": [
+    {"id": "Q1@a", "qid": "Q1", "start": "2026-10-09T06:00Z", "class": "multi_language", "tier": "noticed", "breadth": 4, "excess": 13288},
+    {"id": "Q2@a", "qid": "Q2", "start": "2026-10-09T08:00Z", "class": "multi_language", "tier": "noticed", "breadth": 2, "excess": 31387},
+    {"id": "Q3@a", "qid": "Q3", "start": "2026-10-09T09:00Z", "class": "single_language", "tier": "noticed", "breadth": 2, "excess": 900000}
+  ],
+  "yesterday": [
+    {"id": "Q4@b", "qid": "Q4", "start": "2026-10-08T10:00Z", "class": "multi_language", "tier": "international", "breadth": 7, "excess": 60000}
+  ],
+  "last_week": [
+    {"id": "Q5@c", "qid": "Q5", "start": "2026-10-05T10:00Z", "class": "multi_language", "tier": "noticed", "breadth": 3, "excess": 250000}
+  ],
+  "busy_day": [
+    {"id": "Q6@d", "qid": "Q6", "start": "2026-10-09T03:00Z", "class": "multi_language", "tier": "planetary", "breadth": 28, "excess": 14445115},
+    {"id": "Q7@d", "qid": "Q7", "start": "2026-10-09T05:00Z", "class": "multi_language", "tier": "noticed", "breadth": 2, "excess": 20000000},
+    {"id": "Q8@d", "qid": "Q8", "start": "2026-10-09T05:00Z", "class": "multi_language", "tier": "international", "breadth": 9, "excess": 20000000}
+  ]
+}

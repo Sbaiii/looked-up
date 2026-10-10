@@ -3,6 +3,7 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: 'tests/app',
+  testMatch: '**/*.spec.js',            // tests/app/unit/*.test.mjs run with npm run test:unit
   timeout: 45000,
   retries: process.env.CI ? 1 : 0,
   use: { baseURL: 'http://localhost:4173/' },
