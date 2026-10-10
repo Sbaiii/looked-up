@@ -147,6 +147,11 @@ A day file publishes three sets of events:
 | `labels`, `urls` | label and Wikipedia URL in every one of our languages that has an article |
 | `langs[]` | `lang`, `first` (first spike hour), `lag` (hours after start), `surprise`, `excess` |
 | `spark` | 48 hourly totals across languages, from start − 24 h to start + 23 h; `null` = not ingested yet |
+| `desc` | Wikidata description in en / fr / es when present, ≤ 80 characters (ADR 0026) |
+| `gender` | `female`, `male` or `other` from P21, only when known; used to choose a briefing sentence |
+
+Day files keep the top 20 events by excess views as well, for the hero rule (ADR 0024). Each day also has a social card
+at `data/app/og/YYYY-MM-DD.png`, 1200×630 (ADR 0027).
 
 ## Query it from DuckDB (5 lines)
 
