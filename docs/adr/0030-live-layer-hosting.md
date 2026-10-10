@@ -1,6 +1,6 @@
 # 0030 — Hosting the live layer without a paid Space
 
-- Status: accepted (temporary; revisit if the budget changes)
+- Status: **superseded by ADR 0032** (the live layer moved to a Cloudflare Worker; live.yml is manual only)
 - Date: 2026-10-10
 
 ## Context
