@@ -175,15 +175,26 @@ plus the model version.
 - `training/batch.parquet` is the warehouse feature table (16 Jul – 6 Oct). `training/live-<monday>.parquet` adds
   one file per week.
 
-## Live layer (`data/live/`, Phase 5, ADR 0030)
+## Live layer (Phase 5, ADR 0032)
+
+The live JSON is served by the Cloudflare Worker, not the lake: `/live.json`, `/stats.json`, `/bursts.json`,
+`/health` (docs/ops.md). The lake keeps **one daily snapshot** for the H10 accumulation, plus the files of the
+earlier Actions shifts (10 Oct, ADR 0030):
 
 | File | Content |
 |---|---|
-| `data/live/live.json` | `schema_version`, `generated_at`, `status` (`connected`, `events_per_s`, `kept_per_s`, `languages_seen`, `covered_since`, `gap_minutes`). `events`: items bursting in ≥ 2 languages within 30 min in the last hour, each with labels, desc and per-language `first_burst`, `edits_10m/30m/60m`, `editors_30m`. `single_language_bursts` |
-| `data/live/stats.json` | bursts and live events per hour and per language over 24 h |
 | `data/live/bursts/YYYY-MM-DD.jsonl` | one row per burst: `lang`, `title`, `ts` (epoch s), `kind` (`window` / `new`), `edits_30m`, `editors_30m`, `qid` |
+| `data/live/daily/YYYY-MM-DD-stats.json` | the Worker's `/stats.json` at snapshot time, including `live_events_per_hour_week` |
 | `data/live/lead_time.csv` | H10 scoring, appended daily: `day`, `qid`, `kind` (`live` / `single`), `burst_at`, `langs`, `hit`, `forward_hit`, `event_start`, `lead_minutes` |
-| `data/live/state.json.gz`, `qids.json` | shift handover: stream position, edit timestamps, baselines, bursts and the QID cache. **No user data** |
+| `data/live/live.json`, `stats.json`, `state.json.gz`, `qids.json` | from the Actions shifts (ADR 0030), **no longer updated** |
+
+**`/live.json`** (Worker):
+- `schema_version`, `generated_at`.
+- `status`: `host`, `mode` (`poll`), `connected`, `last_poll_at`, `events_per_s` (rows fetched per second),
+  `kept_per_s`, `languages_seen`, `covered_since`, `gap_minutes`.
+- `events`: items bursting in ≥ 2 languages within 120 min, in the last hour, with labels, desc and per-language
+  counts.
+- `single_language_bursts`: the top 5 by distinct editors.
 
 ## Query it from DuckDB (5 lines)
 
