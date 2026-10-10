@@ -1,7 +1,8 @@
 // Looked Up live layer on Cloudflare Workers (ADR 0032).
-//   Cron (every 5 min): poll recentchanges of the 30 Wikipedias since the last poll, apply the burst rules,
-//                       resolve QIDs of new bursts, save the state to KV (one write per poll: 288 a day, under the
-//                       free tier's 1,000).
+//   Cron (two triggers, each every 5 min, ADR 0032 fallback): each polls recentchanges of half the 30 Wikipedias
+//                       since its last poll, applies the burst rules, resolves QIDs of new bursts and saves the
+//                       state to KV (one write per poll: 576 a day, under the free tier's 1,000). Splitting keeps
+//                       each run's CPU time down (free plan: 10 ms).
 //   HTTP: GET /live.json, /stats.json, /bursts.json, /health with CORS for every origin, cached 15 s.
 // No user data is stored: editors become bits in a salted 64-bit sketch per 5-minute slot (core.ts).
 
@@ -21,7 +22,7 @@ let cached: { at: number; state: State } | null = null;
 
 async function load(env: Env): Promise<State> {
   const s = await env.LIVE.get<State>(STATE_KEY, 'json');
-  return s && s.version === 1 ? s : emptyState();
+  return s && s.version === 2 ? s : emptyState();
 }
 
 async function recentChanges(lang: string, since: number, pages: number): Promise<{ rows: RC[]; caughtUp: boolean }> {
@@ -73,15 +74,22 @@ async function resolveQids(state: State): Promise<void> {
   for (const b of state.bursts) if (b.qid === null) b.qid = state.qids[`${b.lang}|${b.title}`] ?? null;
 }
 
-export async function poll(env: Env, now: number): Promise<State> {
+/** The two cron groups: even-indexed wikis on "*\/5", odd-indexed on "2-59/5" (wrangler.toml). */
+export function groupOf(cron: string): number {
+  return cron.startsWith('2-') ? 1 : 0;
+}
+
+export async function poll(env: Env, now: number, group = 0, groups = 2): Promise<State> {
   const state = await load(env);
   const salt = `${env.SALT || 'looked-up'}|${iso(now)!.slice(0, 10)}`;     // rotates daily
-  const resumed = state.polledAt !== null && now - state.polledAt <= 900;
+  const g = String(group);
+  const last = state.groupPolledAt[g];
+  const resumed = last !== undefined && now - last <= 900;
   let fetched = 0;
   let kept = 0;
   let earliest = now;
   const langs = new Set<string>();
-  for (const lang of LANGUAGES as string[]) {
+  for (const lang of (LANGUAGES as string[]).filter((_, i) => i % groups === group)) {
     const since = resumed && state.lastPoll[lang] ? state.lastPoll[lang] : now - FIRST_LOOKBACK_S;
     earliest = Math.min(earliest, since);
     try {
@@ -101,8 +109,9 @@ export async function poll(env: Env, now: number): Promise<State> {
       /* one wiki failing must not stop the others; it resumes from its lastPoll next time */
     }
   }
-  if (!resumed) state.coveredSince = earliest;
-  state.lastPollStats = { fetched, kept, seconds: resumed ? now - (state.polledAt as number) : FIRST_LOOKBACK_S, languages: [...langs].sort() };
+  if (!resumed) state.coveredSince = Math.max(state.coveredSince ?? 0, earliest);
+  state.groupStats[g] = { fetched, kept, seconds: resumed ? now - last : FIRST_LOOKBACK_S, languages: [...langs].sort() };
+  state.groupPolledAt[g] = now;
   state.polledAt = now;
   await resolveQids(state);
   countLive(state, now);
@@ -111,7 +120,7 @@ export async function poll(env: Env, now: number): Promise<State> {
   await env.LIVE.put(STATE_KEY, blob);                                       // the only KV write of the poll
   cached = { at: now, state };
   // one line per poll for `wrangler tail` (docs/ops.md): no titles, no users
-  console.log(JSON.stringify({ poll: iso(now), fetched, kept, languages: langs.size, bursts: state.bursts.length,
+  console.log(JSON.stringify({ poll: iso(now), group, fetched, kept, languages: langs.size, bursts: state.bursts.length,
     articles: Object.keys(state.articles).length, state_bytes: blob.length, kv_writes: 1 }));
   return state;
 }
@@ -122,27 +131,41 @@ function json(body: unknown, status = 200): Response {
     'access-control-allow-methods': 'GET, OPTIONS', 'cache-control': `public, max-age=${CACHE_S}` } });
 }
 
+async function render(req: Request, env: Env): Promise<Response> {
+  const now = Math.floor(Date.now() / 1000);
+  if (!cached || now - cached.at > CACHE_S) cached = { at: now, state: await load(env) };
+  const state = cached.state;
+  const path = new URL(req.url).pathname;
+  if (path === '/live.json') return json(livePayload(state, now));
+  if (path === '/stats.json') return json(statsPayload(state, now));
+  if (path === '/bursts.json') {
+    const hours = Math.min(72, Number(new URL(req.url).searchParams.get('hours') || 72));
+    return json({ bursts: state.bursts.filter((b) => b.ts >= now - hours * 3600) });
+  }
+  if (path === '/health' || path === '/') {
+    const s = status(state, now);
+    return json({ ok: true, connected: s.connected, last_poll_at: s.last_poll_at, gap_minutes: s.gap_minutes });
+  }
+  return json({ error: 'not found' }, 404);
+}
+
 export default {
-  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(poll(env, Math.floor(Date.now() / 1000)).then(() => undefined));
+  async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(poll(env, Math.floor(Date.now() / 1000), groupOf(event.cron)).then(() => undefined));
   },
 
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (req.method === 'OPTIONS') return json({}, 204);
-    const now = Math.floor(Date.now() / 1000);
-    if (!cached || now - cached.at > CACHE_S) cached = { at: now, state: await load(env) };
-    const state = cached.state;
-    const path = new URL(req.url).pathname;
-    if (path === '/live.json') return json(livePayload(state, now));
-    if (path === '/stats.json') return json(statsPayload(state, now));
-    if (path === '/bursts.json') {
-      const hours = Math.min(72, Number(new URL(req.url).searchParams.get('hours') || 72));
-      return json({ bursts: state.bursts.filter((b) => b.ts >= now - hours * 3600) });
+    // edge cache: most requests skip the KV read and the state parse (CPU budget)
+    const cache = (caches as unknown as { default: Cache }).default;
+    const path0 = new URL(req.url).pathname;
+    if (path0 === '/live.json' || path0 === '/stats.json') {
+      const hit = await cache.match(req);
+      if (hit) return hit;
+      const res = await render(req, env);
+      ctx.waitUntil(cache.put(req, res.clone()));
+      return res;
     }
-    if (path === '/health' || path === '/') {
-      const s = status(state, now);
-      return json({ ok: true, connected: s.connected, last_poll_at: s.last_poll_at, gap_minutes: s.gap_minutes });
-    }
-    return json({ error: 'not found' }, 404);
+    return render(req, env);
   },
 };
