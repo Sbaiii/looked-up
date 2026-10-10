@@ -1,0 +1,37 @@
+name: live layer
+
+# The live edit layer (Phase 5) in fixed-length shifts (ADR 0030): a free Docker Space now needs a paid plan, so the
+# consumer runs as a GitHub Actions job of ~5 h 45 min that publishes data/live/ to the lake every 5 minutes and
+# hands its state (no user data) to the next shift, which resumes the stream with Last-Event-ID.
+# Continuity: the concurrency group keeps one shift running and one queued; the hourly cron, and every hourly
+# ingest run (pinged externally), add a queued shift if none is waiting.
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: live-layer
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  shift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: live/requirements.txt
+      - run: pip install -r live/requirements.txt
+      - name: Run one shift and publish to the lake
+        if: env.HF_TOKEN != ''
+        working-directory: live
+        run: python -m lookedup_live.shift --hours 5.7 --every 300
