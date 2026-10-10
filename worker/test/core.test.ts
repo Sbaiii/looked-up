@@ -134,11 +134,10 @@ describe('replay', () => {
 
 describe('CPU budget (ADR 0032 fallback)', () => {
   it('three cron groups cover the 30 wikis exactly once and merge back for reading', async () => {
-    const { groupOf } = await import('../src/index');
+    const { groupAt } = await import('../src/index');
     const { GROUPS, merge } = await import('../src/core');
-    expect(groupOf('0,5,10,15,20,25,30,35,40,45,50,55 * * * *')).toBe(0);
-    expect(groupOf('2,7,12,17,22,27,32,37,42,47,52,57 * * * *')).toBe(1);
-    expect(groupOf('4,9,14,19,24,29,34,39,44,49,54,59 * * * *')).toBe(2);
+    const at = (min: number) => groupAt(Date.UTC(2026, 9, 10, 12, min));
+    expect([0, 1, 2, 3, 4, 5, 7, 9, 58].map(at)).toEqual([0, null, 1, null, 2, 0, 1, 2, null]);
     const all = GROUPS.flat();
     expect(all.length).toBe(30);
     expect(new Set(all)).toEqual(new Set(LANGUAGES as string[]));

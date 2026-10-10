@@ -1,5 +1,6 @@
 // Looked Up live layer on Cloudflare Workers (ADR 0032).
-//   Cron (three triggers, each every 5 min, ADR 0032): each polls one group of wikis (en; 7 large; 22 others)
+//   Cron (one trigger every minute, ADR 0032): minutes :00, :02, :04 of each 5-minute cycle poll one group of wikis
+//                       each (en; 7 large; 22 others), the other minutes do nothing.
 //                       since its last poll, applies the burst rules, resolves QIDs of new bursts and saves that
 //                       group's own state to KV (one write per poll: 864 a day, under the free tier's 1,000).
 //                       Small per-group states keep each run's CPU time down (free plan: 10 ms).
@@ -79,10 +80,10 @@ async function resolveQids(state: State): Promise<void> {
   for (const b of state.bursts) if (b.qid === null) b.qid = state.qids[`${b.lang}|${b.title}`] ?? null;
 }
 
-/** Cron group from the trigger's first minute (wrangler.toml): 0,5,.. -> 0; 2,7,.. -> 1; 4,9,.. -> 2. */
-export function groupOf(cron: string): number {
-  const first = parseInt(cron, 10);
-  return Number.isNaN(first) ? 0 : Math.min(GROUPS.length - 1, (first % 5) >> 1);
+/** Group polled at this scheduled minute: :00 -> 0, :02 -> 1, :04 -> 2 (mod 5); null = nothing to do. */
+export function groupAt(scheduledMs: number): number | null {
+  const m = new Date(scheduledMs).getUTCMinutes() % 5;
+  return m % 2 === 0 && m >> 1 < GROUPS.length ? m >> 1 : null;
 }
 
 export async function poll(env: Env, now: number, group = 0): Promise<State> {
@@ -160,7 +161,9 @@ async function render(req: Request, env: Env): Promise<Response> {
 
 export default {
   async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(poll(env, Math.floor(Date.now() / 1000), groupOf(event.cron)).then(() => undefined));
+    const group = groupAt(event.scheduledTime);
+    if (group === null) return;                                              // minutes :01 and :03: idle
+    ctx.waitUntil(poll(env, Math.floor(Date.now() / 1000), group).then(() => undefined));
   },
 
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

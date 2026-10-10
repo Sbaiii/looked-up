@@ -5,11 +5,7 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
 [triggers]
-crons = [                       # three groups of wikis, each every 5 min (ADR 0032)
-  "0,5,10,15,20,25,30,35,40,45,50,55 * * * *",
-  "2,7,12,17,22,27,32,37,42,47,52,57 * * * *",
-  "4,9,14,19,24,29,34,39,44,49,54,59 * * * *",
-]
+crons = ["* * * * *"]   # every minute; :00/:02/:04 of each 5-min cycle poll one group each (ADR 0032)
 
 [[kv_namespaces]]
 binding = "LIVE"
