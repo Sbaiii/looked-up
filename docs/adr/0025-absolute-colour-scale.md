@@ -19,8 +19,8 @@ had a fully saturated language, so a four-language blip looked as bright as a pl
 - **Why not 0 to 50.** In the 84-day batch, the median per-language surprise is 79 for noticed events, 109 for
   international and 124 for planetary, and the 90th percentile is 424 to 719.
   - A scale capped at 50 would saturate most spikes of every tier, which is the opposite of the intent.
-  - On the 8–5,000 scale, the median noticed spike sits at ≈ 0.36, Dolly Parton's median language at ≈ 0.54, and
-    Hayden Panettiere's (≈ 4,900) near 1.
+  - On the 8–5,000 scale, the median noticed spike sits at ≈ 0.36. The median languages of the two planetary
+    events of August sit at ≈ 0.95: Dolly Parton (3,439) and Hayden Panettiere (3,849).
 - **Where it lives:** `app/js/scale.js`, mirrored in `lookedup/og.py` so the social cards match the app.
 
 ## Consequences
