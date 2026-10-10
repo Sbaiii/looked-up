@@ -175,6 +175,16 @@ plus the model version.
 - `training/batch.parquet` is the warehouse feature table (16 Jul – 6 Oct). `training/live-<monday>.parquet` adds
   one file per week.
 
+## Live layer (`data/live/`, Phase 5, ADR 0030)
+
+| File | Content |
+|---|---|
+| `data/live/live.json` | `schema_version`, `generated_at`, `status` (`connected`, `events_per_s`, `kept_per_s`, `languages_seen`, `covered_since`, `gap_minutes`). `events`: items bursting in ≥ 2 languages within 30 min in the last hour, each with labels, desc and per-language `first_burst`, `edits_10m/30m/60m`, `editors_30m`. `single_language_bursts` |
+| `data/live/stats.json` | bursts and live events per hour and per language over 24 h |
+| `data/live/bursts/YYYY-MM-DD.jsonl` | one row per burst: `lang`, `title`, `ts` (epoch s), `kind` (`window` / `new`), `edits_30m`, `editors_30m`, `qid` |
+| `data/live/lead_time.csv` | H10 scoring, appended daily: `day`, `qid`, `kind` (`live` / `single`), `burst_at`, `langs`, `hit`, `forward_hit`, `event_start`, `lead_minutes` |
+| `data/live/state.json.gz`, `qids.json` | shift handover: stream position, edit timestamps, baselines, bursts and the QID cache. **No user data** |
+
 ## Query it from DuckDB (5 lines)
 
 ```python
