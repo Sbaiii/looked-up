@@ -29,8 +29,8 @@ flowchart LR
   end
 
   subgraph CF[Cloudflare Workers, free plan]
-    W[looked-up-live Worker<br/>cron every minute, 5 groups of 6 wikis]
-    DB[(D1<br/>group state, bursts, pings)]
+    W[looked-up-live Worker<br/>cron every minute, 6 groups, en alone]
+    DB[(D1<br/>slot rows, meta, summaries, bursts, pings)]
     KV[(KV<br/>QID cache, cached responses)]
   end
 
@@ -85,7 +85,7 @@ caches). Re-create the lake mirror with `python -m lookedup.cli sync --from 2026
 |---|---|---|
 | `hourly.yml` | cron **`17 * * * *`**, `workflow_dispatch`, and dispatched by `trigger.yml` | ingest missing hours of the last **7 days** (≤ 12/run), restore baselines from the cache, score (≤ 12 hours/run), save recomputed baselines on a cache miss, then `cli app-export` (`data/app/`, ADR 0022) |
 | `trigger.yml` | `repository_dispatch` type `hourly-tick` | dispatches `hourly.yml`; the second path for when GitHub drops scheduled runs (ADR 0017) |
-| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` (`retrain` input) | build today's baselines from the previous 28 day files, save them to the Actions cache; **snapshot yesterday's live bursts from the Worker** (`cli live-snapshot`, when `LIVE_URL` is set) and **score the live bursts of two days ago** (`cli live-score`, H10); **Mondays: retrain the forecast models** (`cli forecast-retrain`, ADR 0029) |
+| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` (`retrain` input) | **warns if the live Worker's `/health` shows a full-hour gap or no answer**; build today's baselines from the previous 28 day files, save them to the Actions cache; **snapshot yesterday's live bursts from the Worker** (`cli live-snapshot`, when `LIVE_URL` is set) and **score the live bursts of two days ago** (`cli live-score`, H10); **Mondays: retrain the forecast models** (`cli forecast-retrain`, ADR 0029) |
 | `wikidata-monthly.yml` | cron `30 6 8 * *` | rebuild `data/wikidata/sitelinks.parquet` |
 | `pages.yml` | push to `app/**`, `workflow_dispatch` | deploy `app/` to GitHub Pages ([sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/)); data is read from the Hub at runtime, so hourly updates need no redeploy |
 | `worker.yml` | push to `worker/**` or `config/live.yml`, `workflow_dispatch` | tests (vitest) and deploys the **live layer** Worker when the Cloudflare secrets exist (ADR 0032) |
@@ -173,11 +173,15 @@ The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are lefto
 ## Live layer (Phase 5, ADR 0032 and 0033)
 
 - **Where it runs: a Cloudflare Worker,** `worker/` (TypeScript), Workers free plan.
-  - A cron runs every minute. Minute m polls group m mod 5, which is 6 of the 30 Wikipedias, so each wiki is polled
-    every 5 minutes.
+  - A cron runs every minute. Minute m polls group m mod 6: English alone, or one of five groups balanced by
+    measured edit volume. Each wiki is polled every 6 minutes.
   - Rules come from `config/live.yml`. The Python `live/` package is the reference implementation.
 - **Storage:**
-  - **D1** `looked-up-live`: one row of window state per group, the bursts (7 days), and the pinger counter.
+  - **D1** `looked-up-live`:
+    - slot rows: the 5-minute windows, rolling 70 minutes;
+    - one meta row and one summary row per group;
+    - the bursts (7 days);
+    - the pinger counter.
   - **KV:** the QID cache and the cached `/live.json` (5 min) and `/stats.json` (30 min).
   - The budget against the free limits is in ADR 0033.
 - **Endpoints:** `/live.json`, `/stats.json`, `/bursts.json?hours=72` and `/health`, with CORS for every origin.
@@ -187,6 +191,10 @@ The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are lefto
 - **CPU check:** run `gh workflow run worker-observe.yml -f minutes=30`. It tails the Worker and prints CPU and
   wall time per run, the poll counts, and request user agents.
 - **The old GitHub Actions shifts (`live.yml`) are disabled:** manual only, nothing queues them (ADR 0032).
+
+> **Known limitation:** the live Worker's polls use about 10 ms of CPU (median; p95 16 ms; English alone up to
+> 17 ms), over the Workers free plan's 10 ms. Cloudflare has not rejected any run (85 tailed). The daily job warns
+> if `/health` shows a full-hour gap (ADR 0033).
 
 ### One-time setup (owner)
 
