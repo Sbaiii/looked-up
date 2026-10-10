@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, replace
 from datetime import date
 from functools import lru_cache
@@ -52,7 +53,10 @@ class AnalyticsConfig:
 
     @property
     def period_end(self) -> date:
-        return date.fromisoformat(self.raw["period"]["end"])
+        """The registered end (config/analytics.yml), or LOOKEDUP_PERIOD_END for `cli refresh-warehouse` (ADR 0031).
+        Evaluations keep their own fixed windows, so the override only extends the warehouse."""
+        override = os.environ.get("LOOKEDUP_PERIOD_END")
+        return date.fromisoformat(override) if override else date.fromisoformat(self.raw["period"]["end"])
 
     @property
     def automation(self) -> dict:
