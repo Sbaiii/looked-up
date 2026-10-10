@@ -107,8 +107,12 @@ export async function poll(env: Env, now: number): Promise<State> {
   await resolveQids(state);
   countLive(state, now);
   gc(state, now);
-  await env.LIVE.put(STATE_KEY, JSON.stringify(state));
+  const blob = JSON.stringify(state);
+  await env.LIVE.put(STATE_KEY, blob);                                       // the only KV write of the poll
   cached = { at: now, state };
+  // one line per poll for `wrangler tail` (docs/ops.md): no titles, no users
+  console.log(JSON.stringify({ poll: iso(now), fetched, kept, languages: langs.size, bursts: state.bursts.length,
+    articles: Object.keys(state.articles).length, state_bytes: blob.length, kv_writes: 1 }));
   return state;
 }
 
