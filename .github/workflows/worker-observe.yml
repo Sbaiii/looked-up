@@ -1,0 +1,48 @@
+name: live worker observe
+
+# Tails the live Worker for ~11 minutes (two 5-minute cron runs) and summarises CPU time, wall time, outcome and
+# the per-poll counts, to check the free plan's 10 ms CPU limit (ADR 0032). Manual only.
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "How long to tail"
+        default: "11"
+
+permissions:
+  contents: read
+
+jobs:
+  tail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - name: Tail the Worker
+        run: timeout "$(( ${{ inputs.minutes || 11 }} * 60 ))" npx wrangler tail looked-up-live --format json > tail.jsonl || true
+      - name: Summarise
+        run: |
+          node -e '
+          const lines = require("fs").readFileSync("tail.jsonl", "utf8").split("\n").filter(Boolean);
+          const evs = []; let buf = "";
+          for (const l of lines) { buf += l; try { evs.push(JSON.parse(buf)); buf = ""; } catch {} }
+          for (const e of evs) {
+            const kind = e.event && e.event.cron ? "cron " + e.event.cron : (e.event && e.event.request ? "fetch " + new URL(e.event.request.url).pathname : "other");
+            const logs = (e.logs || []).map((x) => x.message.join(" ")).join(" | ");
+            console.log([new Date(e.eventTimestamp).toISOString(), kind, "outcome=" + e.outcome,
+              "cpuTime=" + (e.cpuTime ?? "n/a") + "ms", "wallTime=" + (e.wallTime ?? "n/a") + "ms", logs,
+              (e.exceptions || []).map((x) => x.message).join(" ")].join("  "));
+          }
+          console.log(`${evs.length} events tailed`);'
