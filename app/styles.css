@@ -321,6 +321,8 @@ select {
 .legend__ramp { display: block; width: 100%; height: 0.5rem; border-radius: 2px; background: linear-gradient(90deg, var(--ramp-0), var(--ramp-1), var(--ramp-2)); }
 .legend__ticks { position: absolute; left: 0; right: 0; top: 0.65rem; height: 0.9rem; }
 .legend__ticks span { position: absolute; transform: translateX(-50%); font-size: 0.66rem; color: var(--faint); }
+.legend__ticks span:first-child { transform: none; }
+.legend__ticks span:last-child { transform: translateX(-100%); }
 .viz__mode { position: absolute; top: 0.6rem; right: 0.6rem; }
 
 /* Phones: a compact bottom nav replaces the header links (hidden below 900px) */
