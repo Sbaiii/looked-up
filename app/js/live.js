@@ -3,9 +3,9 @@
 
 import { t, langName, label as eventLabel } from './i18n.js';
 
-const DEFAULT = 'https://huggingface.co/datasets/Sbaiiiiii/looked-up/resolve/main/data/live/live.json';
+const DEFAULT = 'https://looked-up-live.abdellahsbaisbai.workers.dev/live.json';    // the live Worker (ADR 0032)
 const param = new URLSearchParams(location.search).get('live');
-// ADR 0032: the live host is a Cloudflare Worker (`*.workers.dev`); set DEFAULT to its /live.json once deployed
+// ADR 0032: the live host is a Cloudflare Worker; ?live= may point at another *.workers.dev or *.hf.space host
 export const LIVE_URL = param && /^https:\/\/[a-z0-9.-]+\.(workers\.dev|hf\.space)\/live\.json$/.test(param) ? param : DEFAULT;
 const STALE_MS = 15 * 60e3;
 const POLL_MS = 60e3;
