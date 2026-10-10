@@ -2,8 +2,8 @@
 // config/live.yml (src/rules.json), the same file the Python reference implementation (live/) reads.
 //
 // The Worker polls recentchanges every 5 minutes, so edits are kept per article in 5-minute slots. A slot holds
-// the edit count and a 64-bit bitmap of salted editor hashes (an irreversible sketch, never a user id); distinct
-// editors over a window are estimated from the OR of the bitmaps (linear counting).
+// the edit count and a 64-bit bitmap of salted editor hashes, as two 32-bit numbers (an irreversible sketch, never
+// a user id); distinct editors over a window are estimated from the OR of the bitmaps (linear counting).
 
 import RULES from './rules.json';
 import LANGUAGES from './languages.json';
@@ -16,29 +16,31 @@ const MAINTENANCE = new RegExp(RULES.maintenance_patterns.join('|'), 'i');
 const REVERT_TAGS = new Set<string>(RULES.revert_tags);
 
 export interface RC { title: string; timestamp: string; user?: string; type: string; comment?: string; tags?: string[]; bot?: boolean; minor?: boolean }
-export interface Slot { s: number; e: number; b: string }          // slot start (epoch s), edits, bitmap (16 hex)
-export interface Article { slots: Slot[]; created?: number; createdBits?: string; createdEdits?: number; lastBurst?: number }
+/** [slot start (epoch s), edits, bitmap high 32 bits, bitmap low 32 bits]: compact for KV and cheap to parse. */
+export type Slot = [number, number, number, number];
+export interface Article { sl: Slot[]; c?: number; cb?: [number, number]; ce?: number; lb?: number }   // created, its bits, its edits, last burst
 export interface Burst { lang: string; title: string; ts: number; kind: 'window' | 'new'; edits_30m: number; editors_30m: number; qid: string | null }
 export interface Item { labels: Record<string, string>; desc: Record<string, string> }
 export interface State {
-  version: 1;
+  version: 2;
   articles: Record<string, Article>;          // "lang|title"
   bursts: Burst[];
   hour: number | null;
-  hourCounts: Record<string, Record<string, number>>;   // lang -> title -> edits in the current hour
+  hourCounts: Record<string, Record<string, number>>;   // lang -> short title hash -> edits in the current hour
   medians: Record<string, number[]>;                     // lang -> hourly medians (last 7 days)
   lastPoll: Record<string, number>;                      // lang -> newest edit time processed
-  polledAt: number | null;
+  polledAt: number | null;                               // last poll of any group
+  groupPolledAt: Record<string, number>;                 // per cron group (ADR 0032 fallback: wikis split in two)
+  groupStats: Record<string, { fetched: number; kept: number; seconds: number; languages: string[] }>;
   coveredSince: number | null;
   qids: Record<string, string | null>;                   // "lang|title" -> QID
   items: Record<string, Item>;
   liveSeen: Record<string, string>;                      // "qid|ts" -> hour key (a week of live-event counts)
-  lastPollStats: { fetched: number; kept: number; seconds: number; languages: string[] };
 }
 
 export function emptyState(): State {
-  return { version: 1, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
-    coveredSince: null, qids: {}, items: {}, liveSeen: {}, lastPollStats: { fetched: 0, kept: 0, seconds: 0, languages: [] } };
+  return { version: 2, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
+    groupPolledAt: {}, groupStats: {}, coveredSince: null, qids: {}, items: {}, liveSeen: {} };
 }
 
 // ------------------------------------------------------------------ filters
@@ -57,41 +59,50 @@ export function counted(rc: RC): boolean {
 
 // ------------------------------------------------------------------ editor sketch
 
-/** 64-bit FNV-1a of salt + user, folded to a bit index 0..63. The user name is never stored. */
-export function editorBit(user: string | undefined, salt: string): number | null {
-  if (!user) return null;
+function fnv(s: string): number {
   let h = 0x811c9dc5;
-  const s = salt + '\u0000' + user;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-  return h % 64;
+  return h;
 }
 
-function setBit(hex: string, bit: number): string {
-  const v = BigInt('0x' + hex) | (1n << BigInt(bit));
-  return v.toString(16).padStart(16, '0');
+/** FNV-1a of salt + user folded to a bit index 0..63. The user name is never stored. */
+export function editorBit(user: string | undefined, salt: string): number | null {
+  return user ? fnv(salt + '\u0000' + user) % 64 : null;
 }
 
-export function orBits(hexes: string[]): string {
-  let v = 0n;
-  for (const h of hexes) v |= BigInt('0x' + h);
-  return v.toString(16).padStart(16, '0');
+export function setBit(bits: [number, number], bit: number): [number, number] {
+  return bit < 32 ? [bits[0], (bits[1] | (1 << bit)) >>> 0] : [(bits[0] | (1 << (bit - 32))) >>> 0, bits[1]];
 }
 
-/** Linear-counting estimate of distinct editors from a 64-bit bitmap. */
-export function distinct(hex: string): number {
-  let v = BigInt('0x' + hex);
-  let ones = 0;
-  while (v) { ones += Number(v & 1n); v >>= 1n; }
+function pop32(x: number): number {
+  x -= (x >>> 1) & 0x55555555;
+  x = (x & 0x33333333) + ((x >>> 2) & 0x33333333);
+  return (Math.imul((x + (x >>> 4)) & 0x0f0f0f0f, 0x01010101) >>> 24);
+}
+
+/** Linear-counting estimate of distinct editors from a 64-bit bitmap given as [high, low]. */
+export function distinct(bits: [number, number]): number {
+  const ones = pop32(bits[0]) + pop32(bits[1]);
   if (ones >= 64) return 64;
   return Math.round(-64 * Math.log(1 - ones / 64));
 }
 
+const titleKey = (title: string) => fnv(title).toString(36);
+
 // ------------------------------------------------------------------ windows, baselines, bursts
+
+export function windowEdits(a: Article, t: number, minutes: number): number {
+  const lo = t - WIN(minutes);
+  let n = 0;
+  for (const sl of a.sl) if (sl[0] + SLOT_S > lo && sl[0] <= t) n += sl[1];
+  return n;
+}
 
 export function windowCounts(a: Article, t: number, minutes: number): { edits: number; editors: number } {
   const lo = t - WIN(minutes);
-  const slots = a.slots.filter((s) => s.s + SLOT_S > lo && s.s <= t);
-  return { edits: slots.reduce((n, s) => n + s.e, 0), editors: distinct(orBits(slots.map((s) => s.b))) };
+  let edits = 0; let hi = 0; let low = 0;
+  for (const sl of a.sl) if (sl[0] + SLOT_S > lo && sl[0] <= t) { edits += sl[1]; hi = (hi | sl[2]) >>> 0; low = (low | sl[3]) >>> 0; }
+  return { edits, editors: distinct([hi, low]) };
 }
 
 export function baseline(state: State, lang: string): number {
@@ -127,34 +138,40 @@ function rollHour(state: State, t: number): void {
 export function addEdit(state: State, lang: string, rc: RC, salt: string): Burst | null {
   const t = Date.parse(rc.timestamp) / 1000;
   rollHour(state, t);
-  (state.hourCounts[lang] ||= {})[rc.title] = (state.hourCounts[lang][rc.title] || 0) + 1;
+  const hc = (state.hourCounts[lang] ||= {});
+  const tk = titleKey(rc.title);
+  hc[tk] = (hc[tk] || 0) + 1;
   const key = `${lang}|${rc.title}`;
-  const a = (state.articles[key] ||= { slots: [] });
+  const a = (state.articles[key] ||= { sl: [] });
   const s0 = t - (t % SLOT_S);
-  let slot = a.slots.find((x) => x.s === s0);
-  if (!slot) { slot = { s: s0, e: 0, b: '0'.repeat(16) }; a.slots.push(slot); a.slots.sort((x, y) => x.s - y.s); }
-  slot.e += 1;
+  let slot = a.sl.find((x) => x[0] === s0);
+  if (!slot) { slot = [s0, 0, 0, 0]; a.sl.push(slot); a.sl.sort((x, y) => x[0] - y[0]); }
+  slot[1] += 1;
   const bit = editorBit(rc.user, salt);
-  if (bit !== null) slot.b = setBit(slot.b, bit);
-  if (rc.type === 'new') { a.created = t; a.createdEdits = 0; a.createdBits = '0'.repeat(16); }
-  if (a.created !== undefined && t - a.created <= WIN(RULES.new_article.window_minutes)) {
-    a.createdEdits = (a.createdEdits || 0) + 1;
-    if (bit !== null) a.createdBits = setBit(a.createdBits || '0'.repeat(16), bit);
+  if (bit !== null) [slot[2], slot[3]] = setBit([slot[2], slot[3]], bit);
+  if (rc.type === 'new') { a.c = t; a.ce = 0; a.cb = [0, 0]; }
+  if (a.c !== undefined && t - a.c <= WIN(RULES.new_article.window_minutes)) {
+    a.ce = (a.ce || 0) + 1;
+    if (bit !== null) a.cb = setBit(a.cb || [0, 0], bit);
   }
-  a.slots = a.slots.filter((x) => x.s + SLOT_S > t - WIN(60));
-  if (a.lastBurst !== undefined && t - a.lastBurst < RULES.cooldown_hours * 3600) return null;
-  const w = windowCounts(a, t, RULES.burst.window_minutes);
+  // keep 60 min for articles that burst (their counts are shown), 30 min otherwise (all the burst rule needs)
+  const keep = a.lb !== undefined ? WIN(60) : WIN(RULES.burst.window_minutes);
+  a.sl = a.sl.filter((x) => x[0] + SLOT_S > t - keep);
+  if (a.lb !== undefined && t - a.lb < RULES.cooldown_hours * 3600) return null;
   let kind: Burst['kind'] | null = null;
-  if (w.edits >= RULES.burst.edits && w.editors >= RULES.burst.editors
-      && 2 * w.edits >= RULES.burst.ratio * baseline(state, lang)) {
-    kind = 'window';
-  } else if (a.created !== undefined && t - a.created <= WIN(RULES.new_article.window_minutes)
-      && (a.createdEdits || 0) >= RULES.new_article.edits
-      && distinct(a.createdBits || '0'.repeat(16)) >= RULES.new_article.editors) {
+  let w = { edits: windowEdits(a, t, RULES.burst.window_minutes), editors: 0 };
+  // editors only matter once the edit count qualifies: most articles never get there, so skip the sketch work
+  if (w.edits >= RULES.burst.edits && 2 * w.edits >= RULES.burst.ratio * baseline(state, lang)) {
+    w = windowCounts(a, t, RULES.burst.window_minutes);
+    if (w.editors >= RULES.burst.editors) kind = 'window';
+  }
+  if (!kind && a.c !== undefined && t - a.c <= WIN(RULES.new_article.window_minutes)
+      && (a.ce || 0) >= RULES.new_article.edits && distinct(a.cb || [0, 0]) >= RULES.new_article.editors) {
     kind = 'new';                          // ADR 0032: >= 2 distinct editors
+    if (!w.editors) w = windowCounts(a, t, RULES.burst.window_minutes);
   }
   if (!kind) return null;
-  a.lastBurst = t;
+  a.lb = t;
   const b: Burst = { lang, title: rc.title, ts: t, kind, edits_30m: w.edits, editors_30m: w.editors, qid: state.qids[key] ?? null };
   state.bursts.push(b);
   return b;
@@ -162,10 +179,11 @@ export function addEdit(state: State, lang: string, rc: RC, salt: string): Burst
 
 export function gc(state: State, now: number): void {
   for (const [k, a] of Object.entries(state.articles)) {
-    const idle = !a.slots.length || a.slots[a.slots.length - 1].s + SLOT_S <= now - WIN(60);
-    const cooled = a.lastBurst === undefined || now - a.lastBurst > RULES.cooldown_hours * 3600;
-    const fresh = a.created !== undefined && now - a.created <= WIN(RULES.new_article.window_minutes);
-    if (idle && cooled && !fresh) delete state.articles[k];
+    const keep = a.lb !== undefined ? WIN(60) : WIN(RULES.burst.window_minutes);
+    a.sl = a.sl.filter((x) => x[0] + SLOT_S > now - keep);
+    const cooled = a.lb === undefined || now - a.lb > RULES.cooldown_hours * 3600;
+    const fresh = a.c !== undefined && now - a.c <= WIN(RULES.new_article.window_minutes);
+    if (!a.sl.length && cooled && !fresh) delete state.articles[k];
   }
   state.bursts = state.bursts.filter((b) => b.ts >= now - RULES.keep_bursts_hours * 3600);
   const keep = new Set(state.bursts.map((b) => b.qid).filter(Boolean));
@@ -202,16 +220,19 @@ const hourKey = (t: number) => iso(t - (t % 3600))!.slice(0, 13);
 
 export function status(state: State, now: number) {
   const window = WIN(RULES.live_window_minutes);
+  const polls = Object.values(state.groupPolledAt);
+  const oldest = polls.length ? Math.min(...polls) : null;      // every group must keep polling
   let gap = state.coveredSince === null ? 60 : Math.max(0, state.coveredSince - (now - window)) / 60;
-  if (state.polledAt !== null && now - state.polledAt > 600) gap = Math.max(gap, Math.min(60, (now - state.polledAt) / 60));
-  const p = state.lastPollStats;
+  if (oldest !== null && now - oldest > 600) gap = Math.max(gap, Math.min(60, (now - oldest) / 60));
+  const stats = Object.values(state.groupStats);
+  const rate = (k: 'fetched' | 'kept') => Math.round(stats.reduce((n, g) => n + (g.seconds ? g[k] / g.seconds : 0), 0) * 100) / 100;
   return {
-    host: 'cloudflare-worker', mode: 'poll', poll_minutes: 5,
-    connected: state.polledAt !== null && now - state.polledAt <= 600,
+    host: 'cloudflare-worker', mode: 'poll', poll_minutes: 5, cron_groups: polls.length,
+    connected: oldest !== null && now - oldest <= 600,
     last_poll_at: iso(state.polledAt), last_event_at: iso(Math.max(0, ...Object.values(state.lastPoll)) || null),
-    events_per_s: p.seconds ? Math.round((p.fetched / p.seconds) * 100) / 100 : 0,
-    kept_per_s: p.seconds ? Math.round((p.kept / p.seconds) * 100) / 100 : 0,
-    languages_seen: p.languages, covered_since: iso(state.coveredSince), gap_minutes: Math.round(gap),
+    events_per_s: rate('fetched'), kept_per_s: rate('kept'),
+    languages_seen: [...new Set(stats.flatMap((g) => g.languages))].sort(),
+    covered_since: iso(state.coveredSince), gap_minutes: Math.round(gap),
   };
 }
 
