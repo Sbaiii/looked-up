@@ -149,6 +149,7 @@ class Store(Protocol):
     def read_manifest(self, revision: str | None = None) -> Manifest: ...
     def fetch(self, repo_path: str, dest_dir: Path, revision: str | None = None) -> Path | None: ...
     def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None: ...
+    def list_prefix(self, prefix: str) -> list[str]: ...
 
 
 def write_hours(store: Store, tables: dict[datetime, tuple[pa.Table, str]], message: str,
@@ -206,6 +207,10 @@ class LocalStore:
         p = self.root / repo_path
         return p if p.exists() else None
 
+    def list_prefix(self, prefix: str) -> list[str]:
+        base = self.root / prefix
+        return sorted(str(f.relative_to(self.root)) for f in base.rglob("*") if f.is_file()) if base.exists() else []
+
     def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None:
         for repo_path, src in files.items():
             dst = self.root / repo_path
@@ -248,6 +253,9 @@ class HFStore:
     def used_storage(self) -> int:
         """Bytes the repo occupies on the Hub, including the history of large files."""
         return self.api.dataset_info(self.repo_id, expand=["usedStorage"]).used_storage
+
+    def list_prefix(self, prefix: str) -> list[str]:
+        return sorted(p for p in self.api.list_repo_files(self.repo_id, repo_type="dataset") if p.startswith(prefix))
 
     def delete_prefix(self, prefix: str, message: str) -> list[str]:
         """Delete every file under ``prefix`` in one commit; returns the deleted paths."""
