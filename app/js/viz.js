@@ -82,7 +82,8 @@ function ramp(x) {
 /** Spread steps in lag order. Colour = per-language peak surprise on the absolute scale (ADR 0025); each step
  * colours only countries whose max rises (multi-language countries take the max, ADR 0023). */
 export function steps(ev, { animate }) {
-    const rows = [...ev.langs].sort((a, b) => a.lag - b.lag || a.lang.localeCompare(b.lang));
+    // the lead language always comes first (arcs start there), then lag order
+    const rows = [...ev.langs].sort((a, b) => (b.lang === ev.lead) - (a.lang === ev.lead) || a.lag - b.lag || a.lang.localeCompare(b.lang));
     const best = new Map();
     const maxLag = Math.max(1, ...rows.map((r) => r.lag));
     return rows.map((r, i) => {
