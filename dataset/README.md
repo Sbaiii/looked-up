@@ -44,6 +44,7 @@ data/hourly/year=YYYY/month=MM/day=DD.parquet   all ingested hours of one UTC da
 data/wikidata/sitelinks.parquet                 (lang, title) -> Wikidata QID
 data/manifest.json                              every hour present, with row count, source and ingestion time
 data/app/{today,stats}.json, data/app/days/*.json   small JSON for the web app (+ .json.gz twins)
+data/live/bursts/*.jsonl, data/live/daily/*      daily snapshots of the live editing layer (counts only, no users)
 ```
 
 ## Schema
@@ -136,6 +137,11 @@ deaths, earthquakes and matches.
 The web app [sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/) reads `data/app/` directly from
 this dataset. The schema is described in the
 [data model](https://github.com/Sbaiii/looked-up/blob/main/docs/data_model.md#app-exports-dataapp-phase-3-adr-0022).
+
+The **live editing layer** (what editors across the 30 Wikipedias are updating right now) is served by a Cloudflare
+Worker. This dataset keeps one daily snapshot of its bursts for research
+([ADR 0032](https://github.com/Sbaiii/looked-up/blob/main/docs/adr/0032-live-layer-on-workers.md)). Only
+counts are kept, never user names.
 
 ## Update frequency and provenance
 
