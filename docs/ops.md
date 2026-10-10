@@ -2,6 +2,67 @@
 
 How Looked Up runs, where things live, and what to do when something breaks.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Wikimedia
+    D[Hourly pageview dumps]
+    PC[pageview_complete<br/>daily files]
+    WD[Wikidata<br/>sitelinks, claims, labels]
+    RC[MediaWiki API<br/>recentchanges]
+  end
+
+  subgraph GH[GitHub Actions]
+    H[hourly.yml<br/>ingest, score, app-export]
+    DY[daily.yml<br/>baselines, live-snapshot, live-score,<br/>Monday: forecast-retrain]
+    PG[pages.yml]
+    WY[worker.yml<br/>test + deploy]
+  end
+
+  subgraph Lake[Hugging Face dataset Sbaiiiiii/looked-up]
+    HR[data/hourly<br/>day files]
+    SP[data/spikes, data/events,<br/>latest.json]
+    AP[data/app<br/>today, days, stats, og]
+    MD[data/models<br/>forecast models]
+    LV[data/live<br/>daily burst snapshots, lead_time.csv]
+  end
+
+  subgraph CF[Cloudflare Workers, free plan]
+    W[looked-up-live Worker<br/>cron every minute, 5 groups of 6 wikis]
+    DB[(D1<br/>group state, bursts, pings)]
+    KV[(KV<br/>QID cache, cached responses)]
+  end
+
+  APP[App on GitHub Pages<br/>sbaiii.github.io/looked-up]
+  PING[cron-job.org pinger]
+
+  D --> H --> HR
+  PC -.backfill.-> HR
+  HR --> H --> SP
+  WD --> H
+  SP --> H --> AP
+  MD --> H
+  HR --> DY --> MD
+  RC --> W
+  WD --> W
+  W <--> DB
+  W <--> KV
+  W --> LJ[/live.json, stats.json, health/]
+  W --> DY --> LV
+  LV --> DY
+  AP --> APP
+  LJ --> APP
+  PG --> APP
+  WY --> W
+  PING -->|hourly: dispatch hourly.yml| H
+  PING -->|hourly: GET /health| W
+```
+
+- **Batch path (hours late, complete):** pageview dumps → lake → scoring → forecasts → app exports → app.
+- **Live path (minutes, partial):** recentchanges → Worker (D1 state) → `/live.json` → app strip.
+- The daily job snapshots the Worker's bursts back into the lake for research (H10).
+
 ## Where things live
 
 | What | Where | Notes |
@@ -109,15 +170,22 @@ Duplicates are harmless: the hourly job is idempotent, and its concurrency group
 
 The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are leftovers that can be deleted by hand.
 
-## Live layer (Phase 5, ADR 0032)
+## Live layer (Phase 5, ADR 0032 and 0033)
 
 - **Where it runs: a Cloudflare Worker,** `worker/` (TypeScript), Workers free plan.
-  - A Cron Trigger every 5 minutes polls `recentchanges` on the 30 Wikipedias and applies the burst rules from
-    `config/live.yml`. The Python `live/` package is the reference implementation.
-  - State lives in Workers KV, one write per poll.
-  - The Worker serves `/live.json`, `/stats.json`, `/bursts.json?hours=72` and `/health`, with CORS for every origin,
-    cached 15 s.
+  - A cron runs every minute. Minute m polls group m mod 5, which is 6 of the 30 Wikipedias, so each wiki is polled
+    every 5 minutes.
+  - Rules come from `config/live.yml`. The Python `live/` package is the reference implementation.
+- **Storage:**
+  - **D1** `looked-up-live`: one row of window state per group, the bursts (7 days), and the pinger counter.
+  - **KV:** the QID cache and the cached `/live.json` (5 min) and `/stats.json` (30 min).
+  - The budget against the free limits is in ADR 0033.
+- **Endpoints:** `/live.json`, `/stats.json`, `/bursts.json?hours=72` and `/health`, with CORS for every origin.
+- **`/health`** returns `connected`, `last_poll_at`, `gap_minutes`, `groups_polled`, and `pinger_today` (count, last
+  time and user agent of today's GETs from cron-job.org).
 - **No user data:** editors become bits in a salted 64-bit sketch per 5-minute slot.
+- **CPU check:** run `gh workflow run worker-observe.yml -f minutes=30`. It tails the Worker and prints CPU and
+  wall time per run, the poll counts, and request user agents.
 - **The old GitHub Actions shifts (`live.yml`) are disabled:** manual only, nothing queues them (ADR 0032).
 
 ### One-time setup (owner)
@@ -126,6 +194,7 @@ The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are lefto
    - Permissions:
      - **Account › Workers Scripts › Edit**
      - **Account › Workers KV Storage › Edit**
+     - **Account › D1 › Edit**
    - Account resources: *Include › your account*. No zone permissions are needed.
 2. **Note the Account ID** (dashboard home, right column).
 3. **Add the repository secrets:**
@@ -133,14 +202,14 @@ The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are lefto
    gh secret set CLOUDFLARE_API_TOKEN -R Sbaiii/looked-up      # paste the token
    gh secret set CLOUDFLARE_ACCOUNT_ID -R Sbaiii/looked-up     # paste the account id
    ```
-4. **Deploy:** run `gh workflow run worker.yml`. It runs the vitest suite, creates the KV namespace and the `SALT`
-   secret, and deploys. The log prints the Worker URL, `https://looked-up-live.<your-subdomain>.workers.dev`.
+4. **Deploy:** run `gh workflow run worker.yml`. It runs the vitest suite, creates the KV namespace, creates the D1
+   database and applies its migrations, sets the `SALT` secret, and deploys. The log prints the Worker URL, `https://looked-up-live.abdellahsbaisbai.workers.dev`.
 5. **Tell the pipeline and the app about the URL:**
-   - `gh variable set LIVE_URL -R Sbaiii/looked-up --body https://looked-up-live.<your-subdomain>.workers.dev`
+   - `gh variable set LIVE_URL -R Sbaiii/looked-up --body https://looked-up-live.abdellahsbaisbai.workers.dev`
      (used by the daily snapshot);
-   - in `app/js/live.js`, set `DEFAULT` to `https://looked-up-live.<your-subdomain>.workers.dev/live.json` and push.
+   - in `app/js/live.js`, set `DEFAULT` to `https://looked-up-live.abdellahsbaisbai.workers.dev/live.json` and push.
 6. **Pinger.** Add a cron-job.org job, every hour, `GET` (no headers):
-   **`https://looked-up-live.<your-subdomain>.workers.dev/health`**
+   **`https://looked-up-live.abdellahsbaisbai.workers.dev/health`**
    - Workers don't sleep, and the Cron Trigger runs on its own. The pinger is a watchdog only: `"connected": false`
      or a large `gap_minutes` means polls have stopped.
 
