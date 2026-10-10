@@ -22,7 +22,7 @@ export interface Article { sl: Slot[]; c?: number; cb?: [number, number]; ce?: n
 export interface Burst { lang: string; title: string; ts: number; kind: 'window' | 'new'; edits_30m: number; editors_30m: number; qid: string | null }
 export interface Item { labels: Record<string, string>; desc: Record<string, string> }
 export interface State {
-  version: 3;
+  version: 4;
   articles: Record<string, Article>;          // "lang|title"
   bursts: Burst[];
   hour: number | null;
@@ -39,7 +39,7 @@ export interface State {
 }
 
 export function emptyState(): State {
-  return { version: 3, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
+  return { version: 4, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
     groupPolledAt: {}, groupStats: {}, coveredSince: null, qids: {}, items: {}, liveSeen: {} };
 }
 
@@ -194,12 +194,10 @@ export function gc(state: State, now: number): void {
 
 // ------------------------------------------------------------------ cron groups (CPU budget, ADR 0032)
 
-/** Wikis are polled in three groups balanced by edit volume, each with its own KV state. */
-export const GROUPS: string[][] = (() => {
-  const big = ['ja', 'de', 'ru', 'fr', 'es', 'it', 'zh'];
-  const all = LANGUAGES as string[];
-  return [['en'], big.filter((l) => all.includes(l)), all.filter((l) => l !== 'en' && !big.includes(l))];
-})();
+/** Wikis are polled in three groups of 10, dealt round-robin by rank (languages.json is ranked by views), so each
+ * group gets a mix of large and small wikis. CPU per run tracks the number of API calls (≈ 0.5 ms each) more than
+ * the rows, so equal counts balance the runs (measured: 5/12/16 ms with groups of 1/7/22 wikis). */
+export const GROUPS: string[][] = [0, 1, 2].map((g) => (LANGUAGES as string[]).filter((_, i) => i % 3 === g));
 
 /** Merge the groups' states for reading (articles, bursts and caches are disjoint by wiki). */
 export function merge(states: State[]): State {

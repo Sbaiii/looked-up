@@ -141,7 +141,8 @@ describe('CPU budget (ADR 0032 fallback)', () => {
     const all = GROUPS.flat();
     expect(all.length).toBe(30);
     expect(new Set(all)).toEqual(new Set(LANGUAGES as string[]));
-    expect(GROUPS[0]).toEqual(['en']);
+    expect(GROUPS.map((g) => g.length)).toEqual([10, 10, 10]);
+    expect(GROUPS[0][0]).toBe('en');
     const a = emptyState(); const b = emptyState();
     addEdit(a, 'en', rc('X', 0, 'alice'), SALT); addEdit(b, 'fr', rc('Y', 0, 'bob'), SALT);
     a.groupPolledAt = { 0: T0 }; b.groupPolledAt = { 1: T0 };

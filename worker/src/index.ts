@@ -1,6 +1,6 @@
 // Looked Up live layer on Cloudflare Workers (ADR 0032).
 //   Cron (one trigger every minute, ADR 0032): minutes :00, :02, :04 of each 5-minute cycle poll one group of wikis
-//                       each (en; 7 large; 22 others), the other minutes do nothing.
+//                       each (three groups of 10 wikis, mixed sizes), the other minutes do nothing.
 //                       since its last poll, applies the burst rules, resolves QIDs of new bursts and saves that
 //                       group's own state to KV (one write per poll: 864 a day, under the free tier's 1,000).
 //                       Small per-group states keep each run's CPU time down (free plan: 10 ms).
@@ -13,7 +13,7 @@ import { addEdit, countLive, emptyState, gc, GROUPS, iso, livePayload, merge, st
 export interface Env { LIVE: KVNamespace; SALT?: string }
 
 const UA = 'looked-up/0.1 (https://github.com/Sbaiii/looked-up; abdellahsbaisbai@gmail.com)';
-const stateKey = (g: number) => `state-v3-g${g}`;
+const stateKey = (g: number) => `state-v4-g${g}`;
 const FIRST_LOOKBACK_S = 10 * 60;
 // subrequest budget (free plan: 50 per invocation): 30 wikis + extra pages for the busiest + up to 5 Wikidata calls
 const PAGES: Record<string, number> = { en: 3, de: 2, ja: 2, fr: 2, ru: 2, es: 2 };
@@ -24,7 +24,7 @@ let cached: { at: number; state: State } | null = null;
 
 async function load(env: Env, group: number): Promise<State> {
   const s = await env.LIVE.get<State>(stateKey(group), 'json');
-  return s && s.version === 3 ? s : emptyState();
+  return s && s.version === 4 ? s : emptyState();
 }
 
 async function loadAll(env: Env): Promise<State> {
