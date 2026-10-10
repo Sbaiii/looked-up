@@ -71,7 +71,10 @@ How the Worker works, and why:
   - **The fallback, extended to three groups** with **separate KV state per group**: en; ja de ru fr es it zh; the
     other 22.
     - The first attempt, two groups sharing one state, still measured 33 ms. Its `2-59/5` trigger never fired.
-    - Explicit minute lists (`0,5,…`, `2,7,…`, `4,9,…`) start each group in turn, every 5 minutes.
+    - Three minute-list triggers (`0,5,…`, `2,7,…`, `4,9,…`) were deployed, but only one fired within 20 minutes;
+      Cloudflare reported it as `*/5`.
+    - So the Worker has **a single `* * * * *` trigger**. Minutes :00, :02 and :04 of each 5-minute cycle poll groups
+      0, 1 and 2; the other minutes return at once. That is 1,440 invocations a day, against a free limit of 100,000.
     - Each poll parses and writes only its own group's state: 864 KV writes a day.
     - Reads merge the three states. Live events, which span groups, are counted on the merged view. The Worker's
       `live_events_per_hour_week` therefore covers the 72 h of bursts it keeps, and the full week comes from the
