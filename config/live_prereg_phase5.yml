@@ -1,0 +1,49 @@
+# FROZEN: the live-layer rules as pre-registered for Phase 5 (docs/prereg_phase5.md). The H9 backtest and the H10
+# scoring (lookedup/live_analysis.py) use this file, so the hypotheses keep their definitions after ADR 0032.
+
+windows_minutes: [10, 30, 60]
+
+burst:                       # an article bursts at >= edits by >= editors within window, and 2 x edits >= ratio x baseline
+  edits: 5
+  editors: 3
+  window_minutes: 30
+  ratio: 8.0
+
+new_article:                 # a new page edited >= edits times by >= editors within window of its creation
+  edits: 5
+  editors: 1                 # pre-registered: no editor minimum for new pages
+  window_minutes: 60
+
+baseline:
+  default: 1.0               # median edits per edited article-hour before min_hours of own history
+  hours: 168
+  min_hours: 24
+
+cooldown_hours: 6            # an article bursts at most once per cooldown
+live_event_window_minutes: 30    # pre-registered
+keep_bursts_hours: 72
+live_window_minutes: 60      # /live.json covers this window
+single_bursts_shown: 5       # ranked by distinct editors, then edits
+hourly_counts_hours: 168     # hourly live-event counts kept for a week (to judge the rules)
+
+maintenance_patterns:
+  - '\brevert'
+  - '\bundo\b'
+  - '\bundid\b'
+  - '\brollback\b'
+  - '^rv\b'
+  - '\brv\s'
+  - 'reverted edits'
+  - 'undid revision'
+  - '\bAWB\b'
+  - '\bHotCat\b'
+  - '\bTwinkle\b'
+  - '\bhuggle\b'
+  - '\bIABot\b'
+  - 'InternetArchiveBot'
+  - '\bWPCleaner\b'
+  - '^\s*\{\{[^}]*\}\}\s*$'
+  - '\btypos?\b'
+  - 'fix typo'
+  - 'copyedit'
+revert_tags: [mw-reverted, mw-rollback, mw-undo, mw-manual-revert]

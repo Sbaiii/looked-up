@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import csv
 import json
+from contextlib import contextmanager
 import logging
 import statistics
 import sys
@@ -24,11 +25,29 @@ from lookedup import db
 from lookedup.dumps import session
 from lookedup.settings import ROOT
 
-sys.path.insert(0, str(ROOT / "live"))          # the live layer's rules are the single definition of a burst
+sys.path.insert(0, str(ROOT / "live"))          # the live layer's code is the single definition of a burst
+from lookedup_live import bursts as _bursts  # noqa: E402
 from lookedup_live.bursts import Burst, Detector, live_events  # noqa: E402
 from lookedup_live.filters import REVERT_TAGS, is_maintenance  # noqa: E402
 
 log = logging.getLogger(__name__)
+
+PREREG_RULES = ROOT / "config" / "live_prereg_phase5.yml"
+
+
+@contextmanager
+def prereg_rules():
+    """H9 and H10 keep their pre-registered rules (30-min live window, no new-article editor minimum), whatever
+    config/live.yml says today (ADR 0032)."""
+    import yaml
+    r = yaml.safe_load(PREREG_RULES.read_text())
+    saved = (_bursts.NEW_ARTICLE_EDITORS, _bursts.GROUP_WINDOW_S)
+    _bursts.NEW_ARTICLE_EDITORS = r["new_article"]["editors"]
+    _bursts.GROUP_WINDOW_S = r["live_event_window_minutes"] * 60
+    try:
+        yield _bursts.GROUP_WINDOW_S
+    finally:
+        _bursts.NEW_ARTICLE_EDITORS, _bursts.GROUP_WINDOW_S = saved
 
 OUT = ROOT / "docs" / "analysis"
 FIG = ROOT / "docs" / "figures"
@@ -76,6 +95,11 @@ def counted(rev: dict) -> bool:
 
 def burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: datetime) -> tuple[float | None, str | None]:
     """First burst (live rules, default baseline) with time in [lo, hi]; returns (epoch seconds, kind)."""
+    with prereg_rules():
+        return _burst_time(revs, lang, title, lo, hi)
+
+
+def _burst_time(revs, lang, title, lo, hi):
     det = Detector()
     lo_s, hi_s = lo.replace(tzinfo=timezone.utc).timestamp(), hi.replace(tzinfo=timezone.utc).timestamp()
     for r in revs:
@@ -202,7 +226,8 @@ def score_day(store, day: date) -> list[dict]:
     starts: dict[str, list[datetime]] = {}
     for e in events:                    # every product event spans >= 2 languages (ADR 0021)
         starts.setdefault(f"Q{e['qid']}", []).append(e["start_hour"])
-    lives = live_events(bursts)
+    with prereg_rules() as window_s:
+        lives = live_events(bursts, window_s)
     live_qids = {e["qid"] for e in lives}
     units = [("live", e["qid"], e["ts"], sorted(e["languages"])) for e in lives]
     units += [("single", b.qid, b.ts, [b.lang]) for b in bursts if b.qid and b.qid not in live_qids]

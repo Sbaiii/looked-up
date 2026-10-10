@@ -32,3 +32,13 @@ def test_h10_precision_needs_100_live_events():
     assert p["live_events_scored"] == 90 and p["verdict"] == "inconclusive" and abs(p["precision"] - 40 / 90) < 1e-9
     p2 = LA.precision(rows + [{"kind": "live", "hit": 1, "forward_hit": 1}] * 10)
     assert p2["verdict"] == "supported" and p2["base_rate_single_bursts"] == 0
+
+
+def test_hypotheses_keep_the_preregistered_rules_whatever_the_live_config():
+    from lookedup_live import bursts as B
+    mk = lambda lang, ts, qid: B.Burst(lang, "t", 1_791_000_000 + ts, "window", 5, 3, qid)
+    pair = [mk("en", 0, "Q1"), mk("fr", 3600, "Q1")]                   # 60 min apart
+    assert len(B.live_events(pair)) == 1                                 # live config: 120-min window
+    with LA.prereg_rules() as w:
+        assert w == 1800 and B.live_events(pair, w) == []                # pre-registered: 30 min
+    assert B.GROUP_WINDOW_S == 7200                                      # restored
