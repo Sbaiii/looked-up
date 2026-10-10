@@ -31,5 +31,6 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      - run: npm run test:unit
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --reporter=line
