@@ -1,0 +1,37 @@
+name: live space
+
+# Pushes live/ to the Hugging Face Space Sbaiiiiii/looked-up-live (Docker SDK). Creating that Space needs a paid
+# plan today (ADR 0030); until it exists this job only warns, and the live layer runs in live.yml shifts instead.
+on:
+  push:
+    branches: [main]
+    paths: ["live/**", ".github/workflows/space.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install "huggingface_hub==0.30.2"
+      - name: Upload live/ to the Space (skips if the Space does not exist)
+        run: |
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ.get("HF_TOKEN"))
+          repo = "Sbaiiiiii/looked-up-live"
+          if not os.environ.get("HF_TOKEN") or not api.repo_exists(repo, repo_type="space"):
+              print(f"::warning title=No Space::{repo} does not exist (Docker Spaces need a paid plan); live.yml shifts serve the live layer.")
+          else:
+              api.upload_folder(repo_id=repo, repo_type="space", folder_path="live", commit_message="deploy live layer")
+              print("deployed")
+          PY
