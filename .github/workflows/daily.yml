@@ -72,3 +72,6 @@ jobs:
           else
             echo "not Monday: no retrain"
           fi
+      - name: Score the live bursts of two days ago (Phase 5, H10 accumulates on the lake)
+        if: steps.token.outputs.present == 'true'
+        run: python -m lookedup.cli live-score || echo "::warning::live-score failed"
