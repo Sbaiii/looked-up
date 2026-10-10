@@ -109,7 +109,7 @@ export async function poll(env: Env, now: number, group = 0): Promise<State> {
         if (!counted(rc)) continue;
         kept += 1;
         langs.add(lang);
-        addEdit(state, lang, rc, salt);
+        addEdit(state, lang, rc, salt, t);
       }
       state.lastPoll[lang] = caughtUp ? Math.max(newest, now - 60) : newest;     // behind: resume where we stopped
     } catch {

@@ -135,8 +135,8 @@ function rollHour(state: State, t: number): void {
 }
 
 /** Count one edit; return a Burst when it makes the article burst (same rules as live/lookedup_live/bursts.py). */
-export function addEdit(state: State, lang: string, rc: RC, salt: string): Burst | null {
-  const t = Date.parse(rc.timestamp) / 1000;
+export function addEdit(state: State, lang: string, rc: RC, salt: string, ts?: number): Burst | null {
+  const t = ts ?? Date.parse(rc.timestamp) / 1000;
   rollHour(state, t);
   const hc = (state.hourCounts[lang] ||= {});
   const tk = titleKey(rc.title);
@@ -144,8 +144,15 @@ export function addEdit(state: State, lang: string, rc: RC, salt: string): Burst
   const key = `${lang}|${rc.title}`;
   const a = (state.articles[key] ||= { sl: [] });
   const s0 = t - (t % SLOT_S);
-  let slot = a.sl.find((x) => x[0] === s0);
-  if (!slot) { slot = [s0, 0, 0, 0]; a.sl.push(slot); a.sl.sort((x, y) => x[0] - y[0]); }
+  const lastSlot = a.sl[a.sl.length - 1];
+  let slot = lastSlot && lastSlot[0] === s0 ? lastSlot : a.sl.find((x) => x[0] === s0);   // rows arrive in time order
+  if (!slot) {
+    slot = [s0, 0, 0, 0];
+    if (!lastSlot || lastSlot[0] < s0) a.sl.push(slot); else { a.sl.push(slot); a.sl.sort((x, y) => x[0] - y[0]); }
+    // trim only when a slot is added: keep 60 min for articles that burst (shown), 30 min otherwise (the rule's window)
+    const keep = a.lb !== undefined ? WIN(60) : WIN(RULES.burst.window_minutes);
+    if (a.sl[0][0] + SLOT_S <= t - keep) a.sl = a.sl.filter((x) => x[0] + SLOT_S > t - keep);
+  }
   slot[1] += 1;
   const bit = editorBit(rc.user, salt);
   if (bit !== null) [slot[2], slot[3]] = setBit([slot[2], slot[3]], bit);
@@ -154,9 +161,6 @@ export function addEdit(state: State, lang: string, rc: RC, salt: string): Burst
     a.ce = (a.ce || 0) + 1;
     if (bit !== null) a.cb = setBit(a.cb || [0, 0], bit);
   }
-  // keep 60 min for articles that burst (their counts are shown), 30 min otherwise (all the burst rule needs)
-  const keep = a.lb !== undefined ? WIN(60) : WIN(RULES.burst.window_minutes);
-  a.sl = a.sl.filter((x) => x[0] + SLOT_S > t - keep);
   if (a.lb !== undefined && t - a.lb < RULES.cooldown_hours * 3600) return null;
   let kind: Burst['kind'] | null = null;
   let w = { edits: windowEdits(a, t, RULES.burst.window_minutes), editors: 0 };
