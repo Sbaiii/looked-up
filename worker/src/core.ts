@@ -1,12 +1,13 @@
 // Live layer core (ADR 0032): pure functions, no I/O, so vitest can exercise them. Rules come from
 // config/live.yml (src/rules.json), the same file the Python reference implementation (live/) reads.
 //
-// The Worker polls recentchanges every 5 minutes, so edits are kept per article in 5-minute slots. A slot holds
+// The Worker polls recentchanges every few minutes, so edits are kept per article in 5-minute slots. A slot holds
 // the edit count and a 64-bit bitmap of salted editor hashes, as two 32-bit numbers (an irreversible sketch, never
 // a user id); distinct editors over a window are estimated from the OR of the bitmaps (linear counting).
 
 import RULES from './rules.json';
 import LANGUAGES from './languages.json';
+import GROUP_FILE from './groups.json';
 
 export { RULES, LANGUAGES };
 
@@ -19,14 +20,18 @@ export interface RC { title: string; timestamp: string; user?: string; type: str
 /** [slot start (epoch s), edits, bitmap high 32 bits, bitmap low 32 bits]: compact for KV and cheap to parse. */
 export type Slot = [number, number, number, number];
 export interface Article { sl: Slot[]; c?: number; cb?: [number, number]; ce?: number; lb?: number }   // created, its bits, its edits, last burst
+/** Per-group summary row (ADR 0033): what /health, /stats.json and /live.json need, never the full state. */
+export interface Summary {
+  pa: number; gp: Record<string, number>; gs: State['groupStats']; cs: number | null; lp: number;
+  counts: Record<string, [number, number, number, number]>;   // recent bursters: edits 10/30/60 min, editors 30 min
+}
 export interface Burst { lang: string; title: string; ts: number; kind: 'window' | 'new'; edits_30m: number; editors_30m: number; qid: string | null }
 export interface Item { labels: Record<string, string>; desc: Record<string, string> }
 export interface State {
-  version: 5;
+  version: 6;
   articles: Record<string, Article>;          // "lang|title"
   bursts: Burst[];
   hour: number | null;
-  hourCounts: Record<string, Record<string, number>>;   // lang -> short title hash -> edits in the current hour
   medians: Record<string, number[]>;                     // lang -> hourly medians (last 7 days)
   lastPoll: Record<string, number>;                      // lang -> newest edit time processed
   polledAt: number | null;                               // last poll of any group
@@ -36,10 +41,12 @@ export interface State {
   qids: Record<string, string | null>;                   // "lang|title" -> QID
   items: Record<string, Item>;
   liveSeen: Record<string, string>;                      // "qid|ts" -> hour key (a week of live-event counts)
+  touched?: Set<number>;                                 // slot starts written by this poll (not persisted)
+  counts?: Record<string, [number, number, number, number]>;   // read path: counts from the summaries
 }
 
 export function emptyState(): State {
-  return { version: 5, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
+  return { version: 6, articles: {}, bursts: [], hour: null, medians: {}, lastPoll: {}, polledAt: null,
     groupPolledAt: {}, groupStats: {}, coveredSince: null, qids: {}, items: {}, liveSeen: {} };
 }
 
@@ -87,8 +94,6 @@ export function distinct(bits: [number, number]): number {
   return Math.round(-64 * Math.log(1 - ones / 64));
 }
 
-const titleKey = (title: string) => fnv(title).toString(36);
-
 // ------------------------------------------------------------------ windows, baselines, bursts
 
 export function windowEdits(a: Article, t: number, minutes: number): number {
@@ -117,30 +122,30 @@ function median(xs: number[]): number {
   return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2;
 }
 
-function rollHour(state: State, t: number): void {
-  const h = Math.floor(t / 3600);
-  if (state.hour === null) state.hour = h;
-  if (h > state.hour) {
-    for (const [lang, counts] of Object.entries(state.hourCounts)) {
-      const vals = Object.values(counts);
-      if (vals.length) {
-        const m = (state.medians[lang] ||= []);
-        m.push(median(vals));
-        if (m.length > RULES.baseline.hours) m.splice(0, m.length - RULES.baseline.hours);
-      }
+/** Hourly baseline from the slots (ADR 0033): for each completed hour since the last roll whose slots are loaded,
+ * the median edits per edited article, per wiki. Called once at the end of a poll. */
+export function rollHours(state: State, now: number): void {
+  const h = Math.floor(now / 3600);
+  if (state.hour === null) { state.hour = h; return; }
+  for (let hour = state.hour; hour < h; hour++) {
+    const per: Record<string, number[]> = {};
+    for (const [key, a] of Object.entries(state.articles)) {
+      let n = 0;
+      for (const sl of a.sl) if (Math.floor(sl[0] / 3600) === hour) n += sl[1];
+      if (n) (per[key.slice(0, key.indexOf('|'))] ||= []).push(n);
     }
-    state.hourCounts = {};
-    state.hour = h;
+    for (const [lang, vals] of Object.entries(per)) {
+      const m = (state.medians[lang] ||= []);
+      m.push(median(vals));
+      if (m.length > RULES.baseline.hours) m.splice(0, m.length - RULES.baseline.hours);
+    }
   }
+  state.hour = h;
 }
 
 /** Count one edit; return a Burst when it makes the article burst (same rules as live/lookedup_live/bursts.py). */
 export function addEdit(state: State, lang: string, rc: RC, salt: string, ts?: number): Burst | null {
   const t = ts ?? Date.parse(rc.timestamp) / 1000;
-  rollHour(state, t);
-  const hc = (state.hourCounts[lang] ||= {});
-  const tk = titleKey(rc.title);
-  hc[tk] = (hc[tk] || 0) + 1;
   const key = `${lang}|${rc.title}`;
   const a = (state.articles[key] ||= { sl: [] });
   const s0 = t - (t % SLOT_S);
@@ -149,10 +154,8 @@ export function addEdit(state: State, lang: string, rc: RC, salt: string, ts?: n
   if (!slot) {
     slot = [s0, 0, 0, 0];
     if (!lastSlot || lastSlot[0] < s0) a.sl.push(slot); else { a.sl.push(slot); a.sl.sort((x, y) => x[0] - y[0]); }
-    // trim only when a slot is added: keep 60 min for articles that burst (shown), 30 min otherwise (the rule's window)
-    const keep = a.lb !== undefined ? WIN(60) : WIN(RULES.burst.window_minutes);
-    if (a.sl[0][0] + SLOT_S <= t - keep) a.sl = a.sl.filter((x) => x[0] + SLOT_S > t - keep);
   }
+  (state.touched ||= new Set()).add(s0);           // this slot's row is rewritten at the end of the poll
   slot[1] += 1;
   const bit = editorBit(rc.user, salt);
   if (bit !== null) [slot[2], slot[3]] = setBit([slot[2], slot[3]], bit);
@@ -183,8 +186,7 @@ export function addEdit(state: State, lang: string, rc: RC, salt: string, ts?: n
 
 export function gc(state: State, now: number): void {
   for (const [k, a] of Object.entries(state.articles)) {
-    const keep = a.lb !== undefined ? WIN(60) : WIN(RULES.burst.window_minutes);
-    a.sl = a.sl.filter((x) => x[0] + SLOT_S > now - keep);
+    a.sl = a.sl.filter((x) => x[0] + SLOT_S > now - WINDOW_LOAD_S);
     const cooled = a.lb === undefined || now - a.lb > RULES.cooldown_hours * 3600;
     const fresh = a.c !== undefined && now - a.c <= WIN(RULES.new_article.window_minutes);
     if (!a.sl.length && cooled && !fresh) delete state.articles[k];
@@ -198,21 +200,81 @@ export function gc(state: State, now: number): void {
 
 // ------------------------------------------------------------------ cron groups (CPU budget, ADR 0032)
 
-/** Wikis are polled in five groups of 6, dealt round-robin by rank (languages.json is ranked by views), one group per
- * minute (ADR 0033). CPU per run tracks the number of API calls (≈ 0.5 ms each) more than the rows, so equal,
- * smaller groups keep every run short (measured with 3 groups of 10: 8–13 ms). */
-export const GROUP_COUNT = 5;
-export const GROUPS: string[][] = Array.from({ length: GROUP_COUNT }, (_, g) => (LANGUAGES as string[]).filter((_, i) => i % GROUP_COUNT === g));
+/** Six poll groups (ADR 0033): English alone, the other 29 wikis balanced by measured edits per 5 minutes
+ * (src/groups.json). One group runs per minute, so each wiki is polled every 6 minutes. */
+export const GROUPS: string[][] = GROUP_FILE.groups;
+export const GROUP_COUNT = GROUPS.length;
 
-/** The persisted part of a group's state (D1 row): bursts, QIDs and items live elsewhere (ADR 0033). */
-export function persisted(s: State): Omit<State, 'bursts' | 'qids' | 'items' | 'liveSeen'> {
-  const { bursts: _b, qids: _q, items: _i, liveSeen: _l, ...rest } = s;
-  return rest;
+// ------------------------------------------------------------------ compact storage (ADR 0033)
+
+export const WINDOW_LOAD_S = 70 * 60;            // slots loaded per poll: 60 min of windows + the previous full hour
+
+/** One slot row: article keys written once, then a flat array [edits, bitsHigh, bitsLow] per key. */
+export function encodeSlot(state: State, s0: number): string {
+  const k: string[] = [];
+  const v: number[] = [];
+  for (const [key, a] of Object.entries(state.articles)) {
+    const sl = a.sl.find((x) => x[0] === s0);
+    if (sl) { k.push(key); v.push(sl[1], sl[2], sl[3]); }
+  }
+  return JSON.stringify({ k, v });
 }
 
-export function fromPersisted(p: Partial<State> | null): State {
-  const s = emptyState();
-  return p && p.version === s.version ? { ...s, ...p, bursts: [], qids: {}, items: {}, liveSeen: {} } : s;
+/** Group meta row: poll positions, baselines, coverage and the few per-article extras (creation, last burst). */
+export function encodeMeta(state: State, now: number): string {
+  const x: Record<string, number[]> = {};
+  for (const [key, a] of Object.entries(state.articles)) {
+    const fresh = a.c !== undefined && now - a.c <= WIN(RULES.new_article.window_minutes);
+    const cooling = a.lb !== undefined && now - a.lb < RULES.cooldown_hours * 3600;
+    if (fresh || cooling) x[key] = [a.c ?? -1, a.ce ?? 0, a.cb?.[0] ?? 0, a.cb?.[1] ?? 0, a.lb ?? -1];
+  }
+  return JSON.stringify({ v: state.version, h: state.hour, m: state.medians, lp: state.lastPoll, pa: state.polledAt,
+    gp: state.groupPolledAt, gs: state.groupStats, cs: state.coveredSince, x });
+}
+
+/** Rebuild a group's working state from its meta row and slot rows (missing or outdated meta: a fresh state). */
+export function decodeState(meta: string | null, slots: { s: number; data: string }[]): State {
+  const st = emptyState();
+  const m = meta ? JSON.parse(meta) : null;
+  if (!m || m.v !== st.version) return st;
+  Object.assign(st, { hour: m.h, medians: m.m, lastPoll: m.lp, polledAt: m.pa, groupPolledAt: m.gp, groupStats: m.gs, coveredSince: m.cs });
+  for (const row of [...slots].sort((a, b) => a.s - b.s)) {
+    const { k, v } = JSON.parse(row.data) as { k: string[]; v: number[] };
+    for (let i = 0; i < k.length; i++) (st.articles[k[i]] ||= { sl: [] }).sl.push([row.s, v[3 * i], v[3 * i + 1], v[3 * i + 2]]);
+  }
+  for (const [key, e] of Object.entries(m.x as Record<string, number[]>)) {
+    const a = (st.articles[key] ||= { sl: [] });
+    if (e[0] >= 0) { a.c = e[0]; a.ce = e[1]; a.cb = [e[2], e[3]]; }
+    if (e[4] >= 0) a.lb = e[4];
+  }
+  return st;
+}
+
+/** The group's summary row: status inputs plus 10/30/60-min counts of articles that burst in the last hour. */
+export function summarize(state: State, now: number): Summary {
+  const counts: Summary['counts'] = {};
+  for (const [key, a] of Object.entries(state.articles)) {
+    if (a.lb === undefined || now - a.lb > WIN(RULES.live_window_minutes)) continue;
+    const w30 = windowCounts(a, now, 30);
+    counts[key] = [windowEdits(a, now, 10), w30.edits, windowEdits(a, now, 60), w30.editors];
+  }
+  return { pa: state.polledAt ?? now, gp: state.groupPolledAt, gs: state.groupStats, cs: state.coveredSince,
+    lp: Math.max(0, ...Object.values(state.lastPoll)), counts };
+}
+
+/** The read view from the summaries only (plus bursts and items added by the caller). */
+export function fromSummaries(sums: Summary[]): State {
+  const v = emptyState();
+  v.counts = {};
+  for (const s of sums) {                       // tolerant of partial rows (e.g. a group that has not polled yet)
+    Object.assign(v.groupPolledAt, s.gp || {});
+    Object.assign(v.groupStats, s.gs || {});
+    Object.assign(v.counts, s.counts || {});
+    if (s.pa) v.polledAt = Math.max(v.polledAt ?? 0, s.pa);
+    if (s.cs != null) v.coveredSince = Math.max(v.coveredSince ?? 0, s.cs);
+    if (s.lp) v.lastPoll[`g${Object.keys(s.gp || {})[0] ?? ''}`] = s.lp;
+  }
+  return v;
 }
 
 /** Merge the groups' states for reading (articles, bursts and caches are disjoint by wiki). */
@@ -269,7 +331,7 @@ export function status(state: State, now: number) {
   const stats = Object.values(state.groupStats);
   const rate = (k: 'fetched' | 'kept') => Math.round(stats.reduce((n, g) => n + (g.seconds ? g[k] / g.seconds : 0), 0) * 100) / 100;
   return {
-    host: 'cloudflare-worker', mode: 'poll', poll_minutes: 5, cron_groups: polls.length,
+    host: 'cloudflare-worker', mode: 'poll', poll_minutes: GROUP_COUNT, cron_groups: polls.length,
     connected: oldest !== null && now - oldest <= 600,
     last_poll_at: iso(state.polledAt), last_event_at: iso(Math.max(0, ...Object.values(state.lastPoll)) || null),
     events_per_s: rate('fetched'), kept_per_s: rate('kept'),
@@ -279,6 +341,8 @@ export function status(state: State, now: number) {
 }
 
 function counts(state: State, lang: string, title: string, now: number) {
+  const c = state.counts?.[`${lang}|${title}`];
+  if (c) return { edits_10m: c[0], edits_30m: c[1], edits_60m: c[2], editors_30m: c[3] };
   const a = state.articles[`${lang}|${title}`];
   if (!a) return { edits_10m: 0, edits_30m: 0, edits_60m: 0, editors_30m: 0 };
   const w30 = windowCounts(a, now, 30);
