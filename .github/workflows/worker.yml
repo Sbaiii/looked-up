@@ -49,12 +49,12 @@ jobs:
             id=$(npx wrangler kv namespace list | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const n=JSON.parse(s).find(x=>x.title==='looked-up-live-LIVE'||x.title==='LIVE');process.stdout.write(n?n.id:'')})")
           fi
           sed -i "s/KV_NAMESPACE_ID/$id/" wrangler.toml
-      - name: Set the editor-sketch salt once (random, never in the repo)
+      - name: Deploy
+        if: steps.cf.outputs.present == 'true'
+        run: npx wrangler deploy
+      - name: Set the editor-sketch salt once (random, never in the repo; after the first deploy)
         if: steps.cf.outputs.present == 'true'
         run: |
           if ! npx wrangler secret list 2>/dev/null | grep -q '"SALT"'; then
             openssl rand -hex 24 | npx wrangler secret put SALT
           fi
-      - name: Deploy
-        if: steps.cf.outputs.present == 'true'
-        run: npx wrangler deploy
