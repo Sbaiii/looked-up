@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from datetime import date, datetime
 
 from lookedup.analytics.config import load
 from lookedup.languages import active_codes
@@ -55,3 +56,23 @@ def run(args: list[str], hf: bool = False) -> bool:
     if res.exception:
         raise res.exception
     return bool(res.success)
+
+
+def refresh(end: date | None = None) -> dict:
+    """Extend the local warehouse to ``end`` (default: yesterday UTC): mirror the new day files, then an incremental
+    dbt build (int_* models are incremental by day; marts are rebuilt). Run weekly by hand (docs/ops.md)."""
+    import time
+    from datetime import timedelta
+
+    from lookedup.dumps import utcnow
+    from lookedup.store import HFStore, LocalStore, sync_to_local
+
+    end = end or (utcnow().date() - timedelta(days=1))
+    os.environ["LOOKEDUP_PERIOD_END"] = f"{end:%Y-%m-%d}"
+    t0 = time.monotonic()
+    synced = sync_to_local(HFStore(), LocalStore(), datetime.combine(end - timedelta(days=35), datetime.min.time()),
+                           include_sitelinks=False)
+    t1 = time.monotonic()
+    ok = run(["build"])
+    return {"period_end": f"{end:%Y-%m-%d}", "synced": synced, "sync_seconds": round(t1 - t0),
+            "dbt_seconds": round(time.monotonic() - t1), "success": ok}

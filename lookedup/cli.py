@@ -24,6 +24,7 @@ Commands:
   evaluate      run the pre-registered Phase 2 evaluation (writes docs/analysis/)
   evaluate-v2   run the pre-registered Phase 2b evaluation against deaths, earthquakes and matches
   warehouse     run dbt on the warehouse (e.g. `warehouse build`), thresholds from config/analytics.yml
+  refresh-warehouse   mirror new day files and extend the warehouse to yesterday (weekly, by hand)
 """
 
 from __future__ import annotations
@@ -263,6 +264,15 @@ def cmd_forecast_retrain(a):
     print(json.dumps(retrain(open_store(a.local), upload_batch=a.upload_batch, add_live_week=not a.no_live), indent=1))
 
 
+def cmd_refresh_warehouse(a):
+    from lookedup.warehouse import refresh
+
+    res = refresh(date.fromisoformat(a.end) if a.end else None)
+    print(json.dumps(res, indent=1, default=str))
+    if not res["success"]:
+        sys.exit(1)
+
+
 def cmd_ground_truth(a):
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -371,6 +381,8 @@ def main(argv: list[str] | None = None) -> None:
     sp = add("forecast-retrain", cmd_forecast_retrain)
     sp.add_argument("--upload-batch", action="store_true", help="upload the warehouse feature table (once)")
     sp.add_argument("--no-live", action="store_true", help="skip building last week's live snapshots")
+    sp = add("refresh-warehouse", cmd_refresh_warehouse, local=False)
+    sp.add_argument("--end", help="last day to include (default: yesterday UTC)")
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")
