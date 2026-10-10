@@ -13,7 +13,8 @@ test('live: the strip lists live events with languages and minutes since the fir
   await expect(items.first()).toContainText('Burkinabé politician');
   await expect(items.first()).toContainText('editing in French and English · first burst 12 min ago');
   await expect(page.locator('#right-now')).not.toHaveClass(/is-resting/);
-  await expect(page.locator('#right-now')).toContainText("Readers' numbers arrive about 3 hours later.");
+  await expect(page.locator('#live-kicker')).toHaveText('Right now · editors are confirming');
+  await expect(page.locator('#right-now')).toContainText('Readers usually get there first; editors follow within about two hours');
   await page.click('[data-ui-lang="fr"]');
   await expect(items.first()).toContainText('homme politique burkinabé');
   expect(page.errors).toEqual([]);
@@ -46,4 +47,12 @@ test('most likely to spread next: top open events by forecast, whatever the thre
   await expect(items.first()).toContainText('72% chance of going international');
   await expect(items.nth(1)).toContainText('20% chance of going international');
   await expect(page.locator('#next')).toContainText('Forecast, not a fact');
+});
+
+test('the About section states the H9 lead times', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('.about__live')).toContainText('a median 1 h 46 min after the first reading spike');
+  await page.click('[data-ui-lang="es"]');
+  await expect(page.locator('#live-kicker')).toHaveText('Ahora mismo · los editores están confirmando');
 });
