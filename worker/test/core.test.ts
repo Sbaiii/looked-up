@@ -133,14 +133,22 @@ describe('replay', () => {
 });
 
 describe('CPU budget (ADR 0032 fallback)', () => {
-  it('two cron groups cover the 30 wikis exactly once', async () => {
+  it('three cron groups cover the 30 wikis exactly once and merge back for reading', async () => {
     const { groupOf } = await import('../src/index');
-    expect(groupOf('*/5 * * * *')).toBe(0);
-    expect(groupOf('2-59/5 * * * *')).toBe(1);
-    const langs = LANGUAGES as string[];
-    const g0 = langs.filter((_, i) => i % 2 === 0); const g1 = langs.filter((_, i) => i % 2 === 1);
-    expect(g0.length + g1.length).toBe(30);
-    expect(new Set([...g0, ...g1]).size).toBe(30);
+    const { GROUPS, merge } = await import('../src/core');
+    expect(groupOf('0,5,10,15,20,25,30,35,40,45,50,55 * * * *')).toBe(0);
+    expect(groupOf('2,7,12,17,22,27,32,37,42,47,52,57 * * * *')).toBe(1);
+    expect(groupOf('4,9,14,19,24,29,34,39,44,49,54,59 * * * *')).toBe(2);
+    const all = GROUPS.flat();
+    expect(all.length).toBe(30);
+    expect(new Set(all)).toEqual(new Set(LANGUAGES as string[]));
+    expect(GROUPS[0]).toEqual(['en']);
+    const a = emptyState(); const b = emptyState();
+    addEdit(a, 'en', rc('X', 0, 'alice'), SALT); addEdit(b, 'fr', rc('Y', 0, 'bob'), SALT);
+    a.groupPolledAt = { 0: T0 }; b.groupPolledAt = { 1: T0 };
+    const m = merge([a, b]);
+    expect(Object.keys(m.articles).sort()).toEqual(['en|X', 'fr|Y']);
+    expect(Object.keys(m.groupPolledAt)).toEqual(['0', '1']);
   });
 
   it('a busy poll stays cheap: 1,300 edits processed quickly, compact state', () => {
