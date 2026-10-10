@@ -33,7 +33,10 @@ log = logging.getLogger(__name__)
 SCHEMA_VERSION = 1
 APP_PREFIX = "data/app"
 TOP_EVENTS = 200
+TOP_BY_EXCESS = 20      # also kept, so the hero rule (ADR 0024: rank by excess views) never misses an event
 PER_LANGUAGE = 5
+UI_LANGUAGES = ("en", "fr", "es")   # descriptions are exported only in these (ADR 0026)
+DESC_MAX = 80
 SINGLE_PER_LANGUAGE = 10
 SPARK_BEFORE = 24       # sparkline: 48 hourly points from start - 24 h to start + 23 h
 SPARK_HOURS = 48
@@ -84,6 +87,7 @@ def select(events: list[dict], langs: dict[str, list[dict]]) -> tuple[list[dict]
     multi = sorted((e for e in events if e["event_class"] != "single_language"),
                    key=lambda e: (-e["breadth"], -(e["excess_views"] or 0), e["event_id"]))
     keep = {e["event_id"] for e in multi[:TOP_EVENTS]}
+    keep |= {e["event_id"] for e in sorted(multi, key=lambda e: (-(e["excess_views"] or 0), -e["breadth"]))[:TOP_BY_EXCESS]}
     by_lang: dict[str, list[tuple[float, str]]] = defaultdict(list)
     for e in multi:
         for r in langs.get(e["event_id"], []):
@@ -101,9 +105,17 @@ def select(events: list[dict], langs: dict[str, list[dict]]) -> tuple[list[dict]
     return [e for e in multi if e["event_id"] in keep], singles
 
 
+def short(text: str, n: int = DESC_MAX) -> str:
+    return text if len(text) <= n else text[: n - 1].rstrip() + "…"
+
+
 def event_obj(e: dict, langs: list[dict], titles: dict[str, str], spark: list[int] | None,
-              category: str | None) -> dict:
+              category: str | None, text: tuple[dict, str | None] | None = None) -> dict:
     rows = sorted(langs, key=lambda r: (r["spread_lag_hours"], r["lang"]))
+    desc, gender = text or ({}, None)
+    extra = {"desc": {l: short(desc[l]) for l in UI_LANGUAGES if desc.get(l)}}
+    if gender:
+        extra["gender"] = gender
     return {
         "id": e["event_id"], "qid": f"Q{e['qid']}", "start": _iso(e["start_hour"]),
         "tier": e["tier"], "class": e["event_class"], "breadth": e["breadth"], "lead": e["lead_lang"],
@@ -115,6 +127,7 @@ def event_obj(e: dict, langs: list[dict], titles: dict[str, str], spark: list[in
         "langs": [{"lang": r["lang"], "first": _iso(r["first_spike"]), "lag": int(r["spread_lag_hours"]),
                    "surprise": round(r["peak_surprise"], 1), "excess": int(r["excess_views"] or 0)} for r in rows],
         "spark": spark,
+        **extra,
     }
 
 
@@ -139,10 +152,12 @@ def summary(events: list[dict], langs: dict[str, list[dict]]) -> dict:
 
 
 def period_payload(kind: str, events: list[dict], langs: dict[str, list[dict]], titles: dict[int, dict[str, str]],
-                   sparks: dict[str, list[int]], categories: dict[int, str], generated_at: datetime, **extra) -> dict:
+                   sparks: dict[str, list[int]], categories: dict[int, str], generated_at: datetime,
+                   texts: dict[int, tuple[dict, str | None]] | None = None, **extra) -> dict:
     multi, single = select(events, langs)
+    texts = texts or {}
     obj = lambda e: event_obj(e, langs.get(e["event_id"], []), titles.get(e["qid"], {}), sparks.get(e["event_id"]),
-                              categories.get(e["qid"]))
+                              categories.get(e["qid"]), texts.get(e["qid"]))
     return {"schema_version": SCHEMA_VERSION, "kind": kind, "generated_at": f"{generated_at:%Y-%m-%dT%H:%M:%SZ}",
             **extra, "summary": summary(events, langs),
             "events": [obj(e) for e in multi], "single_language_events": [obj(e) for e in single]}
@@ -286,6 +301,25 @@ def categories_for(events: list[dict]) -> dict[int, str]:
     return out
 
 
+def texts_from_table(table) -> dict[int, tuple[dict, str | None]]:
+    """qid -> (descriptions {lang: text}, gender) from a (qid, descriptions_json, gender) table."""
+    out = {}
+    for q, d, g in zip(table["qid"].to_pylist(), table["descriptions_json"].to_pylist(), table["gender"].to_pylist()):
+        out[q] = (json.loads(d) if d else {}, g)
+    return out
+
+
+def texts_live(events: list[dict]) -> dict[int, tuple[dict, str | None]]:
+    from lookedup.analytics.entities import fetch_text
+    from lookedup.languages import active_codes
+    from lookedup.settings import DATA_DIR
+
+    if not events:
+        return {}
+    return texts_from_table(fetch_text({e["qid"] for e in events}, DATA_DIR / "warehouse" / "entity_text.parquet",
+                                       active_codes()))
+
+
 def by_day(events: list[dict]) -> dict[date, list[dict]]:
     out: dict[date, list[dict]] = defaultdict(list)
     for e in events:
@@ -295,19 +329,19 @@ def by_day(events: list[dict]) -> dict[date, list[dict]]:
 
 def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, list[dict]],
               titles: dict[int, dict[str, str]], categories: dict[int, str], hourly_files: list[Path],
-              now: datetime, last_hour: datetime | None = None) -> dict:
+              now: datetime, last_hour: datetime | None = None, texts: dict | None = None) -> dict:
     sparks = sparklines(con, hourly_files, published(events, langs), titles, last_hour)
-    payload = period_payload("day", events, langs, titles, sparks, categories, now, date=f"{d:%Y-%m-%d}")
+    payload = period_payload("day", events, langs, titles, sparks, categories, now, texts, date=f"{d:%Y-%m-%d}")
     size = dump(payload, out_dir / day_file(d))
     log.info("app day %s: %d events, %d published, %d bytes", d, len(events),
              len(payload["events"]) + len(payload["single_language_events"]), size)
     return payload["summary"]
 
 
-def _today_payload(con, events, langs, titles, categories, hourly_files, now, last_hour) -> dict:
+def _today_payload(con, events, langs, titles, categories, hourly_files, now, last_hour, texts=None) -> dict:
     recent = [e for e in events if e["start_hour"] >= now - timedelta(hours=24)]
     sparks = sparklines(con, hourly_files, published(recent, langs), titles, last_hour)
-    return period_payload("today", recent, langs, titles, sparks, categories, now, window_hours=24,
+    return period_payload("today", recent, langs, titles, sparks, categories, now, texts, window_hours=24,
                           last_hour=_iso(last_hour) if last_hour else None)
 
 
@@ -350,6 +384,9 @@ def backfill(store, out_dir: Path, now: datetime | None = None, languages: list[
         categories |= categories_for([e for e in pub if e["event_id"] in keep])
         titles = titles_from_sitelinks(con, LOCAL_LAKE_DIR / "data" / "wikidata" / "sitelinks.parquet",
                                        {e["qid"] for e in pub}, languages)
+        texts = texts_from_table(db.arrow(con.sql("SELECT qid, descriptions_json, gender FROM wh.main.dim_entities")))
+        missing = [e for e in pub if e["qid"] not in texts]
+        texts |= texts_live(missing)
 
         def hourly(d0: date, d1: date) -> list[Path]:
             fs = [LOCAL_LAKE_DIR / day_path(datetime(x.year, x.month, x.day))
@@ -362,9 +399,10 @@ def backfill(store, out_dir: Path, now: datetime | None = None, languages: list[
         summaries = {}
         for d in sorted(days):
             summaries[f"{d:%Y-%m-%d}"] = write_day(con, out_dir, d, days[d], langs_by, titles, categories,
-                                                   hourly(d - timedelta(days=1), d + timedelta(days=1)), now, last_hour)
+                                                   hourly(d - timedelta(days=1), d + timedelta(days=1)), now, last_hour,
+                                                   texts)
         today = _today_payload(con, events, langs_by, titles, categories,
-                               hourly(now.date() - timedelta(days=2), now.date()), now, last_hour)
+                               hourly(now.date() - timedelta(days=2), now.date()), now, last_hour, texts)
         dump(today, out_dir / APP_PREFIX / "today.json")
         stats = stats_payload(summaries, now, languages)
         dump(stats, out_dir / APP_PREFIX / "stats.json")
@@ -399,14 +437,15 @@ def export_live(store, now: datetime | None = None, languages: list[str] | None 
         pub |= {e["event_id"]: e for e in published(recent, langs_by)}
         titles = titles_from_api({e["qid"] for e in pub.values()}, languages)
         categories = categories_for(list(pub.values()))
+        texts = texts_live(list(pub.values()))
         out = tmp / "out"
         files: dict[str, Path] = {}
         summaries = {}
         for d in (today - timedelta(days=1), today):
             summaries[f"{d:%Y-%m-%d}"] = write_day(con, out, d, days.get(d, []), langs_by, titles, categories,
-                                                   hourly_files, now, last_hour)
+                                                   hourly_files, now, last_hour, texts)
             files[day_file(d)] = out / day_file(d)
-        dump(_today_payload(con, events, langs_by, titles, categories, hourly_files, now, last_hour),
+        dump(_today_payload(con, events, langs_by, titles, categories, hourly_files, now, last_hour, texts),
              out / APP_PREFIX / "today.json")
         files[f"{APP_PREFIX}/today.json"] = out / APP_PREFIX / "today.json"
         stats = _update_stats(_read_json(store, f"{APP_PREFIX}/stats.json", tmp / "st"), summaries, now, languages)

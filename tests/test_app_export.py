@@ -30,6 +30,7 @@ def test_labels_and_urls():
 
 def test_select_keeps_top_by_breadth_plus_each_language_top_and_singles(monkeypatch):
     monkeypatch.setattr(ax, "TOP_EVENTS", 2)
+    monkeypatch.setattr(ax, "TOP_BY_EXCESS", 0)
     monkeypatch.setattr(ax, "PER_LANGUAGE", 1)
     events = [_ev("a", 1, 9, 100), _ev("b", 2, 8, 100), _ev("c", 3, 2, 50), _ev("d", 4, 2, 10),
               _ev("s1", 5, 2, 999, lead="ja", cls="single_language"), _ev("s2", 6, 2, 5, lead="ja", cls="single_language")]
@@ -87,3 +88,22 @@ def test_dump_writes_a_gzipped_twin(tmp_path):
     assert json.loads(gzip.decompress((tmp_path / "a.json.gz").read_bytes())) == {"schema_version": 1, "x": "é"}
     assert n == len((tmp_path / "a.json").read_bytes())
     assert set(ax.with_gz({"data/app/a.json": tmp_path / "a.json"})) == {"data/app/a.json", "data/app/a.json.gz"}
+
+
+def test_descriptions_are_short_ui_languages_only_and_gender_is_kept():
+    long = "x" * 120
+    e = ax.event_obj(_ev("a", 42, 3, 300), [_lang("a", "en", 1)], {"en": "Quake_X"}, None, "human",
+                     ({"en": "American actress", "fr": long, "ja": "女優"}, "female"))
+    assert e["desc"]["en"] == "American actress" and "ja" not in e["desc"]
+    assert len(e["desc"]["fr"]) == ax.DESC_MAX and e["desc"]["fr"].endswith("…")
+    assert e["gender"] == "female"
+    assert "gender" not in ax.event_obj(_ev("b", 7, 3, 1), [], {}, None, None, ({}, None))
+
+
+def test_select_keeps_the_biggest_excess_even_with_low_breadth(monkeypatch):
+    monkeypatch.setattr(ax, "TOP_EVENTS", 1)
+    monkeypatch.setattr(ax, "TOP_BY_EXCESS", 1)
+    monkeypatch.setattr(ax, "PER_LANGUAGE", 0)
+    events = [_ev("wide", 1, 9, 10), _ev("big", 2, 2, 5_000_000), _ev("small", 3, 2, 5)]
+    multi, _ = ax.select(events, {})
+    assert {e["event_id"] for e in multi} == {"wide", "big"}
