@@ -1,7 +1,7 @@
 name: live worker observe
 
-# Tails the live Worker for ~11 minutes (two 5-minute cron runs) and summarises CPU time, wall time, outcome and
-# the per-poll counts, to check the free plan's 10 ms CPU limit (ADR 0032). Manual only.
+# Tails the live Worker (default 11 minutes) and summarises CPU time, wall time, outcome, the per-poll counts and the
+# user agent of HTTP requests (pinger check), to check the free plan's 10 ms CPU limit (ADR 0032, 0033). Manual only.
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +15,7 @@ permissions:
 jobs:
   tail:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     defaults:
       run:
         working-directory: worker
@@ -39,7 +39,8 @@ jobs:
           const evs = []; let buf = "";
           for (const l of lines) { buf += l; try { evs.push(JSON.parse(buf)); buf = ""; } catch {} }
           for (const e of evs) {
-            const kind = e.event && e.event.cron ? "cron " + e.event.cron : (e.event && e.event.request ? "fetch " + new URL(e.event.request.url).pathname : "other");
+            const req = e.event && e.event.request;
+            const kind = e.event && e.event.cron ? "cron " + e.event.cron : (req ? "fetch " + new URL(req.url).pathname + " ua=" + ((req.headers || {})["user-agent"] || "") : "other");
             const logs = (e.logs || []).map((x) => x.message.join(" ")).join(" | ");
             console.log([new Date(e.eventTimestamp).toISOString(), kind, "outcome=" + e.outcome,
               "cpuTime=" + (e.cpuTime ?? "n/a") + "ms", "wallTime=" + (e.wallTime ?? "n/a") + "ms", logs,
