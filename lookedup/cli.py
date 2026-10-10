@@ -25,6 +25,8 @@ Commands:
   evaluate-v2   run the pre-registered Phase 2b evaluation against deaths, earthquakes and matches
   warehouse     run dbt on the warehouse (e.g. `warehouse build`), thresholds from config/analytics.yml
   refresh-warehouse   mirror new day files and extend the warehouse to yesterday (weekly, by hand)
+  live-h9       Phase 5 backtest: edit-burst lead time over the first reading spike (MediaWiki revisions)
+  live-score    Phase 5 daily: score the live bursts of two days ago against the lake (H10 accumulates)
 """
 
 from __future__ import annotations
@@ -273,6 +275,25 @@ def cmd_refresh_warehouse(a):
         sys.exit(1)
 
 
+def cmd_live_h9(a):
+    from lookedup.live_analysis import OUT, run_h9
+
+    res = run_h9()
+    (OUT / "phase5_metrics.json").write_text(json.dumps({"H9": res}, indent=1, default=str))
+    print(json.dumps(res, indent=1, default=str))
+
+
+def cmd_live_score(a):
+    from datetime import timedelta
+
+    from lookedup.dumps import utcnow
+    from lookedup.live_analysis import append_scores
+    from lookedup.store import open_store
+
+    day = date.fromisoformat(a.day) if a.day else utcnow().date() - timedelta(days=2)
+    print(json.dumps(append_scores(open_store(a.local), day), indent=1, default=str))
+
+
 def cmd_ground_truth(a):
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -383,6 +404,9 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--no-live", action="store_true", help="skip building last week's live snapshots")
     sp = add("refresh-warehouse", cmd_refresh_warehouse, local=False)
     sp.add_argument("--end", help="last day to include (default: yesterday UTC)")
+    add("live-h9", cmd_live_h9, local=False)
+    sp = add("live-score", cmd_live_score)
+    sp.add_argument("--day", help="UTC day of the bursts to score (default: two days ago)")
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")
