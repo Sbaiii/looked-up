@@ -7,6 +7,7 @@ import * as data from './data.js';
 import * as viz from './viz.js';
 import { compose, excessPhrase } from './briefing.js';
 import { pickDay, pickHero, rank } from './select.js';
+import { renderLive, startLive } from './live.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 12;
@@ -127,6 +128,7 @@ async function setLang(code) {
     i18n.applyStatic();
     document.querySelectorAll('[data-ui-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.uiLang === code)));
     renderAbout();
+    renderLive();
     viz.refreshLabels();
     if (state.today) { renderAll(false); updateTitle(); }
 }
@@ -197,6 +199,17 @@ function forecastLine(ev) {
         bits.push(el('span', { class: 'fade', text: t('forecast.fade', { time: i18n.hour(f.fade_eta) }) }));
     }
     return bits.length ? el('p', { class: 'card__forecast' }, ...bits) : null;
+}
+
+/** Top 3 open events by p_international, whatever the threshold, labelled as a forecast (Phase 5). */
+function renderNext() {
+    const now = Date.parse(state.today.generated_at);
+    const open = (state.today.events || []).filter((e) => e.forecast?.p_international != null
+        && now - Date.parse(e.start) < 24 * 3600e3)
+        .sort((a, b) => b.forecast.p_international - a.forecast.p_international).slice(0, 3);
+    $('next').hidden = !open.length;
+    $('next-list').replaceChildren(...open.map((e) => el('li', {}, el('strong', { text: label(e) }), ' ',
+        el('span', { text: t('next.item', { p: pct(e.forecast.p_international) }) }))));
 }
 
 function renderForecastNote(shown) {
@@ -486,6 +499,7 @@ function buildDays() {
 
 function renderAll(animate) {
     renderHero(animate);
+    renderNext();
     renderForecastSection();
     renderBars();
     $('day-slider').value = state.index;
@@ -523,6 +537,7 @@ async function boot() {
     initTheme();
     await setLang(i18n.initialLang());
     wire();
+    startLive();
     const vizReady = viz.init($('viz'), { counter: heroCounter }).catch(() => {});
     try {
         [state.today, state.stats] = await Promise.all([data.today(), data.stats()]);
