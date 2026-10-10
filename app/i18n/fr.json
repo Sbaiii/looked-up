@@ -160,5 +160,20 @@
     "day": "{date} · Looked Up",
     "event": "{label}, {date} · Looked Up",
     "lang": "Ce que les lecteurs en {lang} ont consulté · Looked Up"
+  },
+  "forecast": {
+    "spreading": "En expansion",
+    "p_international": "{p} de chances de devenir international",
+    "p_planetary": "{p} de chances de devenir planétaire",
+    "fade": "devrait retomber vers ~{time} UTC",
+    "fading": "probablement déjà en baisse",
+    "note": "Prévision d'un modèle entraîné sur des événements passés ; AUC en test rétrospectif {auc}.",
+    "kicker": "fig. 05 · prévision",
+    "title": "Prévision",
+    "auc": "AUC sur 17 jours inédits : classe-t-il bien les événements qui deviennent internationaux ?",
+    "lift": "fois plus d'événements internationaux parmi les 10 % de prévisions les plus hautes",
+    "gain": "d'erreur en moins qu'une simple règle de décroissance, pour l'attention restante sur 24 heures",
+    "chart": "Probabilité prévue (en abscisse) contre ce qui s'est passé (en ordonnée), jours de test ; taille du point = nombre d'événements",
+    "summary": "Une heure après qu'un événement apparaît dans deux langues, le modèle repère bien ceux qui atteindront cinq langues (AUC {auc} sur 17 jours jamais vus), et ses probabilités sont à peu près honnêtes, un peu trop confiantes au milieu. La célébrité seule ne suffit pas : le nombre de Wikipédias ayant un article n'explique qu'un cinquième de ce que sait le modèle. Ce qui compte le plus, c'est le volume de lecture déjà en cours, l'étendue déjà atteinte et l'heure de la journée. Il prévoit mieux qu'une simple règle de décroissance l'attention restante sur 24 heures, mais pas le moment où elle retombe. Les prévisions planétaires reposent sur très peu de cas passés et ne s'affichent qu'au-dessus de 30 %."
   }
 }

@@ -160,5 +160,20 @@
     "day": "{date} · Looked Up",
     "event": "{label}, {date} · Looked Up",
     "lang": "Lo que consultaron los lectores en {lang} · Looked Up"
+  },
+  "forecast": {
+    "spreading": "Expandiéndose",
+    "p_international": "{p} de probabilidad de volverse internacional",
+    "p_planetary": "{p} de probabilidad de volverse planetario",
+    "fade": "probablemente decaiga hacia las ~{time} UTC",
+    "fading": "probablemente ya en descenso",
+    "note": "Previsión de un modelo entrenado con eventos pasados; AUC en prueba retrospectiva {auc}.",
+    "kicker": "fig. 05 · previsión",
+    "title": "Previsión",
+    "auc": "AUC en 17 días no vistos: ¿ordena bien los eventos que se vuelven internacionales?",
+    "lift": "veces más eventos internacionales entre el 10 % de previsiones más altas",
+    "gain": "menos error que una simple regla de decaimiento, para la atención restante en 24 horas",
+    "chart": "Probabilidad prevista (horizontal) frente a lo que pasó (vertical), días de prueba; tamaño del punto = número de eventos",
+    "summary": "Una hora después de que un evento aparece en dos idiomas, el modelo distingue bien los que llegarán a cinco idiomas (AUC {auc} en 17 días que nunca vio), y sus probabilidades son más o menos honestas, algo confiadas de más en la zona media. La fama sola no basta: cuántas Wikipedias tienen un artículo explica solo una quinta parte de lo que sabe el modelo. Lo que más pesa es cuánta lectura hay ya, cuán amplia es ya y la hora del día. Prevé la atención restante en 24 horas mejor que una simple regla de decaimiento, pero no el momento en que decae. Las previsiones planetarias se basan en muy pocos casos pasados y solo se muestran por encima del 30 %."
   }
 }

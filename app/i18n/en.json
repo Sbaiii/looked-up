@@ -160,5 +160,20 @@
     "day": "{date} · Looked Up",
     "event": "{label}, {date} · Looked Up",
     "lang": "What {lang} readers looked up · Looked Up"
+  },
+  "forecast": {
+    "spreading": "Spreading",
+    "p_international": "{p} chance of going international",
+    "p_planetary": "{p} chance of going planetary",
+    "fade": "likely to fade by ~{time} UTC",
+    "fading": "probably fading already",
+    "note": "Forecast from a model trained on past events; backtested AUC {auc}.",
+    "kicker": "fig. 05 · forecast",
+    "title": "Forecast",
+    "auc": "AUC on 17 unseen days: does it rank events that go international?",
+    "lift": "more international events among the top 10 % of forecasts",
+    "gain": "smaller error than a simple decay rule, for the attention left in the next 24 hours",
+    "chart": "Predicted probability (across) against what happened (up), test days; dot size = number of events",
+    "summary": "An hour after an event is first seen in two languages, the model sorts the ones that will reach five languages well (AUC {auc} on 17 days it never saw), and its probabilities are roughly honest, slightly overconfident in the middle. Fame alone is not enough: how many Wikipedias have an article explains only a fifth of what the model knows. What matters most is how much reading is already happening, how wide it already is, and the hour of the day. It predicts the attention left in the next 24 hours better than a simple decay rule, but not the moment attention fades. Planetary forecasts rest on very few past cases and are shown only above 30 %."
   }
 }
