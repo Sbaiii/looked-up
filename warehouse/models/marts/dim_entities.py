@@ -1,4 +1,5 @@
-"""Entities that can form attention events: labels in the 30 languages, Wikidata class, death dates.
+"""Entities that can form attention events: labels and descriptions in the 30 languages, Wikidata class,
+death dates and gender (P21, ADR 0026).
 
 Scope: every QID that forms an event under the LOOSEST ablation settings (lowest R3, fewest
 languages, widest window), so that every ablation can be classified. Claims come from the
@@ -10,7 +11,8 @@ import json
 import pyarrow as pa
 
 from lookedup.analytics.config import load
-from lookedup.analytics.entities import classify, fetch_claims, is_generic
+from lookedup.analytics.entities import classify, fetch_claims, fetch_text, is_generic
+from lookedup.languages import active_codes
 from lookedup.analytics.events import build_events
 from lookedup.settings import DATA_DIR
 
@@ -26,6 +28,9 @@ def model(dbt, session):
     events, _ = build_events(session, "_spikes_dim_ok", loose)
     qids = [r[0] for r in events.project("qid").distinct().fetchall()]
     claims = fetch_claims(qids, DATA_DIR / "warehouse" / "entity_claims.parquet")
+    text = fetch_text(qids, DATA_DIR / "warehouse" / "entity_text.parquet", active_codes())
+    texts = {q: (d, g) for q, d, g in zip(text["qid"].to_pylist(), text["descriptions_json"].to_pylist(),
+                                          text["gender"].to_pylist())}
     wanted = set(qids)
     rows = []
     for qid, label, cj in zip(claims["qid"].to_pylist(), claims["label_en"].to_pylist(),
@@ -36,11 +41,13 @@ def model(dbt, session):
         rows.append({"qid": qid, "label_en": label, "entity_class": classify(c, cfg),
                      "is_human": int(cfg.raw["human_class"][1:]) in c.get("P31", []),
                      "is_generic": is_generic(c, cfg), "p31": c.get("P31", []), "dates_of_death": c.get("P570", []),
-                     "countries": c.get("P17", []), "locations": c.get("P276", [])})
+                     "countries": c.get("P17", []), "locations": c.get("P276", []),
+                     "descriptions_json": texts.get(qid, (None, None))[0], "gender": texts.get(qid, (None, None))[1]})
     schema = pa.schema([("qid", pa.int64()), ("label_en", pa.string()), ("entity_class", pa.string()),
                         ("is_human", pa.bool_()), ("is_generic", pa.bool_()), ("p31", pa.list_(pa.int64())),
                         ("dates_of_death", pa.list_(pa.string())), ("countries", pa.list_(pa.int64())),
-                        ("locations", pa.list_(pa.int64()))])
+                        ("locations", pa.list_(pa.int64())), ("descriptions_json", pa.string()),
+                        ("gender", pa.string())])
     ents = session.from_arrow(pa.Table.from_pylist(rows, schema=schema))
     ents.create_view("_ents", replace=True)
     dbt.ref("stg_sitelinks").create_view("_sitelinks_dim", replace=True)
