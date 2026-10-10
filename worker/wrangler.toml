@@ -1,12 +1,18 @@
-# Looked Up live layer (ADR 0032). The KV namespace id is filled in by .github/workflows/worker.yml at deploy time
-# (it creates the namespace on first deploy); nothing secret lives here.
+# Looked Up live layer (ADR 0032, 0033). The KV namespace and D1 database ids are filled in by
+# .github/workflows/worker.yml at deploy time (it creates them on first deploy); nothing secret lives here.
 name = "looked-up-live"
 main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
 [triggers]
-crons = ["* * * * *"]   # every minute; :00/:02/:04 of each 5-min cycle poll one group each (ADR 0032)
+crons = ["* * * * *"]   # every minute; minute m polls group m % 5, so each of the 5 groups runs every 5 min (ADR 0033)
 
 [[kv_namespaces]]
 binding = "LIVE"
 id = "KV_NAMESPACE_ID"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "looked-up-live"
+database_id = "D1_DATABASE_ID"
+migrations_dir = "migrations"
