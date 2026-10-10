@@ -13,7 +13,7 @@ test('page loads without errors', async ({ page }) => {
 test('today.json renders the hero, cards, languages and briefing', async ({ page }) => {
   await page.goto('./');
   await ready(page);
-  await expect(page.locator('#hero-label')).toHaveText('Zodiac');
+  await expect(page.locator('#hero-label')).toHaveText('Navi Pillay');   // most excess views among qualifying events
   await expect(page.locator('#hero-counter')).toContainText('languages');
   await expect(page.locator('.card')).toHaveCount(6);
   await expect(page.locator('#brief-text')).toContainText('the world looked up');
