@@ -89,6 +89,22 @@ How the Worker works, and why:
     burst keep 30 min instead of 60.
   - **An edge cache** for `/live.json` and `/stats.json` (15 s), so most requests skip the KV read and the parse.
 
+### Where it stands (13:35 UTC, 7 polls tailed)
+
+- **CPU per run, by group:**
+  - group 0 (en + 9): 13 ms, 448–503 rows;
+  - group 1: 10–13 ms, 305–516 rows;
+  - group 2: 8–11 ms, 124–163 rows.
+- **Every tailed run ended `ok`** (no `exceededCpu`), including the 47–76 ms runs before the fixes. So the limit is
+  not enforced strictly, but runs are still **not reliably under 10 ms**.
+- **What remains** is mostly the fixed cost of about 10 API calls per run. KV's 1,000 writes a day caps the design
+  at 3 groups with 5-minute polls.
+- **Two ways to get to ≈ 6 ms per run:**
+  1. Keep the state in **D1** (free plan: 100,000 rows written a day) and poll **5 groups of 6 wikis**. This needs
+     the token to gain **Account › D1 › Edit**.
+  2. Move to Workers Paid (30 s CPU), which breaks the €0 budget.
+- Pending the owner's choice, the Worker stays as it is.
+
 ## Decision 3: tune the rules (`config/live.yml`)
 
 | Rule | Before | Now | Why |
