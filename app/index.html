@@ -135,6 +135,7 @@
                 </div>
                 <ol class="cards" id="cards"></ol>
                 <button type="button" class="btn btn--wide" id="more" data-i18n="event.more" hidden>Show more</button>
+                <p class="help forecast-note" id="forecast-note" hidden></p>
             </section>
 
             <section class="fig" id="languages" aria-labelledby="langs-title">
@@ -182,6 +183,19 @@
                 <ul class="about__limits" id="about-limits"></ul>
                 <p class="about__links" id="about-links"></p>
                 <p class="help" data-i18n="about.privacy"></p>
+            </section>
+
+            <section class="fig" id="forecast" aria-labelledby="forecast-title" hidden>
+                <div class="fig__head">
+                    <p class="meta" data-i18n="forecast.kicker">fig. 05 · forecast</p>
+                    <h2 class="fig__title" id="forecast-title" data-i18n="forecast.title">Forecast</h2>
+                </div>
+                <dl class="stats" id="forecast-stats"></dl>
+                <figure class="calib">
+                    <svg class="calib__svg" id="forecast-chart" viewBox="0 0 320 240" role="img"></svg>
+                    <figcaption class="help" data-i18n="forecast.chart"></figcaption>
+                </figure>
+                <p class="forecast-summary" id="forecast-summary"></p>
             </section>
         </div>
 

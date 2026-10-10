@@ -270,6 +270,24 @@ button { background: none; border: none; cursor: pointer; }
 .badge--noticed { color: var(--muted); }
 .badge--international { color: var(--accent); }
 .badge--planetary { color: var(--planetary); }
+.badge--spreading { color: var(--accent-on); background: var(--accent); border-color: var(--accent); }
+.card__forecast { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.85rem; color: var(--ink); }
+.card__forecast .fade { color: var(--muted); }
+.forecast-note { margin-top: 0.8rem; }
+
+/* FIG. 05 forecast */
+.stats { display: grid; gap: 1rem 2rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); margin-bottom: 1.5rem; }
+.stats div { border-top: 2px solid var(--accent); padding-top: 0.6rem; }
+.stats dt { font-family: var(--display); font-weight: 800; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.03em; line-height: 1; }
+.stats dd { color: var(--muted); font-size: 0.88rem; margin-top: 0.4rem; }
+.calib { max-width: 26rem; margin: 0 0 1.2rem; }
+.calib__svg { width: 100%; height: auto; display: block; }
+.calib__svg .axis { stroke: var(--rule); }
+.calib__svg .diag { stroke: var(--faint); stroke-dasharray: 3 3; }
+.calib__svg .pt { fill: var(--accent); fill-opacity: 0.85; }
+.calib__svg .line { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.calib__svg text { fill: var(--faint); font-family: var(--mono); font-size: 9px; }
+.forecast-summary { max-width: 62ch; line-height: 1.55; }
 
 /* Languages panel */
 .field { display: grid; gap: 0.3rem; max-width: 22rem; }

@@ -68,6 +68,7 @@ function intl(kind, opts) {
 }
 
 export const num = (n) => intl('NumberFormat', {}).format(n);
+export const pct = (p) => intl('NumberFormat', { style: 'percent', maximumFractionDigits: 0 }).format(p);
 export const compact = (n) => intl('NumberFormat', { notation: 'compact', compactDisplay: 'long', maximumFractionDigits: 1 }).format(n);
 export const day = (iso) => intl('DateTimeFormat', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`));
 export const dayShort = (iso) => intl('DateTimeFormat', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`));
