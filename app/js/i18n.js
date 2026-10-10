@@ -29,6 +29,15 @@ export async function load(code) {
 
 export const current = () => lang;
 
+/** Install a dictionary directly (unit tests run without fetch or a DOM). */
+export function use(dictionary, code) {
+    dict = dictionary;
+    lang = code;
+    locale = dictionary.locale;
+    plural = new Intl.PluralRules(locale);
+    cache.clear();
+}
+
 function lookup(key) {
     return key.split('.').reduce((o, k) => (o == null ? o : o[k]), dict);
 }
@@ -68,8 +77,25 @@ export const langName = (code) => {
     try { return intl('DisplayNames', { type: 'language' }).of(code) || code; } catch { return code; }
 };
 
+/** "Japanese (日本語)"; just "English" when the native name adds nothing. */
+export function langNative(code) {
+    const name = langName(code);
+    let native = code;
+    try { native = new Intl.DisplayNames([code], { type: 'language' }).of(code) || code; } catch { /* keep code */ }
+    return native.toLocaleLowerCase(code) === name.toLocaleLowerCase(locale) ? name : `${name} (${native})`;
+}
+
+/** Viewer's local clock time with zone, e.g. "15:58 CEST". */
+export const localTime = (iso) => new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short' }).format(new Date(iso));
+
 /** "under an hour" / "2 hours" */
 export const within = (h) => t('within', { n: h });
+
+/** Short Wikidata description in the UI language, then English (ADR 0026). */
+export function desc(ev) {
+    const d = ev.desc || {};
+    return d[lang] || d.en || '';
+}
 
 /** The event's label in the viewer's UI language, then English, then the lead language. */
 export function label(ev) {

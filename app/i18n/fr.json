@@ -4,29 +4,59 @@
     "title": "Looked Up : ce que le monde a consulté, heure par heure",
     "description": "Ce que l'humanité a consulté aujourd'hui et ces 90 derniers jours, dans 30 langues de Wikipédia, mis à jour chaque heure à partir des consultations publiques."
   },
-  "nav": { "today": "Aujourd'hui", "timeline": "Jours", "languages": "Langues", "briefing": "Résumé", "about": "À propos" },
+  "nav": {
+    "today": "Aujourd'hui",
+    "timeline": "Jours",
+    "languages": "Langues",
+    "briefing": "Résumé",
+    "about": "À propos"
+  },
   "ui": {
-    "skip": "Aller au contenu", "theme": "Changer de thème", "language": "Langue de l'interface", "utc": "UTC",
-    "error": "Les données n'ont pas pu être chargées. Réessayez plus tard.", "loading": "Chargement…",
-    "updated": "Mis à jour {time}"
+    "skip": "Aller au contenu",
+    "theme": "Changer de thème",
+    "language": "Langue de l'interface",
+    "utc": "UTC",
+    "error": "Les données n'ont pas pu être chargées. Réessayez plus tard.",
+    "loading": "Chargement…",
+    "updated": "Mis à jour {utc} · {local} chez vous",
+    "menu": "Sections",
+    "copy": "Copier le lien",
+    "copied": "Lien copié",
+    "copy_day": "Copier le lien de ce jour"
   },
   "hero": {
     "kicker": "fig. 00 · dernières 24 heures",
     "title": "Aujourd'hui, le monde s'est intéressé à",
     "empty": "Aucun événement ne s'est encore propagé à deux langues ces dernières 24 heures.",
-    "counter": { "one": "{n} langue en {within}", "other": "{n} langues en {within}" },
+    "counter": {
+      "one": "{n} langue en {within}",
+      "other": "{n} langues en {within}"
+    },
     "replay": "Rejouer la propagation",
-    "led_by": "d'abord en {lang}"
+    "led_by": "d'abord en {lang}",
+    "kicker_48h": "fig. 00 · dernières 48 heures",
+    "kicker_week": "fig. 00 · cette semaine"
   },
-  "within": { "zero": "moins d'une heure", "one": "{n} heure", "other": "{n} heures" },
-  "tier": { "noticed": "Remarqué", "international": "International", "planetary": "Planétaire" },
+  "within": {
+    "zero": "moins d'une heure",
+    "one": "{n} heure",
+    "other": "{n} heures"
+  },
+  "tier": {
+    "noticed": "Remarqué",
+    "international": "International",
+    "planetary": "Planétaire"
+  },
   "tier_help": {
     "noticed": "Pic dans 2 à 4 langues",
     "international": "Pic dans 5 à 19 langues",
     "planetary": "Pic dans 20 langues ou plus"
   },
   "event": {
-    "languages": { "one": "{n} langue", "other": "{n} langues" },
+    "languages": {
+      "one": "{n} langue",
+      "other": "{n} langues"
+    },
     "first_spike": "Premier pic à {time} UTC",
     "lead": "En tête : {lang}",
     "wiki": "Wikipédia en {lang}",
@@ -34,9 +64,16 @@
     "show": "Afficher sur la carte",
     "more": "Afficher plus",
     "category": {
-      "death": "Décès", "human": "Personne", "sports": "Sport", "entertainment": "Divertissement",
-      "disaster": "Catastrophe", "politics": "Politique", "place": "Lieu", "organization": "Organisation",
-      "science_tech": "Sciences et techniques", "other": "Autre"
+      "death": "Décès",
+      "human": "Personne",
+      "sports": "Sport",
+      "entertainment": "Divertissement",
+      "disaster": "Catastrophe",
+      "politics": "Politique",
+      "place": "Lieu",
+      "organization": "Organisation",
+      "science_tech": "Sciences et techniques",
+      "other": "Autre"
     }
   },
   "timeline": {
@@ -47,7 +84,10 @@
     "prev": "Jour précédent",
     "next": "Jour suivant",
     "today": "Aujourd'hui",
-    "count": { "one": "{n} événement", "other": "{n} événements" },
+    "count": {
+      "one": "{n} événement",
+      "other": "{n} événements"
+    },
     "filter": "Afficher",
     "all": "Tous les niveaux",
     "intl": "International et plus",
@@ -68,14 +108,17 @@
     "kicker": "fig. 03 · la journée en mots",
     "title": "Résumé",
     "lead": "Le {date}, le monde s'est intéressé à {label} : {breadth} en {within}, d'abord en {lang} ; {excess}.",
-    "lead_death": "Le {date}, le monde s'est intéressé à {label} après l'annonce de sa mort : {breadth} en {within}, d'abord en {lang} ; {excess}.",
     "excess_big": "{n} de consultations de plus que d'habitude",
     "excess_small": "{n} consultations de plus que d'habitude",
     "fastest": "Propagation la plus rapide : {label}, {breadth} en {within}.",
     "widest": "Le plus de langues : {label}, {breadth}.",
     "non_english": "Plus grand événement hors anglais : {label}, d'abord en {lang}, {excess}.",
     "quiet": "Journée calme : aucun événement ne s'est propagé à deux langues.",
-    "note": "Rédigé automatiquement à partir des données du jour, avec le même modèle chaque jour."
+    "note": "Rédigé automatiquement à partir des données du jour, avec le même modèle chaque jour.",
+    "lead_death_female": "Le {date}, le monde s'est intéressé à {label}, tout juste disparue : {breadth} en {within}, d'abord en {lang} ; {excess}.",
+    "lead_death_male": "Le {date}, le monde s'est intéressé à {label}, tout juste disparu : {breadth} en {within}, d'abord en {lang} ; {excess}.",
+    "lead_death_neutral": "Le {date}, après l'annonce du décès de {label}, l'attention s'est propagée à {breadth} en {within}, d'abord en {lang} ; {excess}.",
+    "about": "{label} : {desc}."
   },
   "map": {
     "label": "Carte de l'attention par langue pour {label}",
@@ -84,7 +127,8 @@
     "globe": "Globe 3D",
     "flat": "Carte plane",
     "less": "moins",
-    "more": "plus"
+    "more": "plus",
+    "scale": "Pic de surprise dans chaque langue, même échelle pour chaque événement"
   },
   "about": {
     "kicker": "fig. 04 · fonctionnement",
@@ -110,5 +154,11 @@
     "dataset": "le jeu de données ouvert sur Hugging Face",
     "repo": "le dépôt GitHub",
     "privacy": "Ni cookies ni pistage. Votre thème et votre langue restent dans votre navigateur."
+  },
+  "titles": {
+    "today": "Looked Up : ce que le monde a consulté aujourd'hui",
+    "day": "{date} · Looked Up",
+    "event": "{label}, {date} · Looked Up",
+    "lang": "Ce que les lecteurs en {lang} ont consulté · Looked Up"
   }
 }

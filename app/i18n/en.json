@@ -4,29 +4,59 @@
     "title": "Looked Up: what the world looked up, hour by hour",
     "description": "What humanity looked up today and over the last 90 days, across 30 Wikipedia languages, updated every hour from public pageviews."
   },
-  "nav": { "today": "Today", "timeline": "Days", "languages": "Languages", "briefing": "Briefing", "about": "About" },
+  "nav": {
+    "today": "Today",
+    "timeline": "Days",
+    "languages": "Languages",
+    "briefing": "Briefing",
+    "about": "About"
+  },
   "ui": {
-    "skip": "Skip to content", "theme": "Switch theme", "language": "Interface language", "utc": "UTC",
-    "error": "The data could not be loaded. Please try again later.", "loading": "Loading…",
-    "updated": "Updated {time}"
+    "skip": "Skip to content",
+    "theme": "Switch theme",
+    "language": "Interface language",
+    "utc": "UTC",
+    "error": "The data could not be loaded. Please try again later.",
+    "loading": "Loading…",
+    "updated": "Updated {utc} · {local} your time",
+    "menu": "Sections",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "copy_day": "Copy link to this day"
   },
   "hero": {
     "kicker": "fig. 00 · last 24 hours",
     "title": "Today the world looked up",
     "empty": "No event has spread to two languages in the last 24 hours yet.",
-    "counter": { "one": "{n} language in {within}", "other": "{n} languages in {within}" },
+    "counter": {
+      "one": "{n} language in {within}",
+      "other": "{n} languages in {within}"
+    },
     "replay": "Replay the spread",
-    "led_by": "led by {lang}"
+    "led_by": "led by {lang}",
+    "kicker_48h": "fig. 00 · last 48 hours",
+    "kicker_week": "fig. 00 · this week"
   },
-  "within": { "zero": "under an hour", "one": "{n} hour", "other": "{n} hours" },
-  "tier": { "noticed": "Noticed", "international": "International", "planetary": "Planetary" },
+  "within": {
+    "zero": "under an hour",
+    "one": "{n} hour",
+    "other": "{n} hours"
+  },
+  "tier": {
+    "noticed": "Noticed",
+    "international": "International",
+    "planetary": "Planetary"
+  },
   "tier_help": {
     "noticed": "Spiking in 2 to 4 languages",
     "international": "Spiking in 5 to 19 languages",
     "planetary": "Spiking in 20 languages or more"
   },
   "event": {
-    "languages": { "one": "{n} language", "other": "{n} languages" },
+    "languages": {
+      "one": "{n} language",
+      "other": "{n} languages"
+    },
     "first_spike": "First spike {time} UTC",
     "lead": "Lead: {lang}",
     "wiki": "Wikipedia in {lang}",
@@ -34,9 +64,16 @@
     "show": "Show on the map",
     "more": "Show more",
     "category": {
-      "death": "Death", "human": "Person", "sports": "Sports", "entertainment": "Entertainment",
-      "disaster": "Disaster", "politics": "Politics", "place": "Place", "organization": "Organisation",
-      "science_tech": "Science & tech", "other": "Other"
+      "death": "Death",
+      "human": "Person",
+      "sports": "Sports",
+      "entertainment": "Entertainment",
+      "disaster": "Disaster",
+      "politics": "Politics",
+      "place": "Place",
+      "organization": "Organisation",
+      "science_tech": "Science & tech",
+      "other": "Other"
     }
   },
   "timeline": {
@@ -47,7 +84,10 @@
     "prev": "Previous day",
     "next": "Next day",
     "today": "Today",
-    "count": { "one": "{n} event", "other": "{n} events" },
+    "count": {
+      "one": "{n} event",
+      "other": "{n} events"
+    },
     "filter": "Show",
     "all": "All tiers",
     "intl": "International and up",
@@ -68,14 +108,17 @@
     "kicker": "fig. 03 · the day in words",
     "title": "Briefing",
     "lead": "On {date} the world looked up {label}: {breadth} in {within}, led by {lang}; {excess}.",
-    "lead_death": "On {date} the world looked up {label} after news of their death: {breadth} in {within}, led by {lang}; {excess}.",
     "excess_big": "{n} more views than usual",
     "excess_small": "{n} more views than usual",
     "fastest": "Fastest spread: {label}, {breadth} in {within}.",
     "widest": "Most languages: {label}, {breadth}.",
     "non_english": "Biggest event not led by English: {label}, led by {lang}, {excess}.",
     "quiet": "A quiet day: no event spread to two languages.",
-    "note": "Written automatically from the day's data, with the same template every day."
+    "note": "Written automatically from the day's data, with the same template every day.",
+    "lead_death_female": "On {date} the world looked up {label} after the news of her death: {breadth} in {within}, led by {lang}; {excess}.",
+    "lead_death_male": "On {date} the world looked up {label} after the news of his death: {breadth} in {within}, led by {lang}; {excess}.",
+    "lead_death_neutral": "On {date}, after the news of {label}'s death, attention spread to {breadth} in {within}, led by {lang}; {excess}.",
+    "about": "{label}: {desc}."
   },
   "map": {
     "label": "Map of attention by language for {label}",
@@ -84,7 +127,8 @@
     "globe": "3D globe",
     "flat": "Flat map",
     "less": "less",
-    "more": "more"
+    "more": "more",
+    "scale": "Peak surprise in each language, same scale for every event"
   },
   "about": {
     "kicker": "fig. 04 · how it works",
@@ -110,5 +154,11 @@
     "dataset": "the open dataset on Hugging Face",
     "repo": "the GitHub repository",
     "privacy": "No cookies, no tracking. Your theme and language choice stay in your browser."
+  },
+  "titles": {
+    "today": "Looked Up: what the world looked up today",
+    "day": "{date} · Looked Up",
+    "event": "{label}, {date} · Looked Up",
+    "lang": "What {lang} readers looked up · Looked Up"
   }
 }

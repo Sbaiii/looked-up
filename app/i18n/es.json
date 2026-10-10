@@ -4,29 +4,59 @@
     "title": "Looked Up: lo que el mundo consultó, hora a hora",
     "description": "Lo que la humanidad consultó hoy y en los últimos 90 días, en 30 idiomas de Wikipedia, actualizado cada hora a partir de las visitas públicas."
   },
-  "nav": { "today": "Hoy", "timeline": "Días", "languages": "Idiomas", "briefing": "Resumen", "about": "Acerca de" },
+  "nav": {
+    "today": "Hoy",
+    "timeline": "Días",
+    "languages": "Idiomas",
+    "briefing": "Resumen",
+    "about": "Acerca de"
+  },
   "ui": {
-    "skip": "Ir al contenido", "theme": "Cambiar tema", "language": "Idioma de la interfaz", "utc": "UTC",
-    "error": "No se pudieron cargar los datos. Inténtalo más tarde.", "loading": "Cargando…",
-    "updated": "Actualizado {time}"
+    "skip": "Ir al contenido",
+    "theme": "Cambiar tema",
+    "language": "Idioma de la interfaz",
+    "utc": "UTC",
+    "error": "No se pudieron cargar los datos. Inténtalo más tarde.",
+    "loading": "Cargando…",
+    "updated": "Actualizado {utc} · {local} hora local",
+    "menu": "Secciones",
+    "copy": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "copy_day": "Copiar enlace de este día"
   },
   "hero": {
     "kicker": "fig. 00 · últimas 24 horas",
     "title": "Hoy el mundo se fijó en",
     "empty": "Ningún evento se ha propagado todavía a dos idiomas en las últimas 24 horas.",
-    "counter": { "one": "{n} idioma en {within}", "other": "{n} idiomas en {within}" },
+    "counter": {
+      "one": "{n} idioma en {within}",
+      "other": "{n} idiomas en {within}"
+    },
     "replay": "Repetir la propagación",
-    "led_by": "primero en {lang}"
+    "led_by": "primero en {lang}",
+    "kicker_48h": "fig. 00 · últimas 48 horas",
+    "kicker_week": "fig. 00 · esta semana"
   },
-  "within": { "zero": "menos de una hora", "one": "{n} hora", "other": "{n} horas" },
-  "tier": { "noticed": "Notado", "international": "Internacional", "planetary": "Planetario" },
+  "within": {
+    "zero": "menos de una hora",
+    "one": "{n} hora",
+    "other": "{n} horas"
+  },
+  "tier": {
+    "noticed": "Notado",
+    "international": "Internacional",
+    "planetary": "Planetario"
+  },
   "tier_help": {
     "noticed": "Pico en 2 a 4 idiomas",
     "international": "Pico en 5 a 19 idiomas",
     "planetary": "Pico en 20 idiomas o más"
   },
   "event": {
-    "languages": { "one": "{n} idioma", "other": "{n} idiomas" },
+    "languages": {
+      "one": "{n} idioma",
+      "other": "{n} idiomas"
+    },
     "first_spike": "Primer pico a las {time} UTC",
     "lead": "Primero: {lang}",
     "wiki": "Wikipedia en {lang}",
@@ -34,9 +64,16 @@
     "show": "Ver en el mapa",
     "more": "Ver más",
     "category": {
-      "death": "Fallecimiento", "human": "Persona", "sports": "Deportes", "entertainment": "Entretenimiento",
-      "disaster": "Desastre", "politics": "Política", "place": "Lugar", "organization": "Organización",
-      "science_tech": "Ciencia y tecnología", "other": "Otro"
+      "death": "Fallecimiento",
+      "human": "Persona",
+      "sports": "Deportes",
+      "entertainment": "Entretenimiento",
+      "disaster": "Desastre",
+      "politics": "Política",
+      "place": "Lugar",
+      "organization": "Organización",
+      "science_tech": "Ciencia y tecnología",
+      "other": "Otro"
     }
   },
   "timeline": {
@@ -47,7 +84,10 @@
     "prev": "Día anterior",
     "next": "Día siguiente",
     "today": "Hoy",
-    "count": { "one": "{n} evento", "other": "{n} eventos" },
+    "count": {
+      "one": "{n} evento",
+      "other": "{n} eventos"
+    },
     "filter": "Mostrar",
     "all": "Todos los niveles",
     "intl": "Internacional o más",
@@ -68,14 +108,17 @@
     "kicker": "fig. 03 · el día en palabras",
     "title": "Resumen",
     "lead": "El {date} el mundo se fijó en {label}: {breadth} en {within}, primero en {lang}; {excess}.",
-    "lead_death": "El {date} el mundo se fijó en {label} tras la noticia de su muerte: {breadth} en {within}, primero en {lang}; {excess}.",
     "excess_big": "{n} de visitas más de lo habitual",
     "excess_small": "{n} visitas más de lo habitual",
     "fastest": "Propagación más rápida: {label}, {breadth} en {within}.",
     "widest": "Más idiomas: {label}, {breadth}.",
     "non_english": "Mayor evento no liderado por el inglés: {label}, primero en {lang}, {excess}.",
     "quiet": "Un día tranquilo: ningún evento se propagó a dos idiomas.",
-    "note": "Escrito automáticamente a partir de los datos del día, con la misma plantilla cada día."
+    "note": "Escrito automáticamente a partir de los datos del día, con la misma plantilla cada día.",
+    "lead_death_female": "El {date} el mundo se fijó en {label}, recién fallecida: {breadth} en {within}, primero en {lang}; {excess}.",
+    "lead_death_male": "El {date} el mundo se fijó en {label}, recién fallecido: {breadth} en {within}, primero en {lang}; {excess}.",
+    "lead_death_neutral": "El {date}, tras la noticia de la muerte de {label}, la atención se extendió a {breadth} en {within}, primero en {lang}; {excess}.",
+    "about": "{label}: {desc}."
   },
   "map": {
     "label": "Mapa de la atención por idioma para {label}",
@@ -84,7 +127,8 @@
     "globe": "Globo 3D",
     "flat": "Mapa plano",
     "less": "menos",
-    "more": "más"
+    "more": "más",
+    "scale": "Pico de sorpresa en cada idioma, la misma escala para cada evento"
   },
   "about": {
     "kicker": "fig. 04 · cómo funciona",
@@ -110,5 +154,11 @@
     "dataset": "el conjunto de datos abierto en Hugging Face",
     "repo": "el repositorio de GitHub",
     "privacy": "Sin cookies ni rastreo. Tu tema e idioma se guardan en tu navegador."
+  },
+  "titles": {
+    "today": "Looked Up: lo que el mundo consultó hoy",
+    "day": "{date} · Looked Up",
+    "event": "{label}, {date} · Looked Up",
+    "lang": "Lo que consultaron los lectores en {lang} · Looked Up"
   }
 }
