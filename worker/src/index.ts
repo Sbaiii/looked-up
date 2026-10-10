@@ -1,18 +1,19 @@
 // Looked Up live layer on Cloudflare Workers (ADR 0032).
-//   Cron (two triggers, each every 5 min, ADR 0032 fallback): each polls recentchanges of half the 30 Wikipedias
-//                       since its last poll, applies the burst rules, resolves QIDs of new bursts and saves the
-//                       state to KV (one write per poll: 576 a day, under the free tier's 1,000). Splitting keeps
-//                       each run's CPU time down (free plan: 10 ms).
+//   Cron (three triggers, each every 5 min, ADR 0032): each polls one group of wikis (en; 7 large; 22 others)
+//                       since its last poll, applies the burst rules, resolves QIDs of new bursts and saves that
+//                       group's own state to KV (one write per poll: 864 a day, under the free tier's 1,000).
+//                       Small per-group states keep each run's CPU time down (free plan: 10 ms).
+//   Reads merge the three group states.
 //   HTTP: GET /live.json, /stats.json, /bursts.json, /health with CORS for every origin, cached 15 s.
 // No user data is stored: editors become bits in a salted 64-bit sketch per 5-minute slot (core.ts).
 
-import { addEdit, countLive, emptyState, gc, iso, LANGUAGES, livePayload, statsPayload, status, counted, type RC, type State } from './core';
+import { addEdit, countLive, emptyState, gc, GROUPS, iso, livePayload, merge, statsPayload, status, counted, type RC, type State } from './core';
 
 export interface Env { LIVE: KVNamespace; SALT?: string }
 
 const UA = 'looked-up/0.1 (https://github.com/Sbaiii/looked-up; abdellahsbaisbai@gmail.com)';
-const STATE_KEY = 'state-v1';
-const FIRST_LOOKBACK_S = 30 * 60;
+const stateKey = (g: number) => `state-v3-g${g}`;
+const FIRST_LOOKBACK_S = 10 * 60;
 // subrequest budget (free plan: 50 per invocation): 30 wikis + extra pages for the busiest + up to 5 Wikidata calls
 const PAGES: Record<string, number> = { en: 3, de: 2, ja: 2, fr: 2, ru: 2, es: 2 };
 const WIKIDATA_CALLS = 5;
@@ -20,9 +21,13 @@ const CACHE_S = 15;
 
 let cached: { at: number; state: State } | null = null;
 
-async function load(env: Env): Promise<State> {
-  const s = await env.LIVE.get<State>(STATE_KEY, 'json');
-  return s && s.version === 2 ? s : emptyState();
+async function load(env: Env, group: number): Promise<State> {
+  const s = await env.LIVE.get<State>(stateKey(group), 'json');
+  return s && s.version === 3 ? s : emptyState();
+}
+
+async function loadAll(env: Env): Promise<State> {
+  return merge(await Promise.all(GROUPS.map((_, g) => load(env, g))));
 }
 
 async function recentChanges(lang: string, since: number, pages: number): Promise<{ rows: RC[]; caughtUp: boolean }> {
@@ -74,13 +79,14 @@ async function resolveQids(state: State): Promise<void> {
   for (const b of state.bursts) if (b.qid === null) b.qid = state.qids[`${b.lang}|${b.title}`] ?? null;
 }
 
-/** The two cron groups: even-indexed wikis on "*\/5", odd-indexed on "2-59/5" (wrangler.toml). */
+/** Cron group from the trigger's first minute (wrangler.toml): 0,5,.. -> 0; 2,7,.. -> 1; 4,9,.. -> 2. */
 export function groupOf(cron: string): number {
-  return cron.startsWith('2-') ? 1 : 0;
+  const first = parseInt(cron, 10);
+  return Number.isNaN(first) ? 0 : Math.min(GROUPS.length - 1, (first % 5) >> 1);
 }
 
-export async function poll(env: Env, now: number, group = 0, groups = 2): Promise<State> {
-  const state = await load(env);
+export async function poll(env: Env, now: number, group = 0): Promise<State> {
+  const state = await load(env, group);
   const salt = `${env.SALT || 'looked-up'}|${iso(now)!.slice(0, 10)}`;     // rotates daily
   const g = String(group);
   const last = state.groupPolledAt[g];
@@ -89,7 +95,7 @@ export async function poll(env: Env, now: number, group = 0, groups = 2): Promis
   let kept = 0;
   let earliest = now;
   const langs = new Set<string>();
-  for (const lang of (LANGUAGES as string[]).filter((_, i) => i % groups === group)) {
+  for (const lang of GROUPS[group]) {
     const since = resumed && state.lastPoll[lang] ? state.lastPoll[lang] : now - FIRST_LOOKBACK_S;
     earliest = Math.min(earliest, since);
     try {
@@ -114,11 +120,10 @@ export async function poll(env: Env, now: number, group = 0, groups = 2): Promis
   state.groupPolledAt[g] = now;
   state.polledAt = now;
   await resolveQids(state);
-  countLive(state, now);
   gc(state, now);
   const blob = JSON.stringify(state);
-  await env.LIVE.put(STATE_KEY, blob);                                       // the only KV write of the poll
-  cached = { at: now, state };
+  await env.LIVE.put(stateKey(group), blob);                                 // the only KV write of the poll
+  cached = null;
   // one line per poll for `wrangler tail` (docs/ops.md): no titles, no users
   console.log(JSON.stringify({ poll: iso(now), group, fetched, kept, languages: langs.size, bursts: state.bursts.length,
     articles: Object.keys(state.articles).length, state_bytes: blob.length, kv_writes: 1 }));
@@ -133,7 +138,11 @@ function json(body: unknown, status = 200): Response {
 
 async function render(req: Request, env: Env): Promise<Response> {
   const now = Math.floor(Date.now() / 1000);
-  if (!cached || now - cached.at > CACHE_S) cached = { at: now, state: await load(env) };
+  if (!cached || now - cached.at > CACHE_S) {
+    const state = await loadAll(env);
+    countLive(state, now);                    // live events span groups, so they are counted on the merged view
+    cached = { at: now, state };
+  }
   const state = cached.state;
   const path = new URL(req.url).pathname;
   if (path === '/live.json') return json(livePayload(state, now));

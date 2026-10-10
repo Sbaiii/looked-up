@@ -22,7 +22,7 @@ export interface Article { sl: Slot[]; c?: number; cb?: [number, number]; ce?: n
 export interface Burst { lang: string; title: string; ts: number; kind: 'window' | 'new'; edits_30m: number; editors_30m: number; qid: string | null }
 export interface Item { labels: Record<string, string>; desc: Record<string, string> }
 export interface State {
-  version: 2;
+  version: 3;
   articles: Record<string, Article>;          // "lang|title"
   bursts: Burst[];
   hour: number | null;
@@ -39,7 +39,7 @@ export interface State {
 }
 
 export function emptyState(): State {
-  return { version: 2, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
+  return { version: 3, articles: {}, bursts: [], hour: null, hourCounts: {}, medians: {}, lastPoll: {}, polledAt: null,
     groupPolledAt: {}, groupStats: {}, coveredSince: null, qids: {}, items: {}, liveSeen: {} };
 }
 
@@ -190,6 +190,34 @@ export function gc(state: State, now: number): void {
   for (const q of Object.keys(state.items)) if (!keep.has(q)) delete state.items[q];
   const burstKeys = new Set(state.bursts.map((b) => `${b.lang}|${b.title}`));
   for (const k of Object.keys(state.qids)) if (!burstKeys.has(k)) delete state.qids[k];
+}
+
+// ------------------------------------------------------------------ cron groups (CPU budget, ADR 0032)
+
+/** Wikis are polled in three groups balanced by edit volume, each with its own KV state. */
+export const GROUPS: string[][] = (() => {
+  const big = ['ja', 'de', 'ru', 'fr', 'es', 'it', 'zh'];
+  const all = LANGUAGES as string[];
+  return [['en'], big.filter((l) => all.includes(l)), all.filter((l) => l !== 'en' && !big.includes(l))];
+})();
+
+/** Merge the groups' states for reading (articles, bursts and caches are disjoint by wiki). */
+export function merge(states: State[]): State {
+  const m = emptyState();
+  for (const s of states) {
+    Object.assign(m.articles, s.articles);
+    m.bursts.push(...s.bursts);
+    Object.assign(m.medians, s.medians);
+    Object.assign(m.lastPoll, s.lastPoll);
+    Object.assign(m.groupPolledAt, s.groupPolledAt);
+    Object.assign(m.groupStats, s.groupStats);
+    Object.assign(m.qids, s.qids);
+    Object.assign(m.items, s.items);
+    if (s.polledAt !== null) m.polledAt = Math.max(m.polledAt ?? 0, s.polledAt);
+    if (s.coveredSince !== null) m.coveredSince = Math.max(m.coveredSince ?? 0, s.coveredSince);
+  }
+  m.bursts.sort((a, b) => a.ts - b.ts);
+  return m;
 }
 
 // ------------------------------------------------------------------ grouping and payloads
