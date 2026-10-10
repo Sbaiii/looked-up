@@ -19,6 +19,7 @@ Commands:
   score         score ingested hours into spikes, events and data/latest.json (hourly)
   app-export    write the web app's JSON (data/app/): hourly live files, or --backfill every day
   forecast-evaluate   run the pre-registered Phase 4 backtest (scores the test set once)
+  forecast-retrain    retrain production forecast models (weekly) and publish data/models/
   ground-truth  build data/eval/current_events.parquet from Portal:Current events (Phase 2 evaluation)
   evaluate      run the pre-registered Phase 2 evaluation (writes docs/analysis/)
   evaluate-v2   run the pre-registered Phase 2b evaluation against deaths, earthquakes and matches
@@ -255,6 +256,13 @@ def cmd_forecast_evaluate(a):
     print(json.dumps({k: res[k] for k in ("split_sizes", "H6", "H7", "H8")}, indent=1, default=str))
 
 
+def cmd_forecast_retrain(a):
+    from lookedup.forecast.retrain import retrain
+    from lookedup.store import open_store
+
+    print(json.dumps(retrain(open_store(a.local), upload_batch=a.upload_batch, add_live_week=not a.no_live), indent=1))
+
+
 def cmd_ground_truth(a):
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -360,6 +368,9 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--backfill", action="store_true", help="every day from the warehouse and the lake mirror")
     sp.add_argument("--upload", action="store_true", help="with --backfill: commit the files to the lake")
     add("forecast-evaluate", cmd_forecast_evaluate, local=False)
+    sp = add("forecast-retrain", cmd_forecast_retrain)
+    sp.add_argument("--upload-batch", action="store_true", help="upload the warehouse feature table (once)")
+    sp.add_argument("--no-live", action="store_true", help="skip building last week's live snapshots")
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")
