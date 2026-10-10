@@ -24,11 +24,12 @@ caches). Re-create the lake mirror with `python -m lookedup.cli sync --from 2026
 |---|---|---|
 | `hourly.yml` | cron **`17 * * * *`**, `workflow_dispatch`, and dispatched by `trigger.yml` | ingest missing hours of the last **7 days** (≤ 12/run), restore baselines from the cache, score (≤ 12 hours/run), save recomputed baselines on a cache miss, then `cli app-export` (`data/app/`, ADR 0022) |
 | `trigger.yml` | `repository_dispatch` type `hourly-tick` | dispatches `hourly.yml`; the second path for when GitHub drops scheduled runs (ADR 0017) |
-| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` (`retrain` input) | build today's baselines from the previous 28 day files, save them to the Actions cache; **score the live bursts of two days ago** (`cli live-score`, H10); **Mondays: retrain the forecast models** (`cli forecast-retrain`, ADR 0029) |
+| `daily.yml` | cron `30 3 * * *`, `workflow_dispatch` (`retrain` input) | build today's baselines from the previous 28 day files, save them to the Actions cache; **snapshot yesterday's live bursts from the Worker** (`cli live-snapshot`, when `LIVE_URL` is set) and **score the live bursts of two days ago** (`cli live-score`, H10); **Mondays: retrain the forecast models** (`cli forecast-retrain`, ADR 0029) |
 | `wikidata-monthly.yml` | cron `30 6 8 * *` | rebuild `data/wikidata/sitelinks.parquet` |
 | `pages.yml` | push to `app/**`, `workflow_dispatch` | deploy `app/` to GitHub Pages ([sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/)); data is read from the Hub at runtime, so hourly updates need no redeploy |
-| `live.yml` | cron `23 * * * *`, `workflow_dispatch`, and queued by every `hourly.yml` run | the **live layer** in shifts of 5 h 42 min: consumes EventStreams, publishes `data/live/` every 5 min, hands state to the next shift (ADR 0030) |
-| `space.yml` | push to `live/**`, `workflow_dispatch` | deploys `live/` to the Space `Sbaiiiiii/looked-up-live` once it exists; warns otherwise |
+| `worker.yml` | push to `worker/**` or `config/live.yml`, `workflow_dispatch` | tests (vitest) and deploys the **live layer** Worker when the Cloudflare secrets exist (ADR 0032) |
+| `live.yml` | `workflow_dispatch` only (**disabled**) | the old Actions shifts of ADR 0030, kept for a one-off manual run |
+| `space.yml` | push to `live/**`, `workflow_dispatch` | would deploy `live/` to a Space; Gradio and Docker Spaces need a paid plan (ADR 0032), so it only warns |
 | `hub-maintenance.yml` | cron `41 4 2 * *`, `workflow_dispatch` | **squash the dataset repo's history** (`cli hub --squash`) and report storage |
 | `backfill.yml` | manual | parallel resumable backfill from `pageview_complete` |
 | `tests.yml` | push, PR | pytest |
@@ -108,39 +109,51 @@ Duplicates are harmless: the hourly job is idempotent, and its concurrency group
 
 The old in-repo `data/raw` (regenerable caches) and `.venv.icloud-old` are leftovers that can be deleted by hand.
 
-## Live layer (Phase 5, ADR 0030)
+## Live layer (Phase 5, ADR 0032)
 
-- **What it is.** One EventStreams `recentchange` connection.
-  - It keeps human edits and new pages in namespace 0 of our 30 Wikipedias, and drops maintenance edits.
-  - It detects edit bursts and groups them by Wikidata item.
-  - It stores **no user data**: editors are counted through a salted hash that lives only inside its 30-minute
-    window.
-- **Where it runs today:** GitHub Actions shifts (`live.yml`). Docker Spaces need a paid plan.
-  - Each shift publishes, every 5 minutes:
-    - `data/live/live.json` (the last 60 minutes);
-    - `data/live/stats.json` (the last 24 h);
-    - `data/live/bursts/YYYY-MM-DD.jsonl` (raw bursts: language, title, time, counts, QID).
-  - `data/live/state.json.gz` and `qids.json` carry state to the next shift, which resumes with `Last-Event-ID`.
-- **Continuity:**
-  - One shift runs while another waits in the `live-layer` concurrency group.
-  - The hourly cron, and every `hourly.yml` run, queue a waiting shift.
-  - The existing cron-job.org pinger already dispatches `hourly.yml` at :40, so **no new pinger job is needed** while
-    the layer runs in Actions.
-- **Gaps are visible.**
-  - `status.gap_minutes` is how much of the last 60 minutes the stream did not cover (cold start, outage).
-  - The app shows a quiet "resting" line when `live.json` is older than 15 minutes or the gap is the full hour.
-- **If a Space becomes available** (Hugging Face PRO):
-  1. Create `Sbaiiiiii/looked-up-live` with the Docker SDK. `space.yml` deploys `live/` on the next push, or run it
-     by hand.
-  2. Free Spaces **sleep after 48 h without traffic**, and their disk is wiped on restart. On wake-up the service
-     replays the last 60 minutes (`since`) and reports the uncovered minutes in `gap_minutes`.
-  3. Add a cron-job.org job, every hour, `GET` (no headers needed):
-     **`https://sbaiiiiii-looked-up-live.hf.space/health`**
-  4. Point the app at it with `?live=https://sbaiiiiii-looked-up-live.hf.space/live.json`, or change `DEFAULT` in
-     `app/js/live.js`. Then disable `live.yml`.
-- **H10 accumulation.** `daily.yml` runs `cli live-score`. It scores the bursts of two days ago against the lake's
-  reading events and appends to `data/live/lead_time.csv` on the Hub. Pipelines never commit to the repo, so the
-  file lives on the lake.
+- **Where it runs: a Cloudflare Worker,** `worker/` (TypeScript), Workers free plan.
+  - A Cron Trigger every 5 minutes polls `recentchanges` on the 30 Wikipedias and applies the burst rules from
+    `config/live.yml`. The Python `live/` package is the reference implementation.
+  - State lives in Workers KV, one write per poll.
+  - The Worker serves `/live.json`, `/stats.json`, `/bursts.json?hours=72` and `/health`, with CORS for every origin,
+    cached 15 s.
+- **No user data:** editors become bits in a salted 64-bit sketch per 5-minute slot.
+- **The old GitHub Actions shifts (`live.yml`) are disabled:** manual only, nothing queues them (ADR 0032).
+
+### One-time setup (owner)
+
+1. **Create an API token** in the Cloudflare dashboard: *My Profile › API Tokens › Create Token › Custom token*.
+   - Permissions:
+     - **Account › Workers Scripts › Edit**
+     - **Account › Workers KV Storage › Edit**
+   - Account resources: *Include › your account*. No zone permissions are needed.
+2. **Note the Account ID** (dashboard home, right column).
+3. **Add the repository secrets:**
+   ```bash
+   gh secret set CLOUDFLARE_API_TOKEN -R Sbaiii/looked-up      # paste the token
+   gh secret set CLOUDFLARE_ACCOUNT_ID -R Sbaiii/looked-up     # paste the account id
+   ```
+4. **Deploy:** run `gh workflow run worker.yml`. It runs the vitest suite, creates the KV namespace and the `SALT`
+   secret, and deploys. The log prints the Worker URL, `https://looked-up-live.<your-subdomain>.workers.dev`.
+5. **Tell the pipeline and the app about the URL:**
+   - `gh variable set LIVE_URL -R Sbaiii/looked-up --body https://looked-up-live.<your-subdomain>.workers.dev`
+     (used by the daily snapshot);
+   - in `app/js/live.js`, set `DEFAULT` to `https://looked-up-live.<your-subdomain>.workers.dev/live.json` and push.
+6. **Pinger.** Add a cron-job.org job, every hour, `GET` (no headers):
+   **`https://looked-up-live.<your-subdomain>.workers.dev/health`**
+   - Workers don't sleep, and the Cron Trigger runs on its own. The pinger is a watchdog only: `"connected": false`
+     or a large `gap_minutes` means polls have stopped.
+
+### If it goes quiet
+
+- **`/health` shows `connected: false` or `gap_minutes` > 10.** Check the Worker's cron in the Cloudflare
+  dashboard (*Workers › looked-up-live › Triggers / Logs*).
+- **"Exceeded CPU" errors.** Split the wikis across two cron triggers (ADR 0032, Risk).
+- **The app shows a quiet "resting" line on its own** when `live.json` is older than 15 minutes or the whole hour
+  is a gap.
+- **H10 accumulation.** `daily.yml` runs `cli live-snapshot`, which copies the Worker's bursts of yesterday to
+  `data/live/bursts/` on the lake, only when `LIVE_URL` is set. It then runs `cli live-score`, which appends to
+  `data/live/lead_time.csv`.
 
 ## Warehouse refresh (weekly, by hand; ADR 0031)
 
@@ -163,5 +176,5 @@ mirror, so it doesn't run on GitHub runners.
 | Disk filling during a DuckDB run | `du -sh ~/looked-up-data/tmp/duckdb` | capped at 20 GiB by design; lower `LOOKEDUP_DUCKDB_MAX_TEMP` if needed |
 | App shows stale data | `data/app/today.json` `generated_at` on the Hub; the hourly log's "Export app data" step | `gh workflow run hourly.yml`; full rebuild: `python -m lookedup.cli app-export --backfill --upload` (needs the warehouse and a lake mirror) |
 | Forecasts missing in the app | `data/models/models.json` on the Hub; the hourly log for "forecasts failed" | `gh workflow run daily.yml -f retrain=true`; the export never fails because of forecasts |
-| Right-now strip says "resting" | `data/live/live.json` `generated_at` and `status`; Actions → `live layer` runs | `gh workflow run live.yml`; check `HF_TOKEN`; a shift resumes from `data/live/state.json.gz` |
+| Right-now strip says "resting" | the Worker's `/health` (`connected`, `gap_minutes`); is `DEFAULT` in `app/js/live.js` the Worker URL? | Cloudflare dashboard › Workers › looked-up-live › Logs; redeploy with `gh workflow run worker.yml` |
 | Hub storage growing | `python -m lookedup.cli hub` | `gh workflow run hub-maintenance.yml` |
