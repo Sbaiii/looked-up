@@ -170,3 +170,58 @@ def died_near(claims: dict, start: date, cfg: AnalyticsConfig) -> bool:
         if -ev["death_window_days_after"] <= (start - died).days <= ev["death_window_days_before"]:
             return True
     return False
+
+
+# ---------------------------------------------------------------- descriptions and gender (ADR 0026)
+
+TEXT_SCHEMA = pa.schema([("qid", pa.int64()), ("descriptions_json", pa.string()), ("gender", pa.string())])
+FEMALE = {6581072, 1052281}   # female, trans woman
+MALE = {6581097, 2449503}     # male, trans man
+
+
+def gender_of(values: list[int]) -> str | None:
+    """P21 values -> 'female' / 'male' / 'other' (non-binary and other values) / None (no P21)."""
+    if not values:
+        return None
+    if set(values) <= FEMALE:
+        return "female"
+    if set(values) <= MALE:
+        return "male"
+    return "other"
+
+
+def fetch_text_sparql(qids: list[int], langs: list[str], batch: int = 400) -> list[dict]:
+    """Wikidata descriptions in ``langs`` and P21 for ``qids``, via the Query Service."""
+    rows = []
+    lang_list = ", ".join(f"'{l}'" for l in langs)
+    for i in range(0, len(qids), batch):
+        chunk = qids[i:i + batch]
+        values = " ".join(f"wd:Q{q}" for q in chunk)
+        desc: dict[int, dict[str, str]] = {q: {} for q in chunk}
+        sex: dict[int, list[int]] = {q: [] for q in chunk}
+        for b in _sparql(f"SELECT ?item ?d WHERE {{ VALUES ?item {{ {values} }} ?item schema:description ?d . "
+                         f"FILTER(lang(?d) IN ({lang_list})) }}"):
+            q = int(b["item"]["value"].rsplit("/Q", 1)[1])
+            desc[q][b["d"]["xml:lang"]] = b["d"]["value"]
+        for b in _sparql(f"SELECT ?item ?g WHERE {{ VALUES ?item {{ {values} }} ?item wdt:P21 ?g . }}"):
+            q = int(b["item"]["value"].rsplit("/Q", 1)[1])
+            if "/entity/Q" in b["g"]["value"]:
+                sex[q].append(int(b["g"]["value"].rsplit("/Q", 1)[1]))
+        rows += [{"qid": q, "descriptions_json": json.dumps(desc[q], ensure_ascii=False), "gender": gender_of(sex[q])}
+                 for q in chunk]
+        log.info("descriptions (sparql): %d/%d fetched", min(i + batch, len(qids)), len(qids))
+        time.sleep(1)
+    return rows
+
+
+def fetch_text(qids: Iterable[int], cache: Path, langs: list[str]) -> pa.Table:
+    """Descriptions and gender for ``qids``, fetching only those missing from the Parquet ``cache``."""
+    have = pq.read_table(cache) if cache.exists() else TEXT_SCHEMA.empty_table()
+    todo = sorted(set(int(q) for q in qids) - set(have["qid"].to_pylist()))
+    if not todo:
+        return have
+    rows = fetch_text_sparql(todo, langs)
+    table = pa.concat_tables([have, pa.Table.from_pylist(rows, schema=TEXT_SCHEMA)])
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(table, cache)
+    return table

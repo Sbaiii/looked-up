@@ -31,3 +31,27 @@ def test_generic_and_death_window():
     assert died_near(c, date(2026, 8, 28), CFG) and died_near(c, date(2026, 9, 4), CFG)
     assert died_near(c, date(2026, 8, 27), CFG)          # event one day before the recorded date
     assert not died_near(c, date(2026, 9, 6), CFG) and not died_near({}, date(2026, 8, 28), CFG)
+
+
+def test_gender_from_p21():
+    from lookedup.analytics.entities import gender_of
+    assert gender_of([6581072]) == "female" and gender_of([1052281]) == "female"
+    assert gender_of([6581097]) == "male"
+    assert gender_of([48270]) == "other"           # non-binary
+    assert gender_of([6581072, 48270]) == "other"
+    assert gender_of([]) is None
+
+
+def test_fetch_text_caches_and_fetches_only_new(tmp_path, monkeypatch):
+    from lookedup.analytics import entities
+    calls = []
+
+    def fake(qids, langs):
+        calls.append(list(qids))
+        return [{"qid": q, "descriptions_json": '{"en": "x"}', "gender": None} for q in qids]
+
+    monkeypatch.setattr(entities, "fetch_text_sparql", fake)
+    cache = tmp_path / "text.parquet"
+    assert entities.fetch_text([1, 2], cache, ["en"]).num_rows == 2
+    assert entities.fetch_text([2, 3], cache, ["en"]).num_rows == 3
+    assert calls == [[1, 2], [3]]
