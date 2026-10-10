@@ -27,6 +27,7 @@ Commands:
   refresh-warehouse   mirror new day files and extend the warehouse to yesterday (weekly, by hand)
   live-h9       Phase 5 backtest: edit-burst lead time over the first reading spike (MediaWiki revisions)
   live-score    Phase 5 daily: score the live bursts of two days ago against the lake (H10 accumulates)
+  live-snapshot copy yesterday's bursts and the stats from the live host to the lake (daily, ADR 0032)
 """
 
 from __future__ import annotations
@@ -294,6 +295,22 @@ def cmd_live_score(a):
     print(json.dumps(append_scores(open_store(a.local), day), indent=1, default=str))
 
 
+def cmd_live_snapshot(a):
+    import os
+    from datetime import timedelta
+
+    from lookedup.dumps import utcnow
+    from lookedup.live_analysis import snapshot
+    from lookedup.store import open_store
+
+    url = a.url or os.environ.get("LIVE_URL")
+    if not url:
+        log.warning("LIVE_URL not set: no live host to snapshot")
+        return
+    day = date.fromisoformat(a.day) if a.day else utcnow().date() - timedelta(days=1)
+    print(json.dumps(snapshot(open_store(a.local), url, day), indent=1))
+
+
 def cmd_ground_truth(a):
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -407,6 +424,9 @@ def main(argv: list[str] | None = None) -> None:
     add("live-h9", cmd_live_h9, local=False)
     sp = add("live-score", cmd_live_score)
     sp.add_argument("--day", help="UTC day of the bursts to score (default: two days ago)")
+    sp = add("live-snapshot", cmd_live_snapshot)
+    sp.add_argument("--url", help="live host base URL (default: $LIVE_URL)")
+    sp.add_argument("--day", help="UTC day to snapshot (default: yesterday)")
     add("ground-truth", cmd_ground_truth, local=False)
     sp = add("evaluate", cmd_evaluate, local=False)
     sp.add_argument("--audit-sample", action="store_true")

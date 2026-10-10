@@ -277,3 +277,26 @@ def precision(rows: list[dict]) -> dict:
     return {"live_events_scored": n, "precision": p(live), "forward_precision": p(live, "forward_hit"),
             "base_rate_single_bursts": p(single), "single_bursts_scored": len(single),
             "verdict": ("inconclusive" if n < 100 else ("supported" if p(live) >= 0.30 else "rejected"))}
+
+
+# ---------------------------------------------------------------- daily snapshot from the live host (ADR 0032)
+
+def snapshot(store, base_url: str, day: date) -> dict:
+    """Copy ``day``'s bursts and the current stats from the live host to the lake, once a day (the only live files
+    the pipeline still commits): data/live/bursts/DAY.jsonl and data/live/daily/DAY-stats.json."""
+    import tempfile
+
+    from lookedup.scorer import _commit
+
+    base = base_url.rstrip("/")
+    bursts = session().get(f"{base}/bursts.json", params={"hours": 72}, timeout=30).json()["bursts"]
+    stats = session().get(f"{base}/stats.json", timeout=30).json()
+    lo = datetime(day.year, day.month, day.day, tzinfo=timezone.utc).timestamp()
+    rows = [b for b in bursts if lo <= b["ts"] < lo + 86400]
+    with tempfile.TemporaryDirectory() as tmpd:
+        tmp = Path(tmpd)
+        (tmp / "b.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
+        (tmp / "s.json").write_text(json.dumps(stats, ensure_ascii=False))
+        _commit(store, {f"data/live/bursts/{day}.jsonl": tmp / "b.jsonl", f"data/live/daily/{day}-stats.json": tmp / "s.json"},
+                f"data: live layer daily snapshot {day} ({len(rows)} bursts)")
+    return {"day": f"{day}", "bursts": len(rows), "live_events_24h": stats.get("live_events_24h")}
