@@ -177,7 +177,7 @@ button { background: none; border: none; cursor: pointer; }
 
 /* "Right now" strip (Phase 5): reserved height, so arriving data never shifts the page */
 .livestrip { border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--paper-2) 70%, transparent); }
-.livestrip__inner { max-width: var(--max); margin-inline: auto; padding: 0.6rem var(--gutter) 0.5rem; height: 7.6rem; overflow: hidden; }
+.livestrip__inner { max-width: var(--max); margin-inline: auto; padding: 0.6rem var(--gutter) 0.5rem; height: 8.6rem; overflow: hidden; }
 .livestrip__head { display: flex; align-items: center; gap: 0.55rem; height: 1.2rem; }
 .pulse { flex: none; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #ff5c5c; box-shadow: 0 0 0 0 rgba(255, 92, 92, 0.6); animation: pulse 2s infinite; }
 .livestrip.is-resting .pulse { background: var(--faint); animation: none; }
