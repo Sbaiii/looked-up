@@ -60,6 +60,21 @@ How the Worker works, and why:
   live-snapshot`, which copies yesterday's bursts and the stats from the Worker to the lake for H10
   (`data/live/bursts/DAY.jsonl`, `data/live/daily/DAY-stats.json`).
 
+## Measured after deploying, and the fallback applied (2026-10-10)
+
+- **Worker:** `https://looked-up-live.abdellahsbaisbai.workers.dev`. `wrangler tail`
+  (`.github/workflows/worker-observe.yml`) showed polls using **47–54 ms of CPU** (wall time about 3.3 s):
+  - 769–1,299 rows fetched;
+  - a 470–530 KB state blob.
+  - `/live.json` requests used 9–10 ms.
+- **That is over the free plan's 10 ms,** although Cloudflare still returned `ok`. So the following was applied:
+  - **The fallback:** two cron triggers (`*/5` and `2-59/5`), each polling 15 wikis. That makes 576 KV writes a day.
+  - **No BigInt:** editor bitmaps are two 32-bit numbers. Distinct editors are computed only once an article has
+    enough edits to qualify, which most never reach.
+  - **A compact state:** slots are arrays, hourly counts are keyed by short title hashes, and articles that never
+    burst keep 30 min instead of 60.
+  - **An edge cache** for `/live.json` and `/stats.json` (15 s), so most requests skip the KV read and the parse.
+
 ## Decision 3: tune the rules (`config/live.yml`)
 
 | Rule | Before | Now | Why |
