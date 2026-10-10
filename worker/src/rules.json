@@ -1,0 +1,56 @@
+{
+ "windows_minutes": [
+  10,
+  30,
+  60
+ ],
+ "burst": {
+  "edits": 5,
+  "editors": 3,
+  "window_minutes": 30,
+  "ratio": 8
+ },
+ "new_article": {
+  "edits": 5,
+  "editors": 2,
+  "window_minutes": 60
+ },
+ "baseline": {
+  "default": 1,
+  "hours": 168,
+  "min_hours": 24
+ },
+ "cooldown_hours": 6,
+ "live_event_window_minutes": 120,
+ "keep_bursts_hours": 72,
+ "live_window_minutes": 60,
+ "single_bursts_shown": 5,
+ "hourly_counts_hours": 168,
+ "maintenance_patterns": [
+  "\\brevert",
+  "\\bundo\\b",
+  "\\bundid\\b",
+  "\\brollback\\b",
+  "^rv\\b",
+  "\\brv\\s",
+  "reverted edits",
+  "undid revision",
+  "\\bAWB\\b",
+  "\\bHotCat\\b",
+  "\\bTwinkle\\b",
+  "\\bhuggle\\b",
+  "\\bIABot\\b",
+  "InternetArchiveBot",
+  "\\bWPCleaner\\b",
+  "^\\s*\\{\\{[^}]*\\}\\}\\s*$",
+  "\\btypos?\\b",
+  "fix typo",
+  "copyedit"
+ ],
+ "revert_tags": [
+  "mw-reverted",
+  "mw-rollback",
+  "mw-undo",
+  "mw-manual-revert"
+ ]
+}
