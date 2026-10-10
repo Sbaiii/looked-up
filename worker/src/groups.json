@@ -1,0 +1,80 @@
+{
+ "comment": "Poll groups (ADR 0033): English alone, the other 29 wikis balanced by measured non-bot main-namespace edits per 5 minutes (30-minute sample).",
+ "measured_at": "2026-10-10T15:20Z",
+ "rows_per_5min": {
+  "en": 339,
+  "ja": 46,
+  "de": 62,
+  "ru": 45,
+  "fr": 77,
+  "es": 32,
+  "it": 45,
+  "zh": 39,
+  "pt": 20,
+  "pl": 26,
+  "fa": 12,
+  "nl": 19,
+  "ar": 14,
+  "tr": 8,
+  "id": 8,
+  "sv": 6,
+  "ko": 14,
+  "cs": 7,
+  "fi": 10,
+  "uk": 19,
+  "he": 16,
+  "vi": 9,
+  "hu": 10,
+  "el": 6,
+  "th": 6,
+  "ro": 7,
+  "no": 3,
+  "sr": 3,
+  "bg": 2,
+  "hi": 1
+ },
+ "groups": [
+  [
+   "en"
+  ],
+  [
+   "fr",
+   "uk",
+   "hu",
+   "sv",
+   "sr"
+  ],
+  [
+   "de",
+   "pt",
+   "ar",
+   "vi",
+   "ro",
+   "bg"
+  ],
+  [
+   "ja",
+   "pl",
+   "nl",
+   "fa",
+   "id",
+   "no"
+  ],
+  [
+   "ru",
+   "zh",
+   "ko",
+   "tr",
+   "el",
+   "hi"
+  ],
+  [
+   "it",
+   "es",
+   "he",
+   "fi",
+   "cs",
+   "th"
+  ]
+ ]
+}
