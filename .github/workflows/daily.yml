@@ -72,6 +72,11 @@ jobs:
           else
             echo "not Monday: no retrain"
           fi
+      - name: Snapshot yesterday's live bursts and stats from the live host (ADR 0032)
+        if: steps.token.outputs.present == 'true' && vars.LIVE_URL != ''
+        env:
+          LIVE_URL: ${{ vars.LIVE_URL }}
+        run: python -m lookedup.cli live-snapshot || echo "::warning::live-snapshot failed"
       - name: Score the live bursts of two days ago (Phase 5, H10 accumulates on the lake)
         if: steps.token.outputs.present == 'true'
         run: python -m lookedup.cli live-score || echo "::warning::live-score failed"
