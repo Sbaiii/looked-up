@@ -21,10 +21,21 @@
         })();
     </script>
 
+    <!-- Social preview: GitHub Pages is static, so every URL shares the default card. Per-day cards exist on the
+         Hub (data/app/og/YYYY-MM-DD.png) but need a server to be chosen per URL (ADR 0027). -->
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Looked Up">
+    <meta property="og:url" content="https://sbaiii.github.io/looked-up/">
     <meta property="og:title" content="Looked Up: what the world looked up, hour by hour">
     <meta property="og:description"
         content="Hour by hour, which topics suddenly drew attention across 30 Wikipedia languages, and how fast it spread.">
+    <meta property="og:image" content="https://sbaiii.github.io/looked-up/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Looked Up: what the world looked up, hour by hour, on a map of languages">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Looked Up: what the world looked up, hour by hour">
+    <meta name="twitter:image" content="https://sbaiii.github.io/looked-up/assets/og.png">
 
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
@@ -64,12 +75,14 @@
 
     <main id="main" class="layout">
         <section class="hero" id="today" aria-labelledby="hero-title">
-            <p class="meta" data-i18n="hero.kicker">fig. 00 · last 24 hours</p>
+            <p class="meta" id="hero-kicker">fig. 00 · last 24 hours</p>
             <h1 class="hero__title display" id="hero-title" data-i18n="hero.title">Today the world looked up</h1>
             <div class="hero__event" id="hero-event" aria-live="polite">
                 <p class="hero__label skeleton" id="hero-label">&nbsp;</p>
+                <p class="hero__desc" id="hero-desc"></p>
                 <p class="hero__counter num" id="hero-counter">&nbsp;</p>
                 <p class="hero__sub" id="hero-sub">&nbsp;</p>
+                <p class="hero__brief" id="hero-brief"></p>
             </div>
             <div class="hero__actions">
                 <button type="button" class="btn" id="replay" data-i18n="hero.replay" hidden>Replay the spread</button>
@@ -81,7 +94,12 @@
                 <div class="viz__stage" id="viz" role="img" aria-label="Map of attention by language"></div>
                 <figcaption class="viz__caption">
                     <span class="viz__now" id="viz-now"></span>
-                    <span class="legend" aria-hidden="true"><span data-i18n="map.less">less</span><i class="legend__ramp"></i><span data-i18n="map.more">more</span></span>
+                    <span class="legend" aria-hidden="true">
+                        <span data-i18n="map.less">less</span>
+                        <span class="legend__scale"><i class="legend__ramp"></i><span class="legend__ticks" id="legend-ticks"></span></span>
+                        <span data-i18n="map.more">more</span>
+                    </span>
+                    <span class="viz__note" data-i18n="map.scale">Peak surprise in each language, same scale for every event</span>
                     <span class="viz__note" data-i18n="map.caption">We see languages, not countries.</span>
                 </figcaption>
                 <button type="button" class="btn btn--small viz__mode" id="viz-mode" hidden data-i18n="map.globe">3D globe</button>
@@ -104,7 +122,11 @@
                         <input type="range" id="day-slider" min="0" max="0" value="0" step="1">
                         <button type="button" class="btn btn--icon" id="next-day" data-i18n-aria="timeline.next" aria-label="Next day">&rarr;</button>
                     </div>
-                    <p class="scrubber__out" aria-live="polite"><output id="day-out" for="day-slider"></output> · <span id="day-count"></span></p>
+                    <div class="scrubber__head">
+                        <p class="scrubber__out" aria-live="polite"><output id="day-out" for="day-slider"></output> · <span id="day-count"></span></p>
+                        <button type="button" class="linkbtn" id="copy-day" data-i18n="ui.copy_day">Copy link to this day</button>
+                    </div>
+                    <p class="day-brief" id="day-brief"></p>
                 </div>
                 <div class="filters" role="radiogroup" data-i18n-aria="timeline.filter" aria-label="Show">
                     <button type="button" role="radio" aria-checked="true" data-tier="noticed" data-i18n="timeline.all">All tiers</button>
@@ -145,6 +167,7 @@
                 </div>
                 <p class="briefing__date meta" id="brief-date"></p>
                 <p class="briefing__text" id="brief-text"></p>
+                <p class="briefing__about" id="brief-about"></p>
                 <ul class="facts" id="brief-facts"></ul>
                 <p class="help" data-i18n="briefing.note"></p>
             </section>
@@ -163,6 +186,14 @@
         </div>
 
     </main>
+
+    <nav class="bottomnav" data-i18n-aria="ui.menu" aria-label="Sections">
+        <a href="#today" data-i18n="nav.today">Today</a>
+        <a href="#days" data-i18n="nav.timeline">Days</a>
+        <a href="#languages" data-i18n="nav.languages">Languages</a>
+        <a href="#briefing" data-i18n="nav.briefing">Briefing</a>
+        <a href="#about" data-i18n="nav.about">About</a>
+    </nav>
 
     <footer class="footer">
         <p class="meta">Looked Up · <a href="https://huggingface.co/datasets/Sbaiiiiii/looked-up">Hugging Face</a> · <a
