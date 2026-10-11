@@ -25,6 +25,7 @@ CLAIMS = DATA_DIR / "warehouse" / "entity_claims.parquet"
 
 
 def _csv(path: Path, rows: list[dict] | list[tuple], header: list[str] | None = None) -> None:
+    """Write dicts with a header row, or tuples under ``header``, as CSV."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as f:
         if rows and isinstance(rows[0], dict):
