@@ -39,6 +39,7 @@ def _csv(path: Path, rows: list[dict] | list[tuple], header: list[str] | None = 
 
 
 def evaluate() -> dict:
+    """Run the pre-registered Phase 2 evaluation (H1, H2, H4, ablations, case studies) and return the metrics."""
     cfg = load()
     ctx = metrics.open_context(WAREHOUSE_DB, CURRENT_EVENTS, cfg)
     con = ctx.con
@@ -91,12 +92,14 @@ def evaluate() -> dict:
 
 
 def audit_sample() -> int:
+    """Write the H3 audit sample; returns the number of units drawn."""
     cfg = load()
     ctx = metrics.open_context(WAREHOUSE_DB, CURRENT_EVENTS, cfg)
     return audit.sample(ctx.con, cfg, OUT / "h3_sample.csv")
 
 
 def audit_score() -> dict:
+    """Score the labelled H3 sample and write h3_audit.csv and h3_results.json."""
     cfg = load()
     ctx = metrics.open_context(WAREHOUSE_DB, CURRENT_EVENTS, cfg)
     res = audit.score(ctx.con, cfg, OUT / "h3_sample.csv", OUT / "h3_labels.csv")
