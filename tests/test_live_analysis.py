@@ -42,3 +42,16 @@ def test_hypotheses_keep_the_preregistered_rules_whatever_the_live_config():
     with LA.prereg_rules() as w:
         assert w == 1800 and B.live_events(pair, w) == []                # pre-registered: 30 min
     assert B.GROUP_WINDOW_S == 7200                                      # restored
+
+
+def test_h9_verdict_follows_the_preregistered_60_minutes(monkeypatch):
+    monkeypatch.setattr(LA, "plot_leads", lambda leads, med: None)   # no figure from a unit test
+    rows = [{"lead_minutes": m, "category": "death"} for m in ("-120", "-30", "", "90", "-60")]
+    res = LA.h9_summary(rows)
+    assert res["events"] == 5 and res["with_burst"] == 4
+    assert res["median_lead_minutes"] == -45
+    assert res["verdict"] == "rejected"
+    assert res["share_lead_positive"] == 0.25
+    early = LA.h9_summary([{"lead_minutes": "75", "category": None}] * 3)
+    assert early["verdict"] == "supported"
+    assert LA.h9_summary([{"lead_minutes": "", "category": None}])["verdict"] is None
