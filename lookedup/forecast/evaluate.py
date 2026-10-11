@@ -152,6 +152,7 @@ def fit_m1(tr, va, target, params, enc):
 
 
 def permutation_importance(model, enc, rows, target, repeats=5, calibrated=None) -> list[dict]:
+    """Drop in validation PR AUC (M1) or rise in MAE (M2) when each feature is shuffled, averaged over ``repeats``."""
     rng = np.random.default_rng(T.SEED)
     X = enc.matrix(rows)
     y = T.labels(rows, target)
@@ -170,6 +171,7 @@ def permutation_importance(model, enc, rows, target, repeats=5, calibrated=None)
 
 
 def rolling(rows, params_m1, params_m2) -> list[dict]:
+    """Rolling-origin check over weekly folds: train before, calibrate on the prior week, test on the fold."""
     from datetime import datetime
     out = []
     for lo, hi in FOLDS:
@@ -198,6 +200,7 @@ def rolling(rows, params_m1, params_m2) -> list[dict]:
 # ---------------------------------------------------------------- figures
 
 def plot_calibration(curves: dict[str, list[dict]], path: Path) -> None:
+    """Calibration chart of one or more curves against the diagonal."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -219,6 +222,7 @@ def plot_calibration(curves: dict[str, list[dict]], path: Path) -> None:
 
 
 def plot_importance(imp: list[dict], path: Path, title: str, subtitle: str) -> None:
+    """Horizontal bar chart of the ten most important features."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -238,6 +242,7 @@ def plot_importance(imp: list[dict], path: Path, title: str, subtitle: str) -> N
 # ---------------------------------------------------------------- run
 
 def run() -> dict:
+    """The pre-registered Phase 4 backtest: tuning on validation, one scoring of the test set, baselines, folds and figures."""
     from lookedup.warehouse import WAREHOUSE_DB
 
     con = db.connect()
