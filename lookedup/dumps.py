@@ -57,6 +57,7 @@ def file_name(ts_hour_start: datetime) -> str:
 
 
 def file_url(ts_hour_start: datetime) -> str:
+    """URL of the hourly dump for the hour starting at ``ts_hour_start``; dumps are named and filed by the hour they end."""
     end = ts_hour_start + timedelta(hours=1)
     return f"{DUMPS_BASE}/{end:%Y}/{end:%Y-%m}/{file_name(ts_hour_start)}"
 
@@ -125,9 +126,11 @@ class _Watchdog(threading.Thread):
         self._done = threading.Event()
 
     def add(self, n: int) -> None:
+        """Count ``n`` more bytes received."""
         self.bytes += n
 
     def run(self) -> None:
+        """Every ``interval`` seconds, close the connection if the last ``window`` seconds averaged under ``min_bps``."""
         mark_b, mark_t = 0, time.monotonic()
         while not self._done.wait(self.interval):
             now = time.monotonic()
@@ -149,6 +152,7 @@ class _Watchdog(threading.Thread):
             pass
 
     def stop(self) -> None:
+        """Stop watching once the download has finished."""
         self._done.set()
 
 
