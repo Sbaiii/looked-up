@@ -29,6 +29,8 @@ _SKIP_NS = ("file:", "image:", "category:", "wikt:", "portal:", "template:", ":"
 
 @dataclass(frozen=True)
 class Link:
+    """One link in a Current events entry: the portal day, its section, the entry and nesting depth, and the target."""
+
     date: date
     section: str
     entry_index: int
