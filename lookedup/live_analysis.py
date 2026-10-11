@@ -117,6 +117,7 @@ def _burst_time(revs, lang, title, lo, hi):
 # ---------------------------------------------------------------- H9
 
 def h9_events(con) -> list[dict]:
+    """The widest multi-language events of the H9 window from the warehouse, each with its languages, lead first."""
     rows = con.sql(f"""
         SELECT e.event_id, e.qid, e.start_hour, e.breadth, e.excess_views, e.lead_lang, e.category, e.label_en,
                list(struct_pack(lang := l.lang, title := l.title, lag := l.spread_lag_hours)
@@ -130,6 +131,7 @@ def h9_events(con) -> list[dict]:
 
 
 def run_h9() -> dict:
+    """The H9 backtest: for each event, find the first edit burst under the pre-registered rule and its lead over the first reading spike."""
     from lookedup.warehouse import WAREHOUSE_DB
 
     con = db.connect()
@@ -162,6 +164,7 @@ def run_h9() -> dict:
 
 
 def h9_summary(rows: list[dict]) -> dict:
+    """Median lead, quartiles, share with a burst, per-category medians (n >= 10) and the pre-registered H9 verdict."""
     leads = [int(r["lead_minutes"]) for r in rows if r["lead_minutes"] != ""]
     q = statistics.quantiles(leads, n=4) if len(leads) >= 4 else [None, None, None]
     by_cat: dict[str, list[int]] = {}
@@ -179,6 +182,7 @@ def h9_summary(rows: list[dict]) -> dict:
 
 
 def plot_leads(leads: list[int], med: float | None) -> None:
+    """Histogram of edit-burst lead times, clipped to +-24 h, with the pre-registered 60 minutes marked."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -270,6 +274,7 @@ def append_scores(store, day: date) -> dict:
 
 
 def precision(rows: list[dict]) -> dict:
+    """H10 precision of the scored live events, against the single-burst base rate; inconclusive below 100 events."""
     live = [r for r in rows if r["kind"] == "live"]
     single = [r for r in rows if r["kind"] == "single"]
     p = lambda rs, k="hit": (sum(int(r[k]) for r in rs) / len(rs)) if rs else None
