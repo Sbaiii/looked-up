@@ -20,6 +20,8 @@ DEFAULT_TIERS = (("planetary", 20), ("international", 5), ("noticed", 2))
 
 @dataclass(frozen=True)
 class SpikeParams:
+    """Thresholds of the spike rules: R1/R2 ratios against the baseline, the view floor and the R3 robust score."""
+
     r1_ratio: float
     r2_ratio: float
     r2_hours: int
@@ -30,6 +32,8 @@ class SpikeParams:
 
 @dataclass(frozen=True)
 class EventParams:
+    """How spikes combine into an attention event: languages, windows, episode gap and breadth tiers."""
+
     min_languages: int
     window_hours: int
     breadth_hours: int
@@ -41,14 +45,18 @@ class EventParams:
 
 @dataclass(frozen=True)
 class AnalyticsConfig:
+    """Typed access to the merged analytics configuration; ``raw`` keeps the YAML as loaded."""
+
     raw: dict
 
     @property
     def period_start(self) -> date:
+        """First day of data the analysis reads, baseline warm-up included."""
         return date.fromisoformat(self.raw["period"]["start"])
 
     @property
     def eval_start(self) -> date:
+        """First day that is scored and evaluated (after the warm-up)."""
         return date.fromisoformat(self.raw["period"]["eval_start"])
 
     @property
@@ -60,18 +68,22 @@ class AnalyticsConfig:
 
     @property
     def automation(self) -> dict:
+        """Parameters of the automation (bot) filter."""
         return self.raw["automation"]
 
     @property
     def baseline(self) -> dict:
+        """Parameters of the per-article baseline (window, weekday split)."""
         return self.raw["baseline"]
 
     @property
     def spike(self) -> SpikeParams:
+        """The spike rules R1 to R3 as typed parameters."""
         return SpikeParams(**self.raw["spike"])
 
     @property
     def event(self) -> EventParams:
+        """The pre-registered event parameters, plus the single-language share and the tiers."""
         e = self.raw["event"]
         v2 = self.raw.get("v2", {}).get("event", {})
         return EventParams(min_languages=e["min_languages"], window_hours=e["window_hours"],
@@ -81,6 +93,7 @@ class AnalyticsConfig:
 
     @property
     def tiers(self) -> tuple[tuple[str, int], ...]:
+        """Breadth tiers as (name, minimum languages), highest first; product.yml overrides the defaults."""
         t = self.raw.get("product", {}).get("tiers")
         return tuple(sorted(t.items(), key=lambda kv: -kv[1])) if t else DEFAULT_TIERS
 
@@ -103,6 +116,7 @@ class AnalyticsConfig:
 @lru_cache(maxsize=4)
 def load(path: Path = ANALYTICS_FILE, v2_path: Path = ANALYTICS_V2_FILE,
          product_path: Path = PRODUCT_FILE) -> AnalyticsConfig:
+    """Read config/analytics.yml, with the Phase 2b additions under ``v2`` and the product settings under ``product`` when those files exist."""
     raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     if Path(v2_path).exists():
         raw["v2"] = yaml.safe_load(Path(v2_path).read_text(encoding="utf-8")) or {}
