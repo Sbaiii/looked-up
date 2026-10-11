@@ -119,6 +119,7 @@ def short(text: str, n: int = DESC_MAX) -> str:
 
 def event_obj(e: dict, langs: list[dict], titles: dict[str, str], spark: list[int] | None,
               category: str | None, text: tuple[dict, str | None] | None = None, forecast: dict | None = None) -> dict:
+    """One event as the app reads it: ids, tier, breadth, lead, category, numbers, spark, languages with titles and lags, plus descriptions, gender and forecast when known."""
     rows = sorted(langs, key=lambda r: (r["spread_lag_hours"], r["lang"]))
     desc, gender = text or ({}, None)
     extra = {"desc": {l: short(desc[l]) for l in UI_LANGUAGES if desc.get(l)}}
@@ -165,6 +166,7 @@ def period_payload(kind: str, events: list[dict], langs: dict[str, list[dict]], 
                    sparks: dict[str, list[int]], categories: dict[int, str], generated_at: datetime,
                    texts: dict[int, tuple[dict, str | None]] | None = None, forecasts: dict | None = None,
                    **extra) -> dict:
+    """The JSON for a day or for today: the summary, the multi-language events and the single-language list."""
     multi, single = select(events, langs)
     texts = texts or {}
     forecasts = forecasts or {}
@@ -253,6 +255,7 @@ def sparklines(con: duckdb.DuckDBPyConnection, hourly_files: list[Path], events:
 
 
 def published(events: list[dict], langs: dict[str, list[dict]]) -> list[dict]:
+    """The events that make it into the app: the selected multi-language ones, then the single-language ones."""
     multi, single = select(events, langs)
     return multi + single
 
@@ -279,6 +282,7 @@ def events_from_spikes(con: duckdb.DuckDBPyConnection, spike_files: list[Path]) 
 
 def titles_from_sitelinks(con: duckdb.DuckDBPyConnection, sitelinks: Path, qids: set[int],
                           langs: list[str]) -> dict[int, dict[str, str]]:
+    """Article titles per QID and language from the sitelinks table, for the given QIDs."""
     con.execute("CREATE OR REPLACE TEMP TABLE _q(qid BIGINT)")
     con.executemany("INSERT INTO _q VALUES (?)", [(q,) for q in qids])
     out: dict[int, dict[str, str]] = defaultdict(dict)
@@ -290,6 +294,7 @@ def titles_from_sitelinks(con: duckdb.DuckDBPyConnection, sitelinks: Path, qids:
 
 
 def titles_from_api(qids: set[int], langs: list[str]) -> dict[int, dict[str, str]]:
+    """Article titles per QID and language from the Wikidata API (live exports, no local sitelinks)."""
     from lookedup.scorer import labels_for
 
     return {q: {l: t.replace(" ", "_") for l, t in ts.items()} for q, ts in labels_for(sorted(qids), langs).items()}
@@ -325,6 +330,7 @@ def texts_from_table(table) -> dict[int, tuple[dict, str | None]]:
 
 
 def texts_live(events: list[dict]) -> dict[int, tuple[dict, str | None]]:
+    """Descriptions and gender for the events' QIDs, fetched and cached in the warehouse's entity_text table."""
     from lookedup.analytics.entities import fetch_text
     from lookedup.languages import active_codes
     from lookedup.settings import DATA_DIR
@@ -371,6 +377,7 @@ def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, 
               titles: dict[int, dict[str, str]], categories: dict[int, str], hourly_files: list[Path],
               now: datetime, last_hour: datetime | None = None, texts: dict | None = None,
               forecasts: dict | None = None) -> dict:
+    """Write one day's JSON and its social card; returns the day summary for stats.json."""
     sparks = sparklines(con, hourly_files, published(events, langs), titles, last_hour)
     payload = period_payload("day", events, langs, titles, sparks, categories, now, texts, forecasts, date=f"{d:%Y-%m-%d}")
     size = dump(payload, out_dir / day_file(d))
