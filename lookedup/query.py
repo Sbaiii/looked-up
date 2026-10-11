@@ -25,6 +25,7 @@ def lake_root(local: bool = False) -> str:
 
 
 def _base(root: str) -> duckdb.DuckDBPyConnection:
+    """A connection able to read ``root``: httpfs for hf:// paths, with HF_TOKEN as a secret when it is set."""
     con = db.connect()
     if root.startswith("hf://"):
         con.execute("INSTALL httpfs; LOAD httpfs;")
