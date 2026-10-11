@@ -41,6 +41,8 @@ AUTOMATION_MAX_MOBILE_SHARE = 0.05
 
 @dataclass(frozen=True)
 class Language:
+    """One ranked Wikipedia from config/languages.yml: code, names, approximate speakers and rank."""
+
     code: str
     name_en: str | None
     name_native: str | None
