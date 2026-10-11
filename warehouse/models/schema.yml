@@ -156,16 +156,20 @@ models:
     description: Attention events under the product configuration (ADR 0021), with tier.
     columns:
       - name: event_id
+        description: "Q<id>@YYYYMMDDTHH under the product rule (2 languages)."
         tests: [unique, not_null]
       - name: breadth
+        description: "Languages spiking within 24 h of the start."
         tests: [not_null]
       - name: tier
+        description: "noticed (2+ languages), international (5+) or planetary (20+), from the breadth."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ["noticed", "international", "planetary"]
       - name: event_class
+        description: "multi_language or single_language (lead share of at least 95 %)."
         tests:
           - not_null
           - accepted_values:
