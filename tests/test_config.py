@@ -15,3 +15,13 @@ def test_spikes_are_stored_down_to_the_lowest_ablation_threshold():
     cfg = load()
     assert cfg.min_r3_ablation == min(cfg.raw["ablations"]["r3_threshold"])
     assert cfg.min_r3_ablation <= cfg.spike.r3_threshold
+
+
+def test_period_end_override_only_when_set(monkeypatch):
+    cfg = load()
+    monkeypatch.delenv("LOOKEDUP_PERIOD_END", raising=False)
+    registered = cfg.period_end
+    assert registered.isoformat() == cfg.raw["period"]["end"]
+    monkeypatch.setenv("LOOKEDUP_PERIOD_END", "2026-12-31")
+    assert cfg.period_end.isoformat() == "2026-12-31"
+    assert cfg.eval_start < registered
