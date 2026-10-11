@@ -104,28 +104,34 @@ models:
     description: Attention events under the primary configuration (prereg §2).
     columns:
       - name: event_id
+        description: "Q<id>@YYYYMMDDTHH: the entity and the hour the event starts."
         tests: [unique, not_null]
       - name: lead_lang
+        description: "First language to spike."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: "{{ var('languages') }}"
       - name: breadth
+        description: "Languages spiking within 24 h of the start."
         tests: [not_null]
       - name: category
+        description: "death when P570 falls within the event week, else the entity class."
         tests:
           - accepted_values:
               arguments:
                 values: ["death", "human", "sports", "entertainment", "disaster", "politics", "place",
                          "organization", "science_tech", "other"]
       - name: event_class
+        description: "multi_language, or single_language when one language holds at least 95 % of the excess views."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ["multi_language", "single_language"]
       - name: qid
+        description: "Numeric Wikidata item id of the entity."
         tests:
           - relationships:
               arguments:
