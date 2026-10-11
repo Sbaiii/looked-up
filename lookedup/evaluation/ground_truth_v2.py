@@ -27,6 +27,7 @@ DEATH_WORDS = re.compile(r"(?i)\b(death|died|dies|dead|passed away|passing|rip|d
 
 
 def _get(url: str, params: dict, retries: int = 5, **kw):
+    """GET with up to ``retries`` attempts and a short pause after each success, to stay polite to Wikimedia."""
     for attempt in range(retries):
         try:
             r = session().get(url, params=params, timeout=60, **kw)
@@ -41,6 +42,7 @@ def _get(url: str, params: dict, retries: int = 5, **kw):
 
 
 def _raw(title: str) -> str:
+    """Raw wikitext of an English Wikipedia page."""
     r = _get("https://en.wikipedia.org/w/index.php", {"title": title, "action": "raw"})
     return r.text
 
@@ -118,6 +120,7 @@ def usgs_quakes(start: datetime, end: datetime, min_mag: float) -> list[dict]:
 
 
 def _sparql(query: str) -> list[dict]:
+    """Run a SPARQL query on the Wikidata Query Service, retried up to 5 times; returns the result bindings."""
     for attempt in range(5):
         try:
             r = session().post(SPARQL, data={"query": query}, timeout=120,
@@ -171,6 +174,7 @@ def first_sitelink_created(qid: int, langs: list[str]) -> datetime | None:
 
 
 def _km(a_lat, a_lon, b_lat, b_lon) -> float:
+    """Great-circle distance in km between two points; infinite when a coordinate is missing."""
     if None in (a_lat, a_lon, b_lat, b_lon):
         return float("inf")
     p = math.pi / 180
@@ -249,6 +253,7 @@ def _boxes(wikitext: str) -> list[dict]:
 
 
 def _expand_links(text: str) -> list[str]:
+    """Article links in ``text`` after the API expands its templates (files and images left out)."""
     r = _get(EN_API, {"action": "expandtemplates", "text": text, "prop": "wikitext", "format": "json"})
     expanded = r.json()["expandtemplates"]["wikitext"]
     return [m.group(1).strip() for m in re.finditer(r"\[\[([^\[\]|#]+)(?:\|[^\]]*)?\]\]", expanded)
