@@ -35,6 +35,7 @@ log = logging.getLogger(__name__)
 
 
 def day_range(start: date, end: date, newest_first: bool = True) -> list[date]:
+    """Every date from ``start`` to ``end``, newest first by default so recent days land first."""
     days = [start + timedelta(days=i) for i in range((end - start).days + 1)]
     return days[::-1] if newest_first else days
 
@@ -65,6 +66,7 @@ def backfill_day(store: Store, day: date, langs: list[str], filt: ArticleFilter,
 
 
 def backfill(store: Store, start: date, end: date, newest_first: bool = True, keep_raw: bool = False) -> int:
+    """Backfill every day in [start, end] from pageview_complete; returns the number of hours written."""
     langs, filt = active_codes(), article_filter()
     days = day_range(start, end, newest_first)
     total = 0
@@ -106,6 +108,7 @@ def validate(store: Store, n: int = 3, seed: int | None = None) -> list[dict]:
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Command-line entry point: ``python -m lookedup.backfill --from DAY --to DAY``."""
     p = argparse.ArgumentParser(prog="python -m lookedup.backfill", description=__doc__.splitlines()[0])
     p.add_argument("--from", dest="start", required=True, type=date.fromisoformat)
     p.add_argument("--to", dest="end", required=True, type=date.fromisoformat)
