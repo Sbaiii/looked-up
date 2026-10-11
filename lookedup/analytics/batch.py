@@ -16,6 +16,7 @@ STAGING = DATA_DIR / "warehouse" / "staging"
 
 
 def days_between(start: date, end: date) -> list[date]:
+    """Every date from ``start`` to ``end``, both included."""
     return [start + timedelta(days=i) for i in range((end - start).days + 1)]
 
 
