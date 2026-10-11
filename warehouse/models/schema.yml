@@ -25,6 +25,7 @@ models:
     description: (lang, title) -> numeric Wikidata QID.
     columns:
       - name: qid
+        description: "Numeric Wikidata item id (no Q prefix)."
         tests: [not_null]
 
   - name: stg_manifest_hours
