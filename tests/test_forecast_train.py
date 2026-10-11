@@ -76,3 +76,10 @@ def test_logit_and_calibration_round_trip():
     assert np.isfinite(T.logit(np.array([0.0, 1.0]))).all()          # clipped, never infinite
     shifted = T.calibrate(p, (1.0, 1.0))
     assert (shifted > p).all()                                      # a positive intercept raises every forecast
+
+
+def test_m2_rows_use_the_three_hour_snapshot_and_observable_fades():
+    rows = [{"offset_h": h, "fade_observable": f} for h in (0, 1, 3) for f in (True, False)]
+    assert all(r["offset_h"] == 3 for r in T.m2_rows(rows, "excess_next24"))
+    assert len(T.m2_rows(rows, "excess_next24")) == 2
+    assert T.m2_rows(rows, "fade_hours") == [{"offset_h": 3, "fade_observable": True}]
