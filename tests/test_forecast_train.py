@@ -68,3 +68,11 @@ def test_category_decay_baseline():
     pred = E.m2_baselines("excess_next24", rows, rows[:3])["category_decay"]
     ratios = E.decay_ratios(rows)
     assert np.allclose(pred, np.log1p([10.0 * ratios["human"]] * 3))
+
+
+def test_logit_and_calibration_round_trip():
+    p = np.array([0.01, 0.2, 0.5, 0.8, 0.99])
+    assert np.allclose(T.calibrate(p, (1.0, 0.0)), p)               # identity parameters change nothing
+    assert np.isfinite(T.logit(np.array([0.0, 1.0]))).all()          # clipped, never infinite
+    shifted = T.calibrate(p, (1.0, 1.0))
+    assert (shifted > p).all()                                      # a positive intercept raises every forecast
