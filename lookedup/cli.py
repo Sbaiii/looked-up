@@ -111,6 +111,7 @@ def cmd_wikidata(a):
 
 
 def cmd_coverage(a):
+    """``coverage``: print a Markdown table of the Wikidata join coverage per language over the last ``--hours``."""
     from lookedup.query import lake_root
     from lookedup.settings import SITELINKS_PATH
     from lookedup.store import day_path, open_store
@@ -135,12 +136,14 @@ def cmd_coverage(a):
 
 
 def cmd_top(a):
+    """``top``: show the top articles of one language in one hour, desktop and mobile apart."""
     from lookedup.query import top
 
     top(a.lang, _hour(a.hour), n=a.n, local=a.local).show(max_width=200)
 
 
 def cmd_verify_hour(a):
+    """``verify-hour``: check that a dump file named for an hour's end holds that hour, against the REST API."""
     from lookedup.hourly import verify_alignment
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -148,6 +151,7 @@ def cmd_verify_hour(a):
 
 
 def cmd_push(a):
+    """``push``: upload the hours of the local lake that the Hub does not have yet, one commit per day file."""
     import pyarrow as pa
     import pyarrow.compute as pc
     import pyarrow.parquet as pq
@@ -182,6 +186,7 @@ def cmd_push(a):
 
 
 def cmd_card(a):
+    """``card``: upload dataset/README.md as the dataset card."""
     from lookedup.settings import DATASET_CARD
     from lookedup.store import HFStore
 
@@ -190,12 +195,14 @@ def cmd_card(a):
 
 
 def cmd_relocate_data(a):
+    """``relocate-data``: move the old in-repo data/ directory to LOOKEDUP_DATA_DIR."""
     from lookedup.relocate import relocate
 
     print(json.dumps(relocate(skip=tuple(a.skip)), indent=1))
 
 
 def cmd_sync(a):
+    """``sync``: mirror the Hub's day files (from ``--from``), manifest and sitelinks into the local lake."""
     from lookedup.store import HFStore, LocalStore, sync_to_local
 
     res = sync_to_local(HFStore(), LocalStore(), datetime.fromisoformat(a.start),
