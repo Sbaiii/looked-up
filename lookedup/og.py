@@ -43,6 +43,7 @@ def rank(events: list[dict]) -> list[dict]:
 
 
 def qualifies(e: dict) -> bool:
+    """An event worthy of the card: at least ``HERO_MIN_EXCESS`` excess views, or a strong tier (ADR 0024)."""
     return e["excess"] >= HERO_MIN_EXCESS or e["tier"] in STRONG_TIERS
 
 
@@ -65,12 +66,14 @@ def _rgb(h: str) -> tuple[int, int, int]:
 
 
 def ramp(x: float) -> tuple[int, int, int]:
+    """Colour at position ``x`` in [0, 1] on the three-stop attention ramp, interpolated in RGB."""
     a, b = (RAMP[0], RAMP[1]) if x < 0.5 else (RAMP[1], RAMP[2])
     f = x * 2 if x < 0.5 else (x - 0.5) * 2
     return tuple(round(p + (q - p) * f) for p, q in zip(_rgb(a), _rgb(b)))
 
 
 def font(size: int, weight: int = 800, mono: bool = False) -> ImageFont.FreeTypeFont:
+    """Archivo at ``size`` and ``weight`` (a variable font), or the monospace face when ``mono``."""
     f = ImageFont.truetype(str(MONO if mono else FONT), size)
     if not mono:
         f.set_variation_by_axes([weight])
@@ -87,6 +90,7 @@ def _polygons(d: str) -> list[list[tuple[float, float]]]:
 
 
 def draw_map(img: Image.Image, box: tuple[int, int, int, int], colours: dict[str, tuple[int, int, int]]) -> None:
+    """Draw the world map into ``box``, filling countries from ``colours`` and greying the rest."""
     world = json.loads(WORLD.read_text())
     lang_countries = {k for keys in json.loads(GEO.read_text())["languages"].values() for k in keys}
     x0, y0, x1, y1 = box
@@ -143,10 +147,12 @@ def _base() -> tuple[Image.Image, ImageDraw.ImageDraw]:
 
 
 def within(h: int) -> str:
+    """Human phrase for a spread of ``h`` hours: "under an hour", "1 hour", "5 hours"."""
     return "under an hour" if h == 0 else f"{h} hour" if h == 1 else f"{h} hours"
 
 
 def render_day(day: date, events: list[dict], out: Path) -> Path:
+    """Render the social card of ``day`` from its events (the day's top event and its languages) to ``out``."""
     img, draw = _base()
     ev = pick(events, strict=False)
     draw.text((60, 120), f"{day:%-d %B %Y}".upper() + " · THE WORLD LOOKED UP", font=font(22, mono=True), fill=_rgb(MUTED))
@@ -173,6 +179,7 @@ def render_day(day: date, events: list[dict], out: Path) -> Path:
 
 
 def render_default(out: Path) -> Path:
+    """Render the site's default social card, the one shared for the app's front page."""
     img, draw = _base()
     draw.text((60, 120), "30 WIKIPEDIA LANGUAGES · UPDATED HOURLY", font=font(22, mono=True), fill=_rgb(MUTED))
     y = 165
@@ -189,6 +196,7 @@ def render_default(out: Path) -> Path:
 
 
 def main() -> None:
+    """Command line: write the default card, or the card of one app day file."""
     p = argparse.ArgumentParser()
     p.add_argument("--default", type=Path, help="write the default card to this path")
     p.add_argument("--day-file", type=Path, help="render one app day file (JSON) ...")
