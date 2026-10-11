@@ -29,6 +29,7 @@ SCHEMA = pa.schema([("qid", pa.int64()), ("label_en", pa.string()), ("claims_jso
 
 
 def _item_ids(claims: dict, prop: str) -> list[int]:
+    """Numeric item ids of the values of ``prop`` in a Wikidata claims dict."""
     out = []
     for c in claims.get(prop, []):
         v = c.get("mainsnak", {}).get("datavalue", {}).get("value")
@@ -38,6 +39,7 @@ def _item_ids(claims: dict, prop: str) -> list[int]:
 
 
 def _dates(claims: dict, prop: str) -> list[str]:
+    """Time strings (``+YYYY-MM-DDT...Z``) of the values of ``prop`` in a Wikidata claims dict."""
     out = []
     for c in claims.get(prop, []):
         v = c.get("mainsnak", {}).get("datavalue", {}).get("value")
@@ -58,6 +60,7 @@ SPARQL = "https://query.wikidata.org/sparql"
 
 
 def _sparql(query: str) -> list[dict]:
+    """Run a SPARQL query on the Wikidata Query Service, retried up to 5 times; returns the result bindings."""
     for attempt in range(5):
         try:
             r = session().post(SPARQL, data={"query": query}, timeout=120,
