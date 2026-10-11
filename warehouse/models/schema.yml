@@ -57,6 +57,7 @@ models:
     description: Per scored day and language, the prior median/MAD used for unseen entities.
     columns:
       - name: prior_median
+        description: "Median hourly views of the language on the reference days, used as the baseline of unseen entities."
         tests: [not_null]
 
   - name: int_baselines
