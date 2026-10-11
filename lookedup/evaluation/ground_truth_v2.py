@@ -82,6 +82,7 @@ def announcement_proxy(title: str, day: date) -> datetime | None:
 
 
 def deaths(months: list[tuple[int, int]], n_languages: dict[int, int], min_languages: int) -> list[dict]:
+    """GT1: entries of the en "Deaths in <month>" lists, resolved to QIDs and kept when the person has articles in at least ``min_languages`` of ours."""
     rows = []
     for year, month in months:
         page = f"Deaths in {date(year, month, 1):%B} {year}"
@@ -103,6 +104,7 @@ def deaths(months: list[tuple[int, int]], n_languages: dict[int, int], min_langu
 # ---------------------------------------------------------------- GT2 earthquakes
 
 def usgs_quakes(start: datetime, end: datetime, min_mag: float) -> list[dict]:
+    """Earthquakes of at least ``min_mag`` between ``start`` and ``end`` from the USGS catalogue, with origin time and coordinates."""
     r = _get(USGS, {"format": "geojson", "eventtype": "earthquake", "minmagnitude": min_mag,
                     "starttime": f"{start:%Y-%m-%dT%H:%M:%S}", "endtime": f"{end:%Y-%m-%dT%H:%M:%S}",
                     "orderby": "time-asc"})
@@ -191,6 +193,7 @@ US_STATES = {"Alaska", "California", "Hawaii", "Oregon", "Washington", "Nevada",
 
 
 def quakes(start: datetime, end: datetime, langs: list[str]) -> list[dict]:
+    """GT2: M6.0+ quakes with their place, region and quake articles resolved to QIDs as detection targets."""
     raw = usgs_quakes(start, end, 6.0)
     wd = wikidata_quakes(start.date() - timedelta(days=1), end.date() + timedelta(days=2))
     names = set()
@@ -267,6 +270,7 @@ def kickoff_utc(date_field: str, time_field: str) -> datetime | None:
 
 
 def football_matches(page: str) -> list[dict]:
+    """Matches listed in the football boxes of ``page``: kick-off in UTC, team articles and the match article."""
     out = []
     for f in _boxes(_raw(page)):
         ko = kickoff_utc(f.get("date", ""), f.get("time", ""))
@@ -282,6 +286,7 @@ def football_matches(page: str) -> list[dict]:
 
 
 def matches(pages: list[str]) -> list[dict]:
+    """GT3: matches from ``pages`` with team and match articles resolved to QIDs."""
     rows = []
     for p in pages:
         rows += football_matches(p)
@@ -294,4 +299,5 @@ def matches(pages: list[str]) -> list[dict]:
 
 
 def dump(obj) -> str:
+    """JSON text for caching ground truths (dates as strings, non-ASCII kept)."""
     return json.dumps(obj, default=str, ensure_ascii=False, indent=1)
