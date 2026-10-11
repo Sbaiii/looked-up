@@ -31,3 +31,10 @@ def test_tiers_run_from_widest_to_narrowest():
     tiers = load().tiers
     assert [name for name, _ in tiers] == ["planetary", "international", "noticed"]
     assert [n for _, n in tiers] == sorted((n for _, n in tiers), reverse=True)
+
+
+def test_product_events_need_two_languages_and_keep_the_rest():
+    cfg = load()
+    assert cfg.product_event.min_languages == 2                      # ADR 0021
+    assert cfg.event.min_languages == 3                              # the pre-registered rule is untouched
+    assert cfg.product_event.window_hours == cfg.event.window_hours
