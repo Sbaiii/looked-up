@@ -24,6 +24,8 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Context:
+    """A DuckDB connection with the warehouse attached and the evaluation views, plus the configuration."""
+
     con: duckdb.DuckDBPyConnection
     cfg: AnalyticsConfig
 
