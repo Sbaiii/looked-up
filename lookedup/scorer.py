@@ -67,6 +67,7 @@ def event_languages_path(day: date) -> str:
 
 
 def _stg_view(con, files: list[Path], name: str = "src") -> None:
+    """A view over day files shaped like the warehouse's stg_hourly, so production and batch share the scoring SQL."""
     paths = ", ".join(f"'{p}'" for p in files)
     con.execute(f"""CREATE OR REPLACE VIEW {name} AS SELECT ts_hour_start, ts_hour_start::DATE AS day,
         hour(ts_hour_start)::INT AS hour_of_day, (isodow(ts_hour_start) - 1) IN (5, 6) AS is_weekend,
@@ -126,6 +127,7 @@ def build_baselines(store: Store, day: date, directory: Path = BASELINES_DIR) ->
 
 
 def _read_json(store: Store, path: str, tmp: Path) -> dict:
+    """A JSON file from the lake, or an empty dict when it does not exist."""
     p = store.fetch(path, tmp)
     return json.loads(p.read_text()) if p else {}
 
@@ -271,6 +273,7 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
 
 
 def _latest(events: pa.Table, now: datetime, cfg, langs: list[str], tmp: Path) -> list[dict]:
+    """The events of the last 24 h for latest.json, widest first, with labels and categories."""
     rows = [dict(zip(events.column_names, r)) for r in zip(*(events[c].to_pylist() for c in events.column_names))]
     rows = [r for r in rows if r["start_hour"] >= now - timedelta(hours=24)]
     rows.sort(key=lambda r: (-r["breadth"], -r["peak_intensity"]))
