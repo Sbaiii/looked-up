@@ -99,5 +99,5 @@ ORDER BY views DESC LIMIT 20;
 
 ## Data and license
 
-Wikimedia pageviews and Wikidata are CC0, and so is the dataset built from them. The code is MIT, as declared in
-`pyproject.toml`. Every request to Wikimedia carries a descriptive User-Agent, as Wikimedia asks.
+Code: MIT ([LICENSE](LICENSE)). Data: from Wikimedia (pageviews and Wikidata) under CC0, and so is the dataset built
+from them. Every request to Wikimedia carries a descriptive User-Agent, as Wikimedia asks.
