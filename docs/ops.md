@@ -79,6 +79,48 @@ flowchart LR
 To move an old in-repo `data/` directory: `python -m lookedup.cli relocate-data` (use `--skip raw` for regenerable
 caches). Re-create the lake mirror with `python -m lookedup.cli sync --from 2026-07-09`.
 
+## Commands
+
+The full command reference (the README keeps a short version).
+
+```bash
+python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/pytest                                              # tests (also run in CI)
+
+huggingface-cli login                                         # or export HF_TOKEN=... (never commit it)
+.venv/bin/python -m lookedup.cli hourly                       # ingest missing hours of the last 7 days
+.venv/bin/python -m lookedup.backfill --from 2026-07-09 --to 2026-10-06   # resumable backfill
+.venv/bin/python -m lookedup.cli validate -n 3                # backfill vs hourly dumps, must be identical
+.venv/bin/python -m lookedup.cli wikidata                     # rebuild Wikidata sitelinks
+.venv/bin/python -m lookedup.cli languages                    # re-rank languages over the last 7 days
+.venv/bin/python -m lookedup.cli push                         # upload a local lake ($LOOKEDUP_DATA_DIR/lake) + dataset card
+.venv/bin/python -m lookedup.cli sync --from 2026-07-09       # mirror the lake locally (for the warehouse)
+.venv/bin/python -m lookedup.cli warehouse build              # dbt build: spikes, events, tests
+.venv/bin/python -m lookedup.cli evaluate                     # pre-registered Phase 2 evaluation
+.venv/bin/python -m lookedup.cli evaluate-v2                  # pre-registered Phase 2b evaluation
+.venv/bin/python -m lookedup.cli baselines && .venv/bin/python -m lookedup.cli score   # production scoring
+.venv/bin/python -m lookedup.cli app-export [--backfill --upload]   # app JSON (data/app/), hourly or every day
+npm ci && npm run serve                                       # preview the app on http://localhost:4173/
+npm run test:unit && npx playwright test                      # app unit and smoke tests (also run in CI)
+.venv/bin/pip install -e ".[forecast]"                        # LightGBM + scikit-learn for Phase 4
+.venv/bin/python -m lookedup.cli forecast-evaluate            # pre-registered backtest (scores the test set once)
+.venv/bin/python -m lookedup.cli forecast-retrain             # production models -> data/models/ (Mondays in CI)
+.venv/bin/python -m lookedup.cli refresh-warehouse            # extend the warehouse to yesterday (weekly, by hand)
+(cd worker && npm ci && npm test)                              # the live Worker's tests (rules from config/live.yml)
+(cd live && ../.venv/bin/uvicorn lookedup_live.app:app --port 7860)   # the reference live layer locally
+```
+
+Add `--local` to write to `~/looked-up-data/lake` (or `$LOOKEDUP_DATA_DIR`, kept outside iCloud) instead of Hugging Face. Workflows:
+[`hourly.yml`](.github/workflows/hourly.yml) (every hour at :17: ingest, then score),
+[`trigger.yml`](.github/workflows/trigger.yml) (external backup trigger),
+[`pages.yml`](.github/workflows/pages.yml) (deploys `app/` to GitHub Pages),
+[`hub-maintenance.yml`](.github/workflows/hub-maintenance.yml) (monthly history squash),
+[`daily.yml`](.github/workflows/daily.yml) (baselines, 03:30 UTC),
+[`wikidata-monthly.yml`](.github/workflows/wikidata-monthly.yml),
+[`backfill.yml`](.github/workflows/backfill.yml) (manual, parallel date chunks) and
+[`tests.yml`](.github/workflows/tests.yml). They need the `HF_TOKEN` repository secret; without it the scheduled jobs skip with a warning. Pipelines only
+write to the lake on Hugging Face and never commit to this repository (enforced by `tests/test_no_git_in_pipeline.py`).
+
 ## Workflows
 
 | Workflow | Trigger | Does |
