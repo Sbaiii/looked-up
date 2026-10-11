@@ -95,3 +95,11 @@ def test_sampled_parameters_stay_in_the_preregistered_space():
         assert 20 <= p["min_child_samples"] <= 200
         assert 0.6 <= p["feature_fraction"] <= 1.0
         assert 0 <= p["lambda_l2"] <= 10
+
+
+def test_m2_metrics_in_log_space_and_hours():
+    y = np.log1p(np.array([0.0, 3.0, 7.0]))
+    m = E.m2_metrics(y, y, hours=True)
+    assert m["n"] == 3 and m["mae_log"] == 0 and m["mape_log"] == 0 and m["median_abs_error_hours"] == 0
+    off = E.m2_metrics(y, y + 1)
+    assert np.isclose(off["mae_log"], 1.0) and "median_abs_error_hours" not in off
