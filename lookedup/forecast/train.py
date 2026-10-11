@@ -39,10 +39,12 @@ class Encoder:
 
     @classmethod
     def fit(cls, rows: list[dict], features: list[str] | None = None) -> Encoder:
+        """Learn the category vocabularies from ``rows`` for the categorical features in use."""
         feats = list(features or FEATURES)
         return cls({c: sorted({str(r[c]) for r in rows}) for c in CATEGORICAL if c in feats}, feats)
 
     def matrix(self, rows: list[dict]) -> np.ndarray:
+        """Feature matrix for ``rows``: categories as vocabulary indices, unknown or missing values as NaN."""
         idx = {c: {v: i for i, v in enumerate(vs)} for c, vs in self.vocab.items()}
         X = np.full((len(rows), len(self.features)), np.nan)
         for i, r in enumerate(rows):
@@ -56,17 +58,21 @@ class Encoder:
 
     @property
     def categorical(self) -> list[int]:
+        """Column indices of the categorical features, for LightGBM."""
         return [j for j, f in enumerate(self.features) if f in self.vocab]
 
     @property
     def monotone(self) -> list[int]:
+        """Monotone constraint per feature: +1 for features that can only raise the forecast."""
         return [1 if f in MONOTONE_UP else 0 for f in self.features]
 
     def to_json(self) -> dict:
+        """The encoder as JSON, saved beside the models."""
         return {"features": self.features, "vocab": self.vocab}
 
     @classmethod
     def from_json(cls, d: dict) -> Encoder:
+        """Rebuild an encoder saved with :meth:`to_json`."""
         return cls(d["vocab"], d["features"])
 
 
