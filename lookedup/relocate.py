@@ -31,6 +31,7 @@ Set LOOKEDUP_DATA_DIR to use another location. Re-create the lake mirror with
 
 
 def _copy_with_retry(src: Path, dst: Path, retries: int = 5) -> None:
+    """Copy through a .part file, check the size, then rename into place; retried, since iCloud can evict files mid-copy."""
     dst.parent.mkdir(parents=True, exist_ok=True)
     tmp = dst.with_name(dst.name + ".part")
     for attempt in range(retries):
