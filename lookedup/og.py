@@ -62,6 +62,7 @@ def scale(surprise: float) -> float:
 
 
 def _rgb(h: str) -> tuple[int, int, int]:
+    """``#rrggbb`` as an (r, g, b) tuple."""
     return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
 
 
@@ -81,6 +82,7 @@ def font(size: int, weight: int = 800, mono: bool = False) -> ImageFont.FreeType
 
 
 def _polygons(d: str) -> list[list[tuple[float, float]]]:
+    """Rings of an SVG path made of M/L/Z commands, as point lists (rings of fewer than 3 points dropped)."""
     out = []
     for ring in d.split("Z"):
         pts = [(float(x), float(y)) for x, y in re.findall(r"[ML](-?[\d.]+),(-?[\d.]+)", ring)]
@@ -116,6 +118,7 @@ def country_colours(event: dict) -> dict[str, tuple[int, int, int]]:
 
 
 def _wrap(draw, text: str, f, width: int, lines: int) -> list[str]:
+    """Greedy word wrap of ``text`` to ``width`` pixels in font ``f``, at most ``lines`` lines."""
     words, out, line = text.split(), [], ""
     for w in words:
         trial = f"{line} {w}".strip()
@@ -134,6 +137,7 @@ def _wrap(draw, text: str, f, width: int, lines: int) -> list[str]:
 
 
 def _base() -> tuple[Image.Image, ImageDraw.ImageDraw]:
+    """A blank 1200x630 card: dark paper, the graph-paper grid and the logo mark."""
     img = Image.new("RGB", (W, H), _rgb(PAPER))
     draw = ImageDraw.Draw(img)
     for x in range(0, W, 80):                       # the graph-paper motif
