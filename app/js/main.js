@@ -47,6 +47,8 @@ function el(tag, attrs = {}, ...children) {
 /* ---------------------------------------------------------------- URLs (F6) */
 
 const dayHash = (d) => (d.today ? '#/today' : `#/day/${d.iso}`);
+/** The day on screen: an archive day (older than the slider's window) or the slider's day. */
+const shownDay = () => state.archive || state.days[state.index];
 const eventHash = (d, ev) => `#/day/${d.iso}/event/${ev.qid}`;
 const absolute = (hash) => `${location.origin}${location.pathname}${hash}`;
 
@@ -96,9 +98,10 @@ async function route({ scroll = true } = {}) {
     const h = location.hash;
     let m;
     if ((m = h.match(/^#\/day\/(\d{4}-\d{2}-\d{2})(?:\/event\/(Q\d+))?$/))) {
-        let i = state.days.findIndex((d) => d.iso === m[1]);
-        if (i < 0) i = state.days.length - 1;
-        await selectDay(i, { qid: m[2], push: null });
+        const i = state.days.findIndex((d) => d.iso === m[1]);
+        if (i >= 0) await selectDay(i, { qid: m[2], push: null });
+        else if (m[1] < state.days[0].iso) await selectArchive(m[1], { qid: m[2] });
+        else await selectDay(state.days.length - 1, { push: null });
         if (scroll) scrollTo(m[2] ? document.querySelector('.card.is-selected') || $('days') : $('days'));
     } else if ((m = h.match(/^#\/lang\/([a-z-]+)$/)) && (state.stats.languages || []).includes(m[1])) {
         state.lang = m[1];
@@ -258,7 +261,7 @@ function renderForecastSection() {
 }
 
 function card(ev) {
-    const day = state.days[state.index];
+    const day = shownDay();
     const li = el('li', { class: `card${ev.id === state.selected ? ' is-selected' : ''}`, 'data-id': ev.id, 'data-qid': ev.qid });
     const title = el('h3', { class: 'card__title' },
         el('button', { type: 'button', 'aria-label': `${label(ev)}: ${t('event.show')}`, onclick: () => select(ev, { fromList: true, push: true }), text: label(ev) }));
@@ -353,7 +356,7 @@ function select(ev, { fromList = false, animate = true, push = false } = {}) {
     state.selected = ev.id;
     document.querySelectorAll('.card').forEach((c) => c.classList.toggle('is-selected', c.dataset.id === ev.id));
     viz.show(ev, { animate });
-    if (push) setHash(eventHash(state.days[state.index], ev));
+    if (push) setHash(eventHash(shownDay(), ev));
     if (fromList) {
         const stage = $('viz');
         const r = stage.getBoundingClientRect();
@@ -372,7 +375,7 @@ function renderBars() {
         const h = Math.max(1.5, (d.count / max) * 54);
         const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         r.setAttribute('x', i * 10 + 1); r.setAttribute('width', 8); r.setAttribute('y', 56 - h); r.setAttribute('height', h);
-        if (i === state.index) r.setAttribute('class', 'is-on');
+        if (i === state.index && !state.archive) r.setAttribute('class', 'is-on');
         return r;
     }));
 }
@@ -383,19 +386,45 @@ function dayLabel(d) {
 
 /** push: true = new history entry, false = replace (slider drags), null = leave the URL alone (routing). */
 async function selectDay(index, { qid = null, push = true } = {}) {
+    state.archive = null;
     state.index = Math.max(0, Math.min(state.days.length - 1, index));
     const d = state.days[state.index];
     $('day-slider').value = state.index;
+    if (push !== null) setHash(dayHash(d), push);
+    let payload;
+    try {
+        payload = d.today ? state.today : await data.dayFile(d.iso);
+    } catch {
+        payload = { events: [], single_language_events: [], summary: { events: 0 } };
+    }
+    if (shownDay() !== d) return;  // a newer selection won
+    showDay(d, payload, qid);
+}
+
+/**
+ * A day older than the slider's 90 days, named by a URL. Day files stay on the Hub, so it is fetched directly and
+ * shown with an "archive" tag; the slider keeps its window. A day with no file falls back to the latest day.
+ */
+async function selectArchive(iso, { qid = null } = {}) {
+    const d = { iso, archive: true };
+    state.archive = d;
+    let payload;
+    try {
+        payload = await data.dayFile(iso);
+    } catch {
+        if (state.archive === d) await selectDay(state.days.length - 1, { push: null });
+        return;
+    }
+    if (shownDay() !== d) return;
+    showDay(d, payload, qid);
+}
+
+function showDay(d, payload, qid) {
     $('day-slider').setAttribute('aria-valuetext', dayLabel(d));
     $('day-out').textContent = dayLabel(d);
+    $('day-archive').hidden = !d.archive;
     renderBars();
-    if (push !== null) setHash(dayHash(d), push);
-    try {
-        state.payload = d.today ? state.today : await data.dayFile(d.iso);
-    } catch {
-        state.payload = { events: [], single_language_events: [], summary: { events: 0 } };
-    }
-    if (state.days[state.index] !== d) return;  // a newer selection won
+    state.payload = payload;
     state.shown = PAGE;
     const target = qid ? findByQid(qid) : null;
     if (target && target.class !== 'single_language') {
@@ -412,7 +441,7 @@ async function selectDay(index, { qid = null, push = true } = {}) {
 
 function renderDay() {
     const p = state.payload;
-    const d = state.days[state.index];
+    const d = shownDay();
     $('day-count').textContent = t('timeline.count', { n: p.summary?.events ?? p.events.length });
     $('day-brief').textContent = compose(p, d.today ? todayIso() : d.iso).text;
     renderCards();
@@ -465,7 +494,7 @@ function renderLanguages() {
 /* ---------------------------------------------------------------- briefing and about */
 
 function renderBriefing() {
-    const d = state.days[state.index];
+    const d = shownDay();
     const iso = d.today ? todayIso() : d.iso;
     const b = compose(state.payload, iso);
     $('brief-date').textContent = d.today ? t('timeline.today') : i18n.day(iso);
@@ -503,8 +532,8 @@ function renderAll(animate) {
     renderForecastSection();
     renderBars();
     $('day-slider').value = state.index;
-    $('day-out').textContent = dayLabel(state.days[state.index]);
-    $('day-slider').setAttribute('aria-valuetext', dayLabel(state.days[state.index]));
+    $('day-out').textContent = dayLabel(shownDay());
+    $('day-slider').setAttribute('aria-valuetext', dayLabel(shownDay()));
     renderDay();
 }
 
@@ -512,14 +541,15 @@ function wire() {
     document.querySelectorAll('[data-ui-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.uiLang)));
     $('day-slider').addEventListener('input', (e) => selectDay(Number(e.target.value), { push: false }));
     $('day-slider').addEventListener('change', () => setHash(dayHash(state.days[state.index]), true));
-    $('prev-day').addEventListener('click', () => selectDay(state.index - 1));
-    $('next-day').addEventListener('click', () => selectDay(state.index + 1));
+    // From an archive day, either arrow returns to the oldest day of the slider's window.
+    $('prev-day').addEventListener('click', () => selectDay(state.archive ? 0 : state.index - 1));
+    $('next-day').addEventListener('click', () => selectDay(state.archive ? 0 : state.index + 1));
     $('bars').addEventListener('click', (e) => {
         const r = $('bars').getBoundingClientRect();
         selectDay(Math.floor(((e.clientX - r.left) / r.width) * state.days.length));
     });
-    $('copy-day').addEventListener('click', (e) => copyLink(dayHash(state.days[state.index]) === '#/today'
-        ? `#/day/${todayIso()}` : dayHash(state.days[state.index]), e.currentTarget));
+    $('copy-day').addEventListener('click', (e) => copyLink(dayHash(shownDay()) === '#/today'
+        ? `#/day/${todayIso()}` : dayHash(shownDay()), e.currentTarget));
     $('more').addEventListener('click', () => { state.shown += PAGE; renderCards(); });
     $('replay').addEventListener('click', () => { if (state.hero.event) select(state.hero.event, { animate: true }); });
     $('lang-select').addEventListener('change', (e) => { state.lang = e.target.value; renderLanguages(); setHash(`#/lang/${state.lang}`); });

@@ -84,6 +84,7 @@
     "prev": "Jour précédent",
     "next": "Jour suivant",
     "today": "Aujourd'hui",
+    "archive": "Archives",
     "count": {
       "one": "{n} événement",
       "other": "{n} événements"

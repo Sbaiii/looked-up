@@ -293,6 +293,8 @@ button { background: none; border: none; cursor: pointer; }
 .badge--noticed { color: var(--muted); }
 .badge--international { color: var(--accent); }
 .badge--planetary { color: var(--planetary); }
+.badge--archive { color: var(--muted); margin-left: 0.3rem; vertical-align: 0.1em; }
+.badge--archive[hidden] { display: none; }
 .badge--spreading { color: var(--accent-on); background: var(--accent); border-color: var(--accent); }
 .card__forecast { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.85rem; color: var(--ink); }
 .card__forecast .fade { color: var(--muted); }
