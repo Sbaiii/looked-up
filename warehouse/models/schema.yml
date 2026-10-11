@@ -64,13 +64,16 @@ models:
     description: Every article-hour with >= 100 views in the evaluation period, with baseline, R1/R2 inputs and surprise.
     columns:
       - name: candidate_id
+        description: "lang|title|hour, one row per scored article-hour."
         tests: [unique, not_null]
       - name: baseline_level
+        description: "Which baseline was used: same weekday type, same hour of day, or the language prior when the history is too short."
         tests:
           - accepted_values:
               arguments:
                 values: ["day_type", "hour", "prior"]
       - name: surprise
+        description: "Robust score R3: views above the baseline median, scaled by the MAD plus a Poisson term."
         tests: [not_null]
 
   - name: int_spikes
