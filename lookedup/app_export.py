@@ -46,10 +46,12 @@ _DISAMBIG = re.compile(r"\s+\([^)]*\)$")
 
 
 def day_file(d: date) -> str:
+    """Hub path of the app's JSON for day ``d``."""
     return f"{APP_PREFIX}/days/{d:%Y-%m-%d}.json"
 
 
 def og_file(d: date) -> str:
+    """Hub path of the social card PNG for day ``d`` (ADR 0027)."""
     return f"{APP_PREFIX}/og/{d:%Y-%m-%d}.png"
 
 
@@ -81,6 +83,7 @@ def dump(payload: dict, path: Path) -> int:
 
 
 def with_gz(files: dict[str, Path]) -> dict[str, Path]:
+    """The files plus a gzipped twin of each, which the app fetches first."""
     return {**files, **{f"{k}.gz": Path(f"{v}.gz") for k, v in files.items()}}
 
 
@@ -110,6 +113,7 @@ def select(events: list[dict], langs: dict[str, list[dict]]) -> tuple[list[dict]
 
 
 def short(text: str, n: int = DESC_MAX) -> str:
+    """``text`` cut to ``n`` characters with an ellipsis, for card descriptions."""
     return text if len(text) <= n else text[: n - 1].rstrip() + "…"
 
 
@@ -201,11 +205,13 @@ def stats_payload(days: dict[str, dict], generated_at: datetime, languages: list
 # ---------------------------------------------------------------- inputs
 
 def rows(rel: duckdb.DuckDBPyRelation) -> list[dict]:
+    """Fetch a DuckDB relation as a list of dicts keyed by column name."""
     cols = rel.columns
     return [dict(zip(cols, r)) for r in rel.fetchall()]
 
 
 def group_langs(lang_rows: list[dict]) -> dict[str, list[dict]]:
+    """Per-language rows grouped by event id."""
     out: dict[str, list[dict]] = defaultdict(list)
     for r in lang_rows:
         out[r["event_id"]].append(r)
@@ -354,6 +360,7 @@ def _languages() -> list[str]:
 
 
 def by_day(events: list[dict]) -> dict[date, list[dict]]:
+    """Events grouped by the UTC date of their start hour."""
     out: dict[date, list[dict]] = defaultdict(list)
     for e in events:
         out[e["start_hour"].date()].append(e)
