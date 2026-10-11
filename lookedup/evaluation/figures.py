@@ -186,6 +186,7 @@ def matches_timeline(rows: list[dict], out: Path) -> None:
 
 
 def delay_histogram(values: list[float], out: Path, title: str, subtitle: str, xlabel: str) -> None:
+    """Histogram of detection delays in hours, clipped to +-12, in the house figure style."""
     fig, ax = plt.subplots(figsize=(7, 3.4))
     lo, hi = int(min(values)), int(max(values)) + 1
     ax.hist(values, bins=range(max(lo, -12), min(hi, 13) + 1), color=ACCENT, edgecolor="white")
