@@ -83,3 +83,15 @@ def test_m2_rows_use_the_three_hour_snapshot_and_observable_fades():
     assert all(r["offset_h"] == 3 for r in T.m2_rows(rows, "excess_next24"))
     assert len(T.m2_rows(rows, "excess_next24")) == 2
     assert T.m2_rows(rows, "fade_hours") == [{"offset_h": 3, "fade_observable": True}]
+
+
+def test_sampled_parameters_stay_in_the_preregistered_space():
+    rng = np.random.default_rng(T.SEED)
+    for _ in range(200):
+        p = T.sample_params(rng)
+        assert 7 <= p["num_leaves"] <= 63
+        assert 0.02 <= p["learning_rate"] <= 0.2
+        assert 100 <= p["n_estimators"] <= 800
+        assert 20 <= p["min_child_samples"] <= 200
+        assert 0.6 <= p["feature_fraction"] <= 1.0
+        assert 0 <= p["lambda_l2"] <= 10
