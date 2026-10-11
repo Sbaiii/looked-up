@@ -215,6 +215,7 @@ def h2_lead_language(ctx: Context, events: str, claims_cache) -> dict:
 
 
 def _claims(table) -> dict[int, dict]:
+    """Claims JSON per QID from a claims table."""
     return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist())}
 
 
