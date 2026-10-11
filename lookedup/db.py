@@ -17,6 +17,7 @@ def configure(con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConnection:
 
 
 def connect(database: str = ":memory:", read_only: bool = False) -> duckdb.DuckDBPyConnection:
+    """A DuckDB connection with the project-wide spill limits applied."""
     return configure(duckdb.connect(database, read_only=read_only))
 
 
