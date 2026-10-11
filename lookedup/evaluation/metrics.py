@@ -29,14 +29,17 @@ class Context:
 
     @property
     def eval_start(self) -> date:
+        """First evaluated day, from the configuration."""
         return self.cfg.eval_start
 
     @property
     def end(self) -> date:
+        """Last evaluated day, from the configuration."""
         return self.cfg.period_end
 
 
 def open_context(warehouse_db, current_events, cfg: AnalyticsConfig) -> Context:
+    """Attach the warehouse read-only and create the evaluation views: ground truth, filtered spikes, the S1 variant and the major (date, QID) pairs."""
     con = db.connect()
     con.execute(f"ATTACH '{warehouse_db}' AS wh (READ_ONLY)")
     con.execute(f"CREATE VIEW gt AS SELECT * FROM read_parquet('{current_events}')")
@@ -79,6 +82,7 @@ def recall(ctx: Context, events: str, window_h: int, majors: str = "majors") -> 
 
 
 def recall_by_section(ctx: Context, events: str, window_h: int) -> list[tuple]:
+    """Recall per Current events section within ``window_h`` hours, one row per section."""
     return ctx.con.execute(f"""
         WITH hit AS (
             SELECT m.date, m.qid, m.sections, bool_or(e.qid IS NOT NULL) AS detected
@@ -131,6 +135,7 @@ def ablation_grid(ctx: Context) -> list[dict]:
 
 
 def lead_counts(ctx: Context, events: str) -> list[tuple]:
+    """Events per lead language in the evaluation period, most frequent first."""
     return ctx.con.execute(f"""SELECT lead_lang, count(*) FROM {events}
         WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'
         GROUP BY 1 ORDER BY 2 DESC""").fetchall()
@@ -231,6 +236,7 @@ def detection_delays(ctx: Context, events: str) -> dict:
         return {"n": 0, "rows": []}
 
     def q(p):
+        """Quantile ``p`` of the sorted delays, by lower rank."""
         return vals[min(len(vals) - 1, int(p * (len(vals) - 1)))]
     return {"n": len(vals), "median": q(0.5), "p25": q(0.25), "p75": q(0.75),
             "share_le_6h": sum(0 <= v <= 6 for v in vals) / len(vals),
@@ -238,11 +244,13 @@ def detection_delays(ctx: Context, events: str) -> dict:
 
 
 def event_count(ctx: Context, events: str) -> int:
+    """Number of events in the evaluation period."""
     return ctx.con.execute(f"""SELECT count(*) FROM {events}
         WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'""").fetchone()[0]
 
 
 def to_jsonable(x):
+    """JSON encoder fallback: dates as ISO strings, durations as seconds."""
     if isinstance(x, (datetime, date)):
         return x.isoformat()
     if isinstance(x, timedelta):
