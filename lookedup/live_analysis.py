@@ -100,6 +100,7 @@ def burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: dateti
 
 
 def _burst_time(revs, lang, title, lo, hi):
+    """Time of the first edit burst for one article between ``lo`` and ``hi``, under the pre-registered rules; None without one."""
     det = Detector()
     lo_s, hi_s = lo.replace(tzinfo=timezone.utc).timestamp(), hi.replace(tzinfo=timezone.utc).timestamp()
     for r in revs:
