@@ -118,13 +118,16 @@ class ArticleFilter:
         self._main = {lang: t.replace(" ", "_") for lang, t in self.main_pages.items()}
 
     def namespaces_for(self, lang: str) -> frozenset[str]:
+        """Namespace prefixes of ``lang`` (localised names and aliases); the canonical English set for unknown wikis."""
         return self._ns.get(lang, CANONICAL_NAMESPACES)
 
     def excluded_titles(self, lang: str) -> frozenset[str]:
+        """Titles that are never articles on ``lang``: its main page and the default Main_Page."""
         main = self._main.get(lang)
         return frozenset({MAIN_PAGE_DEFAULT} | ({main} if main else set()))
 
     def is_article(self, lang: str, title: str) -> bool:
+        """True for a main-namespace article: not an invalid title, not a main page, no namespace prefix."""
         if title in INVALID_TITLES or title in self.excluded_titles(lang):
             return False
         prefix = namespace_prefix(title)
