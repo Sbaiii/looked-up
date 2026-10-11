@@ -34,8 +34,10 @@ models:
       lake_root: "{{ var('lake_root') }}"
     columns:
       - name: ts_hour_start
+        description: "An hour present in the lake manifest."
         tests: [unique, not_null]
       - name: source
+        description: "Where the hour came from: the hourly dump or the pageview_complete backfill."
         tests:
           - accepted_values:
               arguments:
