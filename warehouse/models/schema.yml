@@ -90,8 +90,10 @@ models:
     description: Entities that can form events (loosest ablation), with labels in the 30 languages and a coarse class.
     columns:
       - name: qid
+        description: "Numeric Wikidata item id."
         tests: [unique, not_null]
       - name: entity_class
+        description: "Coarse class from direct P31/P106 values (no subclass traversal)."
         tests:
           - accepted_values:
               arguments:
