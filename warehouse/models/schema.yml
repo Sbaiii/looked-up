@@ -80,8 +80,10 @@ models:
     description: Candidate rows passing R1 or R2 with surprise >= the lowest ablation threshold; is_spike = primary rule.
     columns:
       - name: spike_id
+        description: "Candidate id of the article-hour that spiked."
         tests: [unique, not_null]
       - name: entity_key
+        description: "Q<id> when the article has a Wikidata item, else lang:title."
         tests: [not_null]
 
   - name: dim_entities
