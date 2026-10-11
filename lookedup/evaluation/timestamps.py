@@ -17,6 +17,7 @@ _TS = re.compile(r"\|\s*timestamp\s*=\s*(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})
 
 
 def infobox_time(wikitext: str) -> datetime | None:
+    """The first infobox timestamp in ``wikitext`` (date and hh:mm), or None."""
     m = _TS.search(wikitext)
     if not m:
         return None
@@ -32,6 +33,7 @@ def _api(params: dict) -> dict:
 
 
 def event_time(title: str, portal_date: date) -> dict | None:
+    """Best known time of the event behind ``title``: its infobox timestamp, else the creation of a new article, within 2 days of the portal date."""
     q = _api({"action": "query", "titles": title, "redirects": 1, "prop": "revisions", "rvprop": "content",
               "rvslots": "main"})
     pages = q.get("query", {}).get("pages", [])
