@@ -35,6 +35,7 @@ LABEL_LAG_DAYS = 3          # targets need up to 72 h after the start
 
 
 def batch_table(con) -> pa.Table:
+    """The warehouse's batch snapshots (before 7 Oct), the fixed part of every retraining set."""
     from lookedup.warehouse import WAREHOUSE_DB
     con.execute(f"ATTACH '{WAREHOUSE_DB}' AS wh (READ_ONLY)")
     return db.arrow(con.sql("SELECT * FROM wh.main.fct_event_snapshots WHERE start_hour < TIMESTAMP '2026-10-07'"))
@@ -114,6 +115,7 @@ def backtest_summary() -> dict:
 
 
 def retrain(store, now: datetime | None = None, upload_batch: bool = False, add_live_week: bool = True) -> dict:
+    """Weekly retrain (ADR 0029): batch snapshots plus recent live weeks, fitted with the chosen parameters, then uploaded to data/models/."""
     from lookedup.dumps import utcnow
     from lookedup.scorer import _commit
 
