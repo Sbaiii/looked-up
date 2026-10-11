@@ -124,7 +124,7 @@ models:
                 values: ["death", "human", "sports", "entertainment", "disaster", "politics", "place",
                          "organization", "science_tech", "other"]
       - name: event_class
-        description: "multi_language, or single_language when one language holds at least 95 % of the excess views."
+        description: "multi_language, or single_language when the lead language holds at least 95 % of the excess views (ADR 0019)."
         tests:
           - not_null
           - accepted_values:
