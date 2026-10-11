@@ -296,6 +296,7 @@ def cmd_refresh_warehouse(a):
 
 
 def cmd_live_h9(a):
+    """``live-h9``: run the H9 backtest and write phase5_metrics.json, phase5_h9.csv and the lead-time figure."""
     from lookedup.live_analysis import OUT, run_h9
 
     res = run_h9()
@@ -304,6 +305,7 @@ def cmd_live_h9(a):
 
 
 def cmd_live_score(a):
+    """``live-score``: score the live bursts of a day (default two days ago) against the lake's reading events."""
     from datetime import timedelta
 
     from lookedup.dumps import utcnow
@@ -315,6 +317,7 @@ def cmd_live_score(a):
 
 
 def cmd_live_snapshot(a):
+    """``live-snapshot``: copy a day's bursts (default yesterday) and the stats from the live host to the lake."""
     import os
     from datetime import timedelta
 
@@ -385,6 +388,7 @@ def cmd_compact(a):
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Parse the command line and run the chosen command."""
     p = argparse.ArgumentParser(prog="python -m lookedup.cli", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-v", "--verbose", action="store_true")
