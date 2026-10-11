@@ -25,6 +25,7 @@ def infobox_time(wikitext: str) -> datetime | None:
 
 
 def _api(params: dict) -> dict:
+    """One English Wikipedia API call (format version 2), paced to stay under 200 requests a minute."""
     time.sleep(0.35)  # stay under Wikimedia's 200 requests/minute for identified clients
     r = session().get("https://en.wikipedia.org/w/api.php", params={**params, "format": "json", "formatversion": 2},
                       timeout=60)
