@@ -51,3 +51,9 @@ def test_card_qualifies_on_excess_or_a_strong_tier():
     assert og.qualifies({"excess": 10, "tier": "international"})
     assert og.qualifies({"excess": 10, "tier": "planetary"})
     assert not og.qualifies({"excess": og.HERO_MIN_EXCESS - 1, "tier": "noticed"})
+
+
+def test_spread_phrase():
+    assert og.within(0) == "under an hour"
+    assert og.within(1) == "1 hour"
+    assert og.within(7) == "7 hours"
