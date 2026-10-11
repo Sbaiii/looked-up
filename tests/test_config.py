@@ -38,3 +38,15 @@ def test_product_events_need_two_languages_and_keep_the_rest():
     assert cfg.product_event.min_languages == 2                      # ADR 0021
     assert cfg.event.min_languages == 3                              # the pre-registered rule is untouched
     assert cfg.product_event.window_hours == cfg.event.window_hours
+
+
+def test_dbt_vars_carry_the_period_thresholds_and_languages():
+    from lookedup.languages import active_codes
+    from lookedup.warehouse import dbt_vars
+
+    v = dbt_vars("/tmp/lake")
+    cfg = load()
+    assert v["lake_root"] == "/tmp/lake"
+    assert v["period_start"] == f"{cfg.period_start:%Y-%m-%d}"
+    assert v["r3_threshold"] == cfg.spike.r3_threshold
+    assert v["languages"] == active_codes() and len(v["languages"]) == 30
