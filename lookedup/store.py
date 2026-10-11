@@ -77,10 +77,12 @@ def merge_day(existing: pa.Table | None, new: list[pa.Table]) -> pa.Table:
 
 
 def _key(ts: datetime) -> str:
+    """Manifest key of an hour: its start as an ISO timestamp in UTC."""
     return f"{ts:%Y-%m-%dT%H:00:00Z}"
 
 
 def _parse_key(key: str) -> datetime:
+    """The hour start encoded in a manifest key."""
     return datetime.strptime(key, "%Y-%m-%dT%H:%M:%SZ")
 
 
