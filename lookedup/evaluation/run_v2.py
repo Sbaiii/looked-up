@@ -256,7 +256,7 @@ def _claims(table) -> dict[int, dict]:
 
 
 def _country(r: dict, claims: dict[int, dict]) -> int | None:
-    """Country item of a quake: the article's country, else the US for a US state, else the first place that is a country."""
+    """Country item of a quake: the article's country, else the US for a US state, else the first of its places (region before locality) that is a country."""
     if r["article_countries"]:
         return r["article_countries"][0]
     if r.get("region_is_us_state"):
