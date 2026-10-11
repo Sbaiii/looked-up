@@ -270,6 +270,7 @@ def cmd_app_export(a):
 
 
 def cmd_forecast_evaluate(a):
+    """``forecast-evaluate``: run the pre-registered Phase 4 backtest and print the H6 to H8 verdicts."""
     from lookedup.forecast.evaluate import run
 
     res = run()
@@ -277,6 +278,7 @@ def cmd_forecast_evaluate(a):
 
 
 def cmd_forecast_retrain(a):
+    """``forecast-retrain``: retrain the production forecast models and publish them to data/models/."""
     from lookedup.forecast.retrain import retrain
     from lookedup.store import open_store
 
@@ -284,6 +286,7 @@ def cmd_forecast_retrain(a):
 
 
 def cmd_refresh_warehouse(a):
+    """``refresh-warehouse``: mirror new day files and extend the warehouse to ``--end`` (default yesterday)."""
     from lookedup.warehouse import refresh
 
     res = refresh(date.fromisoformat(a.end) if a.end else None)
@@ -328,6 +331,7 @@ def cmd_live_snapshot(a):
 
 
 def cmd_ground_truth(a):
+    """``ground-truth``: build the Current events ground truth for the Phase 2 evaluation."""
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
     from lookedup.settings import DATA_DIR, LOCAL_LAKE_DIR, SITELINKS_PATH
@@ -339,6 +343,7 @@ def cmd_ground_truth(a):
 
 
 def cmd_evaluate(a):
+    """``evaluate``: the Phase 2 evaluation, or the H3 audit sample or score with their flags."""
     from lookedup.evaluation import run
 
     if a.audit_sample:
@@ -350,12 +355,14 @@ def cmd_evaluate(a):
 
 
 def cmd_evaluate_v2(a):
+    """``evaluate-v2``: the Phase 2b evaluation; ``--refresh`` re-fetches the ground truths."""
     from lookedup.evaluation import run_v2
 
     print(json.dumps(run_v2.evaluate(refresh=a.refresh), indent=1, default=str))
 
 
 def cmd_warehouse(a):
+    """``warehouse``: run dbt with the given arguments (default ``build``); exits non-zero on failure."""
     from lookedup.warehouse import run
 
     if not run(a.dbt_args or ["build"], hf=a.hf):
