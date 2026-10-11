@@ -44,6 +44,7 @@ SCHEMA = pa.schema([
 
 
 def _connect(langs: Iterable[str], filt: ArticleFilter) -> duckdb.DuckDBPyConnection:
+    """A connection with the title normaliser registered and temp tables of the active languages and their namespace prefixes."""
     con = db.connect()
     con.create_function("norm_title", normalize_title, ["VARCHAR"], "VARCHAR", side_effects=False)
     langs = sorted(set(langs))
@@ -91,6 +92,7 @@ def _sql_str(path: Path) -> str:
 
 
 def _to_table(rel: duckdb.DuckDBPyRelation) -> pa.Table:
+    """Fetch a relation as Arrow and cast it to the lake schema."""
     fetch = getattr(rel, "to_arrow_table", None) or rel.fetch_arrow_table  # renamed in DuckDB 1.4
     return fetch().cast(SCHEMA)
 
