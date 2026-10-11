@@ -14,6 +14,7 @@ INK, MUTED, ACCENT, GRID = "#1f2933", "#7b8794", "#2f6fdf", "#e4e7eb"
 
 
 def _style(ax, title: str, subtitle: str | None = None) -> None:
+    """House figure style: bold title and grey subtitle above the axes, no top or right spines."""
     fig = ax.figure
     fig.subplots_adjust(top=0.82)
     fig.text(0.02, 0.965, title, fontsize=13, fontweight="bold", color=INK, va="top", ha="left")
