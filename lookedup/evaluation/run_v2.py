@@ -233,7 +233,7 @@ def evaluate(refresh: bool = False) -> dict:
 
 
 def _dist(vals: list[float]) -> dict:
-    """Count, median, quartiles and range of ``vals``, for the delay summaries."""
+    """Count, median, quartiles, range and share within 4 h of ``vals``, for the delay summaries."""
     if not vals:
         return {"n": 0}
     vals = sorted(vals)
