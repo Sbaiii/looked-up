@@ -142,8 +142,10 @@ models:
     description: One row per (event, spiking language) with spread lag.
     columns:
       - name: event_lang_id
+        description: "event_id|lang."
         tests: [unique, not_null]
       - name: event_id
+        description: "The event this language belongs to."
         tests:
           - relationships:
               arguments:
