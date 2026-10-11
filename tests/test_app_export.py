@@ -107,3 +107,10 @@ def test_select_keeps_the_biggest_excess_even_with_low_breadth(monkeypatch):
     events = [_ev("wide", 1, 9, 10), _ev("big", 2, 2, 5_000_000), _ev("small", 3, 2, 5)]
     multi, _ = ax.select(events, {})
     assert {e["event_id"] for e in multi} == {"wide", "big"}
+
+
+def test_events_group_by_their_utc_start_date():
+    e = lambda i, h: {"event_id": f"E{i}", "start_hour": datetime(2026, 8, 17) + timedelta(hours=h)}
+    days = ax.by_day([e(1, 2), e(2, 23), e(3, 24), e(4, -1)])
+    assert sorted(days) == [datetime(2026, 8, 16).date(), datetime(2026, 8, 17).date(), datetime(2026, 8, 18).date()]
+    assert [x["event_id"] for x in days[datetime(2026, 8, 17).date()]] == ["E1", "E2"]
