@@ -60,6 +60,7 @@ def live_relations(con, events: list[dict], categories: dict[int, str], entity_c
 
 
 def entity_classes(qids) -> dict[int, str]:
+    """Category of each QID (death, sports, ...) from its Wikidata claims, cached in the warehouse."""
     from lookedup.analytics.config import load
     from lookedup.analytics.entities import classify, fetch_claims
     from lookedup.settings import DATA_DIR
@@ -72,6 +73,7 @@ def entity_classes(qids) -> dict[int, str]:
 
 
 def snapshots(con, targets: bool = False, data_end: str | None = None) -> list[dict]:
+    """Snapshot rows of the live events loaded into the connection, optionally with targets."""
     rel = con.sql(snapshot_sql("_fev", "_sp", "_fviews", "_fdims", targets=targets, data_end=data_end))
     cols = rel.columns
     return [dict(zip(cols, r)) for r in rel.fetchall()]
