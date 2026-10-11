@@ -69,6 +69,7 @@ def wiki_url(lang: str, title: str) -> str:
 
 
 def _iso(ts: datetime) -> str:
+    """The hour of ``ts`` as the app's timestamp format (YYYY-MM-DDTHH:00Z)."""
     return f"{ts:%Y-%m-%dT%H}:00Z"
 
 
@@ -361,6 +362,7 @@ def live_forecasts(con, store, events, now, last_hour, hourly_files, titles, tmp
 
 
 def _languages() -> list[str]:
+    """The active language codes."""
     from lookedup.languages import active_codes
     return active_codes()
 
@@ -391,6 +393,7 @@ def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, 
 
 def _today_payload(con, events, langs, titles, categories, hourly_files, now, last_hour, texts=None,
                    forecasts=None) -> dict:
+    """today.json: the events of the last 24 h with sparklines up to the last ingested hour."""
     recent = [e for e in events if e["start_hour"] >= now - timedelta(hours=24)]
     sparks = sparklines(con, hourly_files, published(recent, langs), titles, last_hour)
     return period_payload("today", recent, langs, titles, sparks, categories, now, texts, forecasts, window_hours=24,
@@ -399,6 +402,7 @@ def _today_payload(con, events, langs, titles, categories, hourly_files, now, la
 
 def _update_stats(old: dict, summaries: dict[str, dict], now: datetime, languages: list[str],
                   forecast: dict | None = None) -> dict:
+    """stats.json with new day summaries merged into the old ones; a schema change starts afresh."""
     days = dict(old.get("days", {})) if old.get("schema_version") == SCHEMA_VERSION else {}
     days.update(summaries)
     return stats_payload(days, now, languages, forecast or old.get("forecast"))
