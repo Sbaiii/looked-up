@@ -39,6 +39,7 @@ class Link:
 
 
 def page_title(day: date) -> str:
+    """Title of the Current events portal page for ``day``."""
     return f"Portal:Current_events/{day.year}_{day:%B}_{day.day}"
 
 
@@ -79,6 +80,7 @@ def parse_day(wikitext: str, day: date) -> list[Link]:
 
 
 def fetch_day(day: date, retries: int = 5) -> str:
+    """Raw wikitext of the portal page for ``day``; empty when the page does not exist, retried on network errors."""
     for attempt in range(retries):
         try:
             r = session().get("https://en.wikipedia.org/w/index.php",
@@ -130,6 +132,7 @@ def resolve_qids(lang: str, titles: list[str], batch: int = 50) -> dict[str, int
 
 
 def days(start: date, end: date) -> list[date]:
+    """Every date from ``start`` to ``end``, both included."""
     return [start + timedelta(days=i) for i in range((end - start).days + 1)]
 
 
