@@ -26,6 +26,7 @@ WAREHOUSE_DB = DATA_DIR / "warehouse" / "lookedup.duckdb"
 
 
 def dbt_vars(lake_root: str) -> dict:
+    """Variables passed to dbt: the lake path, the analysis period, baseline and spike settings, and the active languages."""
     cfg = load()
     return {
         "lake_root": lake_root,
