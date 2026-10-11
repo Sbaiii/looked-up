@@ -58,6 +58,7 @@ class Events:
         self.tables = {"primary": "wh.main.fct_attention_events"}
 
     def variant(self, min_languages: int) -> str:
+        """Name of an events table built with ``min_languages`` changed, created on first use."""
         name = f"ev_n{min_languages}"
         if name not in self.tables:
             p = self.cfg.event_variant(min_languages=min_languages)
@@ -92,6 +93,7 @@ def _write(name: str, rows: list[dict]) -> None:
 
 
 def evaluate(refresh: bool = False) -> dict:
+    """Run the pre-registered Phase 2b evaluation (deaths, earthquakes, matches); ``refresh`` re-fetches the ground truths."""
     cfg = load()
     langs = active_codes()
     lo_period = datetime.combine(cfg.eval_start, datetime.min.time())
@@ -231,11 +233,13 @@ def evaluate(refresh: bool = False) -> dict:
 
 
 def _dist(vals: list[float]) -> dict:
+    """Count, median, quartiles and range of ``vals``, for the delay summaries."""
     if not vals:
         return {"n": 0}
     vals = sorted(vals)
 
     def q(p):
+        """Quantile ``p`` of the sorted values, by nearest rank."""
         return vals[min(len(vals) - 1, int(round(p * (len(vals) - 1))))]
     return {"n": len(vals), "median": statistics.median(vals), "p25": q(0.25), "p75": q(0.75), "min": vals[0],
             "max": vals[-1], "share_le_4h": sum(v <= 4 for v in vals) / len(vals)}
