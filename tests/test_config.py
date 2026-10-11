@@ -25,3 +25,9 @@ def test_period_end_override_only_when_set(monkeypatch):
     monkeypatch.setenv("LOOKEDUP_PERIOD_END", "2026-12-31")
     assert cfg.period_end.isoformat() == "2026-12-31"
     assert cfg.eval_start < registered
+
+
+def test_tiers_run_from_widest_to_narrowest():
+    tiers = load().tiers
+    assert [name for name, _ in tiers] == ["planetary", "international", "noticed"]
+    assert [n for _, n in tiers] == sorted((n for _, n in tiers), reverse=True)
