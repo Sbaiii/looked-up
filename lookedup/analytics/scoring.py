@@ -24,6 +24,7 @@ from lookedup.analytics.config import AnalyticsConfig
 
 
 def _d(day: date) -> str:
+    """A date as a DuckDB DATE literal."""
     return f"DATE '{day:%Y-%m-%d}'"
 
 
