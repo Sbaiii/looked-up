@@ -44,3 +44,10 @@ def test_ramp_hits_its_stops_and_stays_in_range():
     assert og.ramp(1.0) == og._rgb(og.RAMP[2])
     for x in (0.1, 0.3, 0.7, 0.9):
         assert all(0 <= c <= 255 for c in og.ramp(x))
+
+
+def test_card_qualifies_on_excess_or_a_strong_tier():
+    assert og.qualifies({"excess": og.HERO_MIN_EXCESS, "tier": "noticed"})
+    assert og.qualifies({"excess": 10, "tier": "international"})
+    assert og.qualifies({"excess": 10, "tier": "planetary"})
+    assert not og.qualifies({"excess": og.HERO_MIN_EXCESS - 1, "tier": "noticed"})
