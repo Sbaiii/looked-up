@@ -5,16 +5,20 @@ models:
     description: Typed hourly article views (desktop, mobile, total, mobile share) with calendar fields.
     columns:
       - name: ts_hour_start
+        description: "Start of the UTC hour the views belong to."
         tests: [not_null]
       - name: lang
+        description: "Wiki code, one of the 30 active languages."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: "{{ var('languages') }}"
       - name: title
+        description: "Article title as in the dumps (underscores)."
         tests: [not_null]
       - name: views
+        description: "Desktop plus mobile views in the hour."
         tests: [not_null]
 
   - name: stg_sitelinks
