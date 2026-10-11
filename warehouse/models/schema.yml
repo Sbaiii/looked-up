@@ -47,8 +47,10 @@ models:
     description: (lang, title, day) rows with >= 500 views that day and the automation flags (prereg §2).
     columns:
       - name: flag_id
+        description: "lang|title|day, one row per article-day."
         tests: [unique, not_null]
       - name: is_automated
+        description: "True when the low-mobile or the flat rule flags the article-day."
         tests: [not_null]
 
   - name: int_language_priors
