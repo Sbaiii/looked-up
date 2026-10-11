@@ -30,6 +30,7 @@ COUNTRY_CLASSES = {6256, 3624078}
 
 
 def _cached(name: str, build, refresh: bool):
+    """A ground truth from its JSON cache, rebuilt and saved when missing or when ``refresh``."""
     path = CACHE / f"gt2b_{name}.json"
     if path.exists() and not refresh:
         return json.loads(path.read_text())
@@ -40,10 +41,12 @@ def _cached(name: str, build, refresh: bool):
 
 
 def _ts(x) -> datetime | None:
+    """Parse an ISO timestamp, keeping None for empty values."""
     return datetime.fromisoformat(x) if x else None
 
 
 def _floor(t: datetime) -> datetime:
+    """The start of the hour containing ``t``."""
     return t.replace(minute=0, second=0, microsecond=0)
 
 
@@ -78,12 +81,14 @@ class Events:
 
 
 def _recall(rows: list[dict], key: str = "detected") -> dict:
+    """Count, detected and recall of ``rows`` on the boolean ``key``."""
     n = len(rows)
     d = sum(1 for r in rows if r[key])
     return {"n": n, "detected": d, "recall": d / n if n else None}
 
 
 def _write(name: str, rows: list[dict]) -> None:
+    """Write rows as CSV under docs/analysis/ (nothing for an empty list)."""
     if not rows:
         return
     with open(OUT / name, "w", newline="", encoding="utf-8") as f:
@@ -246,10 +251,12 @@ def _dist(vals: list[float]) -> dict:
 
 
 def _claims(table) -> dict[int, dict]:
+    """Claims JSON per QID from a claims table."""
     return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist())}
 
 
 def _country(r: dict, claims: dict[int, dict]) -> int | None:
+    """Country item of a quake: the article's country, else the US for a US state, else the first place that is a country."""
     if r["article_countries"]:
         return r["article_countries"][0]
     if r.get("region_is_us_state"):
