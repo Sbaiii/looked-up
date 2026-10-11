@@ -51,6 +51,7 @@ class Language:
 # ---------------------------------------------------------------- config I/O
 
 def load_config(path: Path = LANGUAGES_FILE) -> dict:
+    """config/languages.yml as a dict: the ranking, its method and ``top_n``."""
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
@@ -63,6 +64,7 @@ def active_languages(path: Path = LANGUAGES_FILE) -> list[Language]:
 
 
 def active_codes(path: Path = LANGUAGES_FILE) -> list[str]:
+    """Wiki codes of the active languages, in ranking order."""
     return [l.code for l in active_languages(path)]
 
 
