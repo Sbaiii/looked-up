@@ -36,3 +36,11 @@ def test_render_day_png(tmp_path):
     assert img.size == (1200, 630)
     colours = og.country_colours(ev)
     assert colours["840"] != colours["250"]          # USA (en, strong) vs France (fr, faint)
+
+
+def test_ramp_hits_its_stops_and_stays_in_range():
+    assert og.ramp(0.0) == og._rgb(og.RAMP[0])
+    assert og.ramp(0.5) == og._rgb(og.RAMP[1])
+    assert og.ramp(1.0) == og._rgb(og.RAMP[2])
+    for x in (0.1, 0.3, 0.7, 0.9):
+        assert all(0 <= c <= 255 for c in og.ramp(x))
