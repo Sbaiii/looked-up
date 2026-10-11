@@ -93,12 +93,14 @@ class Manifest:
 
     @classmethod
     def from_json(cls, text: str | None) -> Manifest:
+        """Parse a manifest document; empty or missing text gives an empty manifest."""
         if not text:
             return cls()
         doc = json.loads(text)
         return cls(hours=dict(doc.get("hours", {})), files=dict(doc.get("files", {})))
 
     def to_json(self) -> str:
+        """Serialise with summary fields (hour count, total bytes) and keys sorted, for stable diffs."""
         doc = {
             "schema_version": 2,
             "updated_at": f"{utcnow():%Y-%m-%dT%H:%M:%SZ}",
@@ -110,12 +112,15 @@ class Manifest:
         return json.dumps(doc, indent=1) + "\n"
 
     def present(self) -> set[datetime]:
+        """Every hour start recorded in the manifest."""
         return {_parse_key(k) for k in self.hours}
 
     def has(self, ts: datetime) -> bool:
+        """Whether the hour starting at ``ts`` is recorded."""
         return _key(ts) in self.hours
 
     def add(self, ts: datetime, rows: int, source: str, ingested_at: datetime | None = None) -> None:
+        """Record an ingested hour; ``source`` must be one of ``SOURCES``."""
         if source not in SOURCES:
             raise ValueError(f"unknown source {source!r}")
         self.hours[_key(ts)] = {
@@ -124,6 +129,7 @@ class Manifest:
         }
 
     def set_file(self, path: str, rows: int, size: int) -> None:
+        """Record the row count and size of a day file after it was written."""
         self.files[path] = {"rows": rows, "bytes": size, "updated_at": f"{utcnow():%Y-%m-%dT%H:%M:%SZ}"}
 
     def merge(self, other: Manifest) -> None:
@@ -197,21 +203,26 @@ class LocalStore:
         self.root = Path(root)
 
     def head(self) -> str | None:
+        """Local lakes have no revisions, so there is never a parent to race against."""
         return None
 
     def read_manifest(self, revision: str | None = None) -> Manifest:
+        """The manifest on disk, or an empty one before the first write."""
         p = self.root / MANIFEST_PATH
         return Manifest.from_json(p.read_text() if p.exists() else None)
 
     def fetch(self, repo_path: str, dest_dir: Path, revision: str | None = None) -> Path | None:
+        """Path of the file inside the lake, or None if it does not exist yet."""
         p = self.root / repo_path
         return p if p.exists() else None
 
     def list_prefix(self, prefix: str) -> list[str]:
+        """Repo-relative paths of every file under ``prefix``, sorted."""
         base = self.root / prefix
         return sorted(str(f.relative_to(self.root)) for f in base.rglob("*") if f.is_file()) if base.exists() else []
 
     def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None:
+        """Copy the files into the lake and merge ``delta`` into the manifest on disk."""
         for repo_path, src in files.items():
             dst = self.root / repo_path
             dst.parent.mkdir(parents=True, exist_ok=True)
@@ -248,6 +259,7 @@ class HFStore:
                 self.api.create_repo(repo_id, repo_type="dataset", private=False)
 
     def head(self) -> str:
+        """Commit sha of the dataset repo's current revision."""
         return self.api.dataset_info(self.repo_id).sha
 
     def used_storage(self) -> int:
@@ -255,6 +267,7 @@ class HFStore:
         return self.api.dataset_info(self.repo_id, expand=["usedStorage"]).used_storage
 
     def list_prefix(self, prefix: str) -> list[str]:
+        """Repo paths under ``prefix``, sorted."""
         return sorted(p for p in self.api.list_repo_files(self.repo_id, repo_type="dataset") if p.startswith(prefix))
 
     def delete_prefix(self, prefix: str, message: str) -> list[str]:
@@ -281,10 +294,12 @@ class HFStore:
                              repo_type="dataset", commit_message="docs: update dataset card")
 
     def read_manifest(self, revision: str | None = None) -> Manifest:
+        """The manifest as of ``revision`` (default: the current head)."""
         p = self.fetch(MANIFEST_PATH, None, revision or self.head())
         return Manifest.from_json(p.read_text() if p else None)
 
     def fetch(self, repo_path: str, dest_dir: Path | None, revision: str | None = None) -> Path | None:
+        """Download one repo file at ``revision``; None if the file does not exist there."""
         from huggingface_hub import hf_hub_download
         from huggingface_hub.utils import EntryNotFoundError
 
