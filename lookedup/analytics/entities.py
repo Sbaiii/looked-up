@@ -156,6 +156,7 @@ def classify(claims: dict, cfg: AnalyticsConfig) -> str:
 
 
 def is_generic(claims: dict, cfg: AnalyticsConfig) -> bool:
+    """True if any P31 class of the entity is in the configured list of generic classes (list articles, dates and the like)."""
     return bool({f"Q{q}" for q in claims.get("P31", [])} & set(cfg.raw["generic_classes"]))
 
 
