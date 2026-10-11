@@ -47,18 +47,22 @@ BASELINE_BUCKETS = 16
 
 
 def baselines_file(day: date, directory: Path = BASELINES_DIR) -> Path:
+    """Local path of the baselines file used to score ``day`` (kept in the Actions cache, ADR 0018)."""
     return directory / f"day={day:%Y-%m-%d}.parquet"
 
 
 def spikes_path(day: date) -> str:
+    """Lake path of the spikes file for ``day``, laid out like the hourly day files."""
     return day_path(datetime(day.year, day.month, day.day)).replace("data/hourly/", "data/spikes/")
 
 
 def events_path(day: date) -> str:
+    """Lake path of the events file for ``day``."""
     return day_path(datetime(day.year, day.month, day.day)).replace("data/hourly/", "data/events/")
 
 
 def event_languages_path(day: date) -> str:
+    """Lake path of the per-language rows of the events of ``day``."""
     return events_path(day).replace("data/events/", "data/events/languages/")
 
 
