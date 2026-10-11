@@ -31,6 +31,7 @@ FOLDS = [("2026-09-10", "2026-09-17"), ("2026-09-17", "2026-09-24"), ("2026-09-2
 
 
 def load_rows(con) -> list[dict]:
+    """Every warehouse snapshot with the event's English label and final breadth."""
     rel = con.sql("""SELECT s.*, e.label_en, e.breadth AS final_breadth
                      FROM wh.main.fct_event_snapshots s JOIN wh.main.fct_app_events e USING (event_id)""")
     cols = rel.columns
@@ -91,11 +92,13 @@ def m2_metrics(y_log: np.ndarray, p_log: np.ndarray, hours: bool = False) -> dic
 # ---------------------------------------------------------------- baselines
 
 def sitelinks_logistic(train: list[dict]) -> LogisticRegression:
+    """The fame-only baseline: a logistic regression on log1p(sitelinks)."""
     X = np.log1p([[r["n_sitelinks"]] for r in train])
     return LogisticRegression(max_iter=1000).fit(X, [r["_y"] for r in train])
 
 
 def m1_baselines(tr: list[dict], te: list[dict], y_tr: np.ndarray, y_te: np.ndarray) -> dict:
+    """M1 baselines on the test set: the base rate, sitelinks only, and the breadth >= 3 rule."""
     for r, y in zip(tr, y_tr):
         r["_y"] = y
     base = np.full(len(te), y_tr.mean())
@@ -111,6 +114,7 @@ def m1_baselines(tr: list[dict], te: list[dict], y_tr: np.ndarray, y_te: np.ndar
 
 
 def decay_ratios(train: list[dict]) -> dict[str, float]:
+    """Median ratio of next-24 h excess to the current hour's excess, per category (n >= 20) and overall."""
     by: dict[str, list[float]] = {}
     for r in train:
         if r["excess_hour_t"] > 0:
@@ -122,6 +126,7 @@ def decay_ratios(train: list[dict]) -> dict[str, float]:
 
 
 def m2_baselines(target: str, tr: list[dict], te: list[dict]) -> dict[str, np.ndarray]:
+    """M2 baselines: persistence (x24) and category-median decay for attention left; category medians for fade time."""
     if target == "excess_next24":
         ratios = decay_ratios(tr)
         persist = np.log1p([r["excess_hour_t"] * 24 for r in te])
@@ -139,6 +144,7 @@ def m2_baselines(target: str, tr: list[dict], te: list[dict]) -> dict[str, np.nd
 # ---------------------------------------------------------------- pieces
 
 def fit_m1(tr, va, target, params, enc):
+    """Fit an M1 model on train and its Platt calibration on validation."""
     y_tr, y_va = T.labels(tr, target), T.labels(va, target)
     model = T.fit(enc.matrix(tr), y_tr, enc, params, "binary")
     ab = T.platt(T.score(model, enc.matrix(va)), y_va)
