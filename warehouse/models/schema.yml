@@ -355,3 +355,15 @@ models:
         description: "Lead language of the event (categorical feature)."
       - name: entity_class
         description: "Coarse class of the entity (categorical feature)."
+      - name: breadth_t
+        description: "Languages spiking at R3 >= 8 by T."
+      - name: max_surprise_t
+        description: "Highest surprise by T."
+      - name: sum_surprise_t
+        description: "Sum of surprises at R3 >= 8 by T."
+      - name: excess_t
+        description: "Excess views of the spike rows by T."
+      - name: lead_share_t
+        description: "Share of excess_t held by the lead language."
+      - name: new_langs_last_hour
+        description: "Languages whose first spike falls in the hour ending at T."
