@@ -116,12 +116,14 @@ function renderTicks() {
     }));
 }
 
+/** Describe the event on screen for assistive technology and in the caption under the map. */
 function describe(ev) {
     stage.setAttribute('aria-label', t('map.label', { label: label(ev) }));
     const now = document.getElementById('viz-now');
     if (now) now.textContent = `${label(ev)} · ${t('event.languages', { n: ev.breadth })} · ${t('hero.led_by', { lang: langNative(ev.lead) })}`;
 }
 
+/** Play an event's spread on the current renderer, step by step unless motion is reduced. */
 export function show(ev, { animate = true } = {}) {
     currentEvent = ev;
     if (!geo || !renderer || !ev) return;
@@ -134,6 +136,7 @@ export function show(ev, { animate = true } = {}) {
 }
 
 let globeLoading = null;
+/** Switch to the globe, loading globe.gl and its geometry on first use. */
 async function useGlobe() {
     if (mode === 'globe') return;
     globeLoading ||= Promise.all([import('./globe.js'), window.Globe ? null : loadScript('vendor/globe.gl.min.js'), globeFeatures()])
@@ -147,6 +150,7 @@ async function useGlobe() {
     if (currentEvent) show(currentEvent, { animate: false });
 }
 
+/** Switch back to the flat map and redraw the current event. */
 function useFlat() {
     renderer?.destroy();
     stage.classList.remove('is-globe');
@@ -155,8 +159,10 @@ function useFlat() {
     if (currentEvent) show(currentEvent, { animate: false });
 }
 
+/** Remember the map choice for the next visit. */
 function savePref(m) { try { localStorage.setItem('lookedup_viz', m); } catch { /* ignore */ } }
 
+/** Re-translate the map button and the map description after a language change. */
 export function refreshLabels() {
     const btn = document.getElementById('viz-mode');
     if (btn) btn.textContent = t(mode === 'globe' ? 'map.flat' : 'map.globe');
@@ -164,6 +170,7 @@ export function refreshLabels() {
     else if (stage) stage.setAttribute('aria-label', t('map.idle'));
 }
 
+/** Start on the flat map, then offer the globe on capable devices, restoring the saved choice. */
 export async function init(el, { counter } = {}) {
     stage = el;
     onCounter = counter || onCounter;
