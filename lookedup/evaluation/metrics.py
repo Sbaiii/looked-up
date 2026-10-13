@@ -252,7 +252,7 @@ def event_count(ctx: Context, events: str) -> int:
         WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'""").fetchone()[0]
 
 
-def to_jsonable(x):
+def to_jsonable(x: object) -> str | float:
     """JSON encoder fallback: dates as ISO strings, durations as seconds."""
     if isinstance(x, (datetime, date)):
         return x.isoformat()
