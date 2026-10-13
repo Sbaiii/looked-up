@@ -13,6 +13,7 @@ let currentEvent = null;
 let stage;
 let onCounter = () => {};
 
+/** Load a classic script tag and resolve once it has run. */
 function loadScript(src) {
     return new Promise((resolve, reject) => {
         const s = document.createElement('script');
@@ -21,6 +22,7 @@ function loadScript(src) {
     });
 }
 
+/** Whether the browser can create a WebGL context. */
 export function webglOK() {
     try {
         const c = document.createElement('canvas');
@@ -28,6 +30,7 @@ export function webglOK() {
     } catch { return false; }
 }
 
+/** Whether to offer the globe: WebGL, at least 4 GB of memory and 4 cores where reported, and no data saver. */
 export function capable() {
     const conn = navigator.connection || {};
     const lowEnd = (navigator.deviceMemory && navigator.deviceMemory < 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
