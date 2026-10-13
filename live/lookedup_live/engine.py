@@ -36,6 +36,8 @@ def event_ts(event: dict) -> float:
 
 
 class Engine:
+    """The live layer in one object: detector, QID resolver, stream position and the payload renderers."""
+
     def __init__(self, state_dir: Path | None = None) -> None:
         self.state_dir = state_dir
         self.detector = Detector()
@@ -55,6 +57,7 @@ class Engine:
     # ------------------------------------------------------------ ingest
 
     def handle(self, event: dict, event_id: str | None = None, now: float | None = None) -> Burst | None:
+        """Take one stream event: update rates and coverage, then count it if it passes the filters; returns a burst if it causes one."""
         now = now or time.time()
         with self.lock:
             self.received.append(now)
@@ -80,6 +83,7 @@ class Engine:
             return b
 
     def attach_qids(self) -> None:
+        """Give bursts the QIDs that have been resolved since they fired."""
         with self.lock:
             for b in self.detector.bursts:
                 if b.qid is None:
@@ -93,6 +97,7 @@ class Engine:
     # ------------------------------------------------------------ payloads
 
     def _rate(self, q: deque, now: float) -> float:
+        """Events per second over the last minute, dropping older receipts from ``q``."""
         while q and q[0] < now - 60:
             q.popleft()
         return round(len(q) / 60, 2)
