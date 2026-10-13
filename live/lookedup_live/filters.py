@@ -17,6 +17,7 @@ REVERT_TAGS = set(RULES["revert_tags"])
 
 
 def is_maintenance(comment: str | None) -> bool:
+    """True when the edit summary matches a maintenance pattern (reverts, bots, typo fixes and the like)."""
     return bool(comment) and bool(MAINTENANCE.search(comment))
 
 
