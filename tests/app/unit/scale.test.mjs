@@ -11,3 +11,7 @@ test('scale runs from the spike threshold to 5,000 on a log axis', () => {
   assert.equal(scale(MAX * 10), 1);
   assert.ok(Math.abs(scale(Math.sqrt(MIN * MAX)) - 0.5) < 1e-9);     // the geometric midpoint sits in the middle
 });
+
+test('tick labels', () => {
+  assert.deepEqual([8, 50, 500, 1000, 5000].map(tickLabel), ['8', '50', '500', '1k', '5k+']);
+});
