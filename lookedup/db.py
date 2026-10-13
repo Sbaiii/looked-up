@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import duckdb
 
 from lookedup.settings import DUCKDB_MAX_TEMP, DUCKDB_TEMP_DIR
+
+if TYPE_CHECKING:
+    import pyarrow as pa
 
 
 def configure(con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConnection:
@@ -21,7 +26,7 @@ def connect(database: str = ":memory:", read_only: bool = False) -> duckdb.DuckD
     return configure(duckdb.connect(database, read_only=read_only))
 
 
-def arrow(rel):
+def arrow(rel: duckdb.DuckDBPyRelation) -> pa.Table:
     """Fetch a relation as an Arrow table (``to_arrow_table`` since DuckDB 1.4, older name before)."""
     fetch = getattr(rel, "to_arrow_table", None) or rel.fetch_arrow_table
     return fetch()
