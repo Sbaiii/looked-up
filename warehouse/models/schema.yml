@@ -197,6 +197,16 @@ models:
           - accepted_values:
               arguments:
                 values: ["multi_language", "single_language"]
+      - name: qid
+        description: "Numeric Wikidata item id of the entity."
+      - name: start_hour
+        description: "First spike of the earliest window with spikes in 2 languages."
+      - name: lead_lang
+        description: "First language to spike."
+      - name: peak_intensity
+        description: "Highest surprise in any language within 24 h of the start."
+      - name: excess_views
+        description: "Views above baseline, summed over languages for 24 h from the start."
 
   - name: fct_app_event_languages
     description: One row per (product event, spiking language) with spread lag.
