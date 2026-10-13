@@ -85,6 +85,18 @@ models:
       - name: entity_key
         description: "Q<id> when the article has a Wikidata item, else lang:title."
         tests: [not_null]
+      - name: ts_hour_start
+        description: "The spiking hour."
+      - name: day
+        description: "UTC date of the hour."
+      - name: hour_of_day
+        description: "UTC hour, 0 to 23."
+      - name: lang
+        description: "Wiki code."
+      - name: title
+        description: "Article title."
+      - name: qid
+        description: "Numeric Wikidata item id, when the article has one."
 
   - name: dim_entities
     description: Entities that can form events (loosest ablation), with labels in the 30 languages and a coarse class.
