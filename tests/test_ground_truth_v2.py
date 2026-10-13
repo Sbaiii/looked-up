@@ -44,3 +44,11 @@ def test_football_box_and_kickoff():
 def test_place_parts():
     assert place_parts("45 km SW of Ambon, Indonesia") == ("Ambon", "Indonesia")
     assert place_parts("Kermadec Islands region") == (None, "Kermadec Islands region")
+
+
+def test_great_circle_distance():
+    from lookedup.evaluation.ground_truth_v2 import _km
+    assert _km(0, 0, 0, 0) == 0
+    assert abs(_km(0, 0, 0, 1) - 111.2) < 0.5                         # one degree along the equator
+    assert abs(_km(48.8566, 2.3522, 51.5074, -0.1278) - 344) < 5     # Paris to London
+    assert _km(None, 0, 0, 0) == float("inf")
