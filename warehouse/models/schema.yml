@@ -131,6 +131,18 @@ models:
         description: "Wiki code."
       - name: title
         description: "Article title."
+      - name: views
+        description: "Desktop plus mobile views in the hour."
+      - name: views_desktop
+        description: "Desktop views."
+      - name: views_mobile
+        description: "Mobile views."
+      - name: mobile_share
+        description: "Mobile views over all views."
+      - name: views_yesterday
+        description: "Views in the same hour the day before."
+      - name: prev3_median
+        description: "Median views of the previous 3 hours."
 
   - name: int_spikes
     description: Candidate rows passing R1 or R2 with surprise >= the lowest ablation threshold; is_spike = primary rule.
