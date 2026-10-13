@@ -142,3 +142,13 @@ def test_editor_hash_is_stable_per_user_and_none_for_anonymous():
     assert B.editor_hash("Alice") == B.editor_hash("Alice")
     assert B.editor_hash("Alice") != B.editor_hash("Bob")
     assert "Alice" not in B.editor_hash("Alice")
+
+
+def test_article_window_keeps_one_hour():
+    a = B.Article()
+    for m in (0, 20, 50, 70):
+        a.edits.append((T0 + m * 60, B.editor_hash(f"u{m}")))
+    a.trim(T0 + 70 * 60)
+    assert [round((ts - T0) / 60) for ts, _ in a.edits] == [20, 50, 70]
+    assert a.count(T0 + 70 * 60, "30m") == 2 and a.count(T0 + 70 * 60, "10m") == 1
+    assert a.editors(T0 + 70 * 60, "60m") == 3
