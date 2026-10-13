@@ -32,6 +32,7 @@ _SALT = os.urandom(16)
 
 
 def editor_hash(user: str | None) -> str | None:
+    """Salted 8-byte hash of a user name, None for anonymous edits; the salt is random per process, so hashes never leave it."""
     if not user:
         return None
     return hashlib.blake2b(_SALT + user.encode(), digest_size=8).hexdigest()
@@ -39,19 +40,24 @@ def editor_hash(user: str | None) -> str | None:
 
 @dataclass
 class Article:
+    """One article's recent edits as (timestamp, editor hash), its creation time and its last burst."""
+
     edits: deque = field(default_factory=deque)          # (ts, editor_hash or None)
     created_at: float | None = None
     last_burst: float | None = None
 
     def trim(self, now: float) -> None:
+        """Drop edits older than the longest window (60 min)."""
         while self.edits and self.edits[0][0] <= now - WINDOW_S["60m"]:
             self.edits.popleft()
 
     def count(self, now: float, window: str) -> int:
+        """Edits in the last ``window`` (10m, 30m or 60m)."""
         lo = now - WINDOW_S[window]
         return sum(1 for ts, _ in self.edits if ts > lo)
 
     def editors(self, now: float, window: str = "30m") -> int:
+        """Distinct editor hashes in the last ``window``; anonymous edits are not counted as editors."""
         lo = now - WINDOW_S[window]
         return len({h for ts, h in self.edits if ts > lo and h})
 
