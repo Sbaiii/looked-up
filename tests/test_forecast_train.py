@@ -116,3 +116,12 @@ def test_labels_for_tiers_and_counts():
             {"reach_international": 0, "excess_next24": -5}]
     assert T.labels(rows, "international").tolist() == [1.0, 0.0, 0.0]
     assert np.allclose(T.labels(rows, "excess_next24"), [0.0, 1.0, 0.0])        # negatives clipped to 0
+
+
+def test_encoder_json_round_trip():
+    rows = _rows(50)
+    enc = T.Encoder.fit(rows)
+    back = T.Encoder.from_json(enc.to_json())
+    assert back.features == enc.features and back.vocab == enc.vocab
+    assert np.array_equal(back.matrix(rows), enc.matrix(rows), equal_nan=True)
+    assert back.monotone == enc.monotone and back.categorical == enc.categorical
