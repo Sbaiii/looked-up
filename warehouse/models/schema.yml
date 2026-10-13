@@ -205,6 +205,16 @@ models:
         description: "First spiking hour of this language in the event."
       - name: spread_lag_hours
         description: "Hours from the event start to this language's first spike."
+      - name: peak_surprise
+        description: "Highest surprise of this language in the event."
+      - name: spike_hours
+        description: "Number of spiking hours of this language in the event."
+      - name: excess_views
+        description: "Views above baseline in this language over the event's first 24 h."
+      - name: is_lead
+        description: "True for the lead language."
+      - name: title
+        description: "Article title in this language."
 
   - name: fct_app_events
     description: Attention events under the product configuration (ADR 0021), with tier.
