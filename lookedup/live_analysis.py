@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import csv
 import json
+from collections.abc import Iterator
 from contextlib import contextmanager
 import logging
 import statistics
@@ -36,7 +37,7 @@ PREREG_RULES = ROOT / "config" / "live_prereg_phase5.yml"
 
 
 @contextmanager
-def prereg_rules():
+def prereg_rules() -> Iterator[int]:
     """H9 and H10 keep their pre-registered rules (30-min live window, no new-article editor minimum), whatever
     config/live.yml says today (ADR 0032)."""
     import yaml
