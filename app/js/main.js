@@ -387,6 +387,7 @@ function select(ev, { fromList = false, animate = true, push = false } = {}) {
 
 /* ---------------------------------------------------------------- timeline */
 
+/** The day bars above the slider, one per day, the shown day highlighted. */
 function renderBars() {
     const svg = $('bars');
     const n = state.days.length;
@@ -401,6 +402,7 @@ function renderBars() {
     }));
 }
 
+/** Short label of a day for the slider: "Today" or a localised date. */
 function dayLabel(d) {
     return d.today ? t('timeline.today') : i18n.dayShort(d.iso);
 }
