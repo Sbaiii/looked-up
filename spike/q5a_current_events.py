@@ -18,6 +18,7 @@ KEYWORDS = sys.argv[1:] or ["dies", "died", "earthquake", "final", "wins", "assa
 
 
 def main() -> None:
+    """Fetch the last 60 Current events pages (cached) and print entries matching the candidate keywords."""
     out = RAW / "events"
     out.mkdir(parents=True, exist_ok=True)
     today = datetime.now(timezone.utc).date()
