@@ -547,6 +547,7 @@ function renderAbout() {
 
 /* ---------------------------------------------------------------- boot */
 
+/** The slider days: past days of the 90-day timeline, then today. */
 function buildDays() {
     const days = (state.stats.timeline || [])
         .filter((r) => r.day < todayIso())
@@ -556,6 +557,7 @@ function buildDays() {
     $('day-slider').max = days.length - 1;
 }
 
+/** Redraw the whole page, for example after the language changes. */
 function renderAll(animate) {
     renderHero(animate);
     renderNext();
@@ -567,6 +569,7 @@ function renderAll(animate) {
     renderDay();
 }
 
+/** Attach every event handler: language buttons, slider, arrows, bars, copy, more, replay, filters and history. */
 function wire() {
     document.querySelectorAll('[data-ui-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.uiLang)));
     $('day-slider').addEventListener('input', (e) => selectDay(Number(e.target.value), { push: false }));
@@ -593,6 +596,7 @@ function wire() {
     addEventListener('popstate', () => { if (state.today) route({ scroll: true }); });
 }
 
+/** Start the app: theme, language, live strip and map, then load today and stats, pick the hero and follow any deep link. */
 async function boot() {
     initTheme();
     await setLang(i18n.initialLang());
