@@ -82,6 +82,14 @@ models:
         description: "Views of the article that day."
       - name: mobile_share
         description: "Mobile share of the day's views."
+      - name: hourly_mean
+        description: "Mean views per hour that day."
+      - name: hourly_cv
+        description: "Coefficient of variation of the 24 hourly views."
+      - name: is_low_mobile
+        description: "Low-mobile rule: enough views with a mobile share under the threshold."
+      - name: is_flat
+        description: "Flat rule: a busy article whose hourly series barely varies."
 
   - name: int_language_priors
     description: Per scored day and language, the prior median/MAD used for unseen entities.
