@@ -7,6 +7,7 @@ let lang = 'en';
 let locale = 'en-GB';
 let plural = new Intl.PluralRules(locale);
 
+/** The interface language: the stored choice, else the first supported browser language, else English. */
 export function initialLang() {
     try {
         const stored = localStorage.getItem('lookedup_lang');
@@ -16,6 +17,7 @@ export function initialLang() {
     return nav.find((l) => UI_LANGS.includes(l)) || 'en';
 }
 
+/** Load a language file, set the locale and plural rules, remember the choice and set <html lang>. */
 export async function load(code) {
     const res = await fetch(`i18n/${code}.json`);
     dict = await res.json();
@@ -38,6 +40,7 @@ export function use(dictionary, code) {
     cache.clear();
 }
 
+/** The raw entry at a dotted key, or undefined. */
 function lookup(key) {
     return key.split('.').reduce((o, k) => (o == null ? o : o[k]), dict);
 }
@@ -53,6 +56,7 @@ export function t(key, vars = {}) {
     return s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 }
 
+/** Translate every [data-i18n] text and [data-i18n-aria] label, plus the page title and description. */
 export function applyStatic(root = document) {
     root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
     root.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
@@ -61,6 +65,7 @@ export function applyStatic(root = document) {
 }
 
 const cache = new Map();
+/** A cached Intl formatter of ``kind`` for the current locale and options. */
 function intl(kind, opts) {
     const k = `${kind}|${locale}|${JSON.stringify(opts)}`;
     if (!cache.has(k)) cache.set(k, new Intl[kind](locale, opts));
