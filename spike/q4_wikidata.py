@@ -115,7 +115,7 @@ def full(langs: set[str]) -> dict:
 
 
 def main() -> None:
-    """Run the API demo and the dump check; with --full, also stream the dump to measure coverage."""
+    """Run the API demo and the dump check; with --full, also download and stream-parse the whole dump."""
     res = {"api": api_demo(), "dump": dump_head()}
     print(json.dumps(res, indent=2, ensure_ascii=False))
     if "--full" in sys.argv:
