@@ -39,7 +39,7 @@ def parse_sse(lines: Iterator[str]) -> Iterator[tuple[str | None, str]]:
 
 
 def consume(engine, stop: threading.Event, max_backoff: float = 60.0) -> None:
-    """Read the EventStreams feed until ``stop``: resume with Last-Event-ID, else replay a few minutes; reconnect with backoff."""
+    """Read the EventStreams feed until ``stop``: resume with Last-Event-ID, else replay the last 60 minutes; reconnect with backoff."""
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "text/event-stream"})
     backoff = 1.0
