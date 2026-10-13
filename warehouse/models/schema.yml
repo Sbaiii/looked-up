@@ -109,6 +109,16 @@ models:
         description: "Views in the same hour the day before (R1)."
       - name: prev3_median
         description: "Median views of the previous 3 hours (R2)."
+      - name: baseline_level
+        description: "Which baseline was used: day_type, hour or the language prior."
+      - name: unseen
+        description: "True when the article has too little history, so the language prior is used and R1 is off."
+      - name: baseline_median
+        description: "Median of the baseline sample."
+      - name: baseline_mad
+        description: "Median absolute deviation of the baseline sample."
+      - name: surprise
+        description: "Robust score R3 of the hour against the baseline."
 
   - name: dim_entities
     description: Entities that can form events (loosest ablation), with labels in the 30 languages and a coarse class.
