@@ -20,6 +20,7 @@ BASE = "https://stream.wikimedia.org/v2/stream/"
 
 
 def sample(stream: str, seconds: float) -> dict:
+    """Read ``stream`` for ``seconds``, saving the raw events, and summarise rates, wikis and event types."""
     out = RAW / "stream" / f"{stream}-{int(time.time())}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
     events, errors = [], []
@@ -70,6 +71,7 @@ def sample(stream: str, seconds: float) -> dict:
 
 
 def main() -> None:
+    """Sample three EventStreams feeds and save the summary."""
     results = [sample("recentchange", 60), sample("page-create", 20), sample("revision-create", 20)]
     (DERIVED / "q3_stream.json").write_text(json.dumps(results, indent=2, ensure_ascii=False))
     print(json.dumps(results, indent=2, ensure_ascii=False))
