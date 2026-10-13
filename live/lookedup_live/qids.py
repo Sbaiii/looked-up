@@ -19,6 +19,8 @@ UI = ("en", "fr", "es")
 
 
 class Resolver:
+    """Resolves bursting titles to Wikidata items with labels and descriptions, cached in memory and on disk."""
+
     def __init__(self, cache_file: Path | None = None) -> None:
         self.cache_file = cache_file
         self.qids: dict[str, str | None] = {}          # "lang|title" -> QID (None = no item)
@@ -35,14 +37,17 @@ class Resolver:
                 pass
 
     def get(self, lang: str, title: str) -> str | None:
+        """The cached QID of a title: a QID, None for a title without an item, None also when not looked up yet."""
         return self.qids.get(f"{lang}|{title}")
 
     def want(self, lang: str, title: str) -> None:
+        """Queue a title for lookup unless it is already cached."""
         if f"{lang}|{title}" not in self.qids:
             with self.lock:
                 self.pending.add((lang, title))
 
     def resolve_pending(self) -> int:
+        """Look up queued titles in batches of 50 per wiki; failed batches go back on the queue. Returns titles resolved."""
         with self.lock:
             todo, self.pending = sorted(self.pending), set()
         by_lang: dict[str, list[str]] = {}
@@ -80,6 +85,7 @@ class Resolver:
         return n
 
     def save(self) -> None:
+        """Write the QID and item cache to disk."""
         if self.cache_file:
             self.cache_file.parent.mkdir(parents=True, exist_ok=True)
             self.cache_file.write_text(json.dumps({"qids": self.qids, "items": self.items}, ensure_ascii=False))
