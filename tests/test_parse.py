@@ -136,3 +136,10 @@ def test_lag_minutes():
     f = dumps.HourlyFile(name="x", url="x", ts_hour_start=datetime(2026, 10, 7, 9),
                          posted=datetime(2026, 10, 7, 12, 29), size=1)
     assert f.lag_minutes == 149
+
+
+def test_main_pages_are_excluded(article_filter):
+    assert "Main_Page" in article_filter.excluded_titles("en")
+    assert not article_filter.is_article("en", "Main_Page")
+    fr = article_filter.excluded_titles("fr")
+    assert len(fr) >= 1 and all(not article_filter.is_article("fr", t) for t in fr)
