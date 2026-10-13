@@ -226,3 +226,10 @@ def test_bursts_since_filters_by_time():
     e.detector.bursts.extend([B.Burst("en", "A", T0, "window", 5, 3), B.Burst("en", "B", T0 + 600, "window", 5, 3)])
     assert [b["title"] for b in e.bursts_since(T0 + 1)] == ["B"]
     assert len(e.bursts_since(T0)) == 2
+
+
+def test_revert_summaries_are_maintenance():
+    for c in ("Reverted edits by X", "Undid revision 123", "rv vandalism", "rollback"):
+        assert is_maintenance(c), c
+    for c in (None, "", "Added death date", "riverside"):
+        assert not is_maintenance(c), c
