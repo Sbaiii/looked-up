@@ -10,6 +10,7 @@ import csv
 import json
 import logging
 import statistics
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 
 from lookedup import db
@@ -29,7 +30,7 @@ CLAIMS = DATA_DIR / "warehouse" / "entity_claims.parquet"
 COUNTRY_CLASSES = {6256, 3624078}
 
 
-def _cached(name: str, build, refresh: bool):
+def _cached(name: str, build: Callable[[], object], refresh: bool) -> list[dict]:
     """A ground truth from its JSON cache, rebuilt and saved when missing or when ``refresh``."""
     path = CACHE / f"gt2b_{name}.json"
     if path.exists() and not refresh:
