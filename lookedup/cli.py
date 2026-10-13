@@ -52,7 +52,7 @@ def _hour(s: str) -> datetime:
     return dt.replace(minute=0, second=0, microsecond=0, tzinfo=None)
 
 
-def cmd_hourly(a):
+def cmd_hourly(a: argparse.Namespace) -> None:
     """``hourly``: ingest the missing hours of the window (at most ``--max-hours``) into the lake."""
     from lookedup import hourly
     from lookedup.store import open_store
@@ -61,7 +61,7 @@ def cmd_hourly(a):
     log.info("hourly run finished: %d hour(s) ingested", n)
 
 
-def cmd_backfill(a):
+def cmd_backfill(a: argparse.Namespace) -> None:
     """``backfill``: the same as ``python -m lookedup.backfill`` with the given options."""
     from lookedup.backfill import main
 
@@ -70,7 +70,7 @@ def cmd_backfill(a):
     main(argv)
 
 
-def cmd_validate(a):
+def cmd_validate(a: argparse.Namespace) -> None:
     """``validate``: rebuild random backfilled hours from the hourly dumps and compare them row by row."""
     from lookedup.backfill import validate
     from lookedup.store import open_store
@@ -83,7 +83,7 @@ def cmd_validate(a):
         sys.exit(1)
 
 
-def cmd_languages(a):
+def cmd_languages(a: argparse.Namespace) -> None:
     """``languages``: rank the Wikipedias by human article views over the last 7 full days and rewrite config/languages.yml."""
     from lookedup import languages
 
@@ -95,7 +95,7 @@ def cmd_languages(a):
               f"mobile={r['mobile_share']} automated={r['automated_share']} raw_rank={r['raw_rank']}")
 
 
-def cmd_wikidata(a):
+def cmd_wikidata(a: argparse.Namespace) -> None:
     """``wikidata``: rebuild the sitelinks table for the active languages and upload it unless ``--no-upload``."""
     from lookedup.languages import active_codes
     from lookedup.settings import DATA_DIR, SITELINKS_PATH
