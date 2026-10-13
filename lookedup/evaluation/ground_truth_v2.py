@@ -26,7 +26,7 @@ USGS = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 DEATH_WORDS = re.compile(r"(?i)\b(death|died|dies|dead|passed away|passing|rip|deceased|dod|obituary)\b")
 
 
-def _get(url: str, params: dict, retries: int = 5, **kw):
+def _get(url: str, params: dict, retries: int = 5, **kw) -> requests.Response:
     """GET with up to ``retries`` attempts and a short pause after each success, to stay polite to Wikimedia."""
     for attempt in range(retries):
         try:
