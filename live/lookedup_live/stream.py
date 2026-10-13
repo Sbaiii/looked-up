@@ -39,6 +39,7 @@ def parse_sse(lines: Iterator[str]) -> Iterator[tuple[str | None, str]]:
 
 
 def consume(engine, stop: threading.Event, max_backoff: float = 60.0) -> None:
+    """Read the EventStreams feed until ``stop``: resume with Last-Event-ID, else replay a few minutes; reconnect with backoff."""
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "text/event-stream"})
     backoff = 1.0
@@ -70,6 +71,7 @@ def consume(engine, stop: threading.Event, max_backoff: float = 60.0) -> None:
 
 
 def resolver_loop(engine, stop: threading.Event, every: float = 10.0) -> None:
+    """Every ``every`` seconds, resolve queued QIDs, attach them to bursts and drop idle state."""
     while not stop.wait(every):
         if engine.resolver.resolve_pending():
             engine.attach_qids()
