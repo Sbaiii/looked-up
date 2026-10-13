@@ -14,6 +14,7 @@ let failed = false;
 
 const $ = (id) => document.getElementById(id);
 
+/** A new element with optional text and class. */
 function el(tag, text, cls) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -26,12 +27,14 @@ const list = (codes) => {
     try { return new Intl.ListFormat(document.documentElement.lang, { type: 'conjunction' }).format(names); } catch { return names.join(', '); }
 };
 
+/** Whether the strip should rest: no answer, a feed older than 15 minutes, or an hour-long coverage gap. */
 function resting(data) {
     if (failed || !data) return true;
     if (Date.now() - Date.parse(data.generated_at) > STALE_MS) return true;
     return (data.status?.gap_minutes ?? 0) >= 60;
 }
 
+/** Draw the Right now strip: up to 4 live events, else the top single-language bursts; a resting line when the feed is stale. */
 export function renderLive() {
     const strip = $('right-now');
     if (!strip) return;
@@ -66,6 +69,7 @@ export function renderLive() {
     }
 }
 
+/** Fetch /live.json with an 8 s timeout and redraw the strip. */
 async function poll() {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 8000);
@@ -82,6 +86,7 @@ async function poll() {
     renderLive();
 }
 
+/** Poll now and then every minute while the page is visible. */
 export function startLive() {
     poll();
     setInterval(() => { if (!document.hidden) poll(); }, POLL_MS);
