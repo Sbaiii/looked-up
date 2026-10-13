@@ -191,3 +191,8 @@ def test_gc_drops_idle_articles_and_old_bursts():
 
 def test_counts_of_an_unknown_article_are_zero():
     assert B.Detector().counts("en", "Nothing", T0) == {"edits_10m": 0, "edits_30m": 0, "edits_60m": 0, "editors_30m": 0}
+
+
+def test_burst_json_has_no_user_fields():
+    j = B.Burst("fr", "Y", T0, "new", 5, 2, qid="Q1").to_json()
+    assert j == {"lang": "fr", "title": "Y", "ts": T0, "kind": "new", "edits_30m": 5, "editors_30m": 2, "qid": "Q1"}
