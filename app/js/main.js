@@ -31,6 +31,7 @@ const safeUrl = (u) => (typeof u === 'string' && u.startsWith('https://') ? u : 
 const todayIso = () => state.today.generated_at.slice(0, 10);
 const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 
+/** A new element: ``class``, ``text`` and on* handlers are handled specially, other attributes set as given; children appended. */
 function el(tag, attrs = {}, ...children) {
     const e = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs)) {
@@ -52,12 +53,14 @@ const shownDay = () => state.archive || state.days[state.index];
 const eventHash = (d, ev) => `#/day/${d.iso}/event/${ev.qid}`;
 const absolute = (hash) => `${location.origin}${location.pathname}${hash}`;
 
+/** Change the URL hash without scrolling, as a new history entry or in place, and retitle the page. */
 function setHash(hash, push = true) {
     if (location.hash === hash) return;
     history[push ? 'pushState' : 'replaceState'](null, '', hash);
     updateTitle();
 }
 
+/** Copy the absolute URL for ``hash``, with a fallback for browsers without the clipboard API. */
 async function copyLink(hash, button) {
     const url = absolute(hash);
     try {
@@ -74,6 +77,7 @@ async function copyLink(hash, button) {
     setTimeout(() => { button.textContent = old; }, 1600);
 }
 
+/** The document title for the current URL: an event, a day, a language panel or the front page. */
 function updateTitle() {
     const h = location.hash;
     let m;
@@ -89,6 +93,7 @@ function updateTitle() {
     }
 }
 
+/** Scroll a section into view, smoothly unless motion is reduced. */
 function scrollTo(target) {
     target?.scrollIntoView({ behavior: smooth(), block: 'start' });
 }
