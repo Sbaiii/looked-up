@@ -47,6 +47,7 @@ def list_hourly(year: int, month: int) -> list[dict]:
 
 
 def hourly_url(dt: datetime) -> str:
+    """URL of the hourly dump file stamped ``dt`` (dump files are stamped with the hour they end)."""
     return f"{DUMPS}/{dt:%Y}/{dt:%Y-%m}/pageviews-{dt:%Y%m%d-%H}0000.gz"
 
 
@@ -87,6 +88,7 @@ def download(url: str, dest: Path, retries: int = 8) -> tuple[Path, float]:
 
 
 def human(n: float) -> str:
+    """A byte count in binary units (KB, MB, ...), one decimal."""
     for unit in ["B", "KB", "MB", "GB", "TB"]:
         if abs(n) < 1024:
             return f"{n:.1f} {unit}"
