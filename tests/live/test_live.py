@@ -161,3 +161,11 @@ def test_baseline_is_the_default_until_enough_hours():
     b.add("en", "X", T0 + (B.MIN_BASELINE_HOURS - 1) * 3600)          # closes hour MIN - 1
     assert b.get("en") == B.DEFAULT_BASELINE
     assert b.get("fr") == B.DEFAULT_BASELINE
+
+
+def test_baseline_uses_the_wiki_median_once_it_has_enough_hours():
+    b = B.Baselines()
+    for h in range(B.MIN_BASELINE_HOURS + 1):
+        for _ in range(4):
+            b.add("en", "X", T0 + h * 3600)                            # 4 edits on one article every hour
+    assert b.get("en") == 4
