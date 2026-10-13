@@ -109,3 +109,10 @@ def test_split_follows_the_preregistered_boundaries():
     rows = [{"start_hour": t} for t in (T.TRAIN_END - timedelta(hours=1), T.TRAIN_END, T.VALID_END, T.TEST_END)]
     sp = T.split(rows)
     assert [len(sp[k]) for k in ("train", "valid", "test")] == [1, 1, 1]       # TEST_END itself is out of every set
+
+
+def test_labels_for_tiers_and_counts():
+    rows = [{"reach_international": 1, "excess_next24": 0}, {"reach_international": 0, "excess_next24": np.e - 1},
+            {"reach_international": 0, "excess_next24": -5}]
+    assert T.labels(rows, "international").tolist() == [1.0, 0.0, 0.0]
+    assert np.allclose(T.labels(rows, "excess_next24"), [0.0, 1.0, 0.0])        # negatives clipped to 0
