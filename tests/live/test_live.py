@@ -177,3 +177,13 @@ def test_no_second_burst_during_the_cooldown():
     assert any(first)
     again = [d.add("en", "X", T0 + 600 + i * 60, f"v{i}") for i in range(6)]
     assert not any(again)
+
+
+def test_gc_drops_idle_articles_and_old_bursts():
+    d = B.Detector()
+    d.add("en", "Quiet", T0, "a")
+    d.bursts.append(B.Burst("en", "Old", T0, "window", 5, 3))
+    later = T0 + B.KEEP_BURSTS_S + 3600
+    d.gc(later)
+    assert ("en", "Quiet") not in d.articles
+    assert not d.bursts
