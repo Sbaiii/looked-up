@@ -125,3 +125,12 @@ def test_encoder_json_round_trip():
     assert back.features == enc.features and back.vocab == enc.vocab
     assert np.array_equal(back.matrix(rows), enc.matrix(rows), equal_nan=True)
     assert back.monotone == enc.monotone and back.categorical == enc.categorical
+
+
+def test_metrics_on_a_single_class_sample():
+    y = np.zeros(20)
+    s = np.linspace(0, 1, 20)
+    m = E.m1_metrics(y, s)
+    assert m["roc_auc"] is None and m["pr_auc"] is None and m["positives"] == 0
+    assert np.isnan(E.calib_slope(y, s))
+    assert np.isnan(E.lift_top10(y, s))                                  # no positives: lift is undefined
