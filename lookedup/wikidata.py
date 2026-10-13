@@ -13,6 +13,7 @@ import io
 import logging
 import re
 import tempfile
+from collections.abc import Iterable, Iterator
 from datetime import datetime
 from pathlib import Path
 
@@ -37,7 +38,7 @@ def site_id(lang: str) -> str:
     return lang.replace("-", "_") + "wiki"
 
 
-def parse_sitelinks(lines, sites: dict[bytes, str]):
+def parse_sitelinks(lines: Iterable[bytes], sites: dict[bytes, str]) -> Iterator[tuple[str, str, int]]:
     """Yield (lang, title_with_underscores, qid) for rows whose site is in ``sites``."""
     for line in lines:
         if not (line.startswith(b"(") or line.startswith(b"INSERT INTO")):
