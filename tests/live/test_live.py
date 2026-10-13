@@ -212,3 +212,10 @@ def test_events_without_a_timestamp_are_ignored():
     del bad["timestamp"]
     assert e.handle(bad, now=T0) is None
     assert e.last_event_at is None and not e.detector.articles
+
+
+def test_a_stalled_feed_reports_a_gap():
+    e = Engine()
+    e.handle(ev(ts=T0), now=T0)
+    assert e.status(now=T0 + 60)["gap_minutes"] >= 0
+    assert e.status(now=T0 + 30 * 60)["gap_minutes"] >= 30
