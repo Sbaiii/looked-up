@@ -9,3 +9,11 @@ test('equirectangular corners, latitude clamped to the cropped band', () => {
   assert.deepEqual(project([0, 90]), project([0, LAT_TOP]));          // the Arctic is cropped
   assert.deepEqual(project([0, -90]), project([0, LAT_BOTTOM]));       // so is Antarctica
 });
+
+test('polygons of a geometry', () => {
+  const ring = [[0, 0], [1, 0], [1, 1], [0, 0]];
+  assert.deepEqual(polygons({ type: 'Polygon', coordinates: [ring] }), [[ring]]);
+  assert.deepEqual(polygons({ type: 'MultiPolygon', coordinates: [[ring], [ring]] }), [[ring], [ring]]);
+  assert.deepEqual(polygons({ type: 'Point', coordinates: [0, 0] }), []);
+  assert.deepEqual(polygons(null), []);
+});
