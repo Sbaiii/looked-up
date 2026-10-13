@@ -9,6 +9,7 @@ import yaml
 
 
 def _find() -> Path:
+    """Path of the live rules: LIVE_CONFIG, else config/live.yml in the repo, else a live.yml beside the package."""
     here = Path(__file__).resolve()
     for p in (os.environ.get("LIVE_CONFIG"), here.parents[2] / "config" / "live.yml", here.parent / "live.yml"):
         if p and Path(p).exists():
