@@ -71,6 +71,7 @@ class Baselines:
         self.medians: dict[str, deque] = defaultdict(lambda: deque(maxlen=BASELINE_HOURS))
 
     def add(self, lang: str, title: str, ts: float) -> None:
+        """Count one edit in the current hour, rolling the hour over when ``ts`` moves past it."""
         h = int(ts // 3600)
         if self.hour is None:
             self.hour = h
@@ -80,12 +81,14 @@ class Baselines:
         self.current[lang][title] += 1
 
     def roll(self) -> None:
+        """Close the hour: store each wiki's median edits per edited article, then start counting afresh."""
         for lang, counts in self.current.items():
             if counts:
                 self.medians[lang].append(statistics.median(counts.values()))
         self.current = defaultdict(Counter)
 
     def get(self, lang: str) -> float:
+        """The wiki's baseline: the median of its hourly medians, or the default until enough hours exist."""
         m = self.medians.get(lang)
         return statistics.median(m) if m and len(m) >= MIN_BASELINE_HOURS else DEFAULT_BASELINE
 
