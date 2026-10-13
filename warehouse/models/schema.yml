@@ -72,6 +72,16 @@ models:
       - name: is_automated
         description: "True when the low-mobile or the flat rule flags the article-day."
         tests: [not_null]
+      - name: lang
+        description: "Wiki code."
+      - name: title
+        description: "Article title."
+      - name: day
+        description: "UTC date."
+      - name: day_views
+        description: "Views of the article that day."
+      - name: mobile_share
+        description: "Mobile share of the day's views."
 
   - name: int_language_priors
     description: Per scored day and language, the prior median/MAD used for unseen entities.
