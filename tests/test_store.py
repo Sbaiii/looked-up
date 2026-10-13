@@ -135,3 +135,13 @@ def test_manifest_refuses_an_unknown_source():
         m.add(datetime(2026, 8, 17, 2), rows=10, source="scraped")
     m.add(datetime(2026, 8, 17, 2), rows=10, source="hourly_dump")
     assert m.has(datetime(2026, 8, 17, 2)) and not m.has(datetime(2026, 8, 17, 3))
+
+
+def test_manifest_json_summary():
+    m = Manifest()
+    m.add(datetime(2026, 8, 17, 2), rows=10, source="hourly_dump")
+    m.set_file("data/hourly/year=2026/month=08/day=17.parquet", rows=10, size=1234)
+    doc = json.loads(m.to_json())
+    assert doc["schema_version"] == 2 and doc["hour_count"] == 1 and doc["total_bytes"] == 1234
+    assert Manifest.from_json(m.to_json()).hours == m.hours
+    assert Manifest.from_json(None).hours == {} and Manifest.from_json("").files == {}
