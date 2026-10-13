@@ -26,3 +26,10 @@ def test_adr_index_lists_every_record():
     index = (ROOT / "docs" / "adr" / "README.md").read_text()
     for p in sorted((ROOT / "docs" / "adr").glob("0*.md")):
         assert f"]({p.name})" in index, f"{p.name} missing from docs/adr/README.md"
+
+
+def test_config_readme_covers_every_file():
+    readme = (ROOT / "config" / "README.md").read_text()
+    for p in sorted((ROOT / "config").iterdir()):
+        if p.name != "README.md" and p.is_file():
+            assert f"`{p.name}`" in readme, f"{p.name} missing from config/README.md"
