@@ -69,6 +69,7 @@ EVENTS = [
 
 
 def sitelinks(enwiki: str) -> tuple[str, dict[str, str]]:
+    """QID of an English article and its titles on every Wikipedia."""
     r = session.get("https://www.wikidata.org/w/api.php", params={
         "action": "wbgetentities", "sites": "enwiki", "titles": enwiki, "props": "sitelinks",
         "format": "json", "redirects": "yes"}, timeout=30).json()
@@ -77,6 +78,7 @@ def sitelinks(enwiki: str) -> tuple[str, dict[str, str]]:
 
 
 def redirects(lang: str, title: str) -> list[str]:
+    """An article title and every main-namespace redirect to it, with underscores."""
     out, cont = [title.replace(" ", "_")], {}
     while True:
         r = session.get(f"https://{lang}.wikipedia.org/w/api.php", params={
@@ -107,12 +109,14 @@ def build_targets(ev: dict) -> dict:
 
 
 def window_hours(t0: datetime) -> list[datetime]:
+    """The 24 hour starts from ``t0``."""
     return [t0 + timedelta(hours=i) for i in range(24)]
 
 
 def fetch_hourly(hours: list[datetime]) -> list:
     """Download hourly files; file for hour-start h is named h+1h."""
     def one(h):
+        """Download the dump file for the hour starting at ``h``."""
         url = hourly_url(h + timedelta(hours=1))
         return download(url, RAW / "pageviews" / url.rsplit("/", 1)[1])[0]
     with ThreadPoolExecutor(int(os.environ.get("DL_WORKERS", "1"))) as ex:
