@@ -23,6 +23,7 @@ WP_FILTER = "regexp_matches(project, '^[a-z0-9-]+(\\.m)?$')"
 
 
 def main() -> None:
+    """Time the hourly job on this machine: listing, download, filter to Parquet and day compaction."""
     timings: dict[str, float] = {}
     t_all = time.perf_counter()
 
