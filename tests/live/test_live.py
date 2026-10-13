@@ -135,3 +135,10 @@ def test_replay_the_60_second_sample():
     assert 0 < kept < len(rows)                                   # filters drop bots, other namespaces, maintenance
     live = e.live(now=rows[-1]["timestamp"])
     assert live["schema_version"] == 1 and isinstance(live["events"], list)
+
+
+def test_editor_hash_is_stable_per_user_and_none_for_anonymous():
+    assert B.editor_hash(None) is None and B.editor_hash("") is None
+    assert B.editor_hash("Alice") == B.editor_hash("Alice")
+    assert B.editor_hash("Alice") != B.editor_hash("Bob")
+    assert "Alice" not in B.editor_hash("Alice")
