@@ -4,6 +4,7 @@
 import { t, label, langName, within, compact, num, day, desc } from './i18n.js';
 import { rank } from './select.js';
 
+/** Excess views as a phrase: "1.2 million more views" from a million up, the exact number below. */
 export function excessPhrase(n) {
     return n >= 1e6 ? t('briefing.excess_big', { n: compact(n) }) : t('briefing.excess_small', { n: num(n) });
 }
@@ -21,6 +22,7 @@ export function leadKey(ev) {
     return 'briefing.lead_death_neutral';
 }
 
+/** Up to three facts for the briefing: the fastest wide event, the widest, and the biggest led by a non-English edition. */
 export function facts(events) {
     const out = [];
     const wide = events.filter((e) => e.breadth >= 5);
@@ -34,6 +36,7 @@ export function facts(events) {
     return out;
 }
 
+/** The day's briefing: the lead sentence, the facts and an "about" line from the Wikidata description. */
 export function compose(payload, isoDate) {
     const events = payload.events || [];
     const top = leadEvent(events);
