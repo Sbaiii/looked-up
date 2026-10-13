@@ -20,6 +20,18 @@ models:
       - name: views
         description: "Desktop plus mobile views in the hour."
         tests: [not_null]
+      - name: day
+        description: "UTC date of the hour."
+      - name: hour_of_day
+        description: "UTC hour, 0 to 23."
+      - name: is_weekend
+        description: "True on the configured weekend days."
+      - name: views_desktop
+        description: "Desktop views (the xx project)."
+      - name: views_mobile
+        description: "Mobile views (the xx.m project)."
+      - name: mobile_share
+        description: "Mobile views over all views."
 
   - name: stg_sitelinks
     description: (lang, title) -> numeric Wikidata QID.
