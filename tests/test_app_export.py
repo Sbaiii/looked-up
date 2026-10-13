@@ -114,3 +114,9 @@ def test_events_group_by_their_utc_start_date():
     days = ax.by_day([e(1, 2), e(2, 23), e(3, 24), e(4, -1)])
     assert sorted(days) == [datetime(2026, 8, 16).date(), datetime(2026, 8, 17).date(), datetime(2026, 8, 18).date()]
     assert [x["event_id"] for x in days[datetime(2026, 8, 17).date()]] == ["E1", "E2"]
+
+
+def test_short_descriptions():
+    assert ax.short("x" * ax.DESC_MAX) == "x" * ax.DESC_MAX
+    cut = ax.short("word " * 40)
+    assert len(cut) <= ax.DESC_MAX and cut.endswith("…") and not cut[:-1].endswith(" ")
