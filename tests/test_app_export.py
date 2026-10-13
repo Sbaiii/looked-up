@@ -120,3 +120,9 @@ def test_short_descriptions():
     assert ax.short("x" * ax.DESC_MAX) == "x" * ax.DESC_MAX
     cut = ax.short("word " * 40)
     assert len(cut) <= ax.DESC_MAX and cut.endswith("…") and not cut[:-1].endswith(" ")
+
+
+def test_day_and_card_paths():
+    d = datetime(2026, 8, 17).date()
+    assert ax.day_file(d) == f"{ax.APP_PREFIX}/days/2026-08-17.json"
+    assert ax.og_file(d) == f"{ax.APP_PREFIX}/og/2026-08-17.png"
