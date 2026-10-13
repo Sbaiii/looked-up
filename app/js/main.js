@@ -121,6 +121,7 @@ async function route({ scroll = true } = {}) {
 
 /* ---------------------------------------------------------------- theme and language */
 
+/** Wire the theme button: toggle light and dark, remember it, update theme-color and redraw the map colours. */
 function initTheme() {
     $('theme').addEventListener('click', () => {
         const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -131,6 +132,7 @@ function initTheme() {
     });
 }
 
+/** Switch the interface language and redraw everything that holds text. */
 async function setLang(code) {
     await i18n.load(code);
     i18n.applyStatic();
