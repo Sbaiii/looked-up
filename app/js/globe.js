@@ -1,5 +1,6 @@
 // WebGL globe (globe.gl, vendored). Same interface as the flat map: play(steps), destroy().
 
+/** The 3D globe (globe.gl) in ``stage``, with countries as polygons, coloured through the shared renderer interface. */
 export function createGlobe(stage, geo) {
     const cs = getComputedStyle(document.documentElement);
     const css = (v) => cs.getPropertyValue(v).trim();
