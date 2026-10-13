@@ -32,3 +32,10 @@ test('a busy day picks the biggest qualifying event at once', async () => {
   const r = await pickHero(async () => fx.busy_day, now);
   assert.deepEqual([r.event.qid, r.hours], ['Q8', 24]);
 });
+
+test('qualifies on excess views or a strong tier', async () => {
+  const { qualifies, HERO_MIN_EXCESS } = await import('../../../app/js/select.js');
+  assert.ok(qualifies({ excess: HERO_MIN_EXCESS, tier: 'noticed' }));
+  assert.ok(qualifies({ excess: 0, tier: 'international' }) && qualifies({ excess: 0, tier: 'planetary' }));
+  assert.ok(!qualifies({ excess: HERO_MIN_EXCESS - 1, tier: 'noticed' }));
+});
