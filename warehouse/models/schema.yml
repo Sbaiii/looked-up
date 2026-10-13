@@ -119,6 +119,18 @@ models:
       - name: surprise
         description: "Robust score R3: views above the baseline median, scaled by the MAD plus a Poisson term."
         tests: [not_null]
+      - name: ts_hour_start
+        description: "The scored hour."
+      - name: day
+        description: "UTC date of the hour."
+      - name: hour_of_day
+        description: "UTC hour, 0 to 23."
+      - name: is_weekend
+        description: "True on the configured weekend days."
+      - name: lang
+        description: "Wiki code."
+      - name: title
+        description: "Article title."
 
   - name: int_spikes
     description: Candidate rows passing R1 or R2 with surprise >= the lowest ablation threshold; is_spike = primary rule.
