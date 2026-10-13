@@ -17,6 +17,7 @@ WD = "https://www.wikidata.org/w/api.php"
 
 
 def get(url: str) -> tuple[int, dict | None, float, dict]:
+    """GET ``url``: status, JSON body (None on error), elapsed seconds and the rate-limit and cache headers."""
     t0 = time.perf_counter()
     r = session.get(url, timeout=30)
     dt = time.perf_counter() - t0
@@ -30,6 +31,7 @@ def get(url: str) -> tuple[int, dict | None, float, dict]:
 
 
 def main() -> None:
+    """Probe the REST API (top articles, per-article history, per-country tops) and save the results."""
     res: dict = {}
     yday = datetime.now(timezone.utc) - timedelta(days=1)
     y, m, d = f"{yday:%Y}", f"{yday:%m}", f"{yday:%d}"
