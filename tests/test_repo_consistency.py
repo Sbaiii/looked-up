@@ -60,3 +60,12 @@ def test_spike_readme_lists_every_script():
     readme = (ROOT / "spike" / "README.md").read_text()
     for p in sorted((ROOT / "spike").glob("q*.py")):
         assert f"`{p.name}`" in readme, f"{p.name} missing from spike/README.md"
+
+
+def test_live_rules_have_one_source():
+    import yaml
+
+    live = yaml.safe_load((ROOT / "config" / "live.yml").read_text())
+    worker = json.loads((ROOT / "worker" / "src" / "rules.json").read_text())
+    assert worker["live_event_window_minutes"] == live["live_event_window_minutes"]
+    assert worker["burst"] == live["burst"]
