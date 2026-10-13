@@ -269,7 +269,7 @@ def cmd_app_export(a: argparse.Namespace) -> None:
     print(json.dumps(export_live(open_store(a.local)), indent=1))
 
 
-def cmd_forecast_evaluate(a):
+def cmd_forecast_evaluate(a: argparse.Namespace) -> None:
     """``forecast-evaluate``: run the pre-registered Phase 4 backtest and print the H6 to H8 verdicts."""
     from lookedup.forecast.evaluate import run
 
@@ -277,7 +277,7 @@ def cmd_forecast_evaluate(a):
     print(json.dumps({k: res[k] for k in ("split_sizes", "H6", "H7", "H8")}, indent=1, default=str))
 
 
-def cmd_forecast_retrain(a):
+def cmd_forecast_retrain(a: argparse.Namespace) -> None:
     """``forecast-retrain``: retrain the production forecast models and publish them to data/models/."""
     from lookedup.forecast.retrain import retrain
     from lookedup.store import open_store
@@ -285,7 +285,7 @@ def cmd_forecast_retrain(a):
     print(json.dumps(retrain(open_store(a.local), upload_batch=a.upload_batch, add_live_week=not a.no_live), indent=1))
 
 
-def cmd_refresh_warehouse(a):
+def cmd_refresh_warehouse(a: argparse.Namespace) -> None:
     """``refresh-warehouse``: mirror new day files and extend the warehouse to ``--end`` (default yesterday)."""
     from lookedup.warehouse import refresh
 
@@ -333,7 +333,7 @@ def cmd_live_snapshot(a):
     print(json.dumps(snapshot(open_store(a.local), url, day), indent=1))
 
 
-def cmd_ground_truth(a):
+def cmd_ground_truth(a: argparse.Namespace) -> None:
     """``ground-truth``: build the Current events ground truth for the Phase 2 evaluation."""
     from lookedup.analytics.config import load
     from lookedup.evaluation.ground_truth import build
@@ -345,7 +345,7 @@ def cmd_ground_truth(a):
     print(json.dumps(res, indent=1))
 
 
-def cmd_evaluate(a):
+def cmd_evaluate(a: argparse.Namespace) -> None:
     """``evaluate``: the Phase 2 evaluation, or the H3 audit sample or score with their flags."""
     from lookedup.evaluation import run
 
@@ -357,14 +357,14 @@ def cmd_evaluate(a):
         print(json.dumps(run.evaluate(), indent=1, default=str))
 
 
-def cmd_evaluate_v2(a):
+def cmd_evaluate_v2(a: argparse.Namespace) -> None:
     """``evaluate-v2``: the Phase 2b evaluation; ``--refresh`` re-fetches the ground truths."""
     from lookedup.evaluation import run_v2
 
     print(json.dumps(run_v2.evaluate(refresh=a.refresh), indent=1, default=str))
 
 
-def cmd_warehouse(a):
+def cmd_warehouse(a: argparse.Namespace) -> None:
     """``warehouse``: run dbt with the given arguments (default ``build``); exits non-zero on failure."""
     from lookedup.warehouse import run
 
