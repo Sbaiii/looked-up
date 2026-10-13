@@ -26,11 +26,13 @@ PREFIX = "data/live"
 
 
 def _api():
+    """A Hub client with HF_TOKEN."""
     from huggingface_hub import HfApi
     return HfApi(token=os.environ.get("HF_TOKEN"))
 
 
 def fetch_state(state_dir: Path) -> bool:
+    """Download the previous shift's state and QID cache from the lake; False when there is none yet."""
     from huggingface_hub import hf_hub_download
     try:
         for name in ("state.json.gz", "qids.json"):
@@ -43,6 +45,7 @@ def fetch_state(state_dir: Path) -> bool:
 
 
 def publish(engine: Engine, state_dir: Path, final: bool = False) -> None:
+    """Commit live.json, stats.json and the bursts of yesterday and today to the lake; the state too at the end and every 30 min."""
     from huggingface_hub import CommitOperationAdd
     now = time.time()
     out = Path(tempfile.mkdtemp())
@@ -69,6 +72,7 @@ def publish(engine: Engine, state_dir: Path, final: bool = False) -> None:
 
 
 def main() -> None:
+    """Run one shift: resume the state, consume for ``--hours``, publish every ``--every`` seconds, then hand over."""
     p = argparse.ArgumentParser()
     p.add_argument("--hours", type=float, default=5.75)
     p.add_argument("--every", type=int, default=300)
