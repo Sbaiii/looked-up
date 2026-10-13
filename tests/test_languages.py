@@ -14,3 +14,8 @@ def test_active_languages_follow_rank_and_top_n(tmp_path):
     langs = active_languages(p)
     assert [l.code for l in langs] == ["en", "fr"] and langs[0].name_en == "English" and langs[1].name_en is None
     assert active_codes(p) == ["en", "fr"]
+
+
+def test_shipped_ranking():
+    codes = active_codes()
+    assert len(codes) == 30 and codes[0] == "en" and len(set(codes)) == 30
