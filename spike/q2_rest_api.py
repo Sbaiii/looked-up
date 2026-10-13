@@ -31,7 +31,7 @@ def get(url: str) -> tuple[int, dict | None, float, dict]:
 
 
 def main() -> None:
-    """Probe the REST API (top articles, per-article history, per-country tops) and save the results."""
+    """Probe the REST API (top articles, per-article history, top countries of a wiki) and save the results."""
     res: dict = {}
     yday = datetime.now(timezone.utc) - timedelta(days=1)
     y, m, d = f"{yday:%Y}", f"{yday:%m}", f"{yday:%d}"
