@@ -233,3 +233,15 @@ def test_revert_summaries_are_maintenance():
         assert is_maintenance(c), c
     for c in (None, "", "Added death date", "riverside"):
         assert not is_maintenance(c), c
+
+
+def test_resolver_queue_and_cache_round_trip(tmp_path):
+    from lookedup_live.qids import Resolver
+    r = Resolver(tmp_path / "qids.json")
+    r.qids["en|Known"] = "Q1"
+    r.want("en", "Known")
+    r.want("en", "New")
+    assert r.pending == {("en", "New")}
+    assert r.get("en", "Known") == "Q1" and r.get("en", "New") is None
+    r.save()
+    assert Resolver(tmp_path / "qids.json").get("en", "Known") == "Q1"
