@@ -333,6 +333,16 @@ models:
         description: "First spiking hour of this language in the event."
       - name: spread_lag_hours
         description: "Hours from the event start to this language's first spike."
+      - name: peak_surprise
+        description: "Highest surprise of this language in the event."
+      - name: spike_hours
+        description: "Spiking hours of this language in the event."
+      - name: excess_views
+        description: "Views above baseline in this language over the first 24 h."
+      - name: is_lead
+        description: "True for the lead language."
+      - name: title
+        description: "Article title in this language."
 
   - name: fct_event_snapshots
     description: Decision-time snapshots of multi-language product events with M1/M2 targets (prereg phase 4).
