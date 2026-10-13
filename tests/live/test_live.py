@@ -219,3 +219,10 @@ def test_a_stalled_feed_reports_a_gap():
     e.handle(ev(ts=T0), now=T0)
     assert e.status(now=T0 + 60)["gap_minutes"] == 59          # just started: the rest of the hour is not covered yet
     assert e.status(now=T0 + 30 * 60)["gap_minutes"] == 30     # no event for 30 minutes
+
+
+def test_bursts_since_filters_by_time():
+    e = Engine()
+    e.detector.bursts.extend([B.Burst("en", "A", T0, "window", 5, 3), B.Burst("en", "B", T0 + 600, "window", 5, 3)])
+    assert [b["title"] for b in e.bursts_since(T0 + 1)] == ["B"]
+    assert len(e.bursts_since(T0)) == 2
