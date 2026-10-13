@@ -24,7 +24,7 @@ import tempfile
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 
@@ -363,10 +363,8 @@ def sync_to_local(hf: HFStore, local: LocalStore, since: datetime, include_sitel
     return {"downloaded": done, "up_to_date": skipped, "revision": rev, "hours": len(manifest.hours)}
 
 
-def _day_of(path: str) -> "date":
+def _day_of(path: str) -> date:
     """``data/hourly/year=2026/month=10/day=07.parquet`` -> date(2026, 10, 7)."""
-    from datetime import date
-
     parts = dict(p.split("=") for p in path.removesuffix(".parquet").split("/") if "=" in p)
     return date(int(parts["year"]), int(parts["month"]), int(parts["day"]))
 
