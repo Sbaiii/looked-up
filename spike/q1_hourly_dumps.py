@@ -26,6 +26,7 @@ NON_WIKIPEDIA = {
 
 
 def latest_files(n: int = 3) -> list[dict]:
+    """The ``n`` most recent hourly dump files, reaching into the previous month when needed."""
     now = datetime.now(timezone.utc)
     files = list_hourly(now.year, now.month)
     if len(files) < n:
@@ -35,6 +36,7 @@ def latest_files(n: int = 3) -> list[dict]:
 
 
 def day_listing(day: datetime) -> list[dict]:
+    """The hourly dump files of one UTC day."""
     files = [f for f in list_hourly(day.year, day.month) if f["hour"].date() == day.date()]
     return files
 
@@ -54,6 +56,7 @@ def scan_raw(path):
 
 
 def load_sql(path) -> str:
+    """DuckDB SQL reading one gzipped dump as (project, page_title, views, bytes), skipping malformed lines."""
     return f"""
         SELECT * FROM read_csv('{path}',
             delim=' ', header=false, quote='', escape='', auto_detect=false,
@@ -63,6 +66,7 @@ def load_sql(path) -> str:
 
 
 def main() -> None:
+    """Run the Q1 measurements and write the report under data/derived/."""
     DERIVED.mkdir(parents=True, exist_ok=True)
     report: dict = {"run_at": datetime.now(timezone.utc).isoformat()}
 
@@ -125,6 +129,7 @@ def main() -> None:
     report["top_projects"] = proj[:25]
 
     def suffix(p: str) -> str:
+        """Project code suffix (``m``, ``m.d``...) or (none) for desktop Wikipedia."""
         parts = p.split(".", 1)
         return parts[1] if len(parts) > 1 else "(none)"
 
