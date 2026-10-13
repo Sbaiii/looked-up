@@ -29,6 +29,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], a
 
 
 def cached(name: str, build) -> JSONResponse:
+    """Serve ``build()`` as JSON, rebuilt at most every CACHE_S seconds, with a matching Cache-Control header."""
     now = time.time()
     hit = _cache.get(name)
     if not hit or now - hit[0] > CACHE_S:
@@ -37,12 +38,14 @@ def cached(name: str, build) -> JSONResponse:
 
 
 def _snapshots() -> None:
+    """Snapshot the engine every 5 minutes until shutdown."""
     while not stop.wait(300):
         engine.snapshot(STATE / "state.json.gz")
 
 
 @app.on_event("startup")
 def start() -> None:
+    """Restore the last snapshot, then start the stream consumer, the QID resolver and the snapshot loop."""
     engine.restore(STATE / "state.json.gz")
     for target in (lambda: consume(engine, stop), lambda: resolver_loop(engine, stop), _snapshots):
         threading.Thread(target=target, daemon=True).start()
@@ -50,6 +53,7 @@ def start() -> None:
 
 @app.on_event("shutdown")
 def shutdown() -> None:
+    """Stop the background threads and write a final snapshot."""
     stop.set()
     engine.snapshot(STATE / "state.json.gz")
 
