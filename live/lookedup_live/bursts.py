@@ -95,6 +95,8 @@ class Baselines:
 
 @dataclass
 class Burst:
+    """A detected burst: where, when, which rule fired, and the counts at that moment."""
+
     lang: str
     title: str
     ts: float
@@ -104,11 +106,14 @@ class Burst:
     qid: str | None = None
 
     def to_json(self) -> dict:
+        """The burst as a plain dict for snapshots and the JSON endpoints."""
         return {"lang": self.lang, "title": self.title, "ts": self.ts, "kind": self.kind,
                 "edits_30m": self.edits_30m, "editors_30m": self.editors_30m, "qid": self.qid}
 
 
 class Detector:
+    """Applies the burst rules edit by edit, keeping only what the windows need."""
+
     def __init__(self) -> None:
         self.articles: dict[tuple[str, str], Article] = {}
         self.baselines = Baselines()
@@ -152,6 +157,7 @@ class Detector:
             self.bursts.popleft()
 
     def counts(self, lang: str, title: str, now: float) -> dict:
+        """Current edit counts of one article over 10, 30 and 60 minutes, and its editors over 30."""
         a = self.articles.get((lang, title))
         if not a:
             return {"edits_10m": 0, "edits_30m": 0, "edits_60m": 0, "editors_30m": 0}
