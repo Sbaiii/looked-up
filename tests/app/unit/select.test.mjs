@@ -45,3 +45,10 @@ test('ties break on breadth, then id', () => {
   assert.deepEqual(rank([e('b', 10, 2), e('a', 10, 2), e('c', 10, 5)]).map((x) => x.id), ['c', 'a', 'b']);
   assert.deepEqual(rank(null), []);
 });
+
+test('events older than the window are ignored', async () => {
+  const now = Date.parse('2026-08-17T12:00:00Z');
+  const old = { id: 'x', qid: 'Q1', excess: 1e6, breadth: 9, tier: 'international', class: 'multi_language', start: '2026-08-10T00:00:00Z' };
+  const r = await pickHero(async () => [old], now);
+  assert.deepEqual([r.event, r.hours], [null, 24]);
+});
