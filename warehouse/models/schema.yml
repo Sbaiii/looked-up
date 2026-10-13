@@ -343,3 +343,15 @@ models:
               arguments:
                 to: ref('fct_app_events')
                 field: event_id
+      - name: qid
+        description: "Numeric Wikidata item id of the entity."
+      - name: start_hour
+        description: "Start of the event."
+      - name: t0
+        description: "Detection hour: the second language's first spike."
+      - name: snapshot_ts
+        description: "The hour T the snapshot describes; every feature uses hours up to T only."
+      - name: lead_lang
+        description: "Lead language of the event (categorical feature)."
+      - name: entity_class
+        description: "Coarse class of the entity (categorical feature)."
