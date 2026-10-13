@@ -346,15 +346,18 @@ function renderHero(animate) {
 
 /* ---------------------------------------------------------------- map selection */
 
+/** Replay the selected event on the map, for example after a theme change. */
 function reshow(animate) {
     const ev = findEvent(state.selected);
     if (ev) viz.show(ev, { animate });
 }
 
+/** Multi-language and single-language events of a payload, in one list. */
 function allEvents(src) {
     return src ? [...(src.events || []), ...(src.single_language_events || [])] : [];
 }
 
+/** An event by id in the shown day, then today, then the hero. */
 function findEvent(id) {
     for (const src of [state.payload, state.today]) {
         const ev = allEvents(src).find((e) => e.id === id);
@@ -363,11 +366,13 @@ function findEvent(id) {
     return state.hero.event?.id === id ? state.hero.event : null;
 }
 
+/** The strongest event of a QID on the shown day, for /event/Q... links. */
 function findByQid(qid) {
     const evs = allEvents(state.payload).filter((e) => e.qid === qid);
     return rank(evs)[0] || evs[0] || null;
 }
 
+/** Select an event: highlight its card, play it on the map, optionally update the URL and bring the map into view. */
 function select(ev, { fromList = false, animate = true, push = false } = {}) {
     state.selected = ev.id;
     document.querySelectorAll('.card').forEach((c) => c.classList.toggle('is-selected', c.dataset.id === ev.id));
