@@ -442,6 +442,7 @@ async function selectArchive(iso, { qid = null } = {}) {
     showDay(d, payload, qid);
 }
 
+/** Show a loaded day (slider day or archive day): labels, the archive tag, the cards, and the event named by the URL or the day's lead. */
 function showDay(d, payload, qid) {
     $('day-slider').setAttribute('aria-valuetext', dayLabel(d));
     $('day-out').textContent = dayLabel(d);
@@ -462,6 +463,7 @@ function showDay(d, payload, qid) {
     else if (state.hero.event) select(state.hero.event, { animate: false });
 }
 
+/** Redraw everything that depends on the shown day: count, briefing line, cards, languages and the briefing panel. */
 function renderDay() {
     const p = state.payload;
     const d = shownDay();
@@ -472,6 +474,7 @@ function renderDay() {
     renderBriefing();
 }
 
+/** Set the tier filter and mark its button as checked. */
 function setTier(tier) {
     state.tier = tier;
     document.querySelectorAll('.filters [data-tier]').forEach((x) => x.setAttribute('aria-checked', String(x.dataset.tier === tier)));
