@@ -143,6 +143,16 @@ models:
         description: "Views in the same hour the day before."
       - name: prev3_median
         description: "Median views of the previous 3 hours."
+      - name: unseen
+        description: "True when the article has too little history: the language prior is used and R1 is off."
+      - name: baseline_median
+        description: "Median of the baseline sample."
+      - name: baseline_mad
+        description: "Median absolute deviation of the baseline sample."
+      - name: r1
+        description: "Day-over-day rule against views_yesterday."
+      - name: r2
+        description: "Hour-over-hour rule against prev3_median."
 
   - name: int_spikes
     description: Candidate rows passing R1 or R2 with surprise >= the lowest ablation threshold; is_spike = primary rule.
