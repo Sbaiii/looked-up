@@ -151,6 +151,14 @@ models:
         description: "Spiking languages in order of first spike."
       - name: lead_excess_share
         description: "Share of the excess views held by the lead language (ADR 0019)."
+      - name: tier
+        description: "Breadth tier: noticed, international or planetary (ADR 0021)."
+      - name: label_en
+        description: "English label of the entity, when it has one."
+      - name: entity_class
+        description: "Coarse class of the entity, from dim_entities."
+      - name: is_human
+        description: "True when the entity is a human (P31 = Q5)."
 
   - name: fct_event_languages
     description: One row per (event, spiking language) with spread lag.
