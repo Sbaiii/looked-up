@@ -39,6 +39,10 @@ models:
       - name: qid
         description: "Numeric Wikidata item id (no Q prefix)."
         tests: [not_null]
+      - name: lang
+        description: "Wiki code of the sitelink."
+      - name: title
+        description: "Article title with underscores, as in the dumps."
 
   - name: stg_manifest_hours
     description: Hours listed in data/manifest.json, with row counts and source.
