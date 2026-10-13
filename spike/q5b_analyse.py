@@ -25,10 +25,12 @@ PUBLISH_LAG_H = 134 / 60  # median hourly-dump publication lag after the hour en
 
 
 def parse(ts: str) -> datetime:
+    """A UTC hour from the hourly CSV format (YYYY-MM-DD HH:MM)."""
     return datetime.strptime(ts, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
 
 
 def main() -> None:
+    """For each event and article, find the first day-over-day and hour-over-hour spike from 6 h before the event and write the delays."""
     events = json.loads((DERIVED / "q5_events.json").read_text())
     out = []
     for ev in events:
