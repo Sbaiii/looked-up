@@ -9,11 +9,13 @@ export const H = Math.round((W * (LAT_TOP - LAT_BOTTOM)) / 360);
 export const project = ([lon, lat]) => [((lon + 180) / 360) * W,
     ((LAT_TOP - Math.max(LAT_BOTTOM, Math.min(LAT_TOP, lat))) / (LAT_TOP - LAT_BOTTOM)) * H];
 
+/** The polygons of a GeoJSON geometry as rings, for Polygon and MultiPolygon alike. */
 export function polygons(geom) {
     if (!geom) return [];
     return geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
 }
 
+/** An SVG path for one ring in the flat projection. */
 export function ringPath(ring) {
     // Rings crossing the antimeridian (Russia, Fiji) are unwrapped to the east: their far part is
     // drawn just past the right edge instead of as a stripe across the whole map.
