@@ -389,3 +389,15 @@ models:
         description: "Excess views in the hour T itself (baseline input, not a model feature)."
       - name: hours_since_peak
         description: "Hours from the highest hourly total to T (baseline input, not a model feature)."
+      - name: category
+        description: "death when P570 falls within the event week, else the entity class."
+      - name: reach_international
+        description: "M1 target: 1 when the event reaches 5 languages."
+      - name: reach_planetary
+        description: "M1 target: 1 when the event reaches 20 languages."
+      - name: excess_next24
+        description: "M2 target: excess views in the 24 h after T."
+      - name: fade_hours
+        description: "M2 target: hours from T until views fall below half the peak, capped at 48."
+      - name: fade_observable
+        description: "True when the 48 h fade window ends before the end of the data."
