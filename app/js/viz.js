@@ -170,7 +170,7 @@ export function refreshLabels() {
     else if (stage) stage.setAttribute('aria-label', t('map.idle'));
 }
 
-/** Start on the flat map, then offer the globe on capable devices, restoring the saved choice. */
+/** Start on the flat map; on capable devices, upgrade to the globe after the first interaction unless the visitor chose the flat map. */
 export async function init(el, { counter } = {}) {
     stage = el;
     onCounter = counter || onCounter;
