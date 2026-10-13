@@ -48,3 +48,9 @@ def test_schema_and_model_files_match():
     schema = {m["name"] for m in yaml.safe_load((ROOT / "warehouse" / "models" / "schema.yml").read_text())["models"]}
     files = {p.stem for p in (ROOT / "warehouse" / "models").rglob("*") if p.suffix in (".sql", ".py")}
     assert schema == files, schema ^ files
+
+
+def test_readme_relative_links_exist():
+    text = (ROOT / "README.md").read_text()
+    for target in re.findall(r"\]\(((?!https?://|#)[^)\s]+)\)", text):
+        assert (ROOT / target.split("#")[0]).exists(), f"README links to missing {target}"
