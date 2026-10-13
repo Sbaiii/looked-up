@@ -99,7 +99,7 @@ def burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: dateti
         return _burst_time(revs, lang, title, lo, hi)
 
 
-def _burst_time(revs, lang, title, lo, hi):
+def _burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: datetime) -> tuple[float | None, str | None]:
     """(epoch seconds, kind) of the first edit burst of one article between ``lo`` and ``hi``, under the pre-registered rules; (None, None) without one."""
     det = Detector()
     lo_s, hi_s = lo.replace(tzinfo=timezone.utc).timestamp(), hi.replace(tzinfo=timezone.utc).timestamp()
