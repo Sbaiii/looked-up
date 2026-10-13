@@ -196,3 +196,11 @@ def test_counts_of_an_unknown_article_are_zero():
 def test_burst_json_has_no_user_fields():
     j = B.Burst("fr", "Y", T0, "new", 5, 2, qid="Q1").to_json()
     assert j == {"lang": "fr", "title": "Y", "ts": T0, "kind": "new", "edits_30m": 5, "editors_30m": 2, "qid": "Q1"}
+
+
+def test_engine_time_helpers():
+    from lookedup_live.engine import event_ts, iso
+    assert iso(None) is None
+    assert iso(0) == "1970-01-01T00:00:00Z"
+    assert event_ts({"timestamp": 12}) == 12.0
+    assert event_ts({"meta": {"dt": "1970-01-01T00:01:00Z"}}) == 60.0
