@@ -7,6 +7,7 @@ export const HERO_MIN_EXCESS = 100000;
 const STRONG = new Set(['international', 'planetary']);
 export const WINDOWS = [24, 48, 168];
 
+/** Multi-language events by excess views, then breadth, then id, for a stable order (ADR 0024). */
 export function rank(events) {
     return (events || [])
         .filter((e) => e.class !== 'single_language')
