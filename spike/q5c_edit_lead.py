@@ -19,6 +19,7 @@ from common import DERIVED, DOCS, session
 
 
 def first_rev_after(lang: str, title: str, after: datetime) -> dict | None:
+    """The first revision of an article after ``after``: time, user and the start of the summary."""
     r = session.get(f"https://{lang}.wikipedia.org/w/api.php", params={
         "action": "query", "prop": "revisions", "titles": title, "rvlimit": 1, "rvdir": "newer",
         "rvstart": after.strftime("%Y-%m-%dT%H:%M:%SZ"), "rvprop": "timestamp|user|comment|size",
@@ -33,6 +34,7 @@ def first_rev_after(lang: str, title: str, after: datetime) -> dict | None:
 
 
 def creation(lang: str, title: str) -> datetime | None:
+    """Time of an article's first revision."""
     r = session.get(f"https://{lang}.wikipedia.org/w/api.php", params={
         "action": "query", "prop": "revisions", "titles": title, "rvlimit": 1, "rvdir": "newer",
         "rvprop": "timestamp", "redirects": 1, "format": "json", "formatversion": 2}, timeout=30).json()
@@ -44,6 +46,7 @@ def creation(lang: str, title: str) -> datetime | None:
 
 
 def main() -> None:
+    """For each detected article, the first edit after the event (or its creation, for a new article) against when the spike showed in the dumps; writes q5_edit_lead.csv."""
     events = {e["key"]: e for e in json.loads((DERIVED / "q5_events.json").read_text())}
     summary = list(csv.DictReader(open(DOCS / "q5_detection_summary.csv")))
     out = []
