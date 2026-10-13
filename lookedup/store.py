@@ -363,7 +363,7 @@ def sync_to_local(hf: HFStore, local: LocalStore, since: datetime, include_sitel
     return {"downloaded": done, "up_to_date": skipped, "revision": rev, "hours": len(manifest.hours)}
 
 
-def _day_of(path: str):
+def _day_of(path: str) -> "date":
     """``data/hourly/year=2026/month=10/day=07.parquet`` -> date(2026, 10, 7)."""
     from datetime import date
 
