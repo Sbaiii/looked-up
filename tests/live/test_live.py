@@ -217,5 +217,5 @@ def test_events_without_a_timestamp_are_ignored():
 def test_a_stalled_feed_reports_a_gap():
     e = Engine()
     e.handle(ev(ts=T0), now=T0)
-    assert e.status(now=T0 + 60)["gap_minutes"] >= 0
-    assert e.status(now=T0 + 30 * 60)["gap_minutes"] >= 30
+    assert e.status(now=T0 + 60)["gap_minutes"] == 59          # just started: the rest of the hour is not covered yet
+    assert e.status(now=T0 + 30 * 60)["gap_minutes"] == 30     # no event for 30 minutes
