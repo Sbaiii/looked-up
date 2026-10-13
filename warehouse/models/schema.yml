@@ -367,3 +367,13 @@ models:
         description: "Share of excess_t held by the lead language."
       - name: new_langs_last_hour
         description: "Languages whose first spike falls in the hour ending at T."
+      - name: hours_since_start
+        description: "Hours from the event start to T."
+      - name: is_death
+        description: "1 when the event is a death (a declared leakage risk)."
+      - name: hour_utc
+        description: "UTC hour of T."
+      - name: weekday
+        description: "Day of the week of T, Monday = 0."
+      - name: n_sitelinks
+        description: "How many active languages have an article: fame (a declared leakage risk)."
