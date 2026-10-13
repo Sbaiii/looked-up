@@ -204,3 +204,11 @@ def test_engine_time_helpers():
     assert iso(0) == "1970-01-01T00:00:00Z"
     assert event_ts({"timestamp": 12}) == 12.0
     assert event_ts({"meta": {"dt": "1970-01-01T00:01:00Z"}}) == 60.0
+
+
+def test_events_without_a_timestamp_are_ignored():
+    e = Engine()
+    bad = ev()
+    del bad["timestamp"]
+    assert e.handle(bad, now=T0) is None
+    assert e.last_event_at is None and not e.detector.articles
