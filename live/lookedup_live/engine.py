@@ -23,10 +23,12 @@ HOURLY_KEEP = RULES["hourly_counts_hours"]
 
 
 def iso(ts: float | None) -> str | None:
+    """Epoch seconds as an ISO timestamp in UTC (None stays None)."""
     return None if ts is None else datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def event_ts(event: dict) -> float:
+    """Event time in epoch seconds: the recentchange ``timestamp``, else the stream's ``meta.dt``."""
     t = event.get("timestamp")
     if isinstance(t, (int, float)):
         return float(t)
