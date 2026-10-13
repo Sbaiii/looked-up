@@ -11,6 +11,7 @@ import json
 import logging
 from datetime import timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -20,6 +21,9 @@ from lookedup import db
 from lookedup.forecast import train as T
 from lookedup.forecast.features import LEAKY
 from lookedup.settings import DATA_DIR, ROOT
+
+if TYPE_CHECKING:
+    import lightgbm as lgb
 
 log = logging.getLogger(__name__)
 
@@ -143,7 +147,8 @@ def m2_baselines(target: str, tr: list[dict], te: list[dict]) -> dict[str, np.nd
 
 # ---------------------------------------------------------------- pieces
 
-def fit_m1(tr, va, target, params, enc):
+def fit_m1(tr: list[dict], va: list[dict], target: str, params: dict,
+           enc: T.Encoder) -> tuple[lgb.Booster, tuple[float, float]]:
     """Fit an M1 model on train and its Platt calibration on validation."""
     y_tr, y_va = T.labels(tr, target), T.labels(va, target)
     model = T.fit(enc.matrix(tr), y_tr, enc, params, "binary")
