@@ -109,6 +109,18 @@ models:
         description: "Direct P31 (instance of) item ids."
       - name: dates_of_death
         description: "P570 values as Wikidata time strings."
+      - name: countries
+        description: "P17 (country) item ids."
+      - name: locations
+        description: "P276 (location) item ids."
+      - name: descriptions_json
+        description: "Wikidata descriptions in the app languages, as JSON."
+      - name: gender
+        description: "From P21, used to word the briefing (ADR 0026)."
+      - name: labels
+        description: "Article title per language among the active ones, from the sitelinks."
+      - name: n_languages
+        description: "How many of the active languages have an article."
 
   - name: fct_attention_events
     description: Attention events under the primary configuration (prereg §2).
