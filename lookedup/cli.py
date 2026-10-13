@@ -210,7 +210,7 @@ def cmd_sync(a: argparse.Namespace) -> None:
     print(json.dumps(res, indent=1))
 
 
-def cmd_baselines(a):
+def cmd_baselines(a: argparse.Namespace) -> None:
     """``baselines``: build the production baselines for a day (default today); kept local, never uploaded (ADR 0018)."""
     from lookedup.dumps import utcnow
     from lookedup.scorer import build_baselines
@@ -220,7 +220,7 @@ def cmd_baselines(a):
     print(json.dumps(build_baselines(open_store(a.local), day), indent=1))  # local only (ADR 0018)
 
 
-def cmd_hub(a):
+def cmd_hub(a: argparse.Namespace) -> None:
     """``hub``: drop a prefix and/or squash the dataset history, reporting storage before and after."""
     from lookedup.store import HFStore
 
@@ -236,7 +236,7 @@ def cmd_hub(a):
     print(json.dumps(res, indent=1))
 
 
-def cmd_score(a):
+def cmd_score(a: argparse.Namespace) -> None:
     """``score``: score ingested hours (one ``--hour``, or every unscored one) into spikes, events and latest.json."""
     from lookedup.scorer import score
     from lookedup.store import open_store
@@ -245,7 +245,7 @@ def cmd_score(a):
     print(json.dumps(score(open_store(a.local), max_hours=a.max_hours, hours=hours), indent=1))
 
 
-def cmd_app_export(a):
+def cmd_app_export(a: argparse.Namespace) -> None:
     """``app-export``: write the app's JSON, the hourly live files or every day with ``--backfill``."""
     from lookedup.store import open_store
 
@@ -372,7 +372,7 @@ def cmd_warehouse(a):
         sys.exit(1)
 
 
-def cmd_compact(a):
+def cmd_compact(a: argparse.Namespace) -> None:
     """``compact``: one-off migration of a local lake from hourly to daily files."""
     from lookedup.compact import compact_local
     from lookedup.settings import LOCAL_LAKE_DIR
