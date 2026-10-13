@@ -39,6 +39,7 @@ export function capable() {
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** Load the flat map and the language geography, and index country languages and centroids. */
 async function loadGeo() {
     const [world, lg] = await Promise.all([
         fetch('data/world-2d.json').then((r) => r.json()),
@@ -68,11 +69,13 @@ async function globeFeatures() {
     return geo.features;
 }
 
+/** A #rrggbb colour as [r, g, b]. */
 function hexToRgb(h) {
     const v = h.trim().replace('#', '');
     return [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16));
 }
 
+/** Colour at ``x`` on the theme's three-stop ramp (the --ramp-* custom properties). */
 function ramp(x) {
     const cs = getComputedStyle(document.documentElement);
     const stops = ['--ramp-0', '--ramp-1', '--ramp-2'].map((v) => hexToRgb(cs.getPropertyValue(v)));
@@ -101,6 +104,7 @@ export function steps(ev, { animate }) {
     });
 }
 
+/** Place the legend ticks on the absolute scale. */
 function renderTicks() {
     const box = document.getElementById('legend-ticks');
     if (!box) return;
