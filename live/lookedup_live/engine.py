@@ -103,6 +103,7 @@ class Engine:
         return round(len(q) / 60, 2)
 
     def status(self, now: float | None = None) -> dict:
+        """Connection, rates, languages seen and the minutes of the live window not covered by the stream."""
         now = now or time.time()
         window_lo = now - LIVE_WINDOW_S
         covered = self.covered_since or now
@@ -116,6 +117,7 @@ class Engine:
                 "covered_since": iso(self.covered_since), "gap_minutes": round(gap)}
 
     def _label(self, qid: str, langs: list[str], titles: dict[str, str]) -> tuple[dict, dict]:
+        """Labels (UI languages and the burst languages, falling back to titles) and short descriptions of a QID."""
         item = self.resolver.items.get(qid, {})
         labels = {k: v for k, v in item.get("labels", {}).items() if k in UI or k in langs}
         for l, t in titles.items():
@@ -123,6 +125,7 @@ class Engine:
         return labels, {k: v[:80] for k, v in item.get("desc", {}).items() if k in UI}
 
     def live(self, now: float | None = None) -> dict:
+        """/live.json: live events grouped across languages, and the top single-language bursts by editors."""
         now = now or time.time()
         with self.lock:
             recent = [b for b in self.detector.bursts if b.ts > now - LIVE_WINDOW_S]
@@ -154,6 +157,7 @@ class Engine:
         self.live_seen = {k: h for k, h in self.live_seen.items() if h >= cutoff}
 
     def stats(self, now: float | None = None) -> dict:
+        """/stats.json: bursts and live events per hour, bursts per language, and live events per hour over a week."""
         now = now or time.time()
         with self.lock:
             self._count_live(now)
@@ -167,12 +171,14 @@ class Engine:
                     "live_events_per_hour_week": dict(sorted(Counter(self.live_seen.values()).items()))}
 
     def bursts_since(self, since: float) -> list[dict]:
+        """Bursts at or after ``since`` as plain dicts."""
         with self.lock:
             return [b.to_json() for b in self.detector.bursts if b.ts >= since]
 
     # ------------------------------------------------------------ snapshots (no user data)
 
     def snapshot(self, path: Path) -> None:
+        """Write the state to a gzipped JSON file atomically: edit times, baselines, bursts; no editors, no users."""
         with self.lock:
             now = time.time()
             ref = self.last_event_at or now               # stream time, so replays and restores agree
@@ -190,6 +196,7 @@ class Engine:
         self.resolver.save()
 
     def restore(self, path: Path) -> bool:
+        """Load a snapshot written by :meth:`snapshot`; editors are not restored. False when there is none."""
         if not path.exists():
             return False
         with gzip.open(path, "rt") as f:
