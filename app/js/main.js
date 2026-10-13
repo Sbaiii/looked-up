@@ -480,6 +480,7 @@ function setTier(tier) {
     document.querySelectorAll('.filters [data-tier]').forEach((x) => x.setAttribute('aria-checked', String(x.dataset.tier === tier)));
 }
 
+/** The event cards of the shown day at or above the tier filter, a page at a time. */
 function renderCards() {
     const min = TIER_RANK[state.tier];
     const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min);
@@ -492,6 +493,7 @@ function renderCards() {
 
 /* ---------------------------------------------------------------- languages */
 
+/** The language panel: the picker sorted by native name, and that language's top events of the day. */
 function renderLanguages() {
     const p = state.payload;
     const langs = state.stats?.languages || [];
@@ -519,6 +521,7 @@ function renderLanguages() {
 
 /* ---------------------------------------------------------------- briefing and about */
 
+/** The briefing panel for the shown day: date, lead sentence, about line and facts. */
 function renderBriefing() {
     const d = shownDay();
     const iso = d.today ? todayIso() : d.iso;
@@ -529,6 +532,7 @@ function renderBriefing() {
     $('brief-facts').replaceChildren(...b.facts.map(([, text]) => el('li', { text })));
 }
 
+/** The About section, with its dataset and repository links filled into the translated text. */
 function renderAbout() {
     $('about-lines').replaceChildren(...t('about.lines').map((s) => el('li', { text: s })));
     $('about-limits').replaceChildren(...t('about.limits').map((s) => el('li', { text: s })));
