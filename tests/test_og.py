@@ -57,3 +57,12 @@ def test_spread_phrase():
     assert og.within(0) == "under an hour"
     assert og.within(1) == "1 hour"
     assert og.within(7) == "7 hours"
+
+
+def test_title_wrap_respects_width_and_line_count():
+    img, draw = og._base()
+    f = og.font(76, 800)
+    lines = og._wrap(draw, "A very long title that cannot possibly fit on a single line of the card", f, 600, 2)
+    assert 1 < len(lines) <= 2
+    assert all(draw.textlength(l, font=f) <= 600 for l in lines[:-1])
+    assert img.size == (og.W, og.H)
