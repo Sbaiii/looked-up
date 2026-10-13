@@ -30,10 +30,12 @@ TUPLE = re.compile(rb"\((\d+),(\d+),'((?:[^'\\]|\\.)*)','((?:[^'\\]|\\.)*)'\)")
 
 
 def unescape(b: bytes) -> str:
+    """Undo backslash escapes in a raw SQL dump field."""
     return re.sub(rb"\\(.)", rb"\1", b).decode("utf-8", "replace")
 
 
 def api_demo() -> dict:
+    """Look up the sitelinks of Lisbon through wbgetentities, as a demo of the join."""
     r = session.get(WD_API, params={"action": "wbgetentities", "sites": "enwiki", "titles": "Lisbon",
                                     "props": "sitelinks", "format": "json"}, timeout=30)
     ent = next(iter(r.json()["entities"].values()))
@@ -45,6 +47,7 @@ def api_demo() -> dict:
 
 
 def dump_head() -> dict:
+    """Size of the wb_items_per_site dump and its table definition, from its first 8 MiB."""
     head = session.head(DUMP, timeout=30, allow_redirects=True)
     r = session.get(DUMP, headers={"Range": "bytes=0-8388607"}, timeout=120)
     d = zlib.decompressobj(16 + zlib.MAX_WBITS)
@@ -112,6 +115,7 @@ def full(langs: set[str]) -> dict:
 
 
 def main() -> None:
+    """Run the API demo and the dump check; with --full, also stream the dump to measure coverage."""
     res = {"api": api_demo(), "dump": dump_head()}
     print(json.dumps(res, indent=2, ensure_ascii=False))
     if "--full" in sys.argv:
