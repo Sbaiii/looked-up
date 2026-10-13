@@ -60,20 +60,24 @@ def shutdown() -> None:
 
 @app.get("/live.json")
 def live():
+    """GET /live.json: live events and the top single-language bursts."""
     return cached("live", engine.live)
 
 
 @app.get("/stats.json")
 def stats():
+    """GET /stats.json: hourly counts of bursts and live events."""
     return cached("stats", engine.stats)
 
 
 @app.get("/bursts.json")
 def bursts(hours: int = 72):
+    """GET /bursts.json: every burst of the last ``hours`` (at most 72)."""
     return cached(f"bursts{hours}", lambda: {"bursts": engine.bursts_since(time.time() - min(hours, 72) * 3600)})
 
 
 @app.get("/health")
 def health():
+    """GET /health: connection state, the last event time and the coverage gap."""
     s = engine.status()
     return {"ok": True, "connected": s["connected"], "last_event_at": s["last_event_at"], "gap_minutes": s["gap_minutes"]}
