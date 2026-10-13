@@ -119,6 +119,16 @@ models:
         description: "Median absolute deviation of the baseline sample."
       - name: surprise
         description: "Robust score R3 of the hour against the baseline."
+      - name: r1
+        description: "Day-over-day rule: at least the configured ratio of yesterday's views, above the view floor."
+      - name: r2
+        description: "Hour-over-hour rule: at least the configured ratio of the previous 3 hours' median, above the floor."
+      - name: is_low_mobile
+        description: "Automation flag: many views with a very low mobile share that day."
+      - name: is_flat
+        description: "Automation flag: a busy article with an almost flat hourly series that day."
+      - name: is_spike
+        description: "The primary rule: surprise at or above R3 and not automated."
 
   - name: dim_entities
     description: Entities that can form events (loosest ablation), with labels in the 30 languages and a coarse class.
