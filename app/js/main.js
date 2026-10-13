@@ -272,6 +272,7 @@ function renderForecastSection() {
     svg.replaceChildren(...kids);
 }
 
+/** One event card: title button, description, badges and facts, sparkline, Wikipedia links and a copy-link button. */
 function card(ev) {
     const day = shownDay();
     const li = el('li', { class: `card${ev.id === state.selected ? ' is-selected' : ''}`, 'data-id': ev.id, 'data-qid': ev.qid });
@@ -297,6 +298,7 @@ function card(ev) {
 
 /* ---------------------------------------------------------------- hero (F1, F5) */
 
+/** Pick the hero from the last 24 h, widening to 48 h and then 7 days on quiet days (ADR 0024). */
 async function chooseHero() {
     const now = Date.parse(state.today.generated_at);
     const base = new Date(`${todayIso()}T00:00:00Z`);
@@ -309,6 +311,7 @@ async function chooseHero() {
     }, now);
 }
 
+/** Count languages up under the hero as the spread plays, ending on the event's full breadth. */
 function heroCounter(n, lag, ev) {
     if (ev.id !== state.hero.event?.id) return;   // only the hero's own event drives its counter
     $('hero-counter').textContent = n === ev.langs.length
@@ -316,6 +319,7 @@ function heroCounter(n, lag, ev) {
         : t('hero.counter', { n, within: within(lag) });
 }
 
+/** Draw the hero: kicker, label, description, counter, the update time and the briefing sentence. */
 function renderHero(animate) {
     const ev = state.hero.event;
     const lab = $('hero-label');
