@@ -8,5 +8,6 @@
 - **How it runs:** [ops.md](ops.md) (architecture, workflows, commands, runbook).
 - **Data:** [data_model.md](data_model.md) (lake layout and schema), [warehouse.md](warehouse.md) (dbt models),
   [wikidata_coverage.md](wikidata_coverage.md) (how many views map to a Wikidata item).
+- **Terms:** [glossary.md](glossary.md), every term with where it is defined.
 - **Images:** [figures/](figures/) for the results, [screenshots/](screenshots/) of the app.
 - The `q5_*.csv` files are Phase 0 spike-test outputs referenced by the feasibility study.
