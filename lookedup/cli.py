@@ -110,7 +110,7 @@ def cmd_wikidata(a: argparse.Namespace) -> None:
                                    f"data: refresh Wikidata sitelinks ({sum(counts.values()):,} rows)")
 
 
-def cmd_coverage(a):
+def cmd_coverage(a: argparse.Namespace) -> None:
     """``coverage``: print a Markdown table of the Wikidata join coverage per language over the last ``--hours``."""
     from lookedup.query import lake_root
     from lookedup.settings import SITELINKS_PATH
@@ -135,14 +135,14 @@ def cmd_coverage(a):
         Path(a.out).write_text(text)
 
 
-def cmd_top(a):
+def cmd_top(a: argparse.Namespace) -> None:
     """``top``: show the top articles of one language in one hour, desktop and mobile apart."""
     from lookedup.query import top
 
     top(a.lang, _hour(a.hour), n=a.n, local=a.local).show(max_width=200)
 
 
-def cmd_verify_hour(a):
+def cmd_verify_hour(a: argparse.Namespace) -> None:
     """``verify-hour``: check that a dump file named for an hour's end holds that hour, against the REST API."""
     from lookedup.hourly import verify_alignment
 
@@ -150,7 +150,7 @@ def cmd_verify_hour(a):
         print(json.dumps(verify_alignment(_hour(a.hour), Path(tmp)), indent=1))
 
 
-def cmd_push(a):
+def cmd_push(a: argparse.Namespace) -> None:
     """``push``: upload the hours of the local lake that the Hub does not have yet, one commit per day file."""
     import pyarrow as pa
     import pyarrow.compute as pc
@@ -185,7 +185,7 @@ def cmd_push(a):
     cmd_card(a)
 
 
-def cmd_card(a):
+def cmd_card(a: argparse.Namespace) -> None:
     """``card``: upload dataset/README.md as the dataset card."""
     from lookedup.settings import DATASET_CARD
     from lookedup.store import HFStore
@@ -194,14 +194,14 @@ def cmd_card(a):
     log.info("dataset card uploaded from %s", DATASET_CARD)
 
 
-def cmd_relocate_data(a):
+def cmd_relocate_data(a: argparse.Namespace) -> None:
     """``relocate-data``: move the old in-repo data/ directory to LOOKEDUP_DATA_DIR."""
     from lookedup.relocate import relocate
 
     print(json.dumps(relocate(skip=tuple(a.skip)), indent=1))
 
 
-def cmd_sync(a):
+def cmd_sync(a: argparse.Namespace) -> None:
     """``sync``: mirror the Hub's day files (from ``--from``), manifest and sitelinks into the local lake."""
     from lookedup.store import HFStore, LocalStore, sync_to_local
 
