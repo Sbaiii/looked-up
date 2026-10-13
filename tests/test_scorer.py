@@ -87,3 +87,11 @@ def test_bucketed_baselines_equal_single_pass():
     for i in range(4):
         many |= set(con.sql(daily_baselines_sql("src", D, cfg, bucket=(i, 4), include_prior=(i == 0))).fetchall())
     assert len(one) > 100 and one == many
+
+
+def test_lake_paths_mirror_the_day_layout(tmp_path):
+    d = date(2026, 8, 17)
+    assert scorer.spikes_path(d) == "data/spikes/year=2026/month=08/day=17.parquet"
+    assert scorer.events_path(d) == "data/events/year=2026/month=08/day=17.parquet"
+    assert scorer.event_languages_path(d) == "data/events/languages/year=2026/month=08/day=17.parquet"
+    assert scorer.baselines_file(d, tmp_path) == tmp_path / "day=2026-08-17.parquet"
