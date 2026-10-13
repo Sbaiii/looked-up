@@ -295,7 +295,7 @@ def cmd_refresh_warehouse(a: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-def cmd_live_h9(a):
+def cmd_live_h9(a: argparse.Namespace) -> None:
     """``live-h9``: run the H9 backtest and write phase5_metrics.json, phase5_h9.csv and the lead-time figure."""
     from lookedup.live_analysis import OUT, run_h9
 
@@ -304,7 +304,7 @@ def cmd_live_h9(a):
     print(json.dumps(res, indent=1, default=str))
 
 
-def cmd_live_score(a):
+def cmd_live_score(a: argparse.Namespace) -> None:
     """``live-score``: score the live bursts of a day (default two days ago) against the lake's reading events."""
     from datetime import timedelta
 
@@ -316,7 +316,7 @@ def cmd_live_score(a):
     print(json.dumps(append_scores(open_store(a.local), day), indent=1, default=str))
 
 
-def cmd_live_snapshot(a):
+def cmd_live_snapshot(a: argparse.Namespace) -> None:
     """``live-snapshot``: copy a day's bursts (default yesterday) and the stats from the live host to the lake."""
     import os
     from datetime import timedelta
