@@ -99,6 +99,16 @@ models:
               arguments:
                 values: ["human", "sports", "entertainment", "disaster", "politics", "place", "organization",
                          "science_tech", "other"]
+      - name: label_en
+        description: "English label from Wikidata, when there is one."
+      - name: is_human
+        description: "True when P31 includes Q5 (human)."
+      - name: is_generic
+        description: "True when a P31 class is in the configured generic classes (dates, lists and the like)."
+      - name: p31
+        description: "Direct P31 (instance of) item ids."
+      - name: dates_of_death
+        description: "P570 values as Wikidata time strings."
 
   - name: fct_attention_events
     description: Attention events under the primary configuration (prereg §2).
