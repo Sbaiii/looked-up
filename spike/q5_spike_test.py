@@ -124,6 +124,7 @@ def fetch_hourly(hours: list[datetime]) -> list:
 
 
 def hourly_counts(paths: list, hours: list[datetime], targets: dict) -> dict:
+    """Views per (hour, lang, title) of the target titles in the given dump files."""
     con = duckdb.connect()
     con.execute("CREATE TABLE t(lang VARCHAR, title VARCHAR)")
     con.executemany("INSERT INTO t VALUES (?, ?)", list(targets.keys()))
@@ -171,6 +172,7 @@ def pvc_counts(day: datetime, targets: dict) -> dict:
 
 
 def analyse(ev: dict) -> list[dict]:
+    """For one event: build its targets, count hourly views in the 24 h window, write the CSV and the detection summary, and cross-check against pageview_complete."""
     tg = build_targets(ev)
     targets = tg["targets"]
     hours = window_hours(ev["t0"])
@@ -183,6 +185,7 @@ def analyse(ev: dict) -> list[dict]:
 
     # collapse redirects onto (entity, lang)
     def collapse(counts):
+        """Sum redirect variants onto (hour, entity, lang)."""
         agg = {}
         for (h, lang, title), v in counts.items():
             ent, canon = targets[(lang, title)]
@@ -228,6 +231,7 @@ def analyse(ev: dict) -> list[dict]:
 
 
 def main() -> None:
+    """Analyse every event and save the combined detection summary."""
     allsum = []
     for ev in EVENTS:
         print("==", ev["label"])
