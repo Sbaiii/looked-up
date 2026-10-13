@@ -5,6 +5,7 @@ import { project, W, H } from './projection.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
+/** The flat SVG map in ``stage``: one path per country and a layer of spread arcs, behind the same interface as the globe. */
 export function createMap2D(stage, geo) {
     const svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
