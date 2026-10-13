@@ -138,7 +138,7 @@ models:
                 to: ref('dim_entities')
                 field: qid
       - name: start_hour
-        description: "First hour of the event: when the minimum number of languages had spiked within the window."
+        description: "First spike of the earliest window that holds spikes in the minimum number of languages (ADR 0013)."
       - name: peak_intensity
         description: "Highest surprise reached in any language within 24 h of the start."
       - name: excess_views
