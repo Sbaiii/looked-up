@@ -20,3 +20,9 @@ def test_app_translations_have_the_same_keys():
     keys = {l: _keys(json.loads((ROOT / "app" / "i18n" / f"{l}.json").read_text())) for l in ("en", "fr", "es")}
     assert keys["fr"] == keys["en"], keys["en"] ^ keys["fr"]
     assert keys["es"] == keys["en"], keys["en"] ^ keys["es"]
+
+
+def test_adr_index_lists_every_record():
+    index = (ROOT / "docs" / "adr" / "README.md").read_text()
+    for p in sorted((ROOT / "docs" / "adr").glob("0*.md")):
+        assert f"]({p.name})" in index, f"{p.name} missing from docs/adr/README.md"
