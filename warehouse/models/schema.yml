@@ -58,6 +58,10 @@ models:
           - accepted_values:
               arguments:
                 values: ["hourly_dump", "pageview_complete"]
+      - name: rows
+        description: "Rows ingested for the hour."
+      - name: path
+        description: "Day file holding the hour."
 
   - name: int_automation_flags
     description: (lang, title, day) rows with >= 500 views that day and the automation flags (prereg §2).
