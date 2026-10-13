@@ -8,11 +8,13 @@ export const BASE = override && /^[\w./-]+\/$/.test(override) && !override.inclu
 const memory = new Map();
 const CACHE = 'lookedup-days-v1';
 
+/** Parse a gzipped JSON response, inflated in the browser. */
 async function inflate(res) {
     const stream = res.body.pipeThrough(new DecompressionStream('gzip'));
     return JSON.parse(await new Response(stream).text());
 }
 
+/** Fetch one data file: from the Cache API when immutable, else the .gz twin (plain JSON without DecompressionStream). */
 async function fetchJSON(name, { immutable = false } = {}) {
     const url = BASE + name;
     let cache = null;
@@ -50,6 +52,7 @@ export function get(name, opts) {
 
 export const today = () => get('today.json');
 export const stats = () => get('stats.json');
+/** A day file; days more than two days old never change, so they are cached as immutable. */
 export function dayFile(iso) {
     const old = (Date.now() - Date.parse(`${iso}T00:00:00Z`)) / 86400000 > 2.2;
     return get(`days/${iso}.json`, { immutable: old });
