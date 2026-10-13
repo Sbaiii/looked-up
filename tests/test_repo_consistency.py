@@ -40,3 +40,11 @@ def test_analysis_readme_covers_every_output():
     for p in sorted((ROOT / "docs" / "analysis").iterdir()):
         if p.name != "README.md" and p.is_file():
             assert p.name in readme, f"{p.name} missing from docs/analysis/README.md"
+
+
+def test_schema_and_model_files_match():
+    import yaml
+
+    schema = {m["name"] for m in yaml.safe_load((ROOT / "warehouse" / "models" / "schema.yml").read_text())["models"]}
+    files = {p.stem for p in (ROOT / "warehouse" / "models").rglob("*") if p.suffix in (".sql", ".py")}
+    assert schema == files, schema ^ files
