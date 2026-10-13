@@ -20,6 +20,7 @@ ROW = re.compile(r'<a href="(pageviews-(\d{8})-(user|automated)\.bz2)">.*?</a>\s
 
 
 def listing(year: int, month: int) -> list[dict]:
+    """Files of one month of pageview_complete with day, kind, posting time and size, from the directory listing."""
     r = session.get(f"{BASE}/{year}/{year}-{month:02d}/", timeout=60)
     r.raise_for_status()
     out = []
@@ -38,6 +39,7 @@ def decode_hourly(s: str) -> dict[int, int]:
 
 
 def main() -> None:
+    """Measure the lag and size of recent pageview_complete files and print the report."""
     now = datetime.now(timezone.utc)
     rows = listing(now.year, now.month)
     prev = now.replace(day=1) - timedelta(days=1)
