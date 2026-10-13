@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 
@@ -103,3 +103,9 @@ def test_m2_metrics_in_log_space_and_hours():
     assert m["n"] == 3 and m["mae_log"] == 0 and m["mape_log"] == 0 and m["median_abs_error_hours"] == 0
     off = E.m2_metrics(y, y + 1)
     assert np.isclose(off["mae_log"], 1.0) and "median_abs_error_hours" not in off
+
+
+def test_split_follows_the_preregistered_boundaries():
+    rows = [{"start_hour": t} for t in (T.TRAIN_END - timedelta(hours=1), T.TRAIN_END, T.VALID_END, T.TEST_END)]
+    sp = T.split(rows)
+    assert [len(sp[k]) for k in ("train", "valid", "test")] == [1, 1, 1]       # TEST_END itself is out of every set
