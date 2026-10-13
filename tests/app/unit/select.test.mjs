@@ -39,3 +39,9 @@ test('qualifies on excess views or a strong tier', async () => {
   assert.ok(qualifies({ excess: 0, tier: 'international' }) && qualifies({ excess: 0, tier: 'planetary' }));
   assert.ok(!qualifies({ excess: HERO_MIN_EXCESS - 1, tier: 'noticed' }));
 });
+
+test('ties break on breadth, then id', () => {
+  const e = (id, excess, breadth) => ({ id, excess, breadth, class: 'multi_language' });
+  assert.deepEqual(rank([e('b', 10, 2), e('a', 10, 2), e('c', 10, 5)]).map((x) => x.id), ['c', 'a', 'b']);
+  assert.deepEqual(rank(null), []);
+});
