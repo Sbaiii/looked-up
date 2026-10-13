@@ -152,3 +152,12 @@ def test_article_window_keeps_one_hour():
     assert [round((ts - T0) / 60) for ts, _ in a.edits] == [20, 50, 70]
     assert a.count(T0 + 70 * 60, "30m") == 2 and a.count(T0 + 70 * 60, "10m") == 1
     assert a.editors(T0 + 70 * 60, "60m") == 3
+
+
+def test_baseline_is_the_default_until_enough_hours():
+    b = B.Baselines()
+    for h in range(B.MIN_BASELINE_HOURS - 1):
+        b.add("en", "X", T0 + h * 3600)
+    b.add("en", "X", T0 + (B.MIN_BASELINE_HOURS - 1) * 3600)          # closes hour MIN - 1
+    assert b.get("en") == B.DEFAULT_BASELINE
+    assert b.get("fr") == B.DEFAULT_BASELINE
