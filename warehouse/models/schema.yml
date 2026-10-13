@@ -97,6 +97,12 @@ models:
       - name: prior_median
         description: "Median hourly views of the language over the lookback days, from a hashed sample of articles seen on enough days; the baseline of unseen entities."
         tests: [not_null]
+      - name: day
+        description: "The scored day the prior is used for."
+      - name: lang
+        description: "Wiki code."
+      - name: prior_mad
+        description: "Median absolute deviation matching prior_median."
 
   - name: int_baselines
     description: Every article-hour with >= 100 views in the evaluation period, with baseline, R1/R2 inputs and surprise.
