@@ -377,3 +377,15 @@ models:
         description: "Day of the week of T, Monday = 0."
       - name: n_sitelinks
         description: "How many active languages have an article: fame (a declared leakage risk)."
+      - name: views_t
+        description: "Total views at T of the articles known by then."
+      - name: views_slope
+        description: "log1p of views at T minus log1p of views two hours earlier."
+      - name: peak_views_so_far
+        description: "Highest hourly total up to T."
+      - name: lead_views_share
+        description: "Share of the views up to T read in the lead language."
+      - name: excess_hour_t
+        description: "Excess views in the hour T itself (baseline input, not a model feature)."
+      - name: hours_since_peak
+        description: "Hours from the highest hourly total to T (baseline input, not a model feature)."
