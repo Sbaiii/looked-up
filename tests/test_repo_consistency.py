@@ -54,3 +54,9 @@ def test_readme_relative_links_exist():
     text = (ROOT / "README.md").read_text()
     for target in re.findall(r"\]\(((?!https?://|#)[^)\s]+)\)", text):
         assert (ROOT / target.split("#")[0]).exists(), f"README links to missing {target}"
+
+
+def test_spike_readme_lists_every_script():
+    readme = (ROOT / "spike" / "README.md").read_text()
+    for p in sorted((ROOT / "spike").glob("q*.py")):
+        assert f"`{p.name}`" in readme, f"{p.name} missing from spike/README.md"
