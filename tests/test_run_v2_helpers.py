@@ -17,3 +17,10 @@ def test_floor_and_timestamp_helpers():
     assert R._floor(datetime(2026, 8, 17, 2, 57, 13, 5)) == datetime(2026, 8, 17, 2)
     assert R._ts("2026-08-17T02:00:00") == datetime(2026, 8, 17, 2)
     assert R._ts("") is None and R._ts(None) is None
+
+
+def test_delay_distribution():
+    assert R._dist([]) == {"n": 0}
+    d = R._dist([0, 1, 2, 3, 10])
+    assert d["n"] == 5 and d["median"] == 2 and d["min"] == 0 and d["max"] == 10
+    assert d["share_le_4h"] == 0.8
