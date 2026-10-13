@@ -323,6 +323,16 @@ models:
               arguments:
                 to: ref('fct_app_events')
                 field: event_id
+      - name: qid
+        description: "Numeric Wikidata item id of the entity."
+      - name: start_hour
+        description: "Start of the product event."
+      - name: lang
+        description: "The spiking language."
+      - name: first_spike
+        description: "First spiking hour of this language in the event."
+      - name: spread_lag_hours
+        description: "Hours from the event start to this language's first spike."
 
   - name: fct_event_snapshots
     description: Decision-time snapshots of multi-language product events with M1/M2 targets (prereg phase 4).
