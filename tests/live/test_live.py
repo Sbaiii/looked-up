@@ -187,3 +187,7 @@ def test_gc_drops_idle_articles_and_old_bursts():
     d.gc(later)
     assert ("en", "Quiet") not in d.articles
     assert not d.bursts
+
+
+def test_counts_of_an_unknown_article_are_zero():
+    assert B.Detector().counts("en", "Nothing", T0) == {"edits_10m": 0, "edits_30m": 0, "edits_60m": 0, "editors_30m": 0}
