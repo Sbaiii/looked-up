@@ -145,7 +145,7 @@ async function setLang(code) {
 
 /* ---------------------------------------------------------------- pieces */
 
-/** A 24 hour sparkline of an event's views, with the first spike marked. */
+/** An event's views over 48 hours with its start marked in the middle; hours not known yet break the line. */
 function sparkline(values) {
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(NS, 'svg');
