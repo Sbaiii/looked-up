@@ -394,7 +394,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("-v", "--verbose", action="store_true")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def add(name, fn, local=True):
+    def add(name: str, fn, local: bool = True) -> argparse.ArgumentParser:
+        """Register a subcommand running ``fn``, with ``--local`` unless ``local`` is False."""
         sp = sub.add_parser(name)
         sp.set_defaults(fn=fn)
         if local:
