@@ -207,6 +207,14 @@ models:
         description: "Highest surprise in any language within 24 h of the start."
       - name: excess_views
         description: "Views above baseline, summed over languages for 24 h from the start."
+      - name: median_spread_lag_hours
+        description: "Median hours from the start to each non-lead language's first spike."
+      - name: max_spread_lag_hours
+        description: "Hours from the start to the last language's first spike."
+      - name: languages
+        description: "Spiking languages in order of first spike."
+      - name: lead_excess_share
+        description: "Share of the excess views held by the lead language."
 
   - name: fct_app_event_languages
     description: One row per (product event, spiking language) with spread lag.
