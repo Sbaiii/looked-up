@@ -33,3 +33,10 @@ def test_config_readme_covers_every_file():
     for p in sorted((ROOT / "config").iterdir()):
         if p.name != "README.md" and p.is_file():
             assert f"`{p.name}`" in readme, f"{p.name} missing from config/README.md"
+
+
+def test_analysis_readme_covers_every_output():
+    readme = (ROOT / "docs" / "analysis" / "README.md").read_text()
+    for p in sorted((ROOT / "docs" / "analysis").iterdir()):
+        if p.name != "README.md" and p.is_file():
+            assert p.name in readme, f"{p.name} missing from docs/analysis/README.md"
