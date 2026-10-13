@@ -169,3 +169,11 @@ def test_baseline_uses_the_wiki_median_once_it_has_enough_hours():
         for _ in range(4):
             b.add("en", "X", T0 + h * 3600)                            # 4 edits on one article every hour
     assert b.get("en") == 4
+
+
+def test_no_second_burst_during_the_cooldown():
+    d = B.Detector()
+    first = [d.add("en", "X", T0 + i * 60, f"u{i}") for i in range(6)]
+    assert any(first)
+    again = [d.add("en", "X", T0 + 600 + i * 60, f"v{i}") for i in range(6)]
+    assert not any(again)
