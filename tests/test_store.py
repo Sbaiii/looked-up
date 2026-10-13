@@ -127,3 +127,11 @@ def test_day_of_path():
     from lookedup.store import _day_of
 
     assert _day_of("data/hourly/year=2026/month=10/day=07.parquet") == date(2026, 10, 7)
+
+
+def test_manifest_refuses_an_unknown_source():
+    m = Manifest()
+    with pytest.raises(ValueError):
+        m.add(datetime(2026, 8, 17, 2), rows=10, source="scraped")
+    m.add(datetime(2026, 8, 17, 2), rows=10, source="hourly_dump")
+    assert m.has(datetime(2026, 8, 17, 2)) and not m.has(datetime(2026, 8, 17, 3))
