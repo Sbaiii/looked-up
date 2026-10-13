@@ -145,6 +145,7 @@ async function setLang(code) {
 
 /* ---------------------------------------------------------------- pieces */
 
+/** A 24 hour sparkline of an event's views, with the first spike marked. */
 function sparkline(values) {
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(NS, 'svg');
@@ -175,6 +176,7 @@ function sparkline(values) {
     return svg;
 }
 
+/** Links to the article in the lead language and, when different, in the interface language. */
 function wikiLinks(ev) {
     const ui = i18n.current();
     const links = [];
@@ -184,6 +186,7 @@ function wikiLinks(ev) {
     return links;
 }
 
+/** The tier badge, with the tier explained in its title. */
 function badge(tier) {
     return el('span', { class: `badge badge--${tier}`, title: t(`tier_help.${tier}`), text: t(`tier.${tier}`) });
 }
@@ -222,6 +225,7 @@ function renderNext() {
         el('span', { text: t('next.item', { p: pct(e.forecast.p_international) }) }))));
 }
 
+/** Show the forecast note under the open events only when a forecast is shown, with the backtested AUC. */
 function renderForecastNote(shown) {
     const note = $('forecast-note');
     const fc = state.stats?.forecast;
@@ -229,6 +233,7 @@ function renderForecastNote(shown) {
     if (fc) note.textContent = t('forecast.note', { auc: fmtAuc(fc.auc_international_t1) });
 }
 
+/** FIG. 05: the backtest numbers, the calibration chart and the summary; hidden without forecast data. */
 function renderForecastSection() {
     const fc = state.stats?.forecast;
     const sec = $('forecast');
