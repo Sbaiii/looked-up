@@ -103,3 +103,16 @@ def test_live_commands_default_days(monkeypatch, capsys):
     cli.main(["live-score"])
     assert seen == {"snap": ("https://live.example", datetime(2026, 10, 11).date()), "score": datetime(2026, 10, 10).date()}
     capsys.readouterr()
+
+
+def test_evaluate_modes(monkeypatch, capsys):
+    from lookedup.evaluation import run
+
+    monkeypatch.setattr(run, "audit_sample", lambda: 100)
+    monkeypatch.setattr(run, "audit_score", lambda: {"h3": "inconclusive"})
+    monkeypatch.setattr(run, "evaluate", lambda: {"h1": "rejected"})
+    cli.main(["evaluate", "--audit-sample"])
+    cli.main(["evaluate", "--audit-score"])
+    cli.main(["evaluate"])
+    out = capsys.readouterr().out
+    assert "100 units written" in out and '"h3": "inconclusive"' in out and '"h1": "rejected"' in out
