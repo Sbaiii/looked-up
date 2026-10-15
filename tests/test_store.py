@@ -226,3 +226,12 @@ def test_sync_downloads_only_what_changed(tmp_path, monkeypatch):
     assert got == [("data/hourly/year=2026/month=08/day=18.parquet", "rev1")]           # day 16 is before the start
     assert res == {"downloaded": 1, "up_to_date": 1, "revision": "rev1", "hours": 0}
     assert local.read_manifest().files == m.files
+
+
+def test_local_store_list_prefix(tmp_path):
+    store = LocalStore(tmp_path)
+    (tmp_path / "data" / "app" / "days").mkdir(parents=True)
+    (tmp_path / "data" / "app" / "days" / "2026-08-17.json").write_text("{}")
+    (tmp_path / "data" / "app" / "today.json").write_text("{}")
+    assert store.list_prefix("data/app") == ["data/app/days/2026-08-17.json", "data/app/today.json"]
+    assert store.list_prefix("data/none") == [] and store.head() is None
