@@ -196,3 +196,10 @@ def test_hub_commit_maps_a_race_to_a_conflict(tmp_path, monkeypatch):
     api.create_commit = failing(500)
     with pytest.raises(HfHubHTTPError):
         hf.commit({}, Manifest(), "m", parent="abc")
+
+
+def test_hub_commit_needs_a_token():
+    hf = _hf(_FakeApi([]))
+    hf.token = None
+    with pytest.raises(RuntimeError, match="HF token missing"):
+        hf.commit({}, Manifest(), "m", parent="abc")
