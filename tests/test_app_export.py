@@ -163,3 +163,18 @@ def test_stats_update_merges_days_and_keeps_the_forecast():
 def test_texts_from_table():
     t = pa.table({"qid": [1, 2], "descriptions_json": ['{"en": "capital of Portugal"}', None], "gender": [None, "female"]})
     assert ax.texts_from_table(t) == {1: ({"en": "capital of Portugal"}, None), 2: ({}, "female")}
+
+
+def test_categories_mark_recent_deaths(monkeypatch):
+    import json
+
+    import lookedup.analytics.entities as E
+
+    claims = pa.table({"qid": [1, 2, 3], "label_en": ["A", "B", "C"],
+                       "claims_json": [json.dumps({"P31": [5], "P570": ["2026-08-16"]}),
+                                       json.dumps({"P31": [5], "P570": ["2001-01-01"]}), json.dumps({"P31": [515]})]})
+    monkeypatch.setattr(E, "fetch_claims", lambda qids, cache: claims)
+    start = datetime(2026, 8, 17, 2)
+    cats = ax.categories_for([{"qid": q, "start_hour": start} for q in (1, 2, 3)])
+    assert cats[1] == "death" and cats[2] == "human" and cats[3] != "death"
+    assert ax.categories_for([]) == {}
