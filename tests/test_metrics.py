@@ -72,3 +72,14 @@ def test_h4_needs_enough_events(monkeypatch):
 
     res = h4_spread(_ctx(monkeypatch), "ev")
     assert res["n_a"] == 1 and res["n_b"] == 2 and res["verdict"].startswith("inconclusive")
+
+
+def test_h4_rejected_in_the_reverse_direction(monkeypatch):
+    from lookedup.evaluation.metrics import h4_spread
+
+    ctx = _ctx(monkeypatch)
+    ctx.con.execute("DELETE FROM ev")
+    rows = [(i, "death", 2.5) for i in range(12)] + [(100 + i, "sports", 1.0) for i in range(12)]
+    ctx.con.executemany("INSERT INTO ev VALUES (?, TIMESTAMP '2026-08-10 12:00', 'en', ?, ?)", rows)
+    res = h4_spread(ctx, "ev")
+    assert res["median_a"] == 2.5 and res["median_b"] == 1.0 and res["verdict"] == "rejected"
