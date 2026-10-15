@@ -8,6 +8,8 @@ import time
 from collections.abc import Callable
 from datetime import date, timedelta
 
+import duckdb
+
 from lookedup.settings import DATA_DIR
 
 log = logging.getLogger(__name__)
@@ -20,7 +22,8 @@ def days_between(start: date, end: date) -> list[date]:
     return [start + timedelta(days=i) for i in range((end - start).days + 1)]
 
 
-def pending_days(session, this, is_incremental: bool, start: date, end: date) -> list[date]:
+def pending_days(session: duckdb.DuckDBPyConnection, this: str, is_incremental: bool, start: date,
+                 end: date) -> list[date]:
     """Days in [start, end] that the existing incremental table does not contain yet."""
     done: set[date] = set()
     if is_incremental:
@@ -28,7 +31,8 @@ def pending_days(session, this, is_incremental: bool, start: date, end: date) ->
     return [d for d in days_between(start, end) if d not in done]
 
 
-def run_by_day(session, days: list[date], sql_for_day: Callable[[date], str], name: str):
+def run_by_day(session: duckdb.DuckDBPyConnection, days: list[date], sql_for_day: Callable[[date], str],
+               name: str) -> duckdb.DuckDBPyRelation:
     """Write sql_for_day(d) for each day to its own Parquet file and return one relation over them.
 
     Writing day by day keeps memory flat (accumulating ~23 M rows in a temp table ran out of
@@ -50,7 +54,8 @@ def run_by_day(session, days: list[date], sql_for_day: Callable[[date], str], na
     return session.sql(f"select * from read_parquet([{paths}])")
 
 
-def prepare_event_inputs(session, spikes_rel, baselines_rel, suffix: str) -> tuple[str, str]:
+def prepare_event_inputs(session: duckdb.DuckDBPyConnection, spikes_rel: duckdb.DuckDBPyRelation,
+                         baselines_rel: duckdb.DuckDBPyRelation, suffix: str) -> tuple[str, str]:
     """Views shared by the event marts: non-automated spikes, and scored rows of spiking QIDs.
 
     The model files pass ``dbt.ref(...)`` relations in, because dbt only sees refs written in
