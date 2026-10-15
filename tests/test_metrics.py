@@ -33,6 +33,7 @@ def _ctx(monkeypatch):
         (3, TIMESTAMP '2026-08-11 06:00', 'en', 'death', 3.0),         -- exactly day + 24 h + 6 h: the bound is exclusive
         (9, TIMESTAMP '2026-07-01 00:00', 'en', 'death', 2.0)          -- before the evaluation period
         ) t(qid, start_hour, lead_lang, category, median_spread_lag_hours)""")
+    con.execute("ALTER TABLE ev ALTER median_spread_lag_hours TYPE DOUBLE")   # as in the warehouse (median is DOUBLE)
     con.execute("CREATE TABLE portal_qids AS SELECT * FROM (VALUES (DATE '2026-08-12', 2), (DATE '2026-08-20', 3)) t(date, qid)")
     return Context(con, load())
 
