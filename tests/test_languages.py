@@ -38,3 +38,10 @@ def test_fetch_siteinfo(monkeypatch):
     info = L.fetch_siteinfo("fr")
     assert info["main_page"] == "Wikipédia:Accueil_principal"
     assert info["namespaces"] == ["catégorie", "category", "user", "utilisateur", "utilisatrice"]
+
+
+def test_fetch_names(monkeypatch):
+    reply = {"sitematrix": {"count": 2, "0": {"code": "fr", "localname": "French", "name": "français"},
+                            "1": {"code": "ja", "localname": "Japanese", "name": "日本語"}, "specials": []}}
+    monkeypatch.setattr(L, "_get_json", lambda url, params: reply)
+    assert L.fetch_names() == {"fr": ("French", "français"), "ja": ("Japanese", "日本語")}
