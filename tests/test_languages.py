@@ -45,3 +45,12 @@ def test_fetch_names(monkeypatch):
                             "1": {"code": "ja", "localname": "Japanese", "name": "日本語"}, "specials": []}}
     monkeypatch.setattr(L, "_get_json", lambda url, params: reply)
     assert L.fetch_names() == {"fr": ("French", "français"), "ja": ("Japanese", "日本語")}
+
+
+def test_fetch_speakers_survives_a_failure(monkeypatch):
+    class Down:
+        def get(self, *a, **k):
+            raise ConnectionError("query service down")
+
+    monkeypatch.setattr(L, "session", lambda: Down())
+    assert L.fetch_speakers(["en", "fr"]) == {}
