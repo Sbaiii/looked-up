@@ -23,3 +23,10 @@ def test_every_documented_command_is_registered(monkeypatch, capsys):
             cli.main([name, "--help"])
         assert e.value.code == 0, name
     capsys.readouterr()
+
+
+def test_unknown_command_is_a_usage_error(capsys):
+    with pytest.raises(SystemExit) as e:
+        cli.main(["no-such-command"])
+    assert e.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err
