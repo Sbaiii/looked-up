@@ -186,3 +186,21 @@ def test_single_language_events_capped_per_lead(monkeypatch):
                for i in range(5)] + [{"event_id": "F", "event_class": "single_language", "lead_lang": "fr", "excess_views": 1, "breadth": 1}]
     _, kept = ax.select(singles, {})
     assert [e["event_id"] for e in kept] == ["S4", "S3", "F"]
+
+
+def test_events_from_spikes(tmp_path):
+    h = datetime(2026, 8, 17, 2)
+    rows = {"qid": [597, 597, 597, 9], "lang": ["en", "pt", "fr", "en"],
+            "ts_hour_start": [h, h + timedelta(hours=1), h + timedelta(hours=2), h],
+            "title": ["Lisbon", "Lisboa", "Lisbonne", "Lone"], "surprise": [50.0, 30.0, 12.0, 90.0],
+            "views": [5000, 3000, 900, 800], "baseline_median": [100.0, 50.0, 30.0, 10.0],
+            "is_automated": [False, False, False, False]}
+    f = tmp_path / "spikes.parquet"
+    pq.write_table(pa.table(rows), f)
+    events, langs = ax.events_from_spikes(duckdb.connect(), [f])
+    multi = [e for e in events if e["qid"] == 597]
+    assert len(multi) == 1 and multi[0]["breadth"] == 3 and multi[0]["lead_lang"] == "en"
+    assert multi[0]["start_hour"] == h and multi[0]["tier"] == "noticed"
+    assert sorted(r["lang"] for r in langs if r["event_id"] == multi[0]["event_id"]) == ["en", "fr", "pt"]
+    assert not [e for e in events if e["qid"] == 9]                    # one language is not an event
+    assert ax.events_from_spikes(duckdb.connect(), []) == ([], [])
