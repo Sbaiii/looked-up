@@ -116,3 +116,16 @@ def test_evaluate_modes(monkeypatch, capsys):
     cli.main(["evaluate"])
     out = capsys.readouterr().out
     assert "100 units written" in out and '"h3": "inconclusive"' in out and '"h1": "rejected"' in out
+
+
+def test_sync_options(monkeypatch, capsys):
+    import lookedup.store as store
+
+    seen = []
+    monkeypatch.setattr(store, "HFStore", lambda: "hub")
+    monkeypatch.setattr(store, "LocalStore", lambda: "local")
+    monkeypatch.setattr(store, "sync_to_local", lambda hf, lo, since, include_sitelinks: seen.append((since, include_sitelinks)) or {})
+    cli.main(["sync", "--from", "2026-07-09"])
+    cli.main(["sync", "--from", "2026-07-09", "--no-sitelinks"])
+    assert seen == [(datetime(2026, 7, 9), True), (datetime(2026, 7, 9), False)]
+    capsys.readouterr()
