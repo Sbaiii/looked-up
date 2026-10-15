@@ -26,3 +26,12 @@ test('cards come 12 at a time; Show more reveals the rest', async ({ page }) => 
   await expect(page.locator('#cards .card')).toHaveCount(15);
   await expect(page.locator('#more')).toBeHidden();
 });
+
+test('choosing a language updates the panel and the URL', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.selectOption('#lang-select', 'ja');
+  await expect(page).toHaveURL(/#\/lang\/ja$/);
+  await expect(page.locator('#lang-select')).toHaveValue('ja');
+  expect(page.errors).toEqual([]);
+});
