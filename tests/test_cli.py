@@ -78,3 +78,12 @@ def test_warehouse_exit_code(monkeypatch):
     monkeypatch.setattr(wh, "run", lambda args, hf=False: calls.append((args, hf)) or True)
     cli.main(["warehouse", "--hf"])
     assert calls == [(["test", "--select", "stg_hourly"], False), (["build"], True)]
+
+
+def test_live_snapshot_without_a_host(monkeypatch, caplog):
+    import lookedup.live_analysis as la
+
+    monkeypatch.delenv("LIVE_URL", raising=False)
+    monkeypatch.setattr(la, "snapshot", lambda *a: pytest.fail("must not snapshot without a host"))
+    cli.main(["live-snapshot"])
+    assert "LIVE_URL not set" in caplog.text
