@@ -50,3 +50,10 @@ def test_recall_by_section(monkeypatch):
 
     rows = {r[0]: r[1:] for r in recall_by_section(_ctx(monkeypatch), "ev", 6)}
     assert rows["Sports"] == (2, 2, 1.0) and rows["Armed conflicts and attacks"] == (2, 0, 0.0)
+
+
+def test_precision_proxy(monkeypatch):
+    from lookedup.evaluation.metrics import precision_proxy
+
+    res = precision_proxy(_ctx(monkeypatch), "ev")
+    assert res == {"events": 3, "in_portal": 1, "precision_proxy": 1 / 3}      # QID 9 is outside the period
