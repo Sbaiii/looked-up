@@ -17,3 +17,11 @@ def test_official_languages_map_to_countries():
     assert countries["FRA"] == {"name": "France", "num": "250"}
     only_fr, _ = G.build(rows, ["fr"])
     assert set(only_fr) == {"fr"}
+
+
+def test_hand_check_is_applied():
+    rows = [row("USA", "Q1321", "United States", "840"), row("MEX", "Q1321", "Mexico", "484")]
+    by_lang, countries = G.build(rows, ["es", "zh"])
+    assert "USA" not in by_lang["es"] and {"MEX", "URY", "PRI"} <= set(by_lang["es"])     # REMOVE and ADD for es
+    assert by_lang["zh"] == ["CHN", "TWN"]
+    assert countries["TWN"] == {"name": "Taiwan", "num": "158"}                         # filled in by hand
