@@ -55,3 +55,31 @@ def test_h9_verdict_follows_the_preregistered_60_minutes(monkeypatch):
     early = LA.h9_summary([{"lead_minutes": "75", "category": None}] * 3)
     assert early["verdict"] == "supported"
     assert LA.h9_summary([{"lead_minutes": "", "category": None}])["verdict"] is None
+
+
+class _R:
+    def __init__(self, data):
+        self.data = data
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self.data
+
+
+def test_revisions_follow_continuation(monkeypatch):
+    pages = [{"query": {"pages": [{"revisions": [{"revid": 1}, {"revid": 2}]}]}, "continue": {"rvcontinue": "x"}},
+             {"query": {"pages": [{"revisions": [{"revid": 3}]}]}}]
+    calls = []
+
+    class S:
+        def get(self, url, params=None, timeout=None):
+            calls.append(dict(params))
+            return _R(pages.pop(0))
+
+    monkeypatch.setattr(LA, "session", lambda: S())
+    monkeypatch.setattr(LA.time, "sleep", lambda s: None)
+    revs = LA.revisions("en", "Lionel_Messi", T0, T0 + timedelta(hours=1))
+    assert [r["revid"] for r in revs] == [1, 2, 3]
+    assert calls[0]["titles"] == "Lionel Messi" and calls[1]["rvcontinue"] == "x"
