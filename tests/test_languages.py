@@ -93,3 +93,17 @@ def test_rank_languages_keeps_human_article_views(tmp_path, monkeypatch):
     assert rows["en"]["rank"] == 1 and rows["en"]["raw_rank"] == 1
     assert rows["fr"]["automated_share"] > 0 and rows["fr"]["non_article_share"] > 0
     assert rows["fr"]["cumulative_share_of_candidates"] == 1.0
+
+
+def test_write_config(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "fetch_names", lambda: {"en": ("English", "English")})
+    monkeypatch.setattr(L, "fetch_speakers", lambda codes: {"en": 753359540})
+    ranking = [{"rank": 1, "code": "en", "human_views_7d": 10}, {"rank": 2, "code": "xx", "human_views_7d": 1}]
+    out = tmp_path / "languages.yml"
+    L.write_config(ranking, [date(2026, 10, 1), date(2026, 10, 7)], top_n=1, path=out)
+    doc = yaml.safe_load(out.read_text())
+    assert doc["top_n"] == 1 and doc["window"] == {"from": "2026-10-01", "to": "2026-10-07"}
+    assert doc["languages"][0] == {"code": "en", "rank": 1, "name_en": "English", "name_native": "English",
+                                   "speakers": 753359540, "human_views_7d": 10}
+    assert doc["languages"][1]["name_en"] is None and doc["languages"][1]["speakers"] is None
+    assert active_codes(out) == ["en"]
