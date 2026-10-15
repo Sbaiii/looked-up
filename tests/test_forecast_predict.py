@@ -60,3 +60,14 @@ def test_too_young_for_any_snapshot_or_older_than_a_day_gets_nothing():
     assert forecast_open(_con(5), events, T0 + timedelta(hours=1), last_hour=T0, manifest={}, models=_models()) == {}
     assert forecast_open(_con(5), events, T0 + timedelta(hours=30), last_hour=T0 + timedelta(hours=29), manifest={},
                          models=_models()) == {}
+
+
+def test_no_models_means_no_forecasts(tmp_path):
+    from datetime import datetime
+
+    from lookedup.forecast import predict as P
+    from lookedup.store import LocalStore
+
+    manifest, models = P.load_models(LocalStore(tmp_path / "lake"), tmp_path)
+    assert manifest == {} and models == {}
+    assert P.forecast_open(None, [{"event_id": "E1"}], datetime(2026, 10, 10), datetime(2026, 10, 10), manifest, models) == {}
