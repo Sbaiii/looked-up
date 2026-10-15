@@ -241,3 +241,17 @@ def test_evaluate_v2_refresh(monkeypatch, capsys):
     cli.main(["evaluate-v2", "--refresh"])
     assert seen == [False, True]
     capsys.readouterr()
+
+
+def test_top_command(monkeypatch):
+    import lookedup.query as q
+
+    seen = []
+
+    class Rel:
+        def show(self, max_width=None):
+            seen.append("shown")
+
+    monkeypatch.setattr(q, "top", lambda lang, hour, n=20, local=False: seen.append((lang, hour, n, local)) or Rel())
+    cli.main(["top", "--lang", "fr", "--hour", "2026-10-06 14", "-n", "5", "--local"])
+    assert seen == [("fr", datetime(2026, 10, 6, 14), 5, True), "shown"]
