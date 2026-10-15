@@ -145,3 +145,30 @@ def test_manifest_json_summary():
     assert doc["schema_version"] == 2 and doc["hour_count"] == 1 and doc["total_bytes"] == 1234
     assert Manifest.from_json(m.to_json()).hours == m.hours
     assert Manifest.from_json(None).hours == {} and Manifest.from_json("").files == {}
+
+
+class _FakeApi:
+    def __init__(self, files):
+        self.files, self.commits = list(files), []
+
+    def list_repo_files(self, repo_id, repo_type=None):
+        return list(self.files)
+
+    def create_commit(self, repo_id, repo_type=None, commit_message=None, operations=None, parent_commit=None):
+        self.commits.append((commit_message, operations, parent_commit))
+
+
+def _hf(api):
+    from lookedup.store import HFStore
+    hf = HFStore.__new__(HFStore)                     # no network: bypass the constructor
+    hf.repo_id, hf.token, hf.api = "user/repo", "token", api
+    return hf
+
+
+def test_hub_store_prefix_listing_and_deletion():
+    api = _FakeApi(["data/spikes/a.parquet", "data/hourly/b.parquet", "data/spikes/c.parquet"])
+    hf = _hf(api)
+    assert hf.list_prefix("data/spikes/") == ["data/spikes/a.parquet", "data/spikes/c.parquet"]
+    assert hf.delete_prefix("data/spikes/", "drop") == ["data/spikes/a.parquet", "data/spikes/c.parquet"]
+    assert len(api.commits) == 1 and len(api.commits[0][1]) == 2
+    assert hf.delete_prefix("data/none/", "drop") == [] and len(api.commits) == 1      # nothing to delete: no commit
