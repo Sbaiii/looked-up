@@ -129,3 +129,19 @@ def test_sync_options(monkeypatch, capsys):
     cli.main(["sync", "--from", "2026-07-09", "--no-sitelinks"])
     assert seen == [(datetime(2026, 7, 9), True), (datetime(2026, 7, 9), False)]
     capsys.readouterr()
+
+
+def test_app_export_modes(monkeypatch, tmp_path, capsys):
+    import lookedup.app_export as ax
+    import lookedup.settings as settings
+    from lookedup import store
+
+    calls = []
+    monkeypatch.setattr(store, "open_store", lambda local=False: f"store({local})")
+    monkeypatch.setattr(ax, "export_live", lambda st: calls.append(("live", st)) or {"ok": 1})
+    monkeypatch.setattr(ax, "backfill", lambda st, out: calls.append(("backfill", st)) or {"days": 0})
+    monkeypatch.setattr(settings, "DATA_DIR", tmp_path)
+    cli.main(["app-export"])
+    cli.main(["app-export", "--backfill", "--local"])
+    assert calls == [("live", "store(False)"), ("backfill", "store(True)")]
+    capsys.readouterr()
