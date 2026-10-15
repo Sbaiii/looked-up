@@ -115,3 +115,11 @@ def test_fetch_claims_falls_back_to_the_api(tmp_path, monkeypatch):
     monkeypatch.setattr(E.time, "sleep", lambda s: None)
     t = E.fetch_claims([7, 8], tmp_path / "claims.parquet")
     assert t["qid"].to_pylist() == [7] and t["label_en"].to_pylist() == ["Seven"]
+
+
+def test_gender_values():
+    from lookedup.analytics.entities import FEMALE, MALE, gender_of
+
+    assert gender_of([]) is None
+    assert gender_of(sorted(FEMALE)) == "female" and gender_of([min(MALE)]) == "male"
+    assert gender_of([min(FEMALE), min(MALE)]) == "other" and gender_of([48270]) == "other"
