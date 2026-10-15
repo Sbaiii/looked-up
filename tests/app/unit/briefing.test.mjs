@@ -52,3 +52,10 @@ test('a day without events is a quiet day', () => {
   assert.equal(b.text, 'A quiet day: no event spread to two languages.');
   assert.deepEqual([b.facts, b.top], [[], null]);
 });
+
+test('excess views: millions from a million up, the exact number below', async () => {
+  const { excessPhrase } = await import('../../../app/js/briefing.js');
+  i18n.use(dict('en'), 'en');
+  assert.equal(excessPhrase(10452570), '10.5 million more views than usual');
+  assert.equal(excessPhrase(19371), '19,371 more views than usual');
+});
