@@ -42,3 +42,15 @@ def test_top_on_a_local_lake(lake):
 
 def test_top_quotes_the_language(lake):
     assert query.top("en' OR '1'='1", H14, local=True).fetchall() == []
+
+
+def test_connect_views(lake, tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    sl = query.LOCAL_LAKE_DIR / query.SITELINKS_PATH
+    sl.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.table({"lang": ["en"], "title": ["Lisbon"], "qid": [597]}), sl)
+    con = query.connect(local=True)
+    assert con.sql("SELECT count(*) FROM hourly").fetchone()[0] == lake.num_rows
+    assert con.sql("SELECT qid FROM sitelinks WHERE title = 'Lisbon'").fetchone()[0] == 597
