@@ -13,8 +13,10 @@ import statistics
 from collections.abc import Callable
 from datetime import date, datetime, timedelta
 
+import pyarrow as pa
+
 from lookedup import db
-from lookedup.analytics.config import load
+from lookedup.analytics.config import AnalyticsConfig, load
 from lookedup.analytics.entities import fetch_claims
 from lookedup.analytics.events import events_sql
 from lookedup.evaluation import ground_truth_v2 as gt
@@ -41,7 +43,7 @@ def _cached(name: str, build: Callable[[], object], refresh: bool) -> list[dict]
     return rows
 
 
-def _ts(x) -> datetime | None:
+def _ts(x: str | None) -> datetime | None:
     """Parse an ISO timestamp, keeping None for empty values."""
     return datetime.fromisoformat(x) if x else None
 
@@ -54,7 +56,7 @@ def _floor(t: datetime) -> datetime:
 class Events:
     """Event lookups (by QID and time window) for the primary table and for ablation variants."""
 
-    def __init__(self, cfg):
+    def __init__(self, cfg: AnalyticsConfig) -> None:
         self.cfg = cfg
         self.con = db.connect()
         self.con.execute(f"ATTACH '{WAREHOUSE_DB}' AS wh (READ_ONLY)")
@@ -244,14 +246,14 @@ def _dist(vals: list[float]) -> dict:
         return {"n": 0}
     vals = sorted(vals)
 
-    def q(p):
+    def q(p: float) -> float:
         """Quantile ``p`` of the sorted values, by nearest rank."""
         return vals[min(len(vals) - 1, int(round(p * (len(vals) - 1))))]
     return {"n": len(vals), "median": statistics.median(vals), "p25": q(0.25), "p75": q(0.75), "min": vals[0],
             "max": vals[-1], "share_le_4h": sum(v <= 4 for v in vals) / len(vals)}
 
 
-def _claims(table) -> dict[int, dict]:
+def _claims(table: pa.Table) -> dict[int, dict]:
     """Claims JSON per QID from a claims table."""
     return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist())}
 
