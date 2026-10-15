@@ -75,9 +75,10 @@ def test_hf_upload_failure_is_loud(fake_server, tmp_path, article_filter):
 
 def test_nothing_to_do(fake_server, tmp_path, article_filter):
     store = LocalStore(tmp_path / "lake")
-    assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=3) == 2   # the 2 published hours
+    assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=3) == 1   # only 09:00 is published
     assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=3) == 0
-    assert hourly.plan(store.read_manifest(), NOW, window_hours=2) == ([], [])
+    todo, unpublished = hourly.plan(store.read_manifest(), NOW, window_hours=3)
+    assert todo == [] and unpublished == [datetime(2026, 10, 7, 10), datetime(2026, 10, 7, 11)]
 
 
 def test_late_hours_are_logged(monkeypatch, tmp_path, article_filter, caplog):
