@@ -30,7 +30,7 @@ LEAKY = {"n_sitelinks", "is_death"}       # declared leakage risks (sensitivity 
 AUXILIARY = ["excess_hour_t", "hours_since_peak"]   # baseline inputs, not model features
 
 
-def snapshot_sql(events: str, spikes: str, views: str, dims: str, offsets=OFFSETS, targets: bool = False,
+def snapshot_sql(events: str, spikes: str, views: str, dims: str, offsets: tuple[int, ...] = OFFSETS, targets: bool = False,
                  data_end: str | None = None) -> str:
     """SQL for event snapshots at each offset after detection: features known at that hour and, with ``targets``, the outcomes observable up to ``data_end``."""
     offs = ", ".join(f"({k})" for k in offsets)
