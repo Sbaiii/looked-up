@@ -4,9 +4,12 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
-from lookedup.evaluation import figures as F
+pytest.importorskip("matplotlib")                      # in the warehouse extra, which CI does not install
+
+from lookedup.evaluation import figures as F  # noqa: E402
 
 ANALYSIS = Path(__file__).resolve().parents[1] / "docs" / "analysis"
 
