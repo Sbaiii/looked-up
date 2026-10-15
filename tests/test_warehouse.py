@@ -45,3 +45,20 @@ def test_run_on_the_hub_and_failures(monkeypatch, tmp_path):
     _fake_dbt(monkeypatch, exception=RuntimeError("compilation error"))
     with pytest.raises(RuntimeError, match="compilation"):
         W.run(["build"])
+
+
+def test_refresh_mirrors_then_builds(monkeypatch):
+    import lookedup.store as store
+
+    seen = {}
+    monkeypatch.setattr(store, "HFStore", lambda: "hub")
+    monkeypatch.setattr(store, "LocalStore", lambda: "local")
+    monkeypatch.setattr(store, "sync_to_local", lambda hf, lo, since, include_sitelinks: seen.update(since=since) or {"downloaded": 2})
+    monkeypatch.setattr(W, "run", lambda args, hf=False: seen.update(args=args) or True)
+    monkeypatch.delenv("LOOKEDUP_PERIOD_END", raising=False)
+    res = W.refresh(date(2026, 10, 10))
+    assert seen["since"].date() == date(2026, 9, 5) and seen["args"] == ["build"]
+    assert res["period_end"] == "2026-10-10" and res["success"] is True and res["synced"] == {"downloaded": 2}
+    import os
+    assert os.environ["LOOKEDUP_PERIOD_END"] == "2026-10-10"
+    monkeypatch.delenv("LOOKEDUP_PERIOD_END")
