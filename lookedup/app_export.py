@@ -348,7 +348,9 @@ def texts_live(events: list[dict]) -> dict[int, tuple[dict, str | None]]:
                                        active_codes()))
 
 
-def live_forecasts(con, store, events, now, last_hour, hourly_files, titles, tmp) -> tuple[dict, dict]:
+def live_forecasts(con: duckdb.DuckDBPyConnection, store: Store, events: list[dict], now: datetime,
+                   last_hour: datetime | None, hourly_files: list[Path], titles: dict[int, dict[str, str]],
+                   tmp: Path) -> tuple[dict, dict]:
     """Phase 4: forecasts for open events (empty until models are published). Never fails the export."""
     try:
         from lookedup.forecast.predict import entity_classes, forecast_open, live_relations, load_models
@@ -381,7 +383,7 @@ def by_day(events: list[dict]) -> dict[date, list[dict]]:
     return out
 
 
-def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, list[dict]],
+def write_day(con: duckdb.DuckDBPyConnection, out_dir: Path, d: date, events: list[dict], langs: dict[str, list[dict]],
               titles: dict[int, dict[str, str]], categories: dict[int, str], hourly_files: list[Path],
               now: datetime, last_hour: datetime | None = None, texts: dict | None = None,
               forecasts: dict | None = None) -> dict:
@@ -397,8 +399,10 @@ def write_day(con, out_dir: Path, d: date, events: list[dict], langs: dict[str, 
     return payload["summary"]
 
 
-def _today_payload(con, events, langs, titles, categories, hourly_files, now, last_hour, texts=None,
-                   forecasts=None) -> dict:
+def _today_payload(con: duckdb.DuckDBPyConnection, events: list[dict], langs: dict[str, list[dict]],
+                   titles: dict[int, dict[str, str]], categories: dict[int, str], hourly_files: list[Path],
+                   now: datetime, last_hour: datetime | None, texts: dict | None = None,
+                   forecasts: dict | None = None) -> dict:
     """today.json: the events of the last 24 h with sparklines up to the last ingested hour."""
     recent = [e for e in events if e["start_hour"] >= now - timedelta(hours=24)]
     sparks = sparklines(con, hourly_files, published(recent, langs), titles, last_hour)
