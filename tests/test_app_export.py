@@ -204,3 +204,11 @@ def test_events_from_spikes(tmp_path):
     assert sorted(r["lang"] for r in langs if r["event_id"] == multi[0]["event_id"]) == ["en", "fr", "pt"]
     assert not [e for e in events if e["qid"] == 9]                    # one language is not an event
     assert ax.events_from_spikes(duckdb.connect(), []) == ([], [])
+
+
+def test_titles_from_sitelinks(tmp_path):
+    sl = tmp_path / "sitelinks.parquet"
+    pq.write_table(pa.table({"lang": ["en", "pt", "ja", "en"], "title": ["Lisbon", "Lisboa", "リスボン", "Porto"],
+                             "qid": [597, 597, 597, 36433]}), sl)
+    got = ax.titles_from_sitelinks(duckdb.connect(), sl, {597}, ["en", "pt"])
+    assert got == {597: {"en": "Lisbon", "pt": "Lisboa"}}
