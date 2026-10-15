@@ -54,3 +54,21 @@ def test_fetch_speakers_survives_a_failure(monkeypatch):
 
     monkeypatch.setattr(L, "session", lambda: Down())
     assert L.fetch_speakers(["en", "fr"]) == {}
+
+
+def test_day_aggregate_sums_desktop_and_mobile(tmp_path):
+    import bz2
+
+    import duckdb
+
+    lines = ["fr.wikipedia Lisbonne 1 desktop 30 A30\n", "fr.wikipedia Lisbonne 1 mobile-web 50 A50\n",
+             "fr.wikipedia Lisbonne 1 mobile-app 20 A20\n", "fr.wiktionary Lisbonne 1 desktop 99 A99\n",
+             "en.wikipedia Lisbon 2 desktop 7 A7\n"]
+    src = tmp_path / "day.bz2"
+    src.write_bytes(bz2.compress("".join(lines).encode()))
+    out = tmp_path / "agg.parquet"
+    L._day_aggregate(src, out)
+    rows = dict(((l, t), (d, m)) for l, t, d, m in duckdb.sql(f"SELECT * FROM '{out}'").fetchall())
+    assert rows[("fr", "Lisbonne")] == (30, 70)                        # web and app both count as mobile
+    assert rows[("en", "Lisbon")] == (7, None)
+    assert len(rows) == 2                                               # Wiktionary is not a Wikipedia
