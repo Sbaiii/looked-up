@@ -273,3 +273,13 @@ def test_card_upload(monkeypatch):
     monkeypatch.setattr(store, "HFStore", Hub)
     cli.main(["card"])
     assert seen == [("create", True), ("card", DATASET_CARD)]
+
+
+def test_verify_hour(monkeypatch, capsys):
+    import json
+
+    from lookedup import hourly
+
+    monkeypatch.setattr(hourly, "verify_alignment", lambda ts, work: {"file": f"{ts:%H}", "dump_en_total": 1})
+    cli.main(["verify-hour", "--hour", "2026-09-13T14:00"])
+    assert json.loads(capsys.readouterr().out) == {"file": "14", "dump_en_total": 1}
