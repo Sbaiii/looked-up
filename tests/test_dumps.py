@@ -119,3 +119,11 @@ def test_download_resumes_a_part_file(tmp_path, monkeypatch):
     assert dumps.download("https://x/f.gz", dest) == dest
     assert dest.read_bytes() == b"hello world" and seen == [{"Range": "bytes=6-"}]
     assert not (tmp_path / "f.gz.part").exists()
+
+
+def test_download_restarts_when_range_is_ignored(tmp_path, monkeypatch):
+    dest = tmp_path / "f.gz"
+    (tmp_path / "f.gz.part").write_bytes(b"stale")
+    monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: _Stream(200, b"fresh body"))
+    dumps.download("https://x/f.gz", dest)
+    assert dest.read_bytes() == b"fresh body"
