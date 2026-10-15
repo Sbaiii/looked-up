@@ -59,3 +59,12 @@ test('excess views: millions from a million up, the exact number below', async (
   assert.equal(excessPhrase(10452570), '10.5 million more views than usual');
   assert.equal(excessPhrase(19371), '19,371 more views than usual');
 });
+
+test('facts: fastest wide event, widest, biggest not led by English', async () => {
+  const { facts } = await import('../../../app/js/briefing.js');
+  i18n.use(dict('en'), 'en');
+  const ev = (qid, breadth, spread_h, lead, excess) => ({ id: `${qid}@x`, qid, class: 'multi_language', breadth, spread_h,
+    lead, excess, labels: { en: qid }, langs: [] });
+  const out = facts([ev('A', 29, 7, 'en', 9e6), ev('B', 6, 0, 'en', 1e5), ev('C', 5, 2, 'ja', 2e6)]);
+  assert.deepEqual(out.map(([k, , e]) => [k, e.qid]), [['fastest', 'B'], ['widest', 'A'], ['non_english', 'C']]);
+});
