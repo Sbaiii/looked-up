@@ -235,3 +235,12 @@ def test_local_store_list_prefix(tmp_path):
     (tmp_path / "data" / "app" / "today.json").write_text("{}")
     assert store.list_prefix("data/app") == ["data/app/days/2026-08-17.json", "data/app/today.json"]
     assert store.list_prefix("data/none") == [] and store.head() is None
+
+
+def test_merge_day_into_nothing(article_filter):
+    table = hourly_dump_to_table(HOURLY_SAMPLE, H14, LANGS, article_filter)
+    merged = merge_day(None, [table])
+    keys = list(zip(merged["lang"].to_pylist(), merged["title"].to_pylist()))
+    assert merged.num_rows == table.num_rows and keys == sorted(keys)
+    empty = table.slice(0, 0)
+    assert merge_day(None, [empty]).num_rows == 0
