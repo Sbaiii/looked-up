@@ -16,6 +16,7 @@ import logging
 import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -24,6 +25,11 @@ from lookedup import db
 from lookedup.forecast import train as T
 from lookedup.forecast.predict import MANIFEST, MODELS_PREFIX, live_relations, snapshots
 from lookedup.settings import ROOT
+
+if TYPE_CHECKING:
+    import duckdb
+
+    from lookedup.store import Store
 
 log = logging.getLogger(__name__)
 
@@ -34,14 +40,14 @@ CALIBRATION_DAYS = 10
 LABEL_LAG_DAYS = 3          # targets need up to 72 h after the start
 
 
-def batch_table(con) -> pa.Table:
+def batch_table(con: duckdb.DuckDBPyConnection) -> pa.Table:
     """The warehouse's batch snapshots (before 7 Oct), the fixed part of every retraining set."""
     from lookedup.warehouse import WAREHOUSE_DB
     con.execute(f"ATTACH '{WAREHOUSE_DB}' AS wh (READ_ONLY)")
     return db.arrow(con.sql("SELECT * FROM wh.main.fct_event_snapshots WHERE start_hour < TIMESTAMP '2026-10-07'"))
 
 
-def live_week(store, monday: date, tmp: Path) -> pa.Table | None:
+def live_week(store: Store, monday: date, tmp: Path) -> pa.Table | None:
     """Snapshots with targets for events starting in [monday, monday + 7 d), from production files."""
     from lookedup.app_export import categories_for, events_from_spikes, titles_from_api
     from lookedup.analytics.config import load
@@ -114,7 +120,7 @@ def backtest_summary() -> dict:
             "calibration_curve": h["calibration_curve"], "test_window": ["2026-09-20", "2026-10-06"]}
 
 
-def retrain(store, now: datetime | None = None, upload_batch: bool = False, add_live_week: bool = True) -> dict:
+def retrain(store: Store, now: datetime | None = None, upload_batch: bool = False, add_live_week: bool = True) -> dict:
     """Weekly retrain (ADR 0029): batch snapshots plus recent live weeks, fitted with the chosen parameters, then uploaded to data/models/."""
     from lookedup.dumps import utcnow
     from lookedup.scorer import _commit
