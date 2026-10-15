@@ -16,3 +16,13 @@ test('the tier filter narrows the cards to the chosen tier and up', async ({ pag
   await expect(page.locator('#cards .badge--planetary')).toHaveCount(2);
   expect(page.errors).toEqual([]);
 });
+
+test('cards come 12 at a time; Show more reveals the rest', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await expect(page.locator('#cards .card')).toHaveCount(12);
+  await expect(page.locator('#more')).toBeVisible();
+  await page.click('#more');
+  await expect(page.locator('#cards .card')).toHaveCount(15);
+  await expect(page.locator('#more')).toBeHidden();
+});
