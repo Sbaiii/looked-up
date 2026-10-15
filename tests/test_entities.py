@@ -123,3 +123,21 @@ def test_gender_values():
     assert gender_of([]) is None
     assert gender_of(sorted(FEMALE)) == "female" and gender_of([min(MALE)]) == "male"
     assert gender_of([min(FEMALE), min(MALE)]) == "other" and gender_of([48270]) == "other"
+
+
+def test_descriptions_and_gender_from_sparql(monkeypatch):
+    import json as _json
+
+    from lookedup.analytics import entities as E
+
+    W = "http://www.wikidata.org/entity/"
+    answers = [
+        [{"item": {"value": W + "Q1"}, "d": {"value": "actrice américaine", "xml:lang": "fr"}},
+         {"item": {"value": W + "Q1"}, "d": {"value": "American actress", "xml:lang": "en"}}],
+        [{"item": {"value": W + "Q1"}, "g": {"value": W + "Q6581072"}}],
+    ]
+    monkeypatch.setattr(E, "_sparql", lambda q: answers.pop(0))
+    monkeypatch.setattr(E.time, "sleep", lambda s: None)
+    rows = {r["qid"]: r for r in E.fetch_text_sparql([1, 2], ["en", "fr"])}
+    assert _json.loads(rows[1]["descriptions_json"]) == {"fr": "actrice américaine", "en": "American actress"}
+    assert rows[1]["gender"] == "female" and rows[2]["gender"] is None and rows[2]["descriptions_json"] == "{}"
