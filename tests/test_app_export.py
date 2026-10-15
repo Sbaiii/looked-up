@@ -140,3 +140,12 @@ def test_stats_keep_the_last_90_days():
     assert len(s["timeline"]) == ax.STATS_DAYS == len(s["days"])
     assert s["first_day"] == f"{start + timedelta(days=10):%Y-%m-%d}" and s["last_day"] == f"{start + timedelta(days=99):%Y-%m-%d}"
     assert s["events"] == 90 and s["single_language"] == 90
+
+
+def test_stats_lead_share():
+    days = {"2026-08-16": _day_summary(3, "en"), "2026-08-17": _day_summary(1, "ja")}
+    s = ax.stats_payload(days, datetime(2026, 8, 18), ["en", "ja"])
+    assert s["per_language"]["en"]["lead_share"] == 0.75 and s["per_language"]["ja"]["lead_share"] == 0.25
+    assert s["tiers"] == {"noticed": 4, "international": 0, "planetary": 0}
+    assert "forecast" not in s
+    assert ax.stats_payload({}, datetime(2026, 8, 18), [])["first_day"] is None
