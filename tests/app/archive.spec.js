@@ -68,3 +68,12 @@ test('an old day without a file falls back to the latest day', async ({ page }) 
   await expect(page.locator('#day-archive')).toBeHidden();
   await expect(page.locator('#bars rect').last()).toHaveClass('is-on');
 });
+
+test('the archive tag is translated in every interface language', async ({ page }) => {
+  await page.goto('./#/day/2026-07-27');
+  await ready(page);
+  await expect(page.locator('#day-archive')).toHaveText('Archive');
+  await page.click('[data-ui-lang="es"]');
+  await expect(page.locator('#day-archive')).toHaveText('Archivo');
+  await expect(page.locator('#day-archive')).toBeVisible();
+});
