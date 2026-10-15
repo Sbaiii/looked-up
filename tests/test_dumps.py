@@ -84,3 +84,38 @@ def test_available_hours_filters_the_range(monkeypatch):
     monkeypatch.setattr(dumps._session, "get", lambda url, timeout=None: _Page(200, LISTING))
     got = dumps.available_hours(datetime(2026, 10, 7, 10), datetime(2026, 10, 7, 12))
     assert list(got) == [datetime(2026, 10, 7, 10)]
+
+
+class _Stream(_Resp):
+    def __init__(self, status, body, length=None):
+        super().__init__()
+        self.status_code, self.body = status, body
+        self.headers = {"Content-Length": str(len(body) if length is None else length)}
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise RuntimeError(self.status_code)
+
+    def iter_content(self, n):
+        yield self.body
+
+
+def test_download_resumes_a_part_file(tmp_path, monkeypatch):
+    dest = tmp_path / "f.gz"
+    (tmp_path / "f.gz.part").write_bytes(b"hello ")
+    seen = []
+
+    def get(url, stream=True, timeout=None, headers=None):
+        seen.append(headers)
+        return _Stream(206, b"world")
+
+    monkeypatch.setattr(dumps._session, "get", get)
+    assert dumps.download("https://x/f.gz", dest) == dest
+    assert dest.read_bytes() == b"hello world" and seen == [{"Range": "bytes=6-"}]
+    assert not (tmp_path / "f.gz.part").exists()
