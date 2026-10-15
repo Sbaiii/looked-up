@@ -127,3 +127,10 @@ def test_download_restarts_when_range_is_ignored(tmp_path, monkeypatch):
     monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: _Stream(200, b"fresh body"))
     dumps.download("https://x/f.gz", dest)
     assert dest.read_bytes() == b"fresh body"
+
+
+def test_download_skips_an_existing_file(tmp_path, monkeypatch):
+    dest = tmp_path / "f.gz"
+    dest.write_bytes(b"done")
+    monkeypatch.setattr(dumps._session, "get", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no request")))
+    assert dumps.download("https://x/f.gz", dest) == dest and dest.read_bytes() == b"done"
