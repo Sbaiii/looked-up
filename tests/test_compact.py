@@ -36,3 +36,10 @@ def test_compact_migrates_hour_files_to_a_day_file(tmp_path, article_filter):
     assert {e["path"] for e in m["hours"].values()} == {day_path(hours[0])}
     assert all("bytes" not in e for e in m["hours"].values())
     assert m["files"][day_path(hours[0])]["rows"] == day.num_rows
+
+
+def test_compact_skips_days_without_hour_files(tmp_path):
+    from lookedup.compact import compact_local
+
+    (tmp_path / "data" / "hourly" / "year=2026" / "month=09" / "day=13").mkdir(parents=True)
+    assert compact_local(tmp_path) == []
