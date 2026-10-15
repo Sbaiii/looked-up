@@ -35,3 +35,17 @@ test('choosing a language updates the panel and the URL', async ({ page }) => {
   await expect(page.locator('#lang-select')).toHaveValue('ja');
   expect(page.errors).toEqual([]);
 });
+
+test('the theme toggle switches and is remembered', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const theme = () => page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  const before = await theme();
+  await page.click('#theme');
+  const after = await theme();
+  expect(after).not.toBe(before);
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', after === 'light' ? '#ffffff' : '#08090b');
+  await page.reload();
+  await ready(page);
+  expect(await theme()).toBe(after);
+});
