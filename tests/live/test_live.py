@@ -245,3 +245,42 @@ def test_resolver_queue_and_cache_round_trip(tmp_path):
     assert r.get("en", "Known") == "Q1" and r.get("en", "New") is None
     r.save()
     assert Resolver(tmp_path / "qids.json").get("en", "Known") == "Q1"
+
+
+class _WD:
+    def __init__(self, replies):
+        self.replies, self.calls = list(replies), []
+
+    def get(self, url, params=None, timeout=None):
+        self.calls.append(params)
+        r = self.replies.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return r
+
+
+class _Ok:
+    def __init__(self, data):
+        self.data = data
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self.data
+
+
+def test_resolver_stores_qids_labels_and_descriptions(monkeypatch):
+    from lookedup_live import qids
+    monkeypatch.setattr(qids.time, "sleep", lambda s: None)
+    r = qids.Resolver()
+    r.session = _WD([_Ok({"entities": {
+        "Q597": {"sitelinks": {"frwiki": {"title": "Lisbonne"}}, "labels": {"en": {"value": "Lisbon"}},
+                 "descriptions": {"en": {"value": "capital of Portugal"}}},
+        "-1": {"missing": ""}}})])
+    r.want("fr", "Lisbonne")
+    r.want("fr", "Nulle_part")
+    assert r.resolve_pending() == 2
+    assert r.get("fr", "Lisbonne") == "Q597" and r.get("fr", "Nulle_part") is None and "fr|Nulle_part" in r.qids
+    assert r.items["Q597"] == {"labels": {"en": "Lisbon"}, "desc": {"en": "capital of Portugal"}}
+    assert r.session.calls[0]["sites"] == "frwiki" and r.session.calls[0]["languages"] == "en|fr|es"
