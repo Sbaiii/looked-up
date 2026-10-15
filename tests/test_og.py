@@ -79,3 +79,16 @@ def test_long_title_gets_an_ellipsis():
     lines = og._wrap(draw, " ".join(["word"] * 40), f, 500, 2)
     assert len(lines) == 2 and lines[-1].endswith("…")
     assert draw.textlength(lines[-1], font=f) <= 500
+
+
+def test_command_line_renders_a_day_file(tmp_path, monkeypatch, capsys):
+    import json
+    import sys
+
+    day = tmp_path / "2026-08-17.json"
+    day.write_text(json.dumps({"date": "2026-08-17", "events": [_e(1, 2_000_000, 12, "international", langs=[("en", 900)])]}))
+    monkeypatch.setattr(sys, "argv", ["og", "--day-file", str(day), "--out", str(tmp_path / "card.png"),
+                                      "--default", str(tmp_path / "default.png")])
+    og.main()
+    assert (tmp_path / "card.png").exists() and (tmp_path / "default.png").exists()
+    assert "card.png" in capsys.readouterr().out
