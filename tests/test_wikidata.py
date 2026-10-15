@@ -44,3 +44,21 @@ def test_build_sitelinks_sorted_parquet(tmp_path):
     assert t.column_names == ["lang", "title", "qid"]
     assert list(zip(t["lang"].to_pylist(), t["title"].to_pylist())) == sorted(
         zip(t["lang"].to_pylist(), t["title"].to_pylist()))
+
+
+def test_join_coverage(tmp_path):
+    from datetime import datetime
+
+    import pyarrow as pa
+
+    from lookedup.wikidata import join_coverage
+
+    day = tmp_path / "day.parquet"
+    pq.write_table(pa.table({"ts_hour_start": [datetime(2026, 10, 1, 10)] * 3 + [datetime(2026, 10, 1, 20)],
+                             "lang": ["en", "en", "fr", "en"], "title": ["Lisbon", "Nowhere", "Lisbonne", "Lisbon"],
+                             "views_desktop": [60, 30, 5, 1000], "views_mobile": [40, 10, 5, 0]}), day)
+    sl = tmp_path / "sitelinks.parquet"
+    pq.write_table(pa.table({"lang": ["en", "fr"], "title": ["Lisbon", "Lisbonne"], "qid": [597, 597]}), sl)
+    rows = join_coverage([str(day)], str(sl), until=datetime(2026, 10, 1, 12))
+    assert rows == [("en", 140, 100, 71.4), ("fr", 10, 10, 100.0)]
+    assert join_coverage([str(day)], str(sl), since=datetime(2026, 10, 1, 20))[0] == ("en", 1000, 1000, 100.0)
