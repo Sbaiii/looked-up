@@ -156,7 +156,7 @@ def fit_m1(tr: list[dict], va: list[dict], target: str, params: dict,
     return model, ab
 
 
-def permutation_importance(model, enc, rows, target, repeats=5, calibrated=None) -> list[dict]:
+def permutation_importance(model, enc, rows, target, repeats=5) -> list[dict]:
     """Drop in validation PR AUC (M1) or rise in MAE (M2) when each feature is shuffled, averaged over ``repeats``."""
     rng = np.random.default_rng(T.SEED)
     X = enc.matrix(rows)
