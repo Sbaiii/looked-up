@@ -13,5 +13,8 @@
 - No test needs the network or a Hugging Face token, except `tests/app/hub-cors.spec.js`, which checks that the
   live Hub still serves the app's data with CORS (skip it with `OFFLINE=1`).
 - `test_no_git_in_pipeline.py` keeps every pipeline from committing to this repository.
+- `test_cli.py` checks that every documented command is registered and passes its options through, with the work
+  functions replaced by fakes; `test_figures.py` renders every results figure into a temp folder.
+- Network calls (Wikimedia, Wikidata, the Hub) are always replaced by small fakes in the unit tests.
 - `test_repo_consistency.py` keeps the docs in step with the code: the ADR, config, analysis and spike indexes,
   the README links, the schema against the model files, the three app translations and the two copies of the live rules.
