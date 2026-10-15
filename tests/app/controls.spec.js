@@ -76,3 +76,13 @@ test('clicking the first bar opens the first day of the window', async ({ page }
   await expect(page).toHaveURL(/#\/day\/2026-08-16$/);
   await expect(page.locator('#bars rect').first()).toHaveClass('is-on');
 });
+
+test('the event count under the slider follows the day', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await expect(page.locator('#day-count')).toHaveText(/^\d[\d,]* events$/);
+  const before = await page.locator('#day-count').textContent();
+  await page.click('#next-day');
+  await expect(page.locator('#day-out')).toHaveText('Today');
+  expect(await page.locator('#day-count').textContent()).not.toBe(before);
+});
