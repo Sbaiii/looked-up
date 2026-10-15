@@ -118,3 +118,24 @@ def test_daily_snapshot_writes_one_day(tmp_path, monkeypatch):
     lines = (tmp_path / "data/live/bursts/2026-10-11.jsonl").read_text().splitlines()
     assert [json.loads(l)["title"] for l in lines] == ["a", "b"]
     assert json.loads((tmp_path / "data/live/daily/2026-10-11-stats.json").read_text()) == stats
+
+
+def test_append_scores_is_idempotent_per_day(tmp_path, monkeypatch):
+    import csv
+    from datetime import date
+
+    from lookedup.store import LocalStore
+
+    def row(day, kind="live", hit=1):
+        r = {f: "" for f in LA.FIELDS}
+        return r | {"day": f"{day}", "kind": kind, "hit": str(hit), "forward_hit": str(hit)}
+
+    store = LocalStore(tmp_path)
+    d1, d2 = date(2026, 10, 9), date(2026, 10, 10)
+    monkeypatch.setattr(LA, "score_day", lambda st, day: [row(day), row(day, "single", 0)])
+    LA.append_scores(store, d1)
+    LA.append_scores(store, d2)
+    res = LA.append_scores(store, d2)                                  # the same day again
+    rows = list(csv.DictReader((tmp_path / LA.LEAD_CSV).open()))
+    assert sorted(r["day"] for r in rows) == ["2026-10-09", "2026-10-09", "2026-10-10", "2026-10-10"]
+    assert res["live_events_scored"] == 2 and res["units_today"] == 2 and res["verdict"] == "inconclusive"
