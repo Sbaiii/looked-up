@@ -149,3 +149,12 @@ def test_stats_lead_share():
     assert s["tiers"] == {"noticed": 4, "international": 0, "planetary": 0}
     assert "forecast" not in s
     assert ax.stats_payload({}, datetime(2026, 8, 18), [])["first_day"] is None
+
+
+def test_stats_update_merges_days_and_keeps_the_forecast():
+    old = ax.stats_payload({"2026-08-16": _day_summary(2)}, datetime(2026, 8, 17), ["en"], forecast={"auc": 0.875})
+    new = ax._update_stats(old, {"2026-08-17": _day_summary(5)}, datetime(2026, 8, 18), ["en"])
+    assert sorted(new["days"]) == ["2026-08-16", "2026-08-17"] and new["events"] == 7
+    assert new["forecast"] == {"auc": 0.875}
+    stale = dict(old, schema_version=ax.SCHEMA_VERSION - 1)
+    assert sorted(ax._update_stats(stale, {"2026-08-17": _day_summary(5)}, datetime(2026, 8, 18), ["en"])["days"]) == ["2026-08-17"]
