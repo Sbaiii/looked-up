@@ -38,3 +38,7 @@ def test_top_on_a_local_lake(lake):
     assert views == sorted(views, reverse=True)
     assert all(r[3] == r[1] + r[2] for r in rows)                     # views = desktop + mobile
     assert all(0 <= r[4] <= 100 for r in rows)                         # mobile share in percent
+
+
+def test_top_quotes_the_language(lake):
+    assert query.top("en' OR '1'='1", H14, local=True).fetchall() == []
