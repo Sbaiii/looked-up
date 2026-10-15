@@ -45,3 +45,10 @@ test('the description is shown with the label, English as fallback', () => {
   i18n.use(dict('fr'), 'fr');
   assert.equal(compose(day('female'), '2026-08-25').about, 'Dolly Parton : American singer-songwriter and actress.');
 });
+
+test('a day without events is a quiet day', () => {
+  i18n.use(dict('en'), 'en');
+  const b = compose({ events: [] }, '2026-08-25');
+  assert.equal(b.text, 'A quiet day: no event spread to two languages.');
+  assert.deepEqual([b.facts, b.top], [[], null]);
+});
