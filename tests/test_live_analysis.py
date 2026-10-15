@@ -83,3 +83,13 @@ def test_revisions_follow_continuation(monkeypatch):
     revs = LA.revisions("en", "Lionel_Messi", T0, T0 + timedelta(hours=1))
     assert [r["revid"] for r in revs] == [1, 2, 3]
     assert calls[0]["titles"] == "Lionel Messi" and calls[1]["rvcontinue"] == "x"
+
+
+def test_revisions_give_up_after_retries(monkeypatch):
+    class S:
+        def get(self, *a, **k):
+            raise ConnectionError("down")
+
+    monkeypatch.setattr(LA, "session", lambda: S())
+    monkeypatch.setattr(LA.time, "sleep", lambda s: None)
+    assert LA.revisions("en", "X", T0, T0) == []
