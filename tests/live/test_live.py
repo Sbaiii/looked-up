@@ -376,3 +376,11 @@ def test_restore_without_a_snapshot(tmp_path):
     e = Engine()
     assert e.restore(tmp_path / "missing.json.gz") is False
     assert not e.detector.articles and e.last_event_id is None
+
+
+def test_corrupt_qid_cache_is_ignored(tmp_path):
+    from lookedup_live.qids import Resolver
+    bad = tmp_path / "qids.json"
+    bad.write_text("{not json")
+    r = Resolver(bad)
+    assert r.qids == {} and r.items == {}
