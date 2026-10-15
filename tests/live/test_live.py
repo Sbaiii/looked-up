@@ -370,3 +370,9 @@ def test_mark_gap_restarts_coverage():
     assert e.covered_since is None
     e.handle(ev(ts=T0 + 600), now=T0 + 600)
     assert e.covered_since == T0 + 600
+
+
+def test_restore_without_a_snapshot(tmp_path):
+    e = Engine()
+    assert e.restore(tmp_path / "missing.json.gz") is False
+    assert not e.detector.articles and e.last_event_id is None
