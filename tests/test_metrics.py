@@ -43,3 +43,10 @@ def test_recall_window(monkeypatch):
     ctx = _ctx(monkeypatch)
     assert recall(ctx, "ev", 6) == {"pairs": 4, "detected": 2, "recall": 0.5}
     assert recall(ctx, "ev", 7)["detected"] == 3
+
+
+def test_recall_by_section(monkeypatch):
+    from lookedup.evaluation.metrics import recall_by_section
+
+    rows = {r[0]: r[1:] for r in recall_by_section(_ctx(monkeypatch), "ev", 6)}
+    assert rows["Sports"] == (2, 2, 1.0) and rows["Armed conflicts and attacks"] == (2, 0, 0.0)
