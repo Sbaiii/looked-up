@@ -76,3 +76,18 @@ def test_claims_from_sparql(monkeypatch):
     assert by[1]["label_en"] == "Someone" and by[2]["label_en"] is None
     c = _json.loads(by[1]["claims_json"])
     assert c["P31"] == [5] and c["P570"] == ["2026-08-17"] and c["P17"] == []
+
+
+def test_fetch_claims_uses_the_cache(tmp_path, monkeypatch):
+    from lookedup.analytics import entities as E
+
+    asked = []
+    monkeypatch.setattr(E, "fetch_claims_sparql", lambda todo: asked.append(list(todo)) or
+                        [{"qid": q, "label_en": f"L{q}", "claims_json": "{}"} for q in todo])
+    cache = tmp_path / "claims.parquet"
+    E.fetch_claims([3, 1], cache)
+    t = E.fetch_claims([1, 2, 3], cache)
+    assert asked == [[1, 3], [2]]
+    assert sorted(t["qid"].to_pylist()) == [1, 2, 3]
+    E.fetch_claims([1, 2], cache)
+    assert asked[-1] == []                                             # everything already cached
