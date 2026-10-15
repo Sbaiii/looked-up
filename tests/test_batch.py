@@ -23,3 +23,9 @@ def test_run_by_day(tmp_path, monkeypatch):
     rel = batch.run_by_day(con, [date(2026, 8, 17), date(2026, 8, 18)], sql, "demo")
     assert sorted(rel.fetchall()) == [(date(2026, 8, 17), 17), (date(2026, 8, 18), 18)]
     assert sorted(p.name for p in (tmp_path / "demo").iterdir()) == ["day=2026-08-17.parquet", "day=2026-08-18.parquet"]
+
+
+def test_run_by_day_with_nothing_to_do(tmp_path, monkeypatch):
+    monkeypatch.setattr(batch, "STAGING", tmp_path)
+    rel = batch.run_by_day(duckdb.connect(), [], lambda d: f"SELECT DATE '{d}' AS day, 1 AS n", "empty")
+    assert rel.columns == ["day", "n"] and rel.fetchall() == []
