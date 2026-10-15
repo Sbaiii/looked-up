@@ -21,10 +21,16 @@ import sys
 import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from lookedup import db
 from lookedup.dumps import session
 from lookedup.settings import ROOT
+
+if TYPE_CHECKING:
+    import duckdb
+
+    from lookedup.store import Store
 
 sys.path.insert(0, str(ROOT / "live"))          # the live layer's code is the single definition of a burst
 from lookedup_live import bursts as _bursts  # noqa: E402
@@ -118,7 +124,7 @@ def _burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: datet
 
 # ---------------------------------------------------------------- H9
 
-def h9_events(con) -> list[dict]:
+def h9_events(con: duckdb.DuckDBPyConnection) -> list[dict]:
     """The widest multi-language events of the H9 window from the warehouse, each with its languages, lead first."""
     rows = con.sql(f"""
         SELECT e.event_id, e.qid, e.start_hour, e.breadth, e.excess_views, e.lead_lang, e.category, e.label_en,
@@ -214,7 +220,7 @@ LEAD_CSV = "data/live/lead_time.csv"
 FIELDS = ["day", "qid", "kind", "burst_at", "langs", "hit", "forward_hit", "event_start", "lead_minutes", "scored_at"]
 
 
-def score_day(store, day: date) -> list[dict]:
+def score_day(store: Store, day: date) -> list[dict]:
     """Score the live layer's bursts of ``day`` against the lake's reading events (needs day + 2 published)."""
     import tempfile
 
@@ -252,7 +258,7 @@ def score_day(store, day: date) -> list[dict]:
     return rows
 
 
-def append_scores(store, day: date) -> dict:
+def append_scores(store: Store, day: date) -> dict:
     """Append ``day``'s scored rows to data/live/lead_time.csv on the lake (idempotent per day)."""
     import io
     import tempfile
@@ -288,7 +294,7 @@ def precision(rows: list[dict]) -> dict:
 
 # ---------------------------------------------------------------- daily snapshot from the live host (ADR 0032)
 
-def snapshot(store, base_url: str, day: date) -> dict:
+def snapshot(store: Store, base_url: str, day: date) -> dict:
     """Copy ``day``'s bursts and the current stats from the live host to the lake, once a day (the only live files
     the pipeline still commits): data/live/bursts/DAY.jsonl and data/live/daily/DAY-stats.json."""
     import tempfile
