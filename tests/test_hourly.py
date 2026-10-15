@@ -71,3 +71,10 @@ def test_hf_upload_failure_is_loud(fake_server, tmp_path, article_filter):
 
     with pytest.raises(RuntimeError, match="upload failed"):
         hourly.run(Broken(tmp_path / "lake"), now=NOW, langs=LANGS, filt=article_filter, window_hours=3)
+
+
+def test_nothing_to_do(fake_server, tmp_path, article_filter):
+    store = LocalStore(tmp_path / "lake")
+    assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=3) == 2   # the 2 published hours
+    assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=3) == 0
+    assert hourly.plan(store.read_manifest(), NOW, window_hours=2) == ([], [])
