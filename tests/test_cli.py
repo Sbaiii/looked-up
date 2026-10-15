@@ -87,3 +87,19 @@ def test_live_snapshot_without_a_host(monkeypatch, caplog):
     monkeypatch.setattr(la, "snapshot", lambda *a: pytest.fail("must not snapshot without a host"))
     cli.main(["live-snapshot"])
     assert "LIVE_URL not set" in caplog.text
+
+
+def test_live_commands_default_days(monkeypatch, capsys):
+    import lookedup.dumps as dumps
+    import lookedup.live_analysis as la
+    from lookedup import store
+
+    seen = {}
+    monkeypatch.setattr(dumps, "utcnow", lambda: datetime(2026, 10, 12, 3, 30))
+    monkeypatch.setattr(store, "open_store", lambda local=False: "lake")
+    monkeypatch.setattr(la, "snapshot", lambda st, url, day: seen.update(snap=(url, day)) or {})
+    monkeypatch.setattr(la, "append_scores", lambda st, day: seen.update(score=day) or {})
+    cli.main(["live-snapshot", "--url", "https://live.example"])
+    cli.main(["live-score"])
+    assert seen == {"snap": ("https://live.example", datetime(2026, 10, 11).date()), "score": datetime(2026, 10, 10).date()}
+    capsys.readouterr()
