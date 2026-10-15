@@ -9,10 +9,14 @@ import threading
 import time
 from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 
 import requests
 
 from lookedup_live import USER_AGENT
+
+if TYPE_CHECKING:
+    from lookedup_live.engine import Engine
 
 log = logging.getLogger(__name__)
 URL = "https://stream.wikimedia.org/v2/stream/recentchange"
@@ -38,7 +42,7 @@ def parse_sse(lines: Iterator[str]) -> Iterator[tuple[str | None, str]]:
                 data.append(value)
 
 
-def consume(engine, stop: threading.Event, max_backoff: float = 60.0) -> None:
+def consume(engine: Engine, stop: threading.Event, max_backoff: float = 60.0) -> None:
     """Read the EventStreams feed until ``stop``: resume with Last-Event-ID, else replay the last 60 minutes; reconnect with backoff."""
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "text/event-stream"})
@@ -70,7 +74,7 @@ def consume(engine, stop: threading.Event, max_backoff: float = 60.0) -> None:
         backoff = min(max_backoff, backoff * 2)
 
 
-def resolver_loop(engine, stop: threading.Event, every: float = 10.0) -> None:
+def resolver_loop(engine: Engine, stop: threading.Event, every: float = 10.0) -> None:
     """Every ``every`` seconds, resolve queued QIDs, attach them to bursts and drop idle state."""
     while not stop.wait(every):
         if engine.resolver.resolve_pending():
