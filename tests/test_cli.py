@@ -190,3 +190,16 @@ def test_hub_maintenance(monkeypatch, capsys):
     res = json.loads(capsys.readouterr().out)
     assert actions == [("drop", "data/spikes/"), ("squash",)]
     assert res["used_storage_before"] == 100 and res["used_storage_after"] == 80 and res["squashed"] is True
+
+
+def test_forecast_retrain_flags(monkeypatch, capsys):
+    import lookedup.forecast.retrain as rt
+    from lookedup import store
+
+    seen = []
+    monkeypatch.setattr(store, "open_store", lambda local=False: "lake")
+    monkeypatch.setattr(rt, "retrain", lambda st, upload_batch, add_live_week: seen.append((upload_batch, add_live_week)) or {})
+    cli.main(["forecast-retrain"])
+    cli.main(["forecast-retrain", "--upload-batch", "--no-live"])
+    assert seen == [(False, True), (True, False)]
+    capsys.readouterr()
