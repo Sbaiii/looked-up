@@ -25,3 +25,9 @@ def test_hand_check_is_applied():
     assert "USA" not in by_lang["es"] and {"MEX", "URY", "PRI"} <= set(by_lang["es"])     # REMOVE and ADD for es
     assert by_lang["zh"] == ["CHN", "TWN"]
     assert countries["TWN"] == {"name": "Taiwan", "num": "158"}                         # filled in by hand
+
+
+def test_numeric_codes_are_kept():
+    rows = [row("FRA", "Q150", "France"), row("FRA", "Q150", "France", "250")]
+    _, countries = G.build(rows, ["fr"])
+    assert countries["FRA"]["num"] == "250"
