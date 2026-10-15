@@ -83,3 +83,12 @@ def test_h4_rejected_in_the_reverse_direction(monkeypatch):
     ctx.con.executemany("INSERT INTO ev VALUES (?, TIMESTAMP '2026-08-10 12:00', 'en', ?, ?)", rows)
     res = h4_spread(ctx, "ev")
     assert res["median_a"] == 2.5 and res["median_b"] == 1.0 and res["verdict"] == "rejected"
+
+
+def test_matched_events(monkeypatch):
+    from lookedup.evaluation.metrics import matched_events
+
+    ctx = _ctx(monkeypatch)
+    assert matched_events(ctx, "ev") == "matched"
+    got = sorted(ctx.con.execute("SELECT qid, portal_date FROM matched").fetchall())
+    assert [q for q, _ in got] == [1, 2, 3]                               # QID 3 is inside 24 h, though not inside 6 h
