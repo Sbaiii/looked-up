@@ -93,3 +93,28 @@ def test_revisions_give_up_after_retries(monkeypatch):
     monkeypatch.setattr(LA, "session", lambda: S())
     monkeypatch.setattr(LA.time, "sleep", lambda s: None)
     assert LA.revisions("en", "X", T0, T0) == []
+
+
+def test_daily_snapshot_writes_one_day(tmp_path, monkeypatch):
+    import json
+    from datetime import date
+
+    from lookedup.store import LocalStore
+
+    day = date(2026, 10, 11)
+    lo = datetime(2026, 10, 11, tzinfo=timezone.utc).timestamp()
+    bursts = {"bursts": [{"ts": lo - 1, "title": "before"}, {"ts": lo, "title": "a"}, {"ts": lo + 86399, "title": "b"},
+                         {"ts": lo + 86400, "title": "after"}]}
+    stats = {"live_events_24h": 3}
+
+    class S:
+        def get(self, url, params=None, timeout=None):
+            return _R(bursts if url.endswith("/bursts.json") else stats)
+
+    monkeypatch.setattr(LA, "session", lambda: S())
+    store = LocalStore(tmp_path)
+    res = LA.snapshot(store, "https://live.example/", day)
+    assert res == {"day": "2026-10-11", "bursts": 2, "live_events_24h": 3}
+    lines = (tmp_path / "data/live/bursts/2026-10-11.jsonl").read_text().splitlines()
+    assert [json.loads(l)["title"] for l in lines] == ["a", "b"]
+    assert json.loads((tmp_path / "data/live/daily/2026-10-11-stats.json").read_text()) == stats
