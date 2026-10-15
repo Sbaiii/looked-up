@@ -71,3 +71,8 @@ def test_list_month_parses_the_listing(monkeypatch):
     assert f.ts_hour_start == datetime(2026, 10, 7, 9) and f.posted == datetime(2026, 10, 7, 12, 14)
     assert f.size == 55123456 and f.url.endswith("/2026/2026-10/pageviews-20261007-100000.gz")
     assert f.lag_minutes == 134
+
+
+def test_list_month_missing(monkeypatch):
+    monkeypatch.setattr(dumps._session, "get", lambda url, timeout=None: _Page(404))
+    assert dumps.list_month(2030, 1) == []
