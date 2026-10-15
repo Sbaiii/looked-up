@@ -65,3 +65,16 @@ def test_score_one_hour(monkeypatch, capsys):
     assert '"ok": 1' in capsys.readouterr().out
     cli.main(["score"])
     assert seen["hours"] is None
+
+
+def test_warehouse_exit_code(monkeypatch):
+    import lookedup.warehouse as wh
+
+    calls = []
+    monkeypatch.setattr(wh, "run", lambda args, hf=False: calls.append((args, hf)) or False)
+    with pytest.raises(SystemExit) as e:
+        cli.main(["warehouse", "test", "--select", "stg_hourly"])
+    assert e.value.code == 1
+    monkeypatch.setattr(wh, "run", lambda args, hf=False: calls.append((args, hf)) or True)
+    cli.main(["warehouse", "--hf"])
+    assert calls == [(["test", "--select", "stg_hourly"], False), (["build"], True)]
