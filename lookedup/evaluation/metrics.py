@@ -12,8 +12,10 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 import duckdb
+import pyarrow as pa
 
 from lookedup import db
 from lookedup.analytics.config import AnalyticsConfig, EventParams
@@ -40,7 +42,7 @@ class Context:
         return self.cfg.period_end
 
 
-def open_context(warehouse_db, current_events, cfg: AnalyticsConfig) -> Context:
+def open_context(warehouse_db: Path, current_events: Path, cfg: AnalyticsConfig) -> Context:
     """Attach the warehouse read-only and create the evaluation views: ground truth, filtered spikes, the S1 variant and the major (date, QID) pairs."""
     con = db.connect()
     con.execute(f"ATTACH '{warehouse_db}' AS wh (READ_ONLY)")
@@ -175,7 +177,7 @@ def matched_events(ctx: Context, events: str, window_h: int = 24) -> str:
     return "matched"
 
 
-def h2_lead_language(ctx: Context, events: str, claims_cache) -> dict:
+def h2_lead_language(ctx: Context, events: str, claims_cache: Path) -> dict:
     """Lead language vs official languages of the event's country (P17, else P276 -> P17)."""
     from lookedup.analytics.entities import fetch_claims
 
@@ -214,7 +216,7 @@ def h2_lead_language(ctx: Context, events: str, claims_cache) -> dict:
             "verdict": None if share is None else ("supported" if share >= 0.60 else "rejected")}
 
 
-def _claims(table) -> dict[int, dict]:
+def _claims(table: pa.Table) -> dict[int, dict]:
     """Claims JSON per QID from a claims table."""
     return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist())}
 
@@ -238,7 +240,7 @@ def detection_delays(ctx: Context, events: str) -> dict:
     if not vals:
         return {"n": 0, "rows": []}
 
-    def q(p):
+    def q(p: float) -> float:
         """Quantile ``p`` of the sorted delays, by lower rank."""
         return vals[min(len(vals) - 1, int(p * (len(vals) - 1)))]
     return {"n": len(vals), "median": q(0.5), "p25": q(0.25), "p75": q(0.75),
