@@ -10,6 +10,8 @@ from lookedup import warehouse as W
 
 
 def _fake_dbt(monkeypatch, success=True, exception=None):
+    for key in ("LOOKEDUP_LAKE_ROOT", "LOOKEDUP_WAREHOUSE_DB", "LOOKEDUP_DUCKDB_TEMP_DIR", "LOOKEDUP_DUCKDB_MAX_TEMP"):
+        monkeypatch.setenv(key, "")                    # restored after the test, whatever run() sets
     calls = []
 
     class Runner:
@@ -55,10 +57,9 @@ def test_refresh_mirrors_then_builds(monkeypatch):
     monkeypatch.setattr(store, "LocalStore", lambda: "local")
     monkeypatch.setattr(store, "sync_to_local", lambda hf, lo, since, include_sitelinks: seen.update(since=since) or {"downloaded": 2})
     monkeypatch.setattr(W, "run", lambda args, hf=False: seen.update(args=args) or True)
-    monkeypatch.delenv("LOOKEDUP_PERIOD_END", raising=False)
+    monkeypatch.setenv("LOOKEDUP_PERIOD_END", "")    # restored after the test
     res = W.refresh(date(2026, 10, 10))
     assert seen["since"].date() == date(2026, 9, 5) and seen["args"] == ["build"]
     assert res["period_end"] == "2026-10-10" and res["success"] is True and res["synced"] == {"downloaded": 2}
     import os
     assert os.environ["LOOKEDUP_PERIOD_END"] == "2026-10-10"
-    monkeypatch.delenv("LOOKEDUP_PERIOD_END")
