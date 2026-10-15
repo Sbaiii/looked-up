@@ -68,3 +68,10 @@ def test_lead_time_histogram(tmp_path, monkeypatch):
     assert not (tmp_path / "phase5_lead_time.png").exists()
     LA.plot_leads([-300, -106, -60, -45, 90, 2000], -75.5)
     _png(tmp_path / "phase5_lead_time.png")
+
+
+def test_default_social_card(tmp_path):
+    from lookedup import og
+
+    out = og.render_default(tmp_path / "card.png")
+    assert _png(Path(out)) == (og.W, og.H) == (1200, 630)
