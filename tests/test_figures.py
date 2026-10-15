@@ -40,3 +40,8 @@ def test_phase2b_charts(tmp_path):
     F.matches_timeline(_rows("phase2b_gt3_matches.csv"), tmp_path / "matches.png")
     for name in ("deaths", "quakes", "matches"):
         _png(tmp_path / f"{name}.png")
+
+
+def test_delay_histogram(tmp_path):
+    F.delay_histogram([-2, -1, -1, 0, 0, 1, 3, 25], tmp_path / "delay.png", "Delay", "from the announcement", "hours")
+    _png(tmp_path / "delay.png")
