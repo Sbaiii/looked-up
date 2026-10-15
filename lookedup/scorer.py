@@ -25,12 +25,13 @@ import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+import duckdb
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from lookedup import db
-from lookedup.analytics.config import load
+from lookedup.analytics.config import AnalyticsConfig, load
 from lookedup.analytics.entities import classify, died_near, fetch_claims
 from lookedup.analytics.events import events_sql
 from lookedup.analytics.production import daily_baselines_sql, score_hour_sql
@@ -66,7 +67,7 @@ def event_languages_path(day: date) -> str:
     return events_path(day).replace("data/events/", "data/events/languages/")
 
 
-def _stg_view(con, files: list[Path], name: str = "src") -> None:
+def _stg_view(con: duckdb.DuckDBPyConnection, files: list[Path], name: str = "src") -> None:
     """A view over day files shaped like the warehouse's stg_hourly, so production and batch share the scoring SQL."""
     paths = ", ".join(f"'{p}'" for p in files)
     con.execute(f"""CREATE OR REPLACE VIEW {name} AS SELECT ts_hour_start, ts_hour_start::DATE AS day,
@@ -272,7 +273,7 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
     return {"scored_hours": [f"{ts:%Y-%m-%dT%H}" for ts in done], "latest_events": len(latest["events"])}
 
 
-def _latest(events: pa.Table, now: datetime, cfg, langs: list[str], tmp: Path) -> list[dict]:
+def _latest(events: pa.Table, now: datetime, cfg: AnalyticsConfig, langs: list[str], tmp: Path) -> list[dict]:
     """The events of the last 24 h for latest.json, widest first, with labels and categories."""
     rows = [dict(zip(events.column_names, r)) for r in zip(*(events[c].to_pylist() for c in events.column_names))]
     rows = [r for r in rows if r["start_hour"] >= now - timedelta(hours=24)]
