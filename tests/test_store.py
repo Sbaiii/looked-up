@@ -257,3 +257,15 @@ def test_hub_fetch_missing_file(monkeypatch):
     hf = _hf(_FakeApi([]))
     assert hf.fetch("data/manifest.json", None, "rev") is None
     assert hf.read_manifest("rev").hours == {}
+
+
+def test_hf_token_prefers_the_environment(monkeypatch):
+    import huggingface_hub
+
+    from lookedup.store import hf_token
+
+    monkeypatch.setattr(huggingface_hub, "get_token", lambda: "saved")
+    monkeypatch.setenv("HF_TOKEN", "from-env")
+    assert hf_token() == "from-env"
+    monkeypatch.delenv("HF_TOKEN")
+    assert hf_token() == "saved"
