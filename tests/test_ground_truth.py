@@ -73,3 +73,15 @@ def test_fetch_day(monkeypatch):
     assert gt.fetch_day(date(2026, 8, 10)) == ""
     assert gt.fetch_day(date(2026, 8, 11)) == "* item"
     assert s.calls[1]["title"] == "Portal:Current_events/2026_August_11"
+
+
+def test_resolve_qids_follows_redirects(monkeypatch):
+    import lookedup.evaluation.ground_truth as gt
+
+    reply = {"query": {"normalized": [{"from": "lisbon", "to": "Lisbon"}],
+                       "redirects": [{"from": "Lisbon", "to": "Lisboa"}],
+                       "pages": [{"title": "Lisboa", "pageprops": {"wikibase_item": "Q597"}},
+                                 {"title": "Nowhere", "missing": True}]}}
+    monkeypatch.setattr(gt, "session", lambda: _Session([_Reply(data=reply)]))
+    monkeypatch.setattr(gt.time, "sleep", lambda s: None)
+    assert gt.resolve_qids("en", ["lisbon", "Nowhere"]) == {"lisbon": 597}
