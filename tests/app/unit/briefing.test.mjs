@@ -68,3 +68,11 @@ test('facts: fastest wide event, widest, biggest not led by English', async () =
   const out = facts([ev('A', 29, 7, 'en', 9e6), ev('B', 6, 0, 'en', 1e5), ev('C', 5, 2, 'ja', 2e6)]);
   assert.deepEqual(out.map(([k, , e]) => [k, e.qid]), [['fastest', 'B'], ['widest', 'A'], ['non_english', 'C']]);
 });
+
+test('plural forms: zero, one and other', () => {
+  i18n.use(dict('en'), 'en');
+  assert.deepEqual([0, 1, 5].map(i18n.within), ['under an hour', '1 hour', '5 hours']);
+  assert.equal(i18n.t('event.languages', { n: 1 }), '1 language');
+  assert.equal(i18n.t('event.languages', { n: 29 }), '29 languages');
+  assert.equal(i18n.t('no.such.key'), 'no.such.key');                 // a missing key shows itself, never blank
+});
