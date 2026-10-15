@@ -40,3 +40,14 @@ def test_hourly_passes_its_options(monkeypatch):
     monkeypatch.setattr(hourly, "run", lambda st, window_hours, max_hours: seen.update(st=st, w=window_hours, m=max_hours) or 0)
     cli.main(["hourly", "--local", "--window", "48", "--max-hours", "3"])
     assert seen == {"st": "store(local=True)", "w": 48, "m": 3}
+
+
+def test_backfill_builds_the_backfill_argv(monkeypatch):
+    import lookedup.backfill as bf
+
+    seen = []
+    monkeypatch.setattr(bf, "main", lambda argv: seen.append(argv))
+    cli.main(["backfill", "--from", "2026-07-09", "--to", "2026-07-10", "--local", "--oldest-first"])
+    cli.main(["backfill", "--from", "2026-07-09", "--to", "2026-07-09", "--keep-raw"])
+    assert seen == [["--from", "2026-07-09", "--to", "2026-07-10", "--local", "--oldest-first"],
+                    ["--from", "2026-07-09", "--to", "2026-07-09", "--keep-raw"]]
