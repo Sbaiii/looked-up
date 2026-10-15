@@ -7,7 +7,8 @@ import logging
 import os
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -25,10 +26,6 @@ engine = Engine(STATE)
 stop = threading.Event()
 _cache: dict[str, tuple[float, dict]] = {}
 
-app = FastAPI(title="Looked Up live", docs_url=None, redoc_url=None)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
-
-
 def cached(name: str, build: Callable[[], dict]) -> JSONResponse:
     """Serve ``build()`` as JSON, rebuilt at most every CACHE_S seconds, with a matching Cache-Control header."""
     now = time.time()
@@ -44,7 +41,6 @@ def _snapshots() -> None:
         engine.snapshot(STATE / "state.json.gz")
 
 
-@app.on_event("startup")
 def start() -> None:
     """Restore the last snapshot, then start the stream consumer, the QID resolver and the snapshot loop."""
     engine.restore(STATE / "state.json.gz")
@@ -52,11 +48,22 @@ def start() -> None:
         threading.Thread(target=target, daemon=True).start()
 
 
-@app.on_event("shutdown")
 def shutdown() -> None:
     """Stop the background threads and write a final snapshot."""
     stop.set()
     engine.snapshot(STATE / "state.json.gz")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Run :func:`start` before serving and :func:`shutdown` after (FastAPI lifespan, replacing on_event)."""
+    start()
+    yield
+    shutdown()
+
+
+app = FastAPI(title="Looked Up live", docs_url=None, redoc_url=None, lifespan=lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
 
 
 @app.get("/live.json")
