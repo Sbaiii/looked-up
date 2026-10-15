@@ -32,3 +32,11 @@ def test_recall_and_lead_language_charts(tmp_path):
     F.lead_language_bars(leads, tmp_path / "leads.png")
     _png(tmp_path / "recall.png")
     _png(tmp_path / "leads.png")
+
+
+def test_phase2b_charts(tmp_path):
+    F.deaths_by_languages(_rows("phase2b_gt1_deaths.csv"), tmp_path / "deaths.png")
+    F.quakes_timeline(_rows("phase2b_gt2_earthquakes.csv"), tmp_path / "quakes.png")
+    F.matches_timeline(_rows("phase2b_gt3_matches.csv"), tmp_path / "matches.png")
+    for name in ("deaths", "quakes", "matches"):
+        _png(tmp_path / f"{name}.png")
