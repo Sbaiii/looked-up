@@ -203,3 +203,26 @@ def test_hub_commit_needs_a_token():
     hf.token = None
     with pytest.raises(RuntimeError, match="HF token missing"):
         hf.commit({}, Manifest(), "m", parent="abc")
+
+
+def test_sync_downloads_only_what_changed(tmp_path, monkeypatch):
+    import huggingface_hub
+
+    from lookedup.store import sync_to_local
+
+    m = Manifest()
+    for d, size in ((16, 10), (17, 20), (18, 30)):
+        m.set_file(f"data/hourly/year=2026/month=08/day={d}.parquet", rows=1, size=size)
+    hf = _hf(_FakeApi([]))
+    monkeypatch.setattr(hf, "head", lambda: "rev1")
+    monkeypatch.setattr(hf, "read_manifest", lambda revision=None: m)
+    local = LocalStore(tmp_path)
+    up_to_date = tmp_path / "data/hourly/year=2026/month=08/day=17.parquet"
+    up_to_date.parent.mkdir(parents=True)
+    up_to_date.write_bytes(b"x" * 20)
+    got = []
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", lambda repo, path, **k: got.append((path, k["revision"])))
+    res = sync_to_local(hf, local, datetime(2026, 8, 17), include_sitelinks=False)
+    assert got == [("data/hourly/year=2026/month=08/day=18.parquet", "rev1")]           # day 16 is before the start
+    assert res == {"downloaded": 1, "up_to_date": 1, "revision": "rev1", "hours": 0}
+    assert local.read_manifest().files == m.files
