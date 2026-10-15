@@ -172,3 +172,27 @@ def test_hub_store_prefix_listing_and_deletion():
     assert hf.delete_prefix("data/spikes/", "drop") == ["data/spikes/a.parquet", "data/spikes/c.parquet"]
     assert len(api.commits) == 1 and len(api.commits[0][1]) == 2
     assert hf.delete_prefix("data/none/", "drop") == [] and len(api.commits) == 1      # nothing to delete: no commit
+
+
+def test_hub_commit_maps_a_race_to_a_conflict(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from huggingface_hub.utils import HfHubHTTPError
+
+    from lookedup.store import StoreConflict
+
+    def failing(status):
+        def create_commit(*a, **k):
+            raise HfHubHTTPError("nope", response=SimpleNamespace(status_code=status, headers={}, request=None))
+        return create_commit
+
+    api = _FakeApi([])
+    hf = _hf(api)
+    monkeypatch.setattr(hf, "read_manifest", lambda revision=None: Manifest())
+    for status in (409, 412):
+        api.create_commit = failing(status)
+        with pytest.raises(StoreConflict):
+            hf.commit({}, Manifest(), "m", parent="abc")
+    api.create_commit = failing(500)
+    with pytest.raises(HfHubHTTPError):
+        hf.commit({}, Manifest(), "m", parent="abc")
