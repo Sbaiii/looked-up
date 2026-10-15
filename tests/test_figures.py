@@ -58,3 +58,13 @@ def test_forecast_charts(tmp_path):
     E.plot_importance(imp, tmp_path / "imp.png", "Importance", "drop in PR AUC")
     _png(tmp_path / "cal.png")
     _png(tmp_path / "imp.png")
+
+
+def test_lead_time_histogram(tmp_path, monkeypatch):
+    from lookedup import live_analysis as LA
+
+    monkeypatch.setattr(LA, "FIG", tmp_path)
+    LA.plot_leads([], None)
+    assert not (tmp_path / "phase5_lead_time.png").exists()
+    LA.plot_leads([-300, -106, -60, -45, 90, 2000], -75.5)
+    _png(tmp_path / "phase5_lead_time.png")
