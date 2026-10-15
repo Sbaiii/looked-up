@@ -345,3 +345,18 @@ def test_bursts_endpoint_caps_the_window(monkeypatch, tmp_path):
     svc.bursts(hours=500)
     svc.bursts(hours=2)
     assert seen == [T0 - 72 * 3600, T0 - 2 * 3600]
+
+
+def test_service_lifespan_order(monkeypatch, tmp_path):
+    import asyncio
+    svc = _service(monkeypatch, tmp_path)
+    calls = []
+    monkeypatch.setattr(svc, "start", lambda: calls.append("start"))
+    monkeypatch.setattr(svc, "shutdown", lambda: calls.append("shutdown"))
+
+    async def run():
+        async with svc.lifespan(svc.app):
+            calls.append("serving")
+
+    asyncio.run(run())
+    assert calls == ["start", "serving", "shutdown"]
