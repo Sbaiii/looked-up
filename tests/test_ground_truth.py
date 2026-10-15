@@ -85,3 +85,14 @@ def test_resolve_qids_follows_redirects(monkeypatch):
     monkeypatch.setattr(gt, "session", lambda: _Session([_Reply(data=reply)]))
     monkeypatch.setattr(gt.time, "sleep", lambda s: None)
     assert gt.resolve_qids("en", ["lisbon", "Nowhere"]) == {"lisbon": 597}
+
+
+def test_resolve_qids_batches(monkeypatch):
+    import lookedup.evaluation.ground_truth as gt
+
+    empty = {"query": {"pages": []}}
+    s = _Session([_Reply(data=empty)] * 3)
+    monkeypatch.setattr(gt, "session", lambda: s)
+    monkeypatch.setattr(gt.time, "sleep", lambda s: None)
+    gt.resolve_qids("en", [f"T{i}" for i in range(5)], batch=2)
+    assert [c["titles"].count("|") + 1 for c in s.calls] == [2, 2, 1]
