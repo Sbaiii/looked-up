@@ -134,3 +134,23 @@ def test_download_skips_an_existing_file(tmp_path, monkeypatch):
     dest.write_bytes(b"done")
     monkeypatch.setattr(dumps._session, "get", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no request")))
     assert dumps.download("https://x/f.gz", dest) == dest and dest.read_bytes() == b"done"
+
+
+def test_rest_hourly_total(monkeypatch):
+    from datetime import datetime
+
+    class R:
+        def __init__(self, ok, items):
+            self.ok, self.items = ok, items
+
+        def json(self):
+            return {"items": self.items}
+
+    replies = [R(False, []), R(True, []), R(True, [{"views": 12345}])]
+    urls = []
+    monkeypatch.setattr(dumps._session, "get", lambda url, timeout=None: urls.append(url) or replies.pop(0))
+    h = datetime(2026, 10, 7, 9)
+    assert dumps.rest_hourly_total("en.wikipedia", h) is None
+    assert dumps.rest_hourly_total("en.wikipedia", h) is None
+    assert dumps.rest_hourly_total("en.wikipedia", h) == 12345
+    assert urls[0].endswith("/aggregate/en.wikipedia/all-access/user/hourly/2026100709/2026100709")
