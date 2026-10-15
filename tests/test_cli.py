@@ -203,3 +203,13 @@ def test_forecast_retrain_flags(monkeypatch, capsys):
     cli.main(["forecast-retrain", "--upload-batch", "--no-live"])
     assert seen == [(False, True), (True, False)]
     capsys.readouterr()
+
+
+def test_relocate_data_skips(monkeypatch, capsys):
+    import lookedup.relocate as rl
+
+    seen = []
+    monkeypatch.setattr(rl, "relocate", lambda skip=(): seen.append(skip) or {"moved": 0})
+    cli.main(["relocate-data", "--skip", "raw", "--skip", "tmp"])
+    assert seen == [("raw", "tmp")]
+    capsys.readouterr()
