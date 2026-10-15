@@ -284,3 +284,13 @@ def test_resolver_stores_qids_labels_and_descriptions(monkeypatch):
     assert r.get("fr", "Lisbonne") == "Q597" and r.get("fr", "Nulle_part") is None and "fr|Nulle_part" in r.qids
     assert r.items["Q597"] == {"labels": {"en": "Lisbon"}, "desc": {"en": "capital of Portugal"}}
     assert r.session.calls[0]["sites"] == "frwiki" and r.session.calls[0]["languages"] == "en|fr|es"
+
+
+def test_resolver_requeues_after_a_failure(monkeypatch):
+    import requests
+    from lookedup_live import qids
+    r = qids.Resolver()
+    r.session = _WD([requests.ConnectionError("down")])
+    r.want("de", "Berlin")
+    assert r.resolve_pending() == 0
+    assert r.pending == {("de", "Berlin")} and "de|Berlin" not in r.qids
