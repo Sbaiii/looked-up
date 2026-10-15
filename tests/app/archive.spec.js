@@ -77,3 +77,12 @@ test('the archive tag is translated in every interface language', async ({ page 
   await expect(page.locator('#day-archive')).toHaveText('Archivo');
   await expect(page.locator('#day-archive')).toBeVisible();
 });
+
+test('copy link on an archive day copies that day', async ({ page, context, browserName }) => {
+  test.skip(browserName !== 'chromium', 'clipboard permissions are Chromium-only here');
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('./#/day/2026-07-27');
+  await ready(page);
+  await page.click('#copy-day');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/#\/day\/2026-07-27$/);
+});
