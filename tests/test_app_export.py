@@ -158,3 +158,8 @@ def test_stats_update_merges_days_and_keeps_the_forecast():
     assert new["forecast"] == {"auc": 0.875}
     stale = dict(old, schema_version=ax.SCHEMA_VERSION - 1)
     assert sorted(ax._update_stats(stale, {"2026-08-17": _day_summary(5)}, datetime(2026, 8, 18), ["en"])["days"]) == ["2026-08-17"]
+
+
+def test_texts_from_table():
+    t = pa.table({"qid": [1, 2], "descriptions_json": ['{"en": "capital of Portugal"}', None], "gender": [None, "female"]})
+    assert ax.texts_from_table(t) == {1: ({"en": "capital of Portugal"}, None), 2: ({}, "female")}
