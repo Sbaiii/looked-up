@@ -4,16 +4,20 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
 INK, MUTED, ACCENT, GRID = "#1f2933", "#7b8794", "#2f6fdf", "#e4e7eb"
 
 
-def _style(ax, title: str, subtitle: str | None = None) -> None:
+def _style(ax: Axes, title: str, subtitle: str | None = None) -> None:
     """House figure style: bold title and grey subtitle above the axes, no top or right spines."""
     fig = ax.figure
     fig.subplots_adjust(top=0.82)
