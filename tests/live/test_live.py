@@ -306,3 +306,24 @@ def test_resolver_batches_per_wiki(monkeypatch):
     r.want("ja", "東京")
     assert r.resolve_pending() == 61
     assert sorted((c["sites"], c["titles"].count("|") + 1) for c in r.session.calls) == [("enwiki", 10), ("enwiki", 50), ("jawiki", 1)]
+
+
+def _service(monkeypatch, tmp_path):
+    import importlib
+    monkeypatch.setenv("LIVE_STATE_DIR", str(tmp_path))
+    from lookedup_live import app
+    return importlib.reload(app)
+
+
+def test_service_cache_window(monkeypatch, tmp_path):
+    svc = _service(monkeypatch, tmp_path)
+    clock = [T0]
+    monkeypatch.setattr(svc.time, "time", lambda: clock[0])
+    builds = []
+    build = lambda: builds.append(1) or {"n": len(builds)}
+    assert json.loads(svc.cached("x", build).body) == {"n": 1}
+    clock[0] += svc.CACHE_S - 1
+    assert json.loads(svc.cached("x", build).body) == {"n": 1}
+    clock[0] += 2
+    r = svc.cached("x", build)
+    assert json.loads(r.body) == {"n": 2} and r.headers["cache-control"] == f"public, max-age={svc.CACHE_S}"
