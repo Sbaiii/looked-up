@@ -213,3 +213,20 @@ def test_relocate_data_skips(monkeypatch, capsys):
     cli.main(["relocate-data", "--skip", "raw", "--skip", "tmp"])
     assert seen == [("raw", "tmp")]
     capsys.readouterr()
+
+
+def test_baselines_day(monkeypatch, capsys):
+    from datetime import date
+
+    import lookedup.dumps as dumps
+    import lookedup.scorer as sc
+    from lookedup import store
+
+    seen = []
+    monkeypatch.setattr(dumps, "utcnow", lambda: datetime(2026, 10, 12, 3, 30))
+    monkeypatch.setattr(store, "open_store", lambda local=False: "lake")
+    monkeypatch.setattr(sc, "build_baselines", lambda st, day: seen.append(day) or {})
+    cli.main(["baselines"])
+    cli.main(["baselines", "--day", "2026-10-01"])
+    assert seen == [date(2026, 10, 12), date(2026, 10, 1)]
+    capsys.readouterr()
