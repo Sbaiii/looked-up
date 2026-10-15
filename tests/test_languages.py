@@ -27,3 +27,14 @@ def test_shipped_ranking():
 def test_last_full_days_end_yesterday():
     days = L.last_full_days(3, today=date(2026, 10, 8))
     assert days == [date(2026, 10, 5), date(2026, 10, 6), date(2026, 10, 7)]
+
+
+def test_fetch_siteinfo(monkeypatch):
+    reply = {"query": {"general": {"mainpage": "Wikipédia:Accueil principal"},
+                       "namespaces": {"0": {"id": 0, "name": ""}, "2": {"id": 2, "name": "Utilisateur", "canonical": "User"},
+                                      "14": {"id": 14, "name": "Catégorie", "canonical": "Category"}},
+                       "namespacealiases": [{"id": 2, "alias": "Utilisatrice"}, {"id": 0, "alias": "ignored"}]}}
+    monkeypatch.setattr(L, "_get_json", lambda url, params: reply)
+    info = L.fetch_siteinfo("fr")
+    assert info["main_page"] == "Wikipédia:Accueil_principal"
+    assert info["namespaces"] == ["catégorie", "category", "user", "utilisateur", "utilisatrice"]
