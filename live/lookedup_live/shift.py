@@ -16,16 +16,20 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from lookedup_live.engine import Engine
 from lookedup_live.stream import consume, resolver_loop
+
+if TYPE_CHECKING:
+    from huggingface_hub import HfApi
 
 log = logging.getLogger("lookedup_live.shift")
 REPO = os.environ.get("LIVE_HF_REPO", "Sbaiiiiii/looked-up")
 PREFIX = "data/live"
 
 
-def _api():
+def _api() -> HfApi:
     """A Hub client with HF_TOKEN."""
     from huggingface_hub import HfApi
     return HfApi(token=os.environ.get("HF_TOKEN"))
