@@ -56,3 +56,13 @@ test('a language panel link titles the page', async ({ page }) => {
   await expect(page).toHaveTitle(/^What .+ readers looked up · Looked Up$/);
   await expect(page.locator('#lang-select')).toHaveValue('ja');
 });
+
+test('the previous-day arrow moves one day back', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.click('#prev-day');
+  await expect(page).toHaveURL(/#\/day\/2026-08-17$/);
+  await page.click('#prev-day');
+  await expect(page).toHaveURL(/#\/day\/2026-08-16$/);
+  await expect(page.locator('#day-out')).not.toHaveText('Today');
+});
