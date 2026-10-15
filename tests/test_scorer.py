@@ -133,3 +133,8 @@ def test_labels_for_keeps_active_languages(monkeypatch):
     monkeypatch.setattr(scorer, "session", lambda: S())
     monkeypatch.setattr(scorer.time, "sleep", lambda s: None)
     assert scorer.labels_for([597], ["en", "pt"]) == {597: {"en": "Lisbon", "pt": "Lisboa"}}
+
+
+def test_baselines_need_day_files(tmp_path):
+    with pytest.raises(RuntimeError, match="no day files"):
+        scorer.build_baselines(LocalStore(tmp_path / "empty"), date(2026, 8, 17), tmp_path / "b")
