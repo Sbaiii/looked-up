@@ -29,3 +29,12 @@ def test_lake_root(monkeypatch, tmp_path):
     assert query.lake_root(local=True) == str(tmp_path)
     monkeypatch.setenv("LOOKEDUP_LOCAL_LAKE", "1")
     assert query.lake_root() == str(tmp_path)
+
+
+def test_top_on_a_local_lake(lake):
+    rows = query.top("en", H14, n=5, local=True).fetchall()
+    assert 0 < len(rows) <= 5
+    views = [r[3] for r in rows]
+    assert views == sorted(views, reverse=True)
+    assert all(r[3] == r[1] + r[2] for r in rows)                     # views = desktop + mobile
+    assert all(0 <= r[4] <= 100 for r in rows)                         # mobile share in percent
