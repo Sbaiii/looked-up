@@ -29,8 +29,8 @@ def _ctx(monkeypatch):
         ) t(date, qid, sections)""")
     con.execute("""CREATE TABLE ev AS SELECT * FROM (VALUES
         (1, TIMESTAMP '2026-08-09 18:00', 'en', 'sports', 1.0),        -- 6 h before the day: inside
-        (2, TIMESTAMP '2026-08-11 06:00', 'es', 'sports', 0.0),        -- 30 h after the day starts: inside
-        (3, TIMESTAMP '2026-08-11 07:00', 'en', 'death', 3.0),         -- just outside
+        (2, TIMESTAMP '2026-08-11 05:00', 'es', 'sports', 0.0),        -- 29 h after the day starts: inside
+        (3, TIMESTAMP '2026-08-11 06:00', 'en', 'death', 3.0),         -- exactly day + 24 h + 6 h: the bound is exclusive
         (9, TIMESTAMP '2026-07-01 00:00', 'en', 'death', 2.0)          -- before the evaluation period
         ) t(qid, start_hour, lead_lang, category, median_spread_lag_hours)""")
     con.execute("CREATE TABLE portal_qids AS SELECT * FROM (VALUES (DATE '2026-08-12', 2), (DATE '2026-08-20', 3)) t(date, qid)")
@@ -107,4 +107,4 @@ def test_detection_delays(monkeypatch):
     monkeypatch.setattr(T, "event_time", lambda title, d: times[title] and {"time": times[title], "source": "infobox_timestamp"})
     res = detection_delays(ctx, "ev")
     assert res["n"] == 2
-    assert sorted(d["delay_hours"] for d in res["rows"]) == [0.0, 3.0]
+    assert sorted(d["delay_hours"] for d in res["rows"]) == [-1.0, 3.0]
