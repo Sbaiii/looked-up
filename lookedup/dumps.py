@@ -118,7 +118,8 @@ class _Watchdog(threading.Thread):
     the byte counter and closes the socket, which unblocks the read.
     """
 
-    def __init__(self, response, min_bps: int = 20_000, window: float = 60.0, interval: float = 5.0) -> None:
+    def __init__(self, response: requests.Response, min_bps: int = 20_000, window: float = 60.0,
+                 interval: float = 5.0) -> None:
         super().__init__(daemon=True)
         self.response, self.min_bps, self.window, self.interval = response, min_bps, window, interval
         self.bytes = 0
