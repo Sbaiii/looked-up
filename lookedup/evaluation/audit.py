@@ -14,11 +14,17 @@ import csv
 import random
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import duckdb
+
+    from lookedup.analytics.config import AnalyticsConfig
 
 LABELS = ("event", "non_event", "unsure")
 
 
-def sample(con, cfg, out: Path) -> int:
+def sample(con: duckdb.DuckDBPyConnection, cfg: AnalyticsConfig, out: Path) -> int:
     """Draw the H3 audit sample: the seeded random draw from the top surprise units, with their hourly series, written to ``out``."""
     ev = cfg.raw["evaluation"]
     r3 = cfg.spike.r3_threshold
@@ -45,7 +51,7 @@ def sample(con, cfg, out: Path) -> int:
     return len(rows)
 
 
-def score(con, cfg, sample_csv: Path, labels_csv: Path) -> dict:
+def score(con: duckdb.DuckDBPyConnection, cfg: AnalyticsConfig, sample_csv: Path, labels_csv: Path) -> dict:
     """Join the blind labels to the automation flags and compute H3: the share of non-events flagged, and of events flagged."""
     s = {r["unit_id"]: r for r in csv.DictReader(open(sample_csv, encoding="utf-8"))}
     labels = {r["unit_id"]: r["label"] for r in csv.DictReader(open(labels_csv, encoding="utf-8"))}
