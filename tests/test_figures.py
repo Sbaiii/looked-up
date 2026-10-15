@@ -45,3 +45,16 @@ def test_phase2b_charts(tmp_path):
 def test_delay_histogram(tmp_path):
     F.delay_histogram([-2, -1, -1, 0, 0, 1, 3, 25], tmp_path / "delay.png", "Delay", "from the announcement", "hours")
     _png(tmp_path / "delay.png")
+
+
+def test_forecast_charts(tmp_path):
+    import json
+
+    from lookedup.forecast import evaluate as E
+
+    m = json.loads((ANALYSIS / "phase4_metrics.json").read_text())["m1"]["international_t1"]
+    E.plot_calibration({"model": m["calibration_curve"], "fame only": m["sitelinks_calibration_curve"]}, tmp_path / "cal.png")
+    imp = [{"feature": f"f{i}", "importance": 0.1 / (i + 1), "std": 0.01} for i in range(12)]
+    E.plot_importance(imp, tmp_path / "imp.png", "Importance", "drop in PR AUC")
+    _png(tmp_path / "cal.png")
+    _png(tmp_path / "imp.png")
