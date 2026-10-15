@@ -360,3 +360,13 @@ def test_service_lifespan_order(monkeypatch, tmp_path):
 
     asyncio.run(run())
     assert calls == ["start", "serving", "shutdown"]
+
+
+def test_mark_gap_restarts_coverage():
+    e = Engine()
+    e.handle(ev(ts=T0), now=T0)
+    assert e.covered_since == T0
+    e.mark_gap()
+    assert e.covered_since is None
+    e.handle(ev(ts=T0 + 600), now=T0 + 600)
+    assert e.covered_since == T0 + 600
