@@ -141,3 +141,23 @@ def test_descriptions_and_gender_from_sparql(monkeypatch):
     rows = {r["qid"]: r for r in E.fetch_text_sparql([1, 2], ["en", "fr"])}
     assert _json.loads(rows[1]["descriptions_json"]) == {"fr": "actrice américaine", "en": "American actress"}
     assert rows[1]["gender"] == "female" and rows[2]["gender"] is None and rows[2]["descriptions_json"] == "{}"
+
+
+def test_sparql_retries_then_raises(monkeypatch):
+    import pytest
+    import requests
+
+    from lookedup.analytics import entities as E
+
+    attempts = []
+
+    class S:
+        def post(self, *a, **k):
+            attempts.append(1)
+            raise requests.ConnectionError("down")
+
+    monkeypatch.setattr(E, "session", lambda: S())
+    monkeypatch.setattr(E.time, "sleep", lambda s: None)
+    with pytest.raises(requests.ConnectionError):
+        E._sparql("SELECT 1")
+    assert len(attempts) == 5
