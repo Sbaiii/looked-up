@@ -13,10 +13,15 @@ import re
 import time
 from dataclasses import dataclass
 from datetime import date, timedelta
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import requests
 
 from lookedup.dumps import session
+
+if TYPE_CHECKING:
+    from lookedup.analytics.config import AnalyticsConfig
 
 log = logging.getLogger(__name__)
 
@@ -138,7 +143,8 @@ def days(start: date, end: date) -> list[date]:
     return [start + timedelta(days=i) for i in range((end - start).days + 1)]
 
 
-def build(start: date, end: date, sitelinks_path, claims_cache, out_path, cfg) -> dict:
+def build(start: date, end: date, sitelinks_path: Path, claims_cache: Path, out_path: Path,
+          cfg: AnalyticsConfig) -> dict:
     """Fetch, parse and resolve every day; mark major (date, QID) pairs; write Parquet."""
     import json
 
