@@ -23,6 +23,7 @@ from lookedup.forecast.features import LEAKY
 from lookedup.settings import DATA_DIR, ROOT
 
 if TYPE_CHECKING:
+    import duckdb
     import lightgbm as lgb
 
 log = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ FOLDS = [("2026-09-10", "2026-09-17"), ("2026-09-17", "2026-09-24"), ("2026-09-2
          ("2026-10-01", "2026-10-07")]
 
 
-def load_rows(con) -> list[dict]:
+def load_rows(con: duckdb.DuckDBPyConnection) -> list[dict]:
     """Every warehouse snapshot with the event's English label and final breadth."""
     rel = con.sql("""SELECT s.*, e.label_en, e.breadth AS final_breadth
                      FROM wh.main.fct_event_snapshots s JOIN wh.main.fct_app_events e USING (event_id)""")
@@ -156,7 +157,8 @@ def fit_m1(tr: list[dict], va: list[dict], target: str, params: dict,
     return model, ab
 
 
-def permutation_importance(model, enc, rows, target, repeats=5) -> list[dict]:
+def permutation_importance(model: lgb.Booster, enc: T.Encoder, rows: list[dict], target: str,
+                           repeats: int = 5) -> list[dict]:
     """Drop in validation PR AUC (M1) or rise in MAE (M2) when each feature is shuffled, averaged over ``repeats``."""
     rng = np.random.default_rng(T.SEED)
     X = enc.matrix(rows)
@@ -175,7 +177,7 @@ def permutation_importance(model, enc, rows, target, repeats=5) -> list[dict]:
     return sorted(out, key=lambda d: -d["importance"])
 
 
-def rolling(rows, params_m1, params_m2) -> list[dict]:
+def rolling(rows: list[dict], params_m1: dict, params_m2: dict) -> list[dict]:
     """Rolling-origin check over weekly folds: train before, calibrate on the prior week, test on the fold."""
     from datetime import datetime
     out = []
