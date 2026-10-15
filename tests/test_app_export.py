@@ -126,3 +126,17 @@ def test_day_and_card_paths():
     d = datetime(2026, 8, 17).date()
     assert ax.day_file(d) == f"{ax.APP_PREFIX}/days/2026-08-17.json"
     assert ax.og_file(d) == f"{ax.APP_PREFIX}/og/2026-08-17.png"
+
+
+def _day_summary(n, lead_lang="en"):
+    return {"tiers": {"noticed": n, "international": 0, "planetary": 0}, "single_language": 1,
+            "languages": {lead_lang: {"events": n, "lead": n}}, "hourly": [0] * 24, "events": n}
+
+
+def test_stats_keep_the_last_90_days():
+    start = datetime(2026, 7, 1)
+    days = {f"{start + timedelta(days=i):%Y-%m-%d}": _day_summary(1) for i in range(100)}
+    s = ax.stats_payload(days, datetime(2026, 10, 9), ["en"])
+    assert len(s["timeline"]) == ax.STATS_DAYS == len(s["days"])
+    assert s["first_day"] == f"{start + timedelta(days=10):%Y-%m-%d}" and s["last_day"] == f"{start + timedelta(days=99):%Y-%m-%d}"
+    assert s["events"] == 90 and s["single_language"] == 90
