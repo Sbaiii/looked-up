@@ -138,3 +138,18 @@ def test_labels_for_keeps_active_languages(monkeypatch):
 def test_baselines_need_day_files(tmp_path):
     with pytest.raises(RuntimeError, match="no day files"):
         scorer.build_baselines(LocalStore(tmp_path / "empty"), date(2026, 8, 17), tmp_path / "b")
+
+
+def test_commit_gives_up_after_repeated_conflicts(tmp_path, monkeypatch):
+    from lookedup.store import StoreConflict
+
+    class Racy:
+        def head(self):
+            return "rev"
+
+        def commit(self, *a, **k):
+            raise StoreConflict("raced")
+
+    monkeypatch.setattr(scorer.time, "sleep", lambda s: None)
+    with pytest.raises(RuntimeError, match="could not commit"):
+        scorer._commit(Racy(), {}, "data: x")
