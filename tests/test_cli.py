@@ -160,3 +160,33 @@ def test_languages_command(monkeypatch, capsys):
     assert seen["days"][0] == date(2026, 10, 1) and seen["days"][-1] == date(2026, 10, 7)
     assert seen["top_n"] == 1 and seen["keep"] is False
     assert "en" in capsys.readouterr().out
+
+
+def test_hub_maintenance(monkeypatch, capsys):
+    import json
+
+    import lookedup.store as store
+
+    actions = []
+
+    class Hub:
+        def __init__(self, create=False):
+            pass
+
+        def used_storage(self):
+            return 100 - 10 * len(actions)
+
+        def delete_prefix(self, prefix, message):
+            actions.append(("drop", prefix))
+            return [prefix + "a"]
+
+        def squash_history(self, message):
+            actions.append(("squash",))
+
+    monkeypatch.setattr(store, "HFStore", Hub)
+    cli.main(["hub"])
+    assert actions == [] and json.loads(capsys.readouterr().out)["used_storage_after"] == 100
+    cli.main(["hub", "--drop-prefix", "data/spikes/", "--squash"])
+    res = json.loads(capsys.readouterr().out)
+    assert actions == [("drop", "data/spikes/"), ("squash",)]
+    assert res["used_storage_before"] == 100 and res["used_storage_after"] == 80 and res["squashed"] is True
