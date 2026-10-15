@@ -255,3 +255,21 @@ def test_top_command(monkeypatch):
     monkeypatch.setattr(q, "top", lambda lang, hour, n=20, local=False: seen.append((lang, hour, n, local)) or Rel())
     cli.main(["top", "--lang", "fr", "--hour", "2026-10-06 14", "-n", "5", "--local"])
     assert seen == [("fr", datetime(2026, 10, 6, 14), 5, True), "shown"]
+
+
+def test_card_upload(monkeypatch):
+    import lookedup.store as store
+    from lookedup.settings import DATASET_CARD
+
+    seen = []
+
+    class Hub:
+        def __init__(self, create=False):
+            seen.append(("create", create))
+
+        def upload_card(self, path):
+            seen.append(("card", path))
+
+    monkeypatch.setattr(store, "HFStore", Hub)
+    cli.main(["card"])
+    assert seen == [("create", True), ("card", DATASET_CARD)]
