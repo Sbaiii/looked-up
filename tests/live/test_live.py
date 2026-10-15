@@ -327,3 +327,10 @@ def test_service_cache_window(monkeypatch, tmp_path):
     clock[0] += 2
     r = svc.cached("x", build)
     assert json.loads(r.body) == {"n": 2} and r.headers["cache-control"] == f"public, max-age={svc.CACHE_S}"
+
+
+def test_health_endpoint(monkeypatch, tmp_path):
+    svc = _service(monkeypatch, tmp_path)
+    svc.engine.connected = True
+    h = svc.health()
+    assert set(h) == {"ok", "connected", "last_event_at", "gap_minutes"} and h["ok"] and h["connected"]
