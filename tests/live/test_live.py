@@ -334,3 +334,14 @@ def test_health_endpoint(monkeypatch, tmp_path):
     svc.engine.connected = True
     h = svc.health()
     assert set(h) == {"ok", "connected", "last_event_at", "gap_minutes"} and h["ok"] and h["connected"]
+
+
+def test_bursts_endpoint_caps_the_window(monkeypatch, tmp_path):
+    svc = _service(monkeypatch, tmp_path)
+    monkeypatch.setattr(svc.time, "time", lambda: T0)
+    seen = []
+    monkeypatch.setattr(svc.engine, "bursts_since", lambda since: seen.append(since) or [])
+    svc._cache.clear()
+    svc.bursts(hours=500)
+    svc.bursts(hours=2)
+    assert seen == [T0 - 72 * 3600, T0 - 2 * 3600]
