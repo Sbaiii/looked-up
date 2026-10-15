@@ -30,3 +30,13 @@ def test_unknown_command_is_a_usage_error(capsys):
         cli.main(["no-such-command"])
     assert e.value.code == 2
     assert "invalid choice" in capsys.readouterr().err
+
+
+def test_hourly_passes_its_options(monkeypatch):
+    from lookedup import hourly, store
+
+    seen = {}
+    monkeypatch.setattr(store, "open_store", lambda local=False: f"store(local={local})")
+    monkeypatch.setattr(hourly, "run", lambda st, window_hours, max_hours: seen.update(st=st, w=window_hours, m=max_hours) or 0)
+    cli.main(["hourly", "--local", "--window", "48", "--max-hours", "3"])
+    assert seen == {"st": "store(local=True)", "w": 48, "m": 3}
