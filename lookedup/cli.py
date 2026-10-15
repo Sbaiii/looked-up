@@ -37,6 +37,7 @@ import json
 import logging
 import sys
 import tempfile
+from collections.abc import Callable
 from datetime import date, datetime
 from pathlib import Path
 
@@ -394,7 +395,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("-v", "--verbose", action="store_true")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def add(name: str, fn, local: bool = True) -> argparse.ArgumentParser:
+    def add(name: str, fn: Callable[[argparse.Namespace], None], local: bool = True) -> argparse.ArgumentParser:
         """Register a subcommand running ``fn``, with ``--local`` unless ``local`` is False."""
         sp = sub.add_parser(name)
         sp.set_defaults(fn=fn)
