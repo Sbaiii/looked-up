@@ -42,3 +42,34 @@ def test_committed_sample_is_consistent():
         major = r["is_major"] == "true"
         if major:  # major = resolved, not generic, >= 3 of our languages
             assert r["qid"] and r["is_generic"] == "false" and int(r["n_languages"]) >= 3
+
+
+class _Reply:
+    def __init__(self, status=200, text="", data=None):
+        self.status_code, self.text, self._data = status, text, data
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise RuntimeError(self.status_code)
+
+    def json(self):
+        return self._data
+
+
+class _Session:
+    def __init__(self, replies):
+        self.replies, self.calls = list(replies), []
+
+    def get(self, url, params=None, timeout=None):
+        self.calls.append(params)
+        return self.replies.pop(0)
+
+
+def test_fetch_day(monkeypatch):
+    import lookedup.evaluation.ground_truth as gt
+
+    s = _Session([_Reply(404), _Reply(200, "* item")])
+    monkeypatch.setattr(gt, "session", lambda: s)
+    assert gt.fetch_day(date(2026, 8, 10)) == ""
+    assert gt.fetch_day(date(2026, 8, 11)) == "* item"
+    assert s.calls[1]["title"] == "Portal:Current_events/2026_August_11"
