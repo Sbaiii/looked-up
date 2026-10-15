@@ -49,3 +49,16 @@ def test_short_copy_is_retried(tmp_path, monkeypatch):
     R._copy_with_retry(src, tmp_path / "out" / "dst.bin")
     assert len(attempts) == 2 and (tmp_path / "out" / "dst.bin").read_bytes() == b"x" * 100
     assert not (tmp_path / "out" / "dst.bin.part").exists()
+
+
+def test_skipped_prefixes_stay_behind(tmp_path):
+    from lookedup.relocate import relocate
+
+    src, dst = tmp_path / "old", tmp_path / "new"
+    (src / "raw").mkdir(parents=True)
+    (src / "raw" / "big.gz").write_bytes(b"1")
+    (src / "lake").mkdir()
+    (src / "lake" / "m.json").write_text("{}")
+    res = relocate(source=src, target=dst, skip=("raw",))
+    assert (dst / "lake" / "m.json").exists() and not (dst / "raw").exists()
+    assert (src / "raw" / "big.gz").exists() and res["moved"] == 1
