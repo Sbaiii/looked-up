@@ -86,3 +86,9 @@ test('copy link on an archive day copies that day', async ({ page, context, brow
   await page.click('#copy-day');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/#\/day\/2026-07-27$/);
 });
+
+test('an archive event link titles the page', async ({ page }) => {
+  await page.goto('./#/day/2026-07-19/event/Q182063');
+  await ready(page);
+  await expect(page).toHaveTitle('Nicolás Otamendi, 19 July · Looked Up');
+});
