@@ -117,7 +117,7 @@ def country_colours(event: dict) -> dict[str, tuple[int, int, int]]:
     return {k: ramp(v) for k, v in best.items() if v > 0}
 
 
-def _wrap(draw, text: str, f, width: int, lines: int) -> list[str]:
+def _wrap(draw: ImageDraw.ImageDraw, text: str, f: ImageFont.FreeTypeFont, width: int, lines: int) -> list[str]:
     """Greedy word wrap of ``text`` to ``width`` pixels in font ``f``, at most ``lines`` lines."""
     words, out, line = text.split(), [], ""
     for w in words:
