@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 from lookedup import db
 from lookedup.analytics.config import load
@@ -10,7 +11,7 @@ from lookedup.analytics.production import daily_baselines_sql, score_hour_sql
 from lookedup.settings import LOCAL_LAKE_DIR
 
 
-def production_vs_batch(warehouse_db, day: date, hours: list[int], lake_dir=LOCAL_LAKE_DIR) -> dict:
+def production_vs_batch(warehouse_db: Path, day: date, hours: list[int], lake_dir: Path = LOCAL_LAKE_DIR) -> dict:
     """Score held-out hours with the production scorer and compare its spikes with the batch warehouse (ADR 0014)."""
     cfg = load()
     con = db.connect()
