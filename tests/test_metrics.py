@@ -65,3 +65,10 @@ def test_counts_keep_to_the_period(monkeypatch):
     ctx = _ctx(monkeypatch)
     assert event_count(ctx, "ev") == 3
     assert lead_counts(ctx, "ev") == [("en", 2), ("es", 1)]
+
+
+def test_h4_needs_enough_events(monkeypatch):
+    from lookedup.evaluation.metrics import h4_spread
+
+    res = h4_spread(_ctx(monkeypatch), "ev")
+    assert res["n_a"] == 1 and res["n_b"] == 2 and res["verdict"].startswith("inconclusive")
