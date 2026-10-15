@@ -78,3 +78,11 @@ def test_nothing_to_do(fake_server, tmp_path, article_filter):
     assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=3) == 2   # the 2 published hours
     assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=3) == 0
     assert hourly.plan(store.read_manifest(), NOW, window_hours=2) == ([], [])
+
+
+def test_late_hours_are_logged(monkeypatch, tmp_path, article_filter, caplog):
+    monkeypatch.setattr(dumps, "available_hours", lambda start, end: {})
+    store = LocalStore(tmp_path / "lake")
+    assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=12) == 0
+    late = [r for r in caplog.records if "still unpublished" in r.getMessage()]
+    assert len(late) == 12 - hourly.LATE_AFTER_MINUTES // 60
