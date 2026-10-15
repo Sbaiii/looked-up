@@ -294,3 +294,15 @@ def test_resolver_requeues_after_a_failure(monkeypatch):
     r.want("de", "Berlin")
     assert r.resolve_pending() == 0
     assert r.pending == {("de", "Berlin")} and "de|Berlin" not in r.qids
+
+
+def test_resolver_batches_per_wiki(monkeypatch):
+    from lookedup_live import qids
+    monkeypatch.setattr(qids.time, "sleep", lambda s: None)
+    r = qids.Resolver()
+    r.session = _WD([_Ok({"entities": {}})] * 3)
+    for i in range(60):
+        r.want("en", f"T{i}")
+    r.want("ja", "東京")
+    assert r.resolve_pending() == 61
+    assert sorted((c["sites"], c["titles"].count("|") + 1) for c in r.session.calls) == [("enwiki", 10), ("enwiki", 50), ("jawiki", 1)]
