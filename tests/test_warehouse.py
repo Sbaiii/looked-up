@@ -33,3 +33,15 @@ def test_run_passes_project_and_vars(monkeypatch, tmp_path):
     assert json.loads(args[args.index("--vars") + 1])["lake_root"] == str(W.LOCAL_LAKE_DIR)
     import os
     assert os.environ["LOOKEDUP_WAREHOUSE_DB"] == str(tmp_path / "w.duckdb")
+
+
+def test_run_on_the_hub_and_failures(monkeypatch, tmp_path):
+    import pytest
+
+    monkeypatch.setattr(W, "WAREHOUSE_DB", tmp_path / "w.duckdb")
+    calls = _fake_dbt(monkeypatch, success=False)
+    assert W.run(["test"], hf=True) is False
+    assert json.loads(calls[0][calls[0].index("--vars") + 1])["lake_root"] == f"hf://datasets/{W.HF_REPO_ID}"
+    _fake_dbt(monkeypatch, exception=RuntimeError("compilation error"))
+    with pytest.raises(RuntimeError, match="compilation"):
+        W.run(["build"])
