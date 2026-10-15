@@ -76,3 +76,11 @@ def test_list_month_parses_the_listing(monkeypatch):
 def test_list_month_missing(monkeypatch):
     monkeypatch.setattr(dumps._session, "get", lambda url, timeout=None: _Page(404))
     assert dumps.list_month(2030, 1) == []
+
+
+def test_available_hours_filters_the_range(monkeypatch):
+    from datetime import datetime
+
+    monkeypatch.setattr(dumps._session, "get", lambda url, timeout=None: _Page(200, LISTING))
+    got = dumps.available_hours(datetime(2026, 10, 7, 10), datetime(2026, 10, 7, 12))
+    assert list(got) == [datetime(2026, 10, 7, 10)]
