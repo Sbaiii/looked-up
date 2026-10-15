@@ -101,10 +101,10 @@ def test_detection_delays(monkeypatch):
     from lookedup.evaluation.metrics import detection_delays
 
     ctx = _ctx(monkeypatch)
-    ctx.con.execute("ALTER TABLE majors ADD COLUMN title VARCHAR DEFAULT 'Article'")
-    times = {1: datetime(2026, 8, 9, 15, 40), 2: None, 3: datetime(2026, 8, 11, 7, 0)}
-    order = iter(sorted(times))
-    monkeypatch.setattr(T, "event_time", lambda title, d: (lambda t: t and {"time": t, "source": "infobox_timestamp"})(times[next(order)]))
+    ctx.con.execute("ALTER TABLE majors ADD COLUMN title VARCHAR")
+    ctx.con.execute("UPDATE majors SET title = 'Article ' || qid")
+    times = {"Article 1": datetime(2026, 8, 9, 15, 40), "Article 2": None, "Article 3": datetime(2026, 8, 11, 7, 0)}
+    monkeypatch.setattr(T, "event_time", lambda title, d: times[title] and {"time": times[title], "source": "infobox_timestamp"})
     res = detection_delays(ctx, "ev")
     assert res["n"] == 2
     assert sorted(d["delay_hours"] for d in res["rows"]) == [0.0, 3.0]
