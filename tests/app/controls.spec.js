@@ -49,3 +49,10 @@ test('the theme toggle switches and is remembered', async ({ page }) => {
   await ready(page);
   expect(await theme()).toBe(after);
 });
+
+test('a language panel link titles the page', async ({ page }) => {
+  await page.goto('./#/lang/ja');
+  await ready(page);
+  await expect(page).toHaveTitle(/^What .+ readers looked up · Looked Up$/);
+  await expect(page.locator('#lang-select')).toHaveValue('ja');
+});
