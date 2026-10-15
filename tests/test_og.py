@@ -66,3 +66,8 @@ def test_title_wrap_respects_width_and_line_count():
     assert 1 < len(lines) <= 2
     assert all(draw.textlength(l, font=f) <= 600 for l in lines[:-1])
     assert img.size == (og.W, og.H)
+
+
+def test_quiet_day_card(tmp_path):
+    out = og.render_day(date(2026, 8, 18), [], tmp_path / "quiet.png")
+    assert Image.open(out).size == (og.W, og.H)
