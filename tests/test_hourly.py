@@ -86,3 +86,11 @@ def test_late_hours_are_logged(monkeypatch, tmp_path, article_filter, caplog):
     assert hourly.run(store, now=NOW, langs=LANGS, filt=article_filter, window_hours=12) == 0
     late = [r for r in caplog.records if "still unpublished" in r.getMessage()]
     assert len(late) == 12 - hourly.LATE_AFTER_MINUTES // 60
+
+
+def test_verify_alignment(fake_server, monkeypatch, tmp_path):
+    monkeypatch.setattr(dumps, "rest_hourly_total", lambda project, ts: 42)
+    h = datetime(2026, 9, 13, 14)
+    res = hourly.verify_alignment(h, tmp_path)
+    assert res["file"] == "pageviews-20260913-150000.gz"
+    assert res["dump_en_total"] > 0 and res["rest_same_hour_start"] == 42
