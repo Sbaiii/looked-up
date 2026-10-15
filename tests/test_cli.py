@@ -145,3 +145,18 @@ def test_app_export_modes(monkeypatch, tmp_path, capsys):
     cli.main(["app-export", "--backfill", "--local"])
     assert calls == [("live", "store(False)"), ("backfill", "store(True)")]
     capsys.readouterr()
+
+
+def test_languages_command(monkeypatch, capsys):
+    from datetime import date
+
+    from lookedup import languages as L
+
+    seen = {}
+    monkeypatch.setattr(L, "rank_languages", lambda days, keep_raw=True: seen.update(days=days, keep=keep_raw) or
+                        [{"rank": 1, "code": "en", "human_views_7d": 10, "mobile_share": 0.6, "automated_share": 0.0, "raw_rank": 1}])
+    monkeypatch.setattr(L, "write_config", lambda ranking, days, top_n=30: seen.update(top_n=top_n))
+    cli.main(["languages", "--today", "2026-10-08", "--top-n", "1"])
+    assert seen["days"][0] == date(2026, 10, 1) and seen["days"][-1] == date(2026, 10, 7)
+    assert seen["top_n"] == 1 and seen["keep"] is False
+    assert "en" in capsys.readouterr().out
