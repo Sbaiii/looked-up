@@ -178,3 +178,11 @@ def test_categories_mark_recent_deaths(monkeypatch):
     cats = ax.categories_for([{"qid": q, "start_hour": start} for q in (1, 2, 3)])
     assert cats[1] == "death" and cats[2] == "human" and cats[3] != "death"
     assert ax.categories_for([]) == {}
+
+
+def test_single_language_events_capped_per_lead(monkeypatch):
+    monkeypatch.setattr(ax, "SINGLE_PER_LANGUAGE", 2)
+    singles = [{"event_id": f"S{i}", "event_class": "single_language", "lead_lang": "ja", "excess_views": i, "breadth": 1}
+               for i in range(5)] + [{"event_id": "F", "event_class": "single_language", "lead_lang": "fr", "excess_views": 1, "breadth": 1}]
+    _, kept = ax.select(singles, {})
+    assert [e["event_id"] for e in kept] == ["S4", "S3", "F"]
