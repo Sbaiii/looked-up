@@ -51,3 +51,17 @@ def test_backfill_builds_the_backfill_argv(monkeypatch):
     cli.main(["backfill", "--from", "2026-07-09", "--to", "2026-07-09", "--keep-raw"])
     assert seen == [["--from", "2026-07-09", "--to", "2026-07-10", "--local", "--oldest-first"],
                     ["--from", "2026-07-09", "--to", "2026-07-09", "--keep-raw"]]
+
+
+def test_score_one_hour(monkeypatch, capsys):
+    import lookedup.scorer as sc
+    from lookedup import store
+
+    seen = {}
+    monkeypatch.setattr(store, "open_store", lambda local=False: "lake")
+    monkeypatch.setattr(sc, "score", lambda st, max_hours, hours: seen.update(hours=hours, m=max_hours) or {"ok": 1})
+    cli.main(["score", "--hour", "2026-10-08T14:00"])
+    assert seen == {"hours": [datetime(2026, 10, 8, 14)], "m": cli.MAX_HOURS_PER_RUN}
+    assert '"ok": 1' in capsys.readouterr().out
+    cli.main(["score"])
+    assert seen["hours"] is None
