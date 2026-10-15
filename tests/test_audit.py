@@ -37,3 +37,15 @@ def test_h3_score_is_inconclusive_with_few_non_events(tmp_path):
     assert res["non_events_flagged"] == 1 and res["share_non_events_flagged"] == 1.0
     assert res["events_wrongly_flagged"] == 0 and res["by_rule"] == {"is_low_mobile": 1, "is_flat": 0}
     assert res["verdict"].startswith("inconclusive")
+
+
+def test_h3_score_refuses_missing_or_unknown_labels(tmp_path):
+    import pytest
+
+    _write(tmp_path / "s.csv", [{"unit_id": "u1", "lang": "en", "title": "Bot", "day": "2026-08-10"}])
+    _write(tmp_path / "l.csv", [{"unit_id": "u1", "label": "maybe"}])
+    with pytest.raises(AssertionError):
+        audit.score(_con(), load(), tmp_path / "s.csv", tmp_path / "l.csv")
+    _write(tmp_path / "l.csv", [{"unit_id": "u2", "label": "event"}])
+    with pytest.raises(AssertionError, match="every sampled unit"):
+        audit.score(_con(), load(), tmp_path / "s.csv", tmp_path / "l.csv")
