@@ -95,3 +95,30 @@ def test_lake_paths_mirror_the_day_layout(tmp_path):
     assert scorer.events_path(d) == "data/events/year=2026/month=08/day=17.parquet"
     assert scorer.event_languages_path(d) == "data/events/languages/year=2026/month=08/day=17.parquet"
     assert scorer.baselines_file(d, tmp_path) == tmp_path / "day=2026-08-17.parquet"
+
+
+class _WDR:
+    def __init__(self, data):
+        self.data = data
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self.data
+
+
+def test_qids_for_maps_titles_through_sitelinks(monkeypatch):
+    calls = []
+
+    class S:
+        def get(self, url, params=None, timeout=None):
+            calls.append(params)
+            return _WDR({"entities": {"Q597": {"sitelinks": {"enwiki": {"title": "Lisbon"}}}, "-1": {"missing": ""}}})
+
+    monkeypatch.setattr(scorer, "session", lambda: S())
+    monkeypatch.setattr(scorer.time, "sleep", lambda s: None)
+    titles = [("en", "Lisbon")] + [("en", f"T_{i}") for i in range(60)]
+    assert scorer.qids_for(titles) == {("en", "Lisbon"): 597}
+    assert [c["titles"].count("|") + 1 for c in calls] == [50, 11]
+    assert "T 0" in calls[0]["titles"]                                  # underscores become spaces for the API
