@@ -55,3 +55,24 @@ def test_fetch_text_caches_and_fetches_only_new(tmp_path, monkeypatch):
     assert entities.fetch_text([1, 2], cache, ["en"]).num_rows == 2
     assert entities.fetch_text([2, 3], cache, ["en"]).num_rows == 3
     assert calls == [[1, 2], [3]]
+
+
+def test_claims_from_sparql(monkeypatch):
+    import json as _json
+
+    from lookedup.analytics import entities as E
+
+    W = "http://www.wikidata.org"
+    answers = [
+        [{"item": {"value": f"{W}/entity/Q1"}, "p": {"value": f"{W}/prop/direct/P31"}, "v": {"value": f"{W}/entity/Q5"}},
+         {"item": {"value": f"{W}/entity/Q1"}, "p": {"value": f"{W}/prop/direct/P570"}, "v": {"value": "2026-08-17T00:00:00Z"}},
+         {"item": {"value": f"{W}/entity/Q1"}, "p": {"value": f"{W}/prop/direct/P17"}, "v": {"value": "not an item"}}],
+        [{"item": {"value": f"{W}/entity/Q1"}, "l": {"value": "Someone"}}],
+    ]
+    monkeypatch.setattr(E, "_sparql", lambda q: answers.pop(0))
+    monkeypatch.setattr(E.time, "sleep", lambda s: None)
+    rows = E.fetch_claims_sparql([1, 2])
+    by = {r["qid"]: r for r in rows}
+    assert by[1]["label_en"] == "Someone" and by[2]["label_en"] is None
+    c = _json.loads(by[1]["claims_json"])
+    assert c["P31"] == [5] and c["P570"] == ["2026-08-17"] and c["P17"] == []
