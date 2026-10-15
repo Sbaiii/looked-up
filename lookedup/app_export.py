@@ -23,10 +23,16 @@ import tempfile
 from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
 
 from lookedup import db
+
+if TYPE_CHECKING:
+    import pyarrow as pa
+
+    from lookedup.store import Store
 
 log = logging.getLogger(__name__)
 
@@ -322,7 +328,7 @@ def categories_for(events: list[dict]) -> dict[int, str]:
     return out
 
 
-def texts_from_table(table) -> dict[int, tuple[dict, str | None]]:
+def texts_from_table(table: pa.Table) -> dict[int, tuple[dict, str | None]]:
     """qid -> (descriptions {lang: text}, gender) from a (qid, descriptions_json, gender) table."""
     out = {}
     for q, d, g in zip(table["qid"].to_pylist(), table["descriptions_json"].to_pylist(), table["gender"].to_pylist()):
@@ -408,7 +414,7 @@ def _update_stats(old: dict, summaries: dict[str, dict], now: datetime, language
     return stats_payload(days, now, languages, forecast or old.get("forecast"))
 
 
-def backfill(store, out_dir: Path, now: datetime | None = None, languages: list[str] | None = None) -> dict:
+def backfill(store: Store, out_dir: Path, now: datetime | None = None, languages: list[str] | None = None) -> dict:
     """Write every day file (warehouse period, then live days from production spikes), today.json and stats.json
     into ``out_dir`` (mirroring lake paths). Uses the local lake mirror for sparklines and titles."""
     from lookedup.dumps import utcnow
@@ -467,7 +473,7 @@ def backfill(store, out_dir: Path, now: datetime | None = None, languages: list[
             "tiers": stats["tiers"], "single_language": stats["single_language"]}
 
 
-def export_live(store, now: datetime | None = None, languages: list[str] | None = None) -> dict:
+def export_live(store: Store, now: datetime | None = None, languages: list[str] | None = None) -> dict:
     """Hourly: rebuild today.json, the day files of yesterday and today, and stats.json; commit to the lake."""
     from lookedup.dumps import utcnow
     from lookedup.languages import active_codes
