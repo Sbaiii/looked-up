@@ -230,3 +230,14 @@ def test_baselines_day(monkeypatch, capsys):
     cli.main(["baselines", "--day", "2026-10-01"])
     assert seen == [date(2026, 10, 12), date(2026, 10, 1)]
     capsys.readouterr()
+
+
+def test_evaluate_v2_refresh(monkeypatch, capsys):
+    from lookedup.evaluation import run_v2
+
+    seen = []
+    monkeypatch.setattr(run_v2, "evaluate", lambda refresh=False: seen.append(refresh) or {})
+    cli.main(["evaluate-v2"])
+    cli.main(["evaluate-v2", "--refresh"])
+    assert seen == [False, True]
+    capsys.readouterr()
