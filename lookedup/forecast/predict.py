@@ -10,12 +10,19 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timedelta
+from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from lookedup.forecast import train as T
 from lookedup.forecast.features import FADE_CAP, snapshot_sql
+
+if TYPE_CHECKING:
+    import duckdb
+
+    from lookedup.store import Store
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +30,7 @@ MODELS_PREFIX = "data/models"
 MANIFEST = f"{MODELS_PREFIX}/models.json"
 
 
-def load_models(store, tmp: Path) -> tuple[dict, dict]:
+def load_models(store: Store, tmp: Path) -> tuple[dict, dict]:
     """(manifest, {key: (booster, encoder, platt)}); empty when no models are published yet."""
     m = store.fetch(MANIFEST, tmp)
     if not m:
@@ -37,7 +44,7 @@ def load_models(store, tmp: Path) -> tuple[dict, dict]:
     return manifest, models
 
 
-def live_relations(con, events: list[dict], categories: dict[int, str], entity_classes: dict[int, str],
+def live_relations(con: duckdb.DuckDBPyConnection, events: list[dict], categories: dict[int, str], entity_classes: dict[int, str],
                    titles: dict[int, dict[str, str]], hourly_files: list[Path], spikes_view: str = "_sp") -> None:
     """Temp relations _fev, _fdims, _fviews for snapshot_sql from the live inputs (spikes view from events_from_spikes)."""
     con.execute("CREATE OR REPLACE TEMP TABLE _fev(event_id VARCHAR, qid BIGINT, start_hour TIMESTAMP, lead_lang VARCHAR, "
@@ -59,7 +66,7 @@ def live_relations(con, events: list[dict], categories: dict[int, str], entity_c
         WHERE h.views_desktop + h.views_mobile >= 100""")
 
 
-def entity_classes(qids) -> dict[int, str]:
+def entity_classes(qids: Iterable[int]) -> dict[int, str]:
     """Category of each QID (death, sports, ...) from its Wikidata claims, cached in the warehouse."""
     from lookedup.analytics.config import load
     from lookedup.analytics.entities import classify, fetch_claims
@@ -72,14 +79,14 @@ def entity_classes(qids) -> dict[int, str]:
     return {q: classify(json.loads(c), cfg) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist())}
 
 
-def snapshots(con, targets: bool = False, data_end: str | None = None) -> list[dict]:
+def snapshots(con: duckdb.DuckDBPyConnection, targets: bool = False, data_end: str | None = None) -> list[dict]:
     """Snapshot rows of the live events loaded into the connection, optionally with targets."""
     rel = con.sql(snapshot_sql("_fev", "_sp", "_fviews", "_fdims", targets=targets, data_end=data_end))
     cols = rel.columns
     return [dict(zip(cols, r)) for r in rel.fetchall()]
 
 
-def forecast_open(con, events: list[dict], now: datetime, last_hour: datetime, manifest: dict, models: dict) -> dict[str, dict]:
+def forecast_open(con: duckdb.DuckDBPyConnection, events: list[dict], now: datetime, last_hour: datetime, manifest: dict, models: dict) -> dict[str, dict]:
     """event_id -> forecast for events that started in the last 24 h (relations from live_relations must exist)."""
     if not models:
         return {}
