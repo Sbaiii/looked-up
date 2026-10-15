@@ -71,3 +71,11 @@ def test_title_wrap_respects_width_and_line_count():
 def test_quiet_day_card(tmp_path):
     out = og.render_day(date(2026, 8, 18), [], tmp_path / "quiet.png")
     assert Image.open(out).size == (og.W, og.H)
+
+
+def test_long_title_gets_an_ellipsis():
+    img, draw = og._base()
+    f = og.font(76, 800)
+    lines = og._wrap(draw, " ".join(["word"] * 40), f, 500, 2)
+    assert len(lines) == 2 and lines[-1].endswith("…")
+    assert draw.textlength(lines[-1], font=f) <= 500
