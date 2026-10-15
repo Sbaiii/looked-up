@@ -91,7 +91,7 @@ def validate(store: Store, n: int = 3, seed: int | None = None) -> list[dict]:
             raw = dumps.download(dumps.file_url(ts), Path(tmp) / dumps.file_name(ts))
             rebuilt = hourly_dump_to_table(raw, ts, langs, filt)
 
-            def rows(t):
+            def rows(t: pa.Table) -> list[tuple]:
                 return sorted(zip(*(t[c].to_pylist() for c in
                                     ("ts_hour_start", "lang", "title", "views_desktop", "views_mobile"))))
             a, b = rows(stored), rows(rebuilt)
