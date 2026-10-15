@@ -1,8 +1,11 @@
 """The language ranking file: order by rank and the top_n cut."""
 from __future__ import annotations
 
+from datetime import date
+
 import yaml
 
+from lookedup import languages as L
 from lookedup.languages import active_codes, active_languages
 
 
@@ -19,3 +22,8 @@ def test_active_languages_follow_rank_and_top_n(tmp_path):
 def test_shipped_ranking():
     codes = active_codes()
     assert len(codes) == 30 and codes[0] == "en" and len(set(codes)) == 30
+
+
+def test_last_full_days_end_yesterday():
+    days = L.last_full_days(3, today=date(2026, 10, 8))
+    assert days == [date(2026, 10, 5), date(2026, 10, 6), date(2026, 10, 7)]
