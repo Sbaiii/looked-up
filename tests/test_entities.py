@@ -91,3 +91,27 @@ def test_fetch_claims_uses_the_cache(tmp_path, monkeypatch):
     assert sorted(t["qid"].to_pylist()) == [1, 2, 3]
     E.fetch_claims([1, 2], cache)
     assert asked[-1] == []                                             # everything already cached
+
+
+def test_fetch_claims_falls_back_to_the_api(tmp_path, monkeypatch):
+    import requests
+
+    from lookedup.analytics import entities as E
+
+    def down(todo):
+        raise requests.ConnectionError("query service down")
+
+    class R:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"entities": {"Q7": {"labels": {"en": {"value": "Seven"}},
+                                        "claims": {"P31": [{"mainsnak": {"datavalue": {"value": {"numeric-id": 5}}}}]}},
+                                 "Q8": {"missing": ""}}}
+
+    monkeypatch.setattr(E, "fetch_claims_sparql", down)
+    monkeypatch.setattr(E, "session", lambda: type("S", (), {"get": lambda self, *a, **k: R()})())
+    monkeypatch.setattr(E.time, "sleep", lambda s: None)
+    t = E.fetch_claims([7, 8], tmp_path / "claims.parquet")
+    assert t["qid"].to_pylist() == [7] and t["label_en"].to_pylist() == ["Seven"]
