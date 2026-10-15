@@ -37,7 +37,7 @@ def test_fetch_siteinfo(monkeypatch):
     monkeypatch.setattr(L, "_get_json", lambda url, params: reply)
     info = L.fetch_siteinfo("fr")
     assert info["main_page"] == "Wikipédia:Accueil_principal"
-    assert info["namespaces"] == ["catégorie", "category", "user", "utilisateur", "utilisatrice"]
+    assert info["namespaces"] == ["category", "catégorie", "user", "utilisateur", "utilisatrice"]   # plain sort: "o" < "é"
 
 
 def test_fetch_names(monkeypatch):
