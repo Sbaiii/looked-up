@@ -244,3 +244,16 @@ def test_merge_day_into_nothing(article_filter):
     assert merged.num_rows == table.num_rows and keys == sorted(keys)
     empty = table.slice(0, 0)
     assert merge_day(None, [empty]).num_rows == 0
+
+
+def test_hub_fetch_missing_file(monkeypatch):
+    import huggingface_hub
+    from huggingface_hub.utils import EntryNotFoundError
+
+    def missing(*a, **k):
+        raise EntryNotFoundError("not there")
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", missing)
+    hf = _hf(_FakeApi([]))
+    assert hf.fetch("data/manifest.json", None, "rev") is None
+    assert hf.read_manifest("rev").hours == {}
