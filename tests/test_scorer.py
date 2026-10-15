@@ -122,3 +122,14 @@ def test_qids_for_maps_titles_through_sitelinks(monkeypatch):
     assert scorer.qids_for(titles) == {("en", "Lisbon"): 597}
     assert [c["titles"].count("|") + 1 for c in calls] == [50, 11]
     assert "T 0" in calls[0]["titles"]                                  # underscores become spaces for the API
+
+
+def test_labels_for_keeps_active_languages(monkeypatch):
+    class S:
+        def get(self, url, params=None, timeout=None):
+            return _WDR({"entities": {"Q597": {"sitelinks": {"enwiki": {"title": "Lisbon"}, "ptwiki": {"title": "Lisboa"},
+                                                             "commonswiki": {"title": "Category:Lisbon"}}}}})
+
+    monkeypatch.setattr(scorer, "session", lambda: S())
+    monkeypatch.setattr(scorer.time, "sleep", lambda s: None)
+    assert scorer.labels_for([597], ["en", "pt"]) == {597: {"en": "Lisbon", "pt": "Lisboa"}}
