@@ -31,3 +31,20 @@ def test_numeric_codes_are_kept():
     rows = [row("FRA", "Q150", "France"), row("FRA", "Q150", "France", "250")]
     _, countries = G.build(rows, ["fr"])
     assert countries["FRA"]["num"] == "250"
+
+
+def test_write_files(tmp_path, monkeypatch):
+    import json
+
+    import yaml
+
+    monkeypatch.setattr(G, "GEO_FILE", tmp_path / "language_geo.yml")
+    monkeypatch.setattr(G, "APP_GEO_FILE", tmp_path / "app" / "language_geo.json")
+    by_lang = {"fr": ["BEL", "FRA"], "sr": ["SRB", "XKX"]}
+    countries = {"BEL": {"name": "Belgium", "num": "056"}, "FRA": {"name": "France", "num": "250"},
+                 "SRB": {"name": "Serbia", "num": "688"}, "XKX": {"name": "Kosovo", "num": None}}
+    G.write(by_lang, countries)
+    doc = yaml.safe_load((tmp_path / "language_geo.yml").read_text())
+    assert doc["anchors"] == {"fr": "FRA", "sr": "SRB"} and doc["languages"]["fr"] == ["BEL", "FRA"]
+    app = json.loads((tmp_path / "app" / "language_geo.json").read_text())
+    assert sorted(app["languages"]["sr"]) == ["688", "XKX"]                 # Kosovo keeps its alpha-3 code
