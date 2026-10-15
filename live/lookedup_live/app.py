@@ -7,6 +7,7 @@ import logging
 import os
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -28,7 +29,7 @@ app = FastAPI(title="Looked Up live", docs_url=None, redoc_url=None)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
 
 
-def cached(name: str, build) -> JSONResponse:
+def cached(name: str, build: Callable[[], dict]) -> JSONResponse:
     """Serve ``build()`` as JSON, rebuilt at most every CACHE_S seconds, with a matching Cache-Control header."""
     now = time.time()
     hit = _cache.get(name)
@@ -59,25 +60,25 @@ def shutdown() -> None:
 
 
 @app.get("/live.json")
-def live():
+def live() -> JSONResponse:
     """GET /live.json: live events and the top single-language bursts."""
     return cached("live", engine.live)
 
 
 @app.get("/stats.json")
-def stats():
+def stats() -> JSONResponse:
     """GET /stats.json: hourly counts of bursts and live events."""
     return cached("stats", engine.stats)
 
 
 @app.get("/bursts.json")
-def bursts(hours: int = 72):
+def bursts(hours: int = 72) -> JSONResponse:
     """GET /bursts.json: every burst of the last ``hours`` (at most 72)."""
     return cached(f"bursts{hours}", lambda: {"bursts": engine.bursts_since(time.time() - min(hours, 72) * 3600)})
 
 
 @app.get("/health")
-def health():
+def health() -> dict:
     """GET /health: connection state, the last event time and the coverage gap."""
     s = engine.status()
     return {"ok": True, "connected": s["connected"], "last_event_at": s["last_event_at"], "gap_minutes": s["gap_minutes"]}
