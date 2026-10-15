@@ -173,7 +173,7 @@ def first_sitelink_created(qid: int, langs: list[str]) -> datetime | None:
     return min(times) if times else None
 
 
-def _km(a_lat, a_lon, b_lat, b_lon) -> float:
+def _km(a_lat: float | None, a_lon: float | None, b_lat: float | None, b_lon: float | None) -> float:
     """Great-circle distance in km between two points; infinite when a coordinate is missing."""
     if None in (a_lat, a_lon, b_lat, b_lon):
         return float("inf")
@@ -303,6 +303,6 @@ def matches(pages: list[str]) -> list[dict]:
     return rows
 
 
-def dump(obj) -> str:
+def dump(obj: object) -> str:
     """JSON text for caching ground truths (dates as strings, non-ASCII kept)."""
     return json.dumps(obj, default=str, ensure_ascii=False, indent=1)
