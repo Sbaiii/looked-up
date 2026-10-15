@@ -25,3 +25,27 @@ def test_db_connections_cap_spill(tmp_path, monkeypatch):
 
     con = db.connect()
     assert con.execute("SELECT current_setting('max_temp_directory_size')").fetchone()[0] in ("20.0 GiB", "20GiB", "21.4 GB")
+
+
+def test_short_copy_is_retried(tmp_path, monkeypatch):
+    import shutil
+
+    from lookedup import relocate as R
+
+    src = tmp_path / "src.bin"
+    src.write_bytes(b"x" * 100)
+    real = shutil.copyfile
+    attempts = []
+
+    def flaky(a, b):
+        attempts.append(1)
+        if len(attempts) == 1:
+            open(b, "wb").write(b"x" * 10)                 # a truncated first copy
+            return b
+        return real(a, b)
+
+    monkeypatch.setattr(R.shutil, "copyfile", flaky)
+    monkeypatch.setattr(R.time, "sleep", lambda s: None)
+    R._copy_with_retry(src, tmp_path / "out" / "dst.bin")
+    assert len(attempts) == 2 and (tmp_path / "out" / "dst.bin").read_bytes() == b"x" * 100
+    assert not (tmp_path / "out" / "dst.bin.part").exists()
