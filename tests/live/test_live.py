@@ -310,6 +310,9 @@ def test_resolver_batches_per_wiki(monkeypatch):
 
 def _service(monkeypatch, tmp_path):
     import importlib
+
+    import pytest
+    pytest.importorskip("fastapi")                     # the Space dependencies are not installed in CI
     monkeypatch.setenv("LIVE_STATE_DIR", str(tmp_path))
     from lookedup_live import app
     return importlib.reload(app)
