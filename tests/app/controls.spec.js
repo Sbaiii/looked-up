@@ -66,3 +66,13 @@ test('the previous-day arrow moves one day back', async ({ page }) => {
   await expect(page).toHaveURL(/#\/day\/2026-08-16$/);
   await expect(page.locator('#day-out')).not.toHaveText('Today');
 });
+
+test('clicking the first bar opens the first day of the window', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.locator('#bars').scrollIntoViewIfNeeded();
+  const box = await page.locator('#bars').boundingBox();
+  await page.mouse.click(box.x + 2, box.y + box.height / 2);
+  await expect(page).toHaveURL(/#\/day\/2026-08-16$/);
+  await expect(page.locator('#bars rect').first()).toHaveClass('is-on');
+});
