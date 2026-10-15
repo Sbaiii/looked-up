@@ -24,3 +24,11 @@ def test_spread_chart_and_breadth_histogram(tmp_path):
     F.spread_chart([("en", 0), ("fr", 1), ("ja", 2)], "Example", "2026-08-17 02:00 UTC", tmp_path / "spread.png")
     F.breadth_histogram([3, 3, 4, 5, 9, 20, 28], tmp_path / "breadth.png")
     assert _png(tmp_path / "spread.png")[0] > 0 and _png(tmp_path / "breadth.png")[0] > 0
+
+
+def test_recall_and_lead_language_charts(tmp_path):
+    F.recall_vs_threshold(ANALYSIS / "ablation_grid.csv", tmp_path / "recall.png")
+    leads = [(r["lead_lang"], int(r["events"])) for r in _rows("lead_counts.csv")]
+    F.lead_language_bars(leads, tmp_path / "leads.png")
+    _png(tmp_path / "recall.png")
+    _png(tmp_path / "leads.png")
