@@ -57,3 +57,11 @@ def test_precision_proxy(monkeypatch):
 
     res = precision_proxy(_ctx(monkeypatch), "ev")
     assert res == {"events": 3, "in_portal": 1, "precision_proxy": 1 / 3}      # QID 9 is outside the period
+
+
+def test_counts_keep_to_the_period(monkeypatch):
+    from lookedup.evaluation.metrics import event_count, lead_counts
+
+    ctx = _ctx(monkeypatch)
+    assert event_count(ctx, "ev") == 3
+    assert lead_counts(ctx, "ev") == [("en", 2), ("es", 1)]
