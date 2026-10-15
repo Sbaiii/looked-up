@@ -72,3 +72,24 @@ def test_day_aggregate_sums_desktop_and_mobile(tmp_path):
     assert rows[("fr", "Lisbonne")] == (30, 70)                        # web and app both count as mobile
     assert rows[("en", "Lisbon")] == (7, None)
     assert len(rows) == 2                                               # Wiktionary is not a Wikipedia
+
+
+def test_rank_languages_keeps_human_article_views(tmp_path, monkeypatch):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    day = date(2026, 10, 1)
+    pq.write_table(pa.table({
+        "lang": ["fr", "fr", "fr", "fr", "en", "en"],
+        "title": ["Lisbonne", "Accueil", "Utilisateur:X", "Robot", "Lisbon", "Main_Page"],
+        "desktop": [100, 900, 50, 5000, 300, 9000],
+        "mobile": [100, 100, 0, 10, 300, 1000],
+    }), tmp_path / f"agg-{day:%Y%m%d}.parquet")
+    sites = {"fr": {"main_page": "Accueil", "namespaces": ["utilisateur"]}, "en": {"main_page": "Main_Page", "namespaces": []}}
+    monkeypatch.setattr(L, "fetch_siteinfo", lambda lang: sites[lang])
+    monkeypatch.setattr(L, "NAMESPACES_FILE", tmp_path / "namespaces.json")
+    rows = {r["code"]: r for r in L.rank_languages([day], work_dir=tmp_path)}
+    assert rows["en"]["human_views_7d"] == 600 and rows["fr"]["human_views_7d"] == 200   # main pages, User: and the bot-like page out
+    assert rows["en"]["rank"] == 1 and rows["en"]["raw_rank"] == 1
+    assert rows["fr"]["automated_share"] > 0 and rows["fr"]["non_article_share"] > 0
+    assert rows["fr"]["cumulative_share_of_candidates"] == 1.0
