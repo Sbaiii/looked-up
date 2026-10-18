@@ -14,7 +14,7 @@ import os
 import tempfile
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -55,13 +55,13 @@ def publish(engine: Engine, state_dir: Path, final: bool = False) -> None:
     out = Path(tempfile.mkdtemp())
     (out / "live.json").write_text(json.dumps(engine.live(now), ensure_ascii=False, separators=(",", ":")))
     (out / "stats.json").write_text(json.dumps(engine.stats(now), ensure_ascii=False, separators=(",", ":")))
-    day = datetime.fromtimestamp(now, timezone.utc).date()
-    start = datetime(day.year, day.month, day.day, tzinfo=timezone.utc).timestamp()
+    day = datetime.fromtimestamp(now, UTC).date()
+    start = datetime(day.year, day.month, day.day, tzinfo=UTC).timestamp()
     ops = [CommitOperationAdd(f"{PREFIX}/live.json", str(out / "live.json")),
            CommitOperationAdd(f"{PREFIX}/stats.json", str(out / "stats.json"))]
     for d0 in (start - 86400, start):
         rows = [b for b in engine.bursts_since(d0) if b["ts"] < d0 + 86400]
-        iso_day = datetime.fromtimestamp(d0, timezone.utc).strftime("%Y-%m-%d")
+        iso_day = datetime.fromtimestamp(d0, UTC).strftime("%Y-%m-%d")
         f = out / f"{iso_day}.jsonl"
         f.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
         ops.append(CommitOperationAdd(f"{PREFIX}/bursts/{iso_day}.jsonl", str(f)))
