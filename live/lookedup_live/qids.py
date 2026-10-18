@@ -61,7 +61,7 @@ class Resolver:
                 try:
                     r = self.session.get(API, params={"action": "wbgetentities", "sites": site, "titles": "|".join(chunk),
                                                       "props": "labels|descriptions|sitelinks", "sitefilter": site,
-                                                      "languages": "|".join(dict.fromkeys(UI + (lang,))),
+                                                      "languages": "|".join(dict.fromkeys((*UI, lang))),
                                                       "normalize": 1, "format": "json"}, timeout=30)
                     r.raise_for_status()
                     ents = r.json().get("entities", {})
