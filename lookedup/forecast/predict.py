@@ -94,9 +94,9 @@ def forecast_open(con: duckdb.DuckDBPyConnection, events: list[dict], now: datet
                 if e["event_class"] != "single_language" and e["start_hour"] >= now - timedelta(hours=24)}
     best: dict[str, dict] = {}
     for r in snapshots(con):
-        if r["event_id"] in open_ids and r["snapshot_ts"] <= last_hour:
-            if r["event_id"] not in best or r["offset_h"] > best[r["event_id"]]["offset_h"]:
-                best[r["event_id"]] = r
+        if (r["event_id"] in open_ids and r["snapshot_ts"] <= last_hour
+                and (r["event_id"] not in best or r["offset_h"] > best[r["event_id"]]["offset_h"])):
+            best[r["event_id"]] = r
     out: dict[str, dict] = {}
     by_offset: dict[int, list[dict]] = {}
     for r in best.values():
