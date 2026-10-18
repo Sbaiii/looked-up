@@ -294,5 +294,5 @@ def _latest(events: pa.Table, now: datetime, cfg: AnalyticsConfig, langs: list[s
                     "peak_intensity": round(r["peak_intensity"], 1), "excess_views": int(r["excess_views"] or 0),
                     "languages": r["languages"], "category": cat, "event_class": r.get("event_class"),
                     "lead_excess_share": round(r.get("lead_excess_share") or 0, 3),
-                    "labels": {l: t for l, t in sorted(labels.get(r["qid"], {}).items())}})
+                    "labels": dict(sorted(labels.get(r["qid"], {}).items()))})
     return out
