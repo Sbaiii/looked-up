@@ -172,4 +172,4 @@ def test_score_named_hours_only_if_present(lake):
     missing = datetime.combine(D, datetime.min.time()) + timedelta(hours=20)
     out = scorer.score(lake, now=present + timedelta(hours=4), langs=["en", "es", "fr"], hours=[missing, present],
                        baselines_dir=lake.root / "bl", recompute=False)
-    assert out["scored_hours"] == [f"{present:%Y-%m-%dT%H}:00Z"] or out["scored_hours"] == [present] or len(out["scored_hours"]) == 1
+    assert out["scored_hours"] == [f"{present:%Y-%m-%dT%H}"]
