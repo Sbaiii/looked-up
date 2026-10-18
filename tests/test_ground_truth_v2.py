@@ -88,3 +88,18 @@ def test_wikidata_quakes(monkeypatch):
     assert got[140616464]["countries"] == {96, 774} and (got[140616464]["lon"], got[140616464]["lat"]) == (-93.2, 14.4)
     assert got[140616464]["mag"] == 7.3 and got[140616464]["date"] == "2026-07-17"
     assert got[1]["lon"] is None and got[1]["mag"] is None and got[1]["countries"] == set()
+
+
+def test_first_sitelink_created(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    def get(url, params):
+        if "wikidata" in url:
+            return _Json({"entities": {"Q9": {"sitelinks": {"enwiki": {"title": "Quake"}, "eswiki": {"title": "Sismo"}}}}})
+        ts = "2026-08-10T13:00:00Z" if url.startswith("https://en.") else "2026-08-10T12:20:00Z"
+        return _Json({"query": {"pages": [{"revisions": [{"timestamp": ts}]}]}})
+
+    monkeypatch.setattr(G, "_get", get)
+    assert G.first_sitelink_created(9, ["en", "es"]) == datetime(2026, 8, 10, 12, 20)
+    monkeypatch.setattr(G, "_get", lambda url, params: _Json({"entities": {"Q9": {}}}))
+    assert G.first_sitelink_created(9, ["en"]) is None
