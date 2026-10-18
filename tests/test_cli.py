@@ -386,3 +386,42 @@ def test_coverage_table(monkeypatch, tmp_path, capsys):
     text = capsys.readouterr().out
     assert "| Lang | Views | Matched to a QID | Coverage |" in text and "| **all** |" in text
     assert (tmp_path / "cov.md").read_text() == text.rstrip("\n") + "\n"
+
+
+def test_push_uploads_missing_hours(monkeypatch, tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    from conftest import HOURLY_SAMPLE, LANGS
+    from lookedup import store
+    from lookedup.languages import article_filter
+    from lookedup.settings import SITELINKS_PATH
+    from lookedup.store import LocalStore, write_hours
+    from lookedup.transform import hourly_dump_to_table
+
+    h14 = datetime(2026, 9, 13, 14)
+    t = hourly_dump_to_table(HOURLY_SAMPLE, h14, LANGS, article_filter())
+    local = LocalStore(tmp_path / "local")
+    write_hours(local, {h14: (t, "hourly_dump")}, "local")
+    h15 = datetime(2026, 9, 13, 15)
+    write_hours(local, {h15: (t.set_column(0, "ts_hour_start", pa.array([h15] * t.num_rows, pa.timestamp("us"))), "hourly_dump")}, "local")
+    (tmp_path / "local" / SITELINKS_PATH).parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.table({"lang": ["en"], "title": ["X"], "qid": [1]}), tmp_path / "local" / SITELINKS_PATH)
+    cards = []
+
+    class FakeHub(LocalStore):
+        repo_id = "user/repo"
+
+        def __init__(self, create=False):
+            super().__init__(tmp_path / "hub")
+            self.api = type("Api", (), {"file_exists": lambda self, *a, **k: False})()
+
+        def upload_card(self, path):
+            cards.append(path)
+
+    write_hours(FakeHub(), {h14: (t, "hourly_dump")}, "already on the hub")
+    monkeypatch.setattr(store, "LocalStore", lambda root=None: local if root is None else LocalStore(root))
+    monkeypatch.setattr(store, "HFStore", FakeHub)
+    cli.main(["push"])
+    hub = LocalStore(tmp_path / "hub").read_manifest()
+    assert hub.present() == {h14, h15} and (tmp_path / "hub" / SITELINKS_PATH).exists() and len(cards) == 1
