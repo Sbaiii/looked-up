@@ -40,7 +40,7 @@ def load_rows(con: duckdb.DuckDBPyConnection) -> list[dict]:
     rel = con.sql("""SELECT s.*, e.label_en, e.breadth AS final_breadth
                      FROM wh.main.fct_event_snapshots s JOIN wh.main.fct_app_events e USING (event_id)""")
     cols = rel.columns
-    return [dict(zip(cols, r)) for r in rel.fetchall()]
+    return [dict(zip(cols, r, strict=True)) for r in rel.fetchall()]
 
 
 # ---------------------------------------------------------------- metrics
@@ -104,7 +104,7 @@ def sitelinks_logistic(train: list[dict]) -> LogisticRegression:
 
 def m1_baselines(tr: list[dict], te: list[dict], y_tr: np.ndarray, y_te: np.ndarray) -> dict:
     """M1 baselines on the test set: the base rate, sitelinks only, and the breadth >= 3 rule."""
-    for r, y in zip(tr, y_tr):
+    for r, y in zip(tr, y_tr, strict=True):
         r["_y"] = y
     base = np.full(len(te), y_tr.mean())
     sl = sitelinks_logistic(tr).predict_proba(np.log1p([[r["n_sitelinks"]] for r in te]))[:, 1]
@@ -215,7 +215,7 @@ def plot_calibration(curves: dict[str, list[dict]], path: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(5.6, 5))
     ax.plot([0, 1], [0, 1], color=GRID, lw=1)
-    for (name, pts), colour, mk in zip(curves.items(), (ACCENT, MUTED), ("o", "s")):
+    for (name, pts), colour, mk in zip(curves.items(), (ACCENT, MUTED), ("o", "s"), strict=True):
         ax.plot([p["mean_p"] for p in pts], [p["observed"] for p in pts], marker=mk, color=colour, label=name)
     ax.set_xlabel("predicted probability", color=INK)
     ax.set_ylabel("observed share that went international", color=INK)
