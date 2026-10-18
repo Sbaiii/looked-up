@@ -155,3 +155,11 @@ def test_fade_time_baselines():
     assert np.allclose(b["category_decay"], np.log1p([2, 2]))         # sports has too few rows: overall median
     assert np.allclose(b["persistence"], np.log1p([3, 48]))           # capped at 48 h
 
+def test_fit_m1():
+    rows = _rows(400)
+    enc = T.Encoder.fit(rows)
+    params = {"num_leaves": 7, "learning_rate": 0.2, "n_estimators": 30, "min_child_samples": 5,
+              "feature_fraction": 1.0, "lambda_l2": 0.0}
+    model, (a, b) = E.fit_m1(rows[:300], rows[300:], "international", params, enc)
+    p = T.calibrate(T.score(model, enc.matrix(rows[300:])), (a, b))
+    assert np.isfinite(a) and np.isfinite(b) and ((0 < p) & (p < 1)).all()
