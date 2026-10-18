@@ -96,7 +96,7 @@ def test_single_bursts_rank_by_editors_then_edits_and_live_events_are_counted_ho
 
 def test_engine_payload_reports_gaps_and_live_events():
     e = Engine()
-    for lang, wiki in (("en", "enwiki"), ("fr", "frwiki")):
+    for _lang, wiki in (("en", "enwiki"), ("fr", "frwiki")):
         for i, u in enumerate("abcde"):
             e.handle(ev(wiki=wiki, title="Comet", ts=T0 + 3000 + 60 * i, user=u), now=T0 + 3600)
     e.resolver.qids |= {"en|Comet": "Q42", "fr|Comet": "Q42"}
