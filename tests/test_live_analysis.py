@@ -139,3 +139,11 @@ def test_append_scores_is_idempotent_per_day(tmp_path, monkeypatch):
     rows = list(csv.DictReader((tmp_path / LA.LEAD_CSV).open()))
     assert sorted(r["day"] for r in rows) == ["2026-10-09", "2026-10-09", "2026-10-10", "2026-10-10"]
     assert res["live_events_scored"] == 2 and res["units_today"] == 2 and res["verdict"] == "inconclusive"
+
+
+def test_score_day_without_bursts(tmp_path):
+    from datetime import date
+
+    from lookedup.store import LocalStore
+
+    assert LA.score_day(LocalStore(tmp_path), date(2026, 10, 9)) == []
