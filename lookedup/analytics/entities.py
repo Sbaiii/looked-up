@@ -107,7 +107,7 @@ def fetch_claims(qids: Iterable[int], cache: Path, batch: int = 50) -> pa.Table:
     """
     have = pq.read_table(cache) if cache.exists() else SCHEMA.empty_table()
     known = set(have["qid"].to_pylist())
-    todo = sorted(set(int(q) for q in qids) - known)
+    todo = sorted({int(q) for q in qids} - known)
     try:
         rows = fetch_claims_sparql(todo)
         todo = []
@@ -221,7 +221,7 @@ def fetch_text_sparql(qids: list[int], langs: list[str], batch: int = 400) -> li
 def fetch_text(qids: Iterable[int], cache: Path, langs: list[str]) -> pa.Table:
     """Descriptions and gender for ``qids``, fetching only those missing from the Parquet ``cache``."""
     have = pq.read_table(cache) if cache.exists() else TEXT_SCHEMA.empty_table()
-    todo = sorted(set(int(q) for q in qids) - set(have["qid"].to_pylist()))
+    todo = sorted({int(q) for q in qids} - set(have["qid"].to_pylist()))
     if not todo:
         return have
     rows = fetch_text_sparql(todo, langs)
