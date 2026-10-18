@@ -73,3 +73,15 @@ test('langNative adds the native name only when it differs', () => {
   i18n.use(dict('fr'), 'fr');
   assert.equal(i18n.langNative('fr'), 'français');
 });
+
+test('initialLang prefers the stored choice, then a supported browser language, then English', (t) => {
+  const store = {};
+  globalThis.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = v; } };
+  t.after(() => { delete globalThis.localStorage; });
+  t.mock.getter(globalThis.navigator, 'languages', () => ['de-DE', 'es-MX', 'en-US']);
+  assert.equal(i18n.initialLang(), 'es');
+  store.lookedup_lang = 'fr';
+  assert.equal(i18n.initialLang(), 'fr');
+  store.lookedup_lang = 'xx';
+  assert.equal(i18n.initialLang(), 'es');
+});
