@@ -76,14 +76,14 @@ def entity_classes(qids: Iterable[int]) -> dict[int, str]:
         return {}
     cfg = load()
     claims = fetch_claims(qids, DATA_DIR / "warehouse" / "entity_claims.parquet")
-    return {q: classify(json.loads(c), cfg) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist())}
+    return {q: classify(json.loads(c), cfg) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist(), strict=True)}
 
 
 def snapshots(con: duckdb.DuckDBPyConnection, targets: bool = False, data_end: str | None = None) -> list[dict]:
     """Snapshot rows of the live events loaded into the connection, optionally with targets."""
     rel = con.sql(snapshot_sql("_fev", "_sp", "_fviews", "_fdims", targets=targets, data_end=data_end))
     cols = rel.columns
-    return [dict(zip(cols, r)) for r in rel.fetchall()]
+    return [dict(zip(cols, r, strict=True)) for r in rel.fetchall()]
 
 
 def forecast_open(con: duckdb.DuckDBPyConnection, events: list[dict], now: datetime, last_hour: datetime, manifest: dict, models: dict) -> dict[str, dict]:
@@ -111,7 +111,7 @@ def forecast_open(con: duckdb.DuckDBPyConnection, events: list[dict], now: datet
             todo = [r for r in rows if open_ids[r["event_id"]]["breadth"] < threshold]   # never for a reached tier
             if todo:
                 p = T.calibrate(T.score(booster, enc.matrix(todo)), ab) if ab else T.score(booster, enc.matrix(todo))
-                for r, v in zip(todo, p):
+                for r, v in zip(todo, p, strict=True):
                     res[r["event_id"]][f"p_{target}"] = round(float(v), 3)
         if off == 3:
             for target in T.M2_TARGETS:
@@ -119,7 +119,7 @@ def forecast_open(con: duckdb.DuckDBPyConnection, events: list[dict], now: datet
                 if key in models:
                     booster, enc, _ = models[key]
                     pred = np.expm1(T.score(booster, enc.matrix(rows)))
-                    for r, v in zip(rows, pred):
+                    for r, v in zip(rows, pred, strict=True):
                         if target == "excess_next24":
                             res[r["event_id"]]["predicted_excess_24h"] = int(max(v, 0))
                         else:
