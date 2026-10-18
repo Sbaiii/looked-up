@@ -36,7 +36,8 @@ def test_parse_ignores_files_and_categories():
 def test_committed_sample_is_consistent():
     import csv
 
-    rows = list(csv.DictReader(open(Path(__file__).parent / "fixtures" / "current_events_sample.csv", encoding="utf-8")))
+    with open(Path(__file__).parent / "fixtures" / "current_events_sample.csv", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
     assert len(rows) == 50
     for r in rows:
         major = r["is_major"] == "true"
