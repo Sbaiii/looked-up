@@ -31,7 +31,7 @@ def _at(day, hour):
 
 def _score(con):
     rel = con.sql(scored_candidates_sql("stg", D, CFG, "prior"))
-    return {r[rel.columns.index("title")]: dict(zip(rel.columns, r)) for r in rel.fetchall()}
+    return {r[rel.columns.index("title")]: dict(zip(rel.columns, r, strict=True)) for r in rel.fetchall()}
 
 
 def test_observation_counts():
@@ -68,7 +68,7 @@ def test_r2_uses_previous_three_hours_including_yesterday():
     assert s["Night"]["hour_of_day"] in (0, 1)
     con = _con(rows)
     rel = con.sql(scored_candidates_sql("stg", D, CFG, "prior") + " ORDER BY hour_of_day")
-    rows_out = [dict(zip(rel.columns, r)) for r in rel.fetchall()]
+    rows_out = [dict(zip(rel.columns, r, strict=True)) for r in rel.fetchall()]
     assert [r["prev3_median"] for r in rows_out] == [60, 60]   # (60, 60, 0) then (150, 60, 60)
     assert [r["r2"] for r in rows_out] == [False, True]
 
@@ -79,7 +79,7 @@ def test_automation_flags():
     rows += [("en", "Human", _at(D, h), 10, 40 + 10 * (h % 12)) for h in range(24)]        # mobile, diurnal
     con = _con(rows)
     rel = con.sql(automation_flags_sql("stg", D, CFG))
-    f = {r[1]: dict(zip(rel.columns, r)) for r in rel.fetchall()}
+    f = {r[1]: dict(zip(rel.columns, r, strict=True)) for r in rel.fetchall()}
     assert f["Cookie"]["is_low_mobile"] and f["Cookie"]["is_automated"]
     assert f["Crawler"]["is_flat"] and not f["Crawler"]["is_low_mobile"] and f["Crawler"]["is_automated"]
     assert not f["Human"]["is_automated"]
