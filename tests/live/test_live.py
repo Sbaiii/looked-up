@@ -394,3 +394,45 @@ def test_parse_sse_messages():
     from lookedup_live.stream import parse_sse
     lines = [":ok", "id: [1]", "data: {\"a\":", "data: 1}", "", "event: message", "data: {}", "", "", "id: x"]
     assert list(parse_sse(iter(lines))) == [("[1]", '{"a":\n1}'), (None, "{}")]
+
+
+class _Stream:
+    def __init__(self, lines, status=200):
+        self.lines, self.status = lines, status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def raise_for_status(self):
+        if self.status >= 400:
+            import requests
+            raise requests.HTTPError(str(self.status))
+
+    def iter_lines(self, decode_unicode=True):
+        return iter(self.lines)
+
+
+def test_cold_start_replays_and_handles_events(monkeypatch):
+    import threading
+
+    from lookedup_live import stream
+    stop, calls = threading.Event(), []
+    e = Engine()
+    payload = json.dumps(ev(ts=T0))
+
+    class S:
+        headers = {}
+
+        def get(self, url, headers=None, params=None, stream=None, timeout=None):
+            calls.append((dict(headers), dict(params)))
+            stop.set()                                             # one connection only
+            return _Stream([f"id: [7]", f"data: {payload}", ""])
+
+    monkeypatch.setattr(stream.requests, "Session", S)
+    e.covered_since = T0 - 99
+    stream.consume(e, stop)
+    assert "since" in calls[0][1] and "Last-Event-ID" not in calls[0][0]
+    assert e.last_event_id is None and not e.detector.articles      # stop is checked before each message
