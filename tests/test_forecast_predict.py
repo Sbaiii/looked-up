@@ -95,3 +95,22 @@ def test_published_models_load(tmp_path):
     model, enc2, platt = models["international_t1"]
     assert got_manifest["version"] == "v1" and platt == (1.0, 0.0) and enc2.features == enc.features
     assert np.allclose(T.score(model, enc2.matrix(rows)), T.score(booster, enc.matrix(rows)))
+
+
+def test_live_relations(tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    from lookedup.forecast import predict as P
+
+    h = datetime(2026, 10, 10, 1)
+    f = tmp_path / "day.parquet"
+    pq.write_table(pa.table({"ts_hour_start": [h, h], "lang": ["en", "fr"], "title": ["A", "B"],
+                             "views_desktop": [150, 50], "views_mobile": [0, 10]}), f)
+    con = duckdb.connect()
+    con.execute("CREATE VIEW _sp AS SELECT 'en' AS lang, 'A' AS title, TIMESTAMP '2026-10-10 01:00' AS ts_hour_start, 40.0 AS baseline_median")
+    ev = {"event_id": "E", "qid": 1, "start_hour": h, "lead_lang": "en", "breadth": 2, "event_class": "multi_language"}
+    P.live_relations(con, [ev], {1: "death"}, {1: "human"}, {1: {"en": "A", "fr": "B"}}, [f])
+    assert con.sql("SELECT lang, views, baseline_median FROM _fviews").fetchall() == [("en", 150, 40.0)]
+    assert con.sql("SELECT category FROM _fev").fetchone() == ("death",)
+    assert con.sql("SELECT entity_class, n_languages FROM _fdims").fetchone() == ("human", 2)
