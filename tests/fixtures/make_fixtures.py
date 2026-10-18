@@ -24,7 +24,8 @@ LANGS = ["en", "fr", "de", "ja", "ar", "es"]
 N = 2000
 
 random.seed(13)
-lines = gzip.open(HOURLY, "rt", encoding="utf-8", errors="replace").read().splitlines()
+with gzip.open(HOURLY, "rt", encoding="utf-8", errors="replace") as f:
+    lines = f.read().splitlines()
 by_key: dict[tuple[str, str], list[int]] = {}
 for i, ln in enumerate(lines):
     parts = ln.split(" ")
