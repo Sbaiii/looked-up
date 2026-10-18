@@ -77,3 +77,11 @@ def test_calibration_window_widens_for_rare_targets():
     assert all(s["calibration_positives"] >= 5 for s in specs.values() if s["kind"] == "m1")
     assert specs["planetary_t0"]["calibration_days"] >= specs["international_t0"]["calibration_days"]
     assert specs["m2_excess_next24"]["platt"] is None
+
+
+def test_live_week_skipped_before_production(tmp_path, monkeypatch):
+    called = []
+    monkeypatch.setattr(R, "live_week", lambda *a: called.append(a))
+    with pytest.raises(RuntimeError, match="no training data"):
+        R.retrain(LocalStore(tmp_path / "lake"), now=datetime(2026, 10, 9))     # last full week ends before 7 Oct
+    assert called == []
