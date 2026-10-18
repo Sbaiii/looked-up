@@ -76,7 +76,7 @@ def test_merge_day_replaces_hours_and_sorts():
     h1, h2 = datetime(2026, 10, 7, 1), datetime(2026, 10, 7, 2)
     existing = pa.concat_tables([_hour(h1, [("fr", "B", 5, 0), ("en", "A", 9, 9)]), _hour(h2, [("en", "A", 1, 4)])])
     merged = merge_day(existing, [_hour(h2, [("en", "A", 7, 7), ("de", "Z", 3, 3)])])
-    rows = list(zip(*(merged[c].to_pylist() for c in ("lang", "title", "ts_hour_start", "views_desktop"))))
+    rows = list(zip(*(merged[c].to_pylist() for c in ("lang", "title", "ts_hour_start", "views_desktop")), strict=True))
     assert rows == [("de", "Z", h2, 3), ("en", "A", h1, 9), ("en", "A", h2, 7), ("fr", "B", h1, 5)]
     assert merged.schema == SCHEMA
 
@@ -95,7 +95,7 @@ def test_write_hours_appends_to_the_day_file(tmp_path, article_filter):
     day = pq.read_table(tmp_path / "lake" / day_path(H14))
     assert day.num_rows == 2 * table.num_rows
     assert m.files[day_path(H14)]["rows"] == day.num_rows
-    keys = list(zip(day["lang"].to_pylist(), day["title"].to_pylist(), day["ts_hour_start"].to_pylist()))
+    keys = list(zip(day["lang"].to_pylist(), day["title"].to_pylist(), day["ts_hour_start"].to_pylist(), strict=True))
     assert keys == sorted(keys)
     assert pq.ParquetFile(tmp_path / "lake" / day_path(H14)).metadata.row_group(0).column(0).compression == "ZSTD"
 
@@ -240,7 +240,7 @@ def test_local_store_list_prefix(tmp_path):
 def test_merge_day_into_nothing(article_filter):
     table = hourly_dump_to_table(HOURLY_SAMPLE, H14, LANGS, article_filter)
     merged = merge_day(None, [table])
-    keys = list(zip(merged["lang"].to_pylist(), merged["title"].to_pylist()))
+    keys = list(zip(merged["lang"].to_pylist(), merged["title"].to_pylist(), strict=True))
     assert merged.num_rows == table.num_rows and keys == sorted(keys)
     empty = table.slice(0, 0)
     assert merge_day(None, [empty]).num_rows == 0
