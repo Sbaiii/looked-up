@@ -50,8 +50,8 @@ def run(args: list[str], hf: bool = False) -> bool:
     DUCKDB_TEMP_DIR.mkdir(parents=True, exist_ok=True)
     os.environ["LOOKEDUP_DUCKDB_TEMP_DIR"] = str(DUCKDB_TEMP_DIR)
     os.environ["LOOKEDUP_DUCKDB_MAX_TEMP"] = DUCKDB_MAX_TEMP
-    full = args + ["--project-dir", str(WAREHOUSE_DIR), "--profiles-dir", str(WAREHOUSE_DIR),
-                   "--vars", json.dumps(dbt_vars(lake_root))]
+    full = [*args, "--project-dir", str(WAREHOUSE_DIR), "--profiles-dir", str(WAREHOUSE_DIR),
+            "--vars", json.dumps(dbt_vars(lake_root))]
     log.info("dbt %s (lake: %s)", " ".join(args), lake_root)
     res = dbtRunner().invoke(full)
     if res.exception:
