@@ -231,7 +231,7 @@ def quakes(start: datetime, end: datetime, langs: list[str]) -> list[dict]:
 
 # ---------------------------------------------------------------- GT3 matches
 
-_BOX_START = re.compile(r"\{\{\s*(?:#invoke:\s*football box\s*\|\s*main|Football box)", re.I)
+_BOX_START = re.compile(r"\{\{\s*(?:#invoke:\s*football box\s*\|\s*main|Football box)", re.IGNORECASE)
 
 
 def _boxes(wikitext: str) -> list[dict]:
@@ -265,7 +265,7 @@ def kickoff_utc(date_field: str, time_field: str) -> datetime | None:
     """{{Start date|2026|7|18}} + '5:00&nbsp;p.m. [[UTC−04:00|UTC−4]]' -> 2026-07-18 21:00 UTC."""
     d = re.search(r"(\d{4})\|(\d{1,2})\|(\d{1,2})", date_field)
     tf = time_field.replace("&nbsp;", " ")
-    t = re.search(r"(\d{1,2}):(\d{2})\s*([ap])?\.?\s*m?", tf, re.I)
+    t = re.search(r"(\d{1,2}):(\d{2})\s*([ap])?\.?\s*m?", tf, re.IGNORECASE)
     off = re.search(r"UTC\s*([+−-])\s*(\d{1,2})(?::(\d{2}))?", tf)
     if not (d and t and off):
         return None
