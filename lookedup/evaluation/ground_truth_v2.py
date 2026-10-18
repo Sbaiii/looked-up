@@ -39,6 +39,7 @@ def _get(url: str, params: dict, retries: int = 5, **kw) -> requests.Response:
                 raise
             log.warning("%s failed (%s), retry", url, e)
             time.sleep(3 * (attempt + 1))
+    raise RuntimeError("unreachable")       # the last attempt either returns or raises
 
 
 def _raw(title: str) -> str:
