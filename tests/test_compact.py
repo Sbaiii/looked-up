@@ -43,3 +43,12 @@ def test_compact_skips_days_without_hour_files(tmp_path):
 
     (tmp_path / "data" / "hourly" / "year=2026" / "month=09" / "day=13").mkdir(parents=True)
     assert compact_local(tmp_path) == []
+
+
+def test_compact_skips_stray_files(tmp_path):
+    from lookedup.compact import compact_local
+
+    month = tmp_path / "data" / "hourly" / "year=2026" / "month=09"
+    month.mkdir(parents=True)
+    (month / "day=13").write_text("not a folder")
+    assert compact_local(tmp_path) == []
