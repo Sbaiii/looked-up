@@ -222,9 +222,9 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
         # attach QIDs and merge new spike hours into the spike day files
         for d, tables in new_spikes.items():
             t = pa.concat_tables(tables) if tables else None
-            keys = sorted(set(zip(t["lang"].to_pylist(), t["title"].to_pylist())))
+            keys = sorted(set(zip(t["lang"].to_pylist(), t["title"].to_pylist(), strict=True)))
             qmap = qids_for(keys) if keys else {}
-            t = t.append_column("qid", pa.array([qmap.get(k) for k in zip(t["lang"].to_pylist(), t["title"].to_pylist())],
+            t = t.append_column("qid", pa.array([qmap.get(k) for k in zip(t["lang"].to_pylist(), t["title"].to_pylist(), strict=True)],
                                                 pa.int64()))
             existing = store.fetch(spikes_path(d), tmp / "s")
             if existing:
@@ -275,7 +275,7 @@ def score(store: Store, now: datetime | None = None, max_hours: int = MAX_HOURS_
 
 def _latest(events: pa.Table, now: datetime, cfg: AnalyticsConfig, langs: list[str], tmp: Path) -> list[dict]:
     """The events of the last 24 h for latest.json, widest first, with labels and categories."""
-    rows = [dict(zip(events.column_names, r)) for r in zip(*(events[c].to_pylist() for c in events.column_names))]
+    rows = [dict(zip(events.column_names, r, strict=True)) for r in zip(*(events[c].to_pylist() for c in events.column_names), strict=True)]
     rows = [r for r in rows if r["start_hour"] >= now - timedelta(hours=24)]
     rows.sort(key=lambda r: (-r["breadth"], -r["peak_intensity"]))
     if not rows:
@@ -283,7 +283,7 @@ def _latest(events: pa.Table, now: datetime, cfg: AnalyticsConfig, langs: list[s
     qids = [r["qid"] for r in rows]
     labels = labels_for(qids, langs)
     claims = fetch_claims(qids, DATA_DIR / "warehouse" / "entity_claims.parquet")
-    cj = {q: json.loads(c) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist())}
+    cj = {q: json.loads(c) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist(), strict=True)}
     out = []
     for r in rows:
         c = cj.get(r["qid"], {})
