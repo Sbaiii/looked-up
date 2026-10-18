@@ -79,3 +79,20 @@ test('a data outage shows the error line instead of a blank hero', async ({ page
   await expect(page.locator('#hero-label')).toHaveText('The data could not be loaded. Please try again later.');
   await expect(page.locator('#hero-label')).not.toHaveClass(/skeleton/);
 });
+
+test('stats without a forecast block hide FIG. 05', async ({ page }) => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const zlib = require('node:zlib');
+  const stats = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'stats.json'), 'utf8'));
+  delete stats.forecast;
+  const body = JSON.stringify(stats);
+  await page.route('https://huggingface.co/datasets/Sbaiiiiii/looked-up/resolve/main/data/app/stats.json*', (route) => {
+    const gz = route.request().url().endsWith('.gz');
+    return route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*' },
+      contentType: gz ? 'application/gzip' : 'application/json', body: gz ? zlib.gzipSync(body) : body });
+  });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#forecast')).toBeHidden();
+});
