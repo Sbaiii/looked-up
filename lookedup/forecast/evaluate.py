@@ -102,8 +102,8 @@ def sitelinks_logistic(train: list[dict]) -> LogisticRegression:
     return LogisticRegression(max_iter=1000).fit(X, [r["_y"] for r in train])
 
 
-def m1_baselines(tr: list[dict], te: list[dict], y_tr: np.ndarray, y_te: np.ndarray) -> dict:
-    """M1 baselines on the test set: the base rate, sitelinks only, and the breadth >= 3 rule."""
+def m1_baselines(tr: list[dict], te: list[dict], y_tr: np.ndarray, y_te: np.ndarray) -> tuple[dict, np.ndarray]:
+    """M1 baselines on the test set (base rate, sitelinks only, breadth >= 3 rule), and the sitelinks-only scores."""
     for r, y in zip(tr, y_tr, strict=True):
         r["_y"] = y
     base = np.full(len(te), y_tr.mean())
