@@ -83,3 +83,18 @@ def test_run_audit_sample_writes_into_out(tmp_path, monkeypatch):
     monkeypatch.setattr(metrics, "open_context", lambda w, c, cfg: SimpleNamespace(con="con"))
     monkeypatch.setattr(audit, "sample", lambda con, cfg, out: seen.update(con=con, out=out) or 7)
     assert run.audit_sample() == 7 and seen == {"con": "con", "out": tmp_path / "h3_sample.csv"}
+
+
+def test_run_audit_score_writes_outputs(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+
+    from lookedup.evaluation import metrics, run
+
+    monkeypatch.setattr(run, "OUT", tmp_path)
+    monkeypatch.setattr(metrics, "open_context", lambda w, c, cfg: SimpleNamespace(con="con"))
+    monkeypatch.setattr(audit, "score", lambda con, cfg, s, l: {"verdict": "inconclusive", "rows": [{"unit_id": "u1", "label": "event"}]})
+    res = run.audit_score()
+    assert res == {"verdict": "inconclusive"}
+    assert json.loads((tmp_path / "h3_results.json").read_text()) == {"verdict": "inconclusive"}
+    assert (tmp_path / "h3_audit.csv").read_text().splitlines() == ["unit_id,label", "u1,event"]
