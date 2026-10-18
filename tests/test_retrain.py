@@ -67,3 +67,13 @@ def test_live_week_without_files(tmp_path):
     from datetime import date
 
     assert R.live_week(LocalStore(tmp_path / "lake"), date(2026, 10, 12), tmp_path) is None
+
+
+def test_calibration_window_widens_for_rare_targets():
+    rows = _rows()
+    cutoff = max(r["start_hour"] for r in rows) + timedelta(hours=1)
+    params = {k: SMALL for k in [f"{t}_t{o}" for t in T.TARGETS for o in T.OFFSETS] + [f"m2_{t}" for t in T.M2_TARGETS]}
+    _, specs = R.train_all(rows, params, cutoff)
+    assert all(s["calibration_positives"] >= 5 for s in specs.values() if s["kind"] == "m1")
+    assert specs["planetary_t0"]["calibration_days"] >= specs["international_t0"]["calibration_days"]
+    assert specs["m2_excess_next24"]["platt"] is None
