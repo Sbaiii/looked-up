@@ -41,7 +41,7 @@ def site_id(lang: str) -> str:
 def parse_sitelinks(lines: Iterable[bytes], sites: dict[bytes, str]) -> Iterator[tuple[str, str, int]]:
     """Yield (lang, title_with_underscores, qid) for rows whose site is in ``sites``."""
     for line in lines:
-        if not (line.startswith(b"(") or line.startswith(b"INSERT INTO")):
+        if not line.startswith((b"(", b"INSERT INTO")):
             continue
         for _row, item, site, page in _TUPLE.findall(line):
             lang = sites.get(site)
