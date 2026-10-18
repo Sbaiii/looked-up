@@ -40,3 +40,8 @@ def test_backtest_summary():
     s = R.backtest_summary()
     assert s["auc_international_t1"] == 0.875 and s["test_window"] == ["2026-09-20", "2026-10-06"]
     assert s["calibration_curve"] and 0 < s["base_rate_international_t1"] < 1
+
+
+def test_retrain_needs_training_data(tmp_path):
+    with pytest.raises(RuntimeError, match="no training data"):
+        R.retrain(LocalStore(tmp_path / "lake"), now=datetime(2026, 10, 12), add_live_week=False)
