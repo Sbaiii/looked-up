@@ -46,3 +46,13 @@ test('desc uses the interface language, then English, then an empty string', () 
   assert.equal(i18n.desc({ desc: { en: 'singer' } }), 'singer');
   assert.equal(i18n.desc({}), '');
 });
+
+test('day and hour format in UTC in the interface locale', () => {
+  i18n.use(dict('en'), 'en');
+  assert.equal(i18n.day('2026-08-17'), '17 August');
+  assert.equal(i18n.hour('2026-08-17T23:00:00Z'), '23:00');
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.day('2026-08-17'), '17 août');
+  i18n.use(dict('es'), 'es');
+  assert.equal(i18n.day('2026-08-17'), '17 de agosto');
+});
