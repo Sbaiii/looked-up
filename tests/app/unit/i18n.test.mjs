@@ -56,3 +56,12 @@ test('day and hour format in UTC in the interface locale', () => {
   i18n.use(dict('es'), 'es');
   assert.equal(i18n.day('2026-08-17'), '17 de agosto');
 });
+
+test('num and pct follow the locale', () => {
+  i18n.use(dict('en'), 'en');
+  assert.equal(i18n.num(1234567), '1,234,567');
+  assert.equal(i18n.pct(0.266), '27%');
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.num(1234567).replace(/\s/g, ' '), '1 234 567');
+  assert.match(i18n.pct(0.5), /^50\s%$/);
+});
