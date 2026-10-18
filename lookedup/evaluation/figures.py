@@ -72,7 +72,8 @@ def breadth_histogram(breadths: list[int], out: Path) -> None:
 
 def recall_vs_threshold(grid_csv: Path, out: Path) -> None:
     """Recall (24 h) against the R3 threshold for each minimum-language setting (6-hour window)."""
-    rows = [r for r in csv.DictReader(open(grid_csv)) if r["window_hours"] == "6"]
+    with open(grid_csv, encoding="utf-8") as f:
+        rows = [r for r in csv.DictReader(f) if r["window_hours"] == "6"]
     fig, ax = plt.subplots(figsize=(7, 3.8))
     best = 0.0
     for n, colour in zip(("2", "3", "5"), (MUTED, ACCENT, INK)):
