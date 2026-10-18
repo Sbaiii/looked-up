@@ -13,7 +13,7 @@ import socket
 import threading
 import time
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, UTC
 from pathlib import Path
 
 import requests
@@ -219,4 +219,4 @@ def rest_hourly_total(project: str, ts_hour_start: datetime, agent: str = "user"
 
 def utcnow() -> datetime:
     """Current time as naive UTC (the whole package uses naive UTC datetimes)."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
