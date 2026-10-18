@@ -68,7 +68,7 @@ def test_day_aggregate_sums_desktop_and_mobile(tmp_path):
     src.write_bytes(bz2.compress("".join(lines).encode()))
     out = tmp_path / "agg.parquet"
     L._day_aggregate(src, out)
-    rows = dict(((l, t), (d, m)) for l, t, d, m in duckdb.sql(f"SELECT * FROM '{out}'").fetchall())
+    rows = {(l, t): (d, m) for l, t, d, m in duckdb.sql(f"SELECT * FROM '{out}'").fetchall()}
     assert rows[("fr", "Lisbonne")] == (30, 70)                        # web and app both count as mobile
     assert rows[("en", "Lisbon")] == (7, None)
     assert len(rows) == 2                                               # Wiktionary is not a Wikipedia
