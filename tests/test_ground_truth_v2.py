@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from lookedup.evaluation.ground_truth_v2 import DEATH_WORDS, _boxes, kickoff_utc, parse_deaths, place_parts
 
@@ -127,3 +127,20 @@ def test_deaths_keep_widely_known_people(monkeypatch):
     rows = G.deaths([(2026, 8)], {171571: 28, 9: 2}, 5)
     assert [(r["title"], r["qid"], r["n_languages"]) for r in rows] == [("Hayden Panettiere", 171571, 28)]
     assert rows[0]["date"] == date(2026, 8, 17) and rows[0]["announcement"] == datetime(2026, 8, 17, 2, 57)
+
+
+def test_quakes_match_nearby_new_articles(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    origin = datetime(2026, 8, 10, 12, 0)
+    monkeypatch.setattr(G, "usgs_quakes", lambda s, e, m: [{"usgs_id": "u1", "mag": 7.4, "place": "10 km E of San Jose, Colombia",
+                                                             "origin": origin, "lon": -76.0, "lat": 4.5}])
+    monkeypatch.setattr(G, "wikidata_quakes", lambda s, e: [
+        {"qid": 1, "date": "2026-08-10", "lon": 120.0, "lat": -8.0, "mag": 7.4, "countries": {252}},     # far away
+        {"qid": 2, "date": "2026-08-10", "lon": -76.1, "lat": 4.4, "mag": 7.3, "countries": {739}}])
+    monkeypatch.setattr(G, "first_sitelink_created", lambda qid, langs: origin + timedelta(hours=3))
+    monkeypatch.setattr(G, "resolve_qids", lambda lang, names: {"Colombia": 739})
+    q = G.quakes(origin - timedelta(days=1), origin + timedelta(days=1), ["en", "es"])[0]
+    assert q["article_qid"] == 2 and q["article_countries"] == [739]
+    assert (q["locality"], q["region"]) == ("San Jose", "Colombia") and q["place_qids"] == [739]
+    assert q["region_is_us_state"] is False
