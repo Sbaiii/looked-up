@@ -144,3 +144,11 @@ def test_quakes_match_nearby_new_articles(monkeypatch):
     assert q["article_qid"] == 2 and q["article_countries"] == [739]
     assert (q["locality"], q["region"]) == ("San Jose", "Colombia") and q["place_qids"] == [739]
     assert q["region_is_us_state"] is False
+
+
+def test_expand_links_drop_files(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    text = "[[File:Flag.svg|20px]] [[France national football team|France]] [[Image:x.png]] [[Kylian Mbappé]]"
+    monkeypatch.setattr(G, "_get", lambda url, params: _Json({"expandtemplates": {"wikitext": text}}))
+    assert G._expand_links("{{fb|FRA}}") == ["France national football team", "Kylian Mbappé"]
