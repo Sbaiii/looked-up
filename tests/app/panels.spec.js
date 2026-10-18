@@ -45,3 +45,15 @@ test('selecting a card updates the caption under the map', async ({ page }) => {
   await expect(page.locator('#viz-now')).toContainText(name);
   await expect(page.locator('#viz-now')).toContainText(/\d+ languages · led by /);
 });
+
+test('the language panel lists up to five events for the chosen language', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.selectOption('#lang-select', 'en');
+  const items = page.locator('#lang-top li:not(.empty)');
+  const n = await items.count();
+  expect(n).toBeGreaterThan(0);
+  expect(n).toBeLessThanOrEqual(5);
+  const plus = await items.locator('small').allTextContents();
+  expect(plus.every((s) => /\+/.test(s))).toBe(true);
+});
