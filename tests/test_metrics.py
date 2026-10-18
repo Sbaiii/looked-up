@@ -155,3 +155,27 @@ def test_ablation_grid(tmp_path, monkeypatch):
     two = [g for g in grid if g["min_languages"] == 2 and g["r3_threshold"] == 6]
     assert all(g["events"] == 1 and g["recall_24h"] == 1.0 for g in two)        # en and fr spike within the window
     assert all(g["events"] == 0 for g in grid if g["min_languages"] == 5)
+
+
+def test_h2_lead_language(monkeypatch, tmp_path):
+    import json
+
+    import pyarrow as pa
+
+    import lookedup.analytics.entities as E
+    from lookedup.evaluation.metrics import h2_lead_language
+
+    ctx = _ctx(monkeypatch)
+    ctx.con.execute("ALTER TABLE ev ADD COLUMN event_id VARCHAR")
+    ctx.con.execute("UPDATE ev SET event_id = 'E' || qid")
+    ctx.con.execute("ATTACH ':memory:' AS wh")
+    ctx.con.execute("""CREATE TABLE wh.main.dim_entities AS SELECT * FROM (VALUES
+        (1, [30], []), (2, [], [90]), (3, [142], [])) t(qid, countries, locations)""")
+    claims = {30: {"P37": [1860]}, 142: {"P37": [150]}, 90: {"P17": [29]}, 29: {"P37": [1321]}}
+    monkeypatch.setattr(E, "fetch_claims", lambda qids, cache: pa.table({
+        "qid": sorted(qids), "label_en": [None] * len(qids), "claims_json": [json.dumps(claims[q]) for q in sorted(qids)]}))
+    res = h2_lead_language(ctx, "ev", tmp_path / "claims.parquet")
+    # QID 1: led by en in an English-speaking country (hit); QID 2: led by es, located in a Spanish-speaking
+    # country through its location (hit); QID 3: led by en in a French-speaking country (miss)
+    assert res["geolocatable"] == 3 and res["lead_is_official"] == 2 and res["verdict"] == "supported"
+    assert res["geolocatable_non_english_countries"] == 2 and res["share_non_english_countries"] == 0.5
