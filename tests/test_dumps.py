@@ -160,3 +160,20 @@ def test_download_416_finishes_the_part_file(tmp_path, monkeypatch):
     (tmp_path / "f.gz.part").write_bytes(b"all of it")
     monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: _Stream(416, b""))
     assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"all of it"
+
+
+def test_download_gives_up_after_retries(tmp_path, monkeypatch):
+    import pytest
+    import requests
+
+    calls = []
+
+    def get(*a, **k):
+        calls.append(1)
+        raise requests.ConnectionError("reset")
+
+    monkeypatch.setattr(dumps._session, "get", get)
+    monkeypatch.setattr(dumps.time, "sleep", lambda s: None)
+    with pytest.raises(requests.ConnectionError):
+        dumps.download("https://x/f.gz", tmp_path / "f.gz", retries=3)
+    assert len(calls) == 3 and not (tmp_path / "f.gz").exists()
