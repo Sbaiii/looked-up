@@ -189,3 +189,14 @@ def test_rolling_folds():
     folds = E.rolling(rows, params, params)
     assert [f["fold"] for f in folds] == [f"{lo}..{hi}" for lo, hi in E.FOLDS]
     assert all(0 <= f["m1_international_1h"]["roc_auc"] <= 1 and f["m2_excess"]["n"] > 0 for f in folds)
+
+
+def test_search_is_reproducible():
+    rows = _rows(300)
+    enc = T.Encoder.fit(rows)
+    a = T.search(rows[:200], rows[200:], "international", enc, trials=2)
+    b = T.search(rows[:200], rows[200:], "international", enc, trials=2)
+    assert a == b and 0 <= a[1] <= 1                                   # same seed, same choice; PR AUC in [0, 1]
+    m2 = T.m2_rows([r | {"offset_h": 3} for r in rows], "excess_next24")
+    params, mae = T.search(m2[:200], m2[200:], "excess_next24", T.Encoder.fit(m2), trials=1)
+    assert mae >= 0 and set(params) == set(T.sample_params(np.random.default_rng(0)))
