@@ -61,3 +61,17 @@ def test_pageview_complete_matches_hourly_dump(article_filter):
     assert all(tb.schema == SCHEMA for tb in tables.values())
     hourly = hourly_dump_to_table(HOURLY_SAMPLE, HOUR, LANGS, article_filter)
     assert _rows(tables[HOUR]) == _rows(hourly)
+
+
+def test_pvc_prefilter_skips_other_wikis_and_bad_lines(tmp_path):
+    from lookedup.transform import _pvc_to_tsv
+
+    src = tmp_path / "day.txt"
+    src.write_text("en.wikipedia Lisbon 597 desktop 30 A30\n"
+                   "en.wikipedia broken line\n"
+                   "xx.wikipedia Lisbon 597 desktop 30 A30\n"
+                   "en.wiktionary Lisbon 1 desktop 3 A3\n"
+                   "noline\n")
+    out = tmp_path / "out.tsv"
+    assert _pvc_to_tsv(src, {"en"}, out) == 1
+    assert out.read_text().split("\t")[:3] == ["en", "0", "Lisbon"]
