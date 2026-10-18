@@ -6,6 +6,7 @@ Hourly files are named after the END of the hour they cover
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 import socket
@@ -143,14 +144,10 @@ class _Watchdog(threading.Thread):
                 mark_b, mark_t = self.bytes, now
 
     def _kill(self) -> None:
-        try:
+        with contextlib.suppress(Exception):    # best effort: the connection may already be gone
             self.response.raw.connection.sock.shutdown(socket.SHUT_RDWR)
-        except Exception:  # best effort: the connection may already be gone
-            pass
-        try:
+        with contextlib.suppress(Exception):
             self.response.close()
-        except Exception:
-            pass
 
     def stop(self) -> None:
         """Stop watching once the download has finished."""
