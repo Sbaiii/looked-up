@@ -619,3 +619,17 @@ def test_restore_brings_back_baselines_and_bursts(tmp_path):
     assert back.restore(tmp_path / "s.json.gz") is True
     assert list(back.detector.baselines.medians["en"]) == [2.0, 3.0]
     assert back.detector.bursts[0].qid == "Q1" and back.last_event_id == "[9]"
+
+
+def test_rules_location(monkeypatch, tmp_path):
+    import pytest
+    from lookedup_live import rules
+    custom = tmp_path / "live.yml"
+    custom.write_text("x: 1\n")
+    monkeypatch.setenv("LIVE_CONFIG", str(custom))
+    assert rules._find() == custom
+    monkeypatch.setenv("LIVE_CONFIG", str(tmp_path / "missing.yml"))
+    assert rules._find().name == "live.yml" and rules._find() != custom        # falls back to the repo's config
+    monkeypatch.setattr(rules, "__file__", str(tmp_path / "pkg" / "lookedup_live" / "rules.py"))
+    with pytest.raises(FileNotFoundError, match="LIVE_CONFIG"):
+        rules._find()
