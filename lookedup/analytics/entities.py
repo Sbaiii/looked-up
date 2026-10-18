@@ -93,8 +93,7 @@ def fetch_claims_sparql(qids: list[int], batch: int = 500) -> list[dict]:
                 claims[q][prop].append(int(v.rsplit("/Q", 1)[1]))
         labels = {int(b["item"]["value"].rsplit("/Q", 1)[1]): b["l"]["value"] for b in _sparql(
             f"SELECT ?item ?l WHERE {{ VALUES ?item {{ {values} }} ?item rdfs:label ?l . FILTER(lang(?l) = 'en') }}")}
-        for q in chunk:
-            rows.append({"qid": q, "label_en": labels.get(q), "claims_json": json.dumps(claims[q])})
+        rows.extend({"qid": q, "label_en": labels.get(q), "claims_json": json.dumps(claims[q])} for q in chunk)
         log.info("claims (sparql): %d/%d fetched", min(i + batch, len(qids)), len(qids))
         time.sleep(1)
     return rows
