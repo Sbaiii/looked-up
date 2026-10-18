@@ -34,7 +34,7 @@ VIEWS = [("es", h, 500 - 40 * h) for h in range(10)] + [("en", h, 300) for h in 
 
 def _rows(con, **kw):
     rel = con.sql(snapshot_sql("events", "spikes", "views", "dims", **kw) + " ORDER BY offset_h")
-    return [dict(zip(rel.columns, r)) for r in rel.fetchall()]
+    return [dict(zip(rel.columns, r, strict=True)) for r in rel.fetchall()]
 
 
 def test_t0_is_the_second_language_and_features_use_only_the_past():
@@ -56,7 +56,7 @@ def test_future_rows_never_change_features():
     later = SPIKES + [("ja", 8, 999, 9999, 10), ("es", 6, 80, 900, 10)]
     more = _rows(_con(later, VIEWS + [("ja", 8, 9999), ("es", 11, 99999)]))
     cols = ["breadth_t", "max_surprise_t", "sum_surprise_t", "excess_t", "views_t", "peak_views_so_far"]
-    for a, b in zip(base, more):
+    for a, b in zip(base, more, strict=True):
         assert {c: a[c] for c in cols} == {c: b[c] for c in cols}
 
 
