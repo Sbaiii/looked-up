@@ -168,3 +168,30 @@ def test_score_day_hits_and_singles(tmp_path, monkeypatch):
     assert rows["Q1"]["kind"] == "live" and rows["Q1"]["hit"] == 1 and rows["Q1"]["forward_hit"] == 1
     assert rows["Q1"]["langs"] == "en fr" and rows["Q1"]["lead_minutes"] == 100     # dated at the fr burst, 12:20
     assert rows["Q2"]["kind"] == "single" and rows["Q2"]["hit"] == 0 and rows["Q2"]["event_start"] == ""
+
+
+def test_run_h9_writes_rows(tmp_path, monkeypatch):
+    import csv
+
+    import duckdb
+
+    import lookedup.warehouse as wh
+
+    db_file = tmp_path / "w.duckdb"
+    duckdb.connect(str(db_file)).close()
+    monkeypatch.setattr(wh, "WAREHOUSE_DB", db_file)
+    monkeypatch.setattr(LA, "OUT", tmp_path)
+    monkeypatch.setattr(LA, "plot_leads", lambda leads, med: None)
+    start = T0 + timedelta(hours=2)
+    monkeypatch.setattr(LA, "h9_events", lambda con: [
+        {"event_id": "E1", "qid": 1, "label_en": "X", "category": "death", "breadth": 5, "start_hour": start,
+         "langs": [{"lang": "en", "title": "X", "lag": 0}]},
+        {"event_id": "E2", "qid": 2, "label_en": "Y", "category": "sports", "breadth": 3, "start_hour": start,
+         "langs": [{"lang": "fr", "title": "Y", "lag": 0}]}])
+    monkeypatch.setattr(LA, "revisions", lambda lang, title, lo, hi:
+                        [rev(m, f"u{m}") for m in range(0, 10, 2)] if lang == "en" else [])
+    res = LA.run_h9()
+    rows = list(csv.DictReader((tmp_path / "phase5_h9.csv").open()))
+    assert [r["event_id"] for r in rows] == ["E1", "E2"]
+    assert rows[0]["burst_lang"] == "en" and int(rows[0]["lead_minutes"]) > 0 and rows[1]["burst_at"] == ""
+    assert res["events"] == 2 and res["with_burst"] == 1
