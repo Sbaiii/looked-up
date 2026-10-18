@@ -49,7 +49,7 @@ def test_plan_newest_first_capped(fake_server):
 
 def test_run_is_idempotent_and_self_healing(fake_server, tmp_path, article_filter):
     store = LocalStore(tmp_path / "lake")
-    kw = dict(now=NOW, langs=LANGS, filt=article_filter, window_hours=8, max_hours=6)
+    kw = {"now": NOW, "langs": LANGS, "filt": article_filter, "window_hours": 8, "max_hours": 6}
     assert hourly.run(store, **kw) == 6        # 8 expected, 2 unpublished -> 6 ingested
     assert hourly.run(store, **kw) == 0        # nothing new: no duplicates, no work
     m = store.read_manifest()
