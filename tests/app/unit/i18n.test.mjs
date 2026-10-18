@@ -21,3 +21,12 @@ test('a missing key comes back as the key, and an unknown placeholder is kept', 
   assert.equal(i18n.t('greet'), 'hello {who}');
   assert.equal(i18n.t('greet', { who: 'world' }), 'hello world');
 });
+
+test('French counts 0 and 1 as singular', () => {
+  const fr = dict('fr');
+  i18n.use({ locale: 'fr-FR', n: { one: '{n} langue', other: '{n} langues' } }, 'fr');
+  assert.equal(i18n.t('n', { n: 0 }), '0 langue');
+  assert.equal(i18n.t('n', { n: 1.5 }), '1.5 langue');
+  assert.equal(i18n.t('n', { n: 2 }), '2 langues');
+  assert.equal(fr.locale, 'fr-FR');
+});
