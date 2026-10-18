@@ -29,3 +29,15 @@ def test_run_by_day_with_nothing_to_do(tmp_path, monkeypatch):
     monkeypatch.setattr(batch, "STAGING", tmp_path)
     rel = batch.run_by_day(duckdb.connect(), [], lambda d: f"SELECT DATE '{d}' AS day, 1 AS n", "empty")
     assert rel.columns == ["day", "n"] and rel.fetchall() == []
+
+
+def test_prepare_event_inputs():
+    con = duckdb.connect()
+    spikes = con.sql("""SELECT * FROM (VALUES ('en', 'A', 1, false), ('en', 'B', 2, true), ('fr', 'C', NULL, false))
+                        t(lang, title, qid, is_automated)""")
+    baselines = con.sql("""SELECT * FROM (VALUES (TIMESTAMP '2026-08-10 10:00', 'en', 'A', 500, 50.0),
+                           (TIMESTAMP '2026-08-10 10:00', 'en', 'B', 900, 90.0)) t(ts_hour_start, lang, title, views, baseline_median)""")
+    ok, scored = batch.prepare_event_inputs(con, spikes, baselines, "t")
+    assert (ok, scored) == ("_ok_t", "_scored_t")
+    assert sorted(r[1] for r in con.sql(f"SELECT * FROM {ok}").fetchall()) == ["A", "C"]
+    assert con.sql(f"SELECT lang, views, qid FROM {scored}").fetchall() == [("en", 500, 1)]
