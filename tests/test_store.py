@@ -269,3 +269,29 @@ def test_hf_token_prefers_the_environment(monkeypatch):
     assert hf_token() == "from-env"
     monkeypatch.delenv("HF_TOKEN")
     assert hf_token() == "saved"
+
+
+def test_hub_store_creation(monkeypatch):
+    import huggingface_hub
+
+    from lookedup import store as S
+
+    created = []
+
+    class Api:
+        def __init__(self, token=None):
+            self.token = token
+
+        def repo_exists(self, repo_id, repo_type=None):
+            return repo_id == "user/exists"
+
+        def create_repo(self, repo_id, repo_type=None, private=None):
+            created.append((repo_id, private))
+
+    monkeypatch.setattr(huggingface_hub, "HfApi", Api)
+    monkeypatch.setattr(S, "hf_token", lambda: None)
+    with pytest.raises(RuntimeError, match="HF token missing"):
+        S.HFStore("user/new", create=True)
+    S.HFStore("user/exists", token="t", create=True)
+    S.HFStore("user/new", token="t", create=True)
+    assert created == [("user/new", False)]
