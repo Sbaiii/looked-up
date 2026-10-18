@@ -435,4 +435,5 @@ def test_cold_start_replays_and_handles_events(monkeypatch):
     e.covered_since = T0 - 99
     stream.consume(e, stop)
     assert "since" in calls[0][1] and "Last-Event-ID" not in calls[0][0]
+    assert e.covered_since is None                                   # the gap is marked before replaying
     assert e.last_event_id is None and not e.detector.articles      # stop is checked before each message
