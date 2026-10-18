@@ -30,3 +30,12 @@ test('French counts 0 and 1 as singular', () => {
   assert.equal(i18n.t('n', { n: 2 }), '2 langues');
   assert.equal(fr.locale, 'fr-FR');
 });
+
+test('label falls back to English, the lead language, any label, then the QID', () => {
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.label({ qid: 'Q1', labels: { fr: 'Paris', en: 'Paris (en)' } }), 'Paris');
+  assert.equal(i18n.label({ qid: 'Q1', labels: { en: 'London', ja: 'ロンドン' }, lead: 'ja' }), 'London');
+  assert.equal(i18n.label({ qid: 'Q1', labels: { ja: 'ロンドン', de: 'London' }, lead: 'ja' }), 'ロンドン');
+  assert.equal(i18n.label({ qid: 'Q1', labels: { de: 'London' }, lead: 'ja' }), 'London');
+  assert.equal(i18n.label({ qid: 'Q1' }), 'Q1');
+});
