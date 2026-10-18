@@ -350,3 +350,16 @@ def test_compact_report(monkeypatch, capsys):
                                                            {"day": "d2", "hours": 3, "bytes_hourly_files": 50, "bytes_day_file": 40}])
     cli.main(["compact"])
     assert "full days: 1; mean bytes/day 200 -> 100 (0.50x)" in capsys.readouterr().out
+
+
+def test_ground_truth_paths(monkeypatch, capsys):
+    import lookedup.evaluation.ground_truth as gt
+    from lookedup.analytics.config import load
+    from lookedup.settings import LOCAL_LAKE_DIR, SITELINKS_PATH
+
+    seen = {}
+    monkeypatch.setattr(gt, "build", lambda start, end, sl, claims, out, cfg: seen.update(start=start, sl=sl, out=out) or {"pairs": 1})
+    cli.main(["ground-truth"])
+    assert seen["start"] == load().period_start and seen["sl"] == LOCAL_LAKE_DIR / SITELINKS_PATH
+    assert seen["out"].name == "current_events.parquet"
+    capsys.readouterr()
