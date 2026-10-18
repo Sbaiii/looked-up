@@ -123,6 +123,8 @@ def _warehouse(tmp_path):
         (1, 'fr', TIMESTAMP '2026-08-10 11:00', 15.0, false, false),
         (1, 'de', TIMESTAMP '2026-08-10 12:00', 9.0, false, false),
         (1, 'ja', TIMESTAMP '2026-08-10 13:00', 50.0, true, false)) t(qid, lang, ts_hour_start, surprise, is_automated, is_low_mobile)""")
+    con.execute("ALTER TABLE int_spikes ADD COLUMN views BIGINT DEFAULT 1000")
+    con.execute("ALTER TABLE int_spikes ADD COLUMN baseline_median DOUBLE DEFAULT 100")
     con.close()
     gt = tmp_path / "gt.parquet"
     pq.write_table(pa.table({"date": [datetime(2026, 8, 10).date()] * 3, "qid": [1, 1, 2], "section": ["Sports", "Sports", "Law"],
@@ -140,3 +142,16 @@ def test_open_context(tmp_path, monkeypatch):
     assert ctx.con.sql("SELECT count(*) FROM spikes_s1").fetchone()[0] == 4
     assert ctx.con.sql("SELECT qid, sections FROM majors").fetchall() == [(1, ["Sports"])]
     assert ctx.con.sql("SELECT count(*) FROM portal_qids").fetchone()[0] == 2
+
+
+def test_ablation_grid(tmp_path, monkeypatch):
+    from lookedup.analytics.config import load
+    from lookedup.evaluation.metrics import ablation_grid, open_context
+
+    monkeypatch.delenv("LOOKEDUP_PERIOD_END", raising=False)
+    grid = ablation_grid(open_context(*_warehouse(tmp_path), load()))
+    assert len(grid) == 27
+    assert sum(g["primary"] for g in grid) == 1 and sum(g["winner"] for g in grid) == 1
+    two = [g for g in grid if g["min_languages"] == 2 and g["r3_threshold"] == 6]
+    assert all(g["events"] == 1 and g["recall_24h"] == 1.0 for g in two)        # en and fr spike within the window
+    assert all(g["events"] == 0 for g in grid if g["min_languages"] == 5)
