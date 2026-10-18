@@ -63,3 +63,13 @@ def test_api_call_is_paced(monkeypatch):
     monkeypatch.setattr(T.time, "sleep", lambda s: slept.append(s))
     assert T._api({"action": "query"}) == {"query": {}}
     assert slept == [0.35] and seen == [{"action": "query", "format": "json", "formatversion": 2}]
+
+
+def test_no_event_time_without_a_first_revision(monkeypatch):
+    from datetime import date
+
+    import lookedup.evaluation.timestamps as T
+
+    replies = [_page("no infobox"), {"query": {"pages": [{"title": "Quake"}]}}]
+    monkeypatch.setattr(T, "_api", lambda params: replies.pop(0))
+    assert T.event_time("Quake", date(2026, 8, 10)) is None
