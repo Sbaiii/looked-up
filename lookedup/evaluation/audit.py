@@ -53,8 +53,10 @@ def sample(con: duckdb.DuckDBPyConnection, cfg: AnalyticsConfig, out: Path) -> i
 
 def score(con: duckdb.DuckDBPyConnection, cfg: AnalyticsConfig, sample_csv: Path, labels_csv: Path) -> dict:
     """Join the blind labels to the automation flags and compute H3: the share of non-events flagged, and of events flagged."""
-    s = {r["unit_id"]: r for r in csv.DictReader(open(sample_csv, encoding="utf-8"))}
-    labels = {r["unit_id"]: r["label"] for r in csv.DictReader(open(labels_csv, encoding="utf-8"))}
+    with open(sample_csv, encoding="utf-8") as f:
+        s = {r["unit_id"]: r for r in csv.DictReader(f)}
+    with open(labels_csv, encoding="utf-8") as f:
+        labels = {r["unit_id"]: r["label"] for r in csv.DictReader(f)}
     assert set(labels) == set(s), "every sampled unit needs a label"
     assert set(labels.values()) <= set(LABELS), set(labels.values())
     flagged = {}
