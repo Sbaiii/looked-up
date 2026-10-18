@@ -462,3 +462,27 @@ def test_resumed_stream_handles_events(monkeypatch):
     assert calls == [({"Last-Event-ID": "[6]"}, {})]
     assert e.last_event_id == "[9]" and e.detector.articles[("en", "X")].count(T0 + 3, "10m") == 3
     assert e.connected is False
+
+
+def test_stream_error_backs_off(monkeypatch):
+    import threading
+
+    import requests
+    from lookedup_live import stream
+    e, waits = Engine(), []
+    stop = threading.Event()
+
+    class S:
+        headers = {}
+
+        def get(self, *a, **k):
+            raise requests.ConnectionError("down")
+
+    def wait(t):
+        waits.append(t)
+        return len(waits) >= 4
+
+    monkeypatch.setattr(stream.requests, "Session", S)
+    monkeypatch.setattr(stop, "wait", wait)
+    stream.consume(e, stop, max_backoff=4)
+    assert waits == [1.0, 2.0, 4, 4]
