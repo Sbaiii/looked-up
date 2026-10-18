@@ -67,7 +67,7 @@ def live_relations(con: duckdb.DuckDBPyConnection, events: list[dict], categorie
 
 
 def entity_classes(qids: Iterable[int]) -> dict[int, str]:
-    """Category of each QID (death, sports, ...) from its Wikidata claims, cached in the warehouse."""
+    """Coarse entity class of each QID (human, sports, place, ...) from its Wikidata claims, cached in the warehouse."""
     from lookedup.analytics.config import load
     from lookedup.analytics.entities import classify, fetch_claims
     from lookedup.settings import DATA_DIR
