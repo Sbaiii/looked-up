@@ -363,3 +363,26 @@ def test_ground_truth_paths(monkeypatch, capsys):
     assert seen["start"] == load().period_start and seen["sl"] == LOCAL_LAKE_DIR / SITELINKS_PATH
     assert seen["out"].name == "current_events.parquet"
     capsys.readouterr()
+
+
+def test_coverage_table(monkeypatch, tmp_path, capsys):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    from conftest import HOURLY_SAMPLE, LANGS
+    from lookedup import store
+    from lookedup.languages import article_filter
+    from lookedup.settings import SITELINKS_PATH
+    from lookedup.store import LocalStore, write_hours
+    from lookedup.transform import hourly_dump_to_table
+
+    h = datetime(2026, 9, 13, 14)
+    lake = LocalStore(tmp_path / "lake")
+    write_hours(lake, {h: (hourly_dump_to_table(HOURLY_SAMPLE, h, LANGS, article_filter()), "hourly_dump")}, "seed")
+    (tmp_path / "lake" / SITELINKS_PATH).parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.table({"lang": ["en"], "title": ["Main_Page"], "qid": [5296]}), tmp_path / "lake" / SITELINKS_PATH)
+    monkeypatch.setattr(store, "open_store", lambda local=False: lake)
+    cli.main(["coverage", "--hours", "1", "--out", str(tmp_path / "cov.md")])
+    text = capsys.readouterr().out
+    assert "| Lang | Views | Matched to a QID | Coverage |" in text and "| **all** |" in text
+    assert (tmp_path / "cov.md").read_text() == text.rstrip("\n") + "\n"
