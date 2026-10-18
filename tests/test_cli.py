@@ -318,3 +318,14 @@ def test_wikidata_upload_switch(monkeypatch, tmp_path, capsys):
     cli.main(["wikidata"])
     assert commits == [([settings.SITELINKS_PATH], "data: refresh Wikidata sitelinks (3 rows)")]
     capsys.readouterr()
+
+
+def test_refresh_warehouse_exit_code(monkeypatch, capsys):
+    import lookedup.warehouse as wh
+
+    monkeypatch.setattr(wh, "refresh", lambda end=None: {"success": end is not None})
+    with pytest.raises(SystemExit) as e:
+        cli.main(["refresh-warehouse"])
+    assert e.value.code == 1
+    cli.main(["refresh-warehouse", "--end", "2026-10-10"])
+    capsys.readouterr()
