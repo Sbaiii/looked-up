@@ -148,3 +148,10 @@ def test_m1_baselines():
     assert out["breadth_rule"]["rule_recall"] == tp / y_te.sum()
     assert out["sitelinks_logistic"]["roc_auc"] > 0.6                 # fame does predict these synthetic rows
 
+def test_fade_time_baselines():
+    tr = [{"category": "death", "fade_hours": 2} for _ in range(25)] + [{"category": "sports", "fade_hours": 6}] * 5
+    te = [{"category": "death", "hours_since_peak": 3}, {"category": "sports", "hours_since_peak": 100}]
+    b = E.m2_baselines("fade_hours", tr, te)
+    assert np.allclose(b["category_decay"], np.log1p([2, 2]))         # sports has too few rows: overall median
+    assert np.allclose(b["persistence"], np.log1p([3, 48]))           # capped at 48 h
+
