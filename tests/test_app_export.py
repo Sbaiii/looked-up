@@ -239,3 +239,13 @@ def test_sparkline_future_hours_are_unknown(tmp_path):
     sp = ax.sparklines(duckdb.connect(), [f], [ev], {597: {"en": "Lisbon"}}, last_hour=start + timedelta(hours=2))["E1"]
     assert sp[ax.SPARK_BEFORE + 2] == 0 and sp[ax.SPARK_BEFORE + 3] is None and sp[-1] is None
     assert ax.sparklines(duckdb.connect(), [], [ev], {}) == {}
+
+
+def test_live_forecasts_never_fail(tmp_path, monkeypatch):
+    import lookedup.forecast.predict as P
+
+    def broken(store, tmp):
+        raise RuntimeError("corrupt model file")
+
+    monkeypatch.setattr(P, "load_models", broken)
+    assert ax.live_forecasts(duckdb.connect(), None, [], datetime(2026, 8, 17), None, [], {}, tmp_path) == ({}, {})
