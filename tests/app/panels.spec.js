@@ -57,3 +57,17 @@ test('the language panel lists up to five events for the chosen language', async
   const plus = await items.locator('small').allTextContents();
   expect(plus.every((s) => /\+/.test(s))).toBe(true);
 });
+
+test('a language without events on the day shows the empty line', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  const langs = await page.locator('#lang-select option').evaluateAll((os) => os.map((o) => o.value));
+  for (const code of langs) {
+    await page.selectOption('#lang-select', code);
+    if (await page.locator('#lang-only li.empty').count()) {
+      await expect(page.locator('#lang-only li.empty')).toHaveText('Nothing for this language on this day.');
+      return;
+    }
+  }
+  throw new Error('every language had single-language events in the fixture');
+});
