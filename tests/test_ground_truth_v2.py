@@ -165,3 +165,13 @@ def test_football_matches(monkeypatch):
     assert m["teams"][0] == "France national football team" and m["match_article"] == "2026 FIFA World Cup final"
     monkeypatch.setattr(G, "_raw", lambda page: BOX)
     assert G.football_matches("2026 FIFA World Cup knockout stage")[0]["match_article"] is None
+
+
+def test_matches_resolve_qids(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    monkeypatch.setattr(G, "football_matches", lambda page: [{"page": page, "kickoff": None, "teams": ["Spain", "Argentina"],
+                                                              "match_article": page}])
+    monkeypatch.setattr(G, "resolve_qids", lambda lang, titles: {"Spain": 29, "2026 FIFA World Cup final": 7})
+    [m] = G.matches(["2026 FIFA World Cup final"])
+    assert m["team_qids"] == [29] and m["match_qid"] == 7
