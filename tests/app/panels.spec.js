@@ -35,3 +35,13 @@ test('the update line names the data time in UTC and in local time', async ({ pa
   await ready(page);
   await expect(page.locator('#updated')).toHaveText(/^Updated .+ UTC · .+ your time$/);
 });
+
+test('selecting a card updates the caption under the map', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  const first = page.locator('#cards .card').first();
+  const name = (await first.locator('.card__title').textContent()).trim();
+  await first.locator('.card__title button').click();
+  await expect(page.locator('#viz-now')).toContainText(name);
+  await expect(page.locator('#viz-now')).toContainText(/\d+ languages · led by /);
+});
