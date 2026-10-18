@@ -154,3 +154,9 @@ def test_rest_hourly_total(monkeypatch):
     assert dumps.rest_hourly_total("en.wikipedia", h) is None
     assert dumps.rest_hourly_total("en.wikipedia", h) == 12345
     assert urls[0].endswith("/aggregate/en.wikipedia/all-access/user/hourly/2026100709/2026100709")
+
+
+def test_download_416_finishes_the_part_file(tmp_path, monkeypatch):
+    (tmp_path / "f.gz.part").write_bytes(b"all of it")
+    monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: _Stream(416, b""))
+    assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"all of it"
