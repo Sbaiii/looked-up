@@ -295,3 +295,25 @@ def test_hub_store_creation(monkeypatch):
     S.HFStore("user/exists", token="t", create=True)
     S.HFStore("user/new", token="t", create=True)
     assert created == [("user/new", False)]
+
+
+def test_hub_maintenance_calls(tmp_path):
+    from types import SimpleNamespace
+
+    calls = []
+
+    class Api(_FakeApi):
+        def dataset_info(self, repo_id, expand=None):
+            return SimpleNamespace(sha="abc", used_storage=123)
+
+        def super_squash_history(self, repo_id, repo_type=None, commit_message=None):
+            calls.append(("squash", repo_type))
+
+        def upload_file(self, path_or_fileobj=None, path_in_repo=None, repo_id=None, repo_type=None, commit_message=None):
+            calls.append(("card", path_in_repo, repo_type))
+
+    hf = _hf(Api([]))
+    assert hf.head() == "abc" and hf.used_storage() == 123
+    hf.squash_history("squash")
+    hf.upload_card(tmp_path / "README.md")
+    assert calls == [("squash", "dataset"), ("card", "README.md", "dataset")]
