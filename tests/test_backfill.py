@@ -70,3 +70,15 @@ def test_validate_matches_hourly_path(fake_dumps, tmp_path):
     (tmp_path / "lake" / "data" / "manifest.json").write_text(m.to_json())
     [res] = backfill.validate(store, n=3, seed=1)
     assert res["identical"] and res["stored_rows"] > 100
+
+
+def test_backfill_entry_point(monkeypatch):
+    import lookedup.backfill as bf
+
+    seen = []
+    monkeypatch.setattr(bf, "open_store", lambda local=False: f"store({local})")
+    monkeypatch.setattr(bf, "backfill", lambda st, start, end, newest, keep: seen.append((st, start, end, newest, keep)) or 0)
+    bf.main(["--from", "2026-07-09", "--to", "2026-07-10", "--local"])
+    bf.main(["--from", "2026-07-09", "--to", "2026-07-09", "--oldest-first", "--keep-raw"])
+    assert seen == [("store(True)", date(2026, 7, 9), date(2026, 7, 10), True, False),
+                    ("store(False)", date(2026, 7, 9), date(2026, 7, 9), False, True)]
