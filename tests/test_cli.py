@@ -329,3 +329,15 @@ def test_refresh_warehouse_exit_code(monkeypatch, capsys):
     assert e.value.code == 1
     cli.main(["refresh-warehouse", "--end", "2026-10-10"])
     capsys.readouterr()
+
+
+def test_forecast_evaluate_summary(monkeypatch, capsys):
+    import json
+
+    import lookedup.forecast.evaluate as ev
+
+    monkeypatch.setattr(ev, "run", lambda: {"split_sizes": {"train": 1}, "H6": "supported", "H7": "rejected",
+                                            "H8": "supported", "m1": {"large": "not printed"}})
+    cli.main(["forecast-evaluate"])
+    assert json.loads(capsys.readouterr().out) == {"split_sizes": {"train": 1}, "H6": "supported", "H7": "rejected",
+                                                   "H8": "supported"}
