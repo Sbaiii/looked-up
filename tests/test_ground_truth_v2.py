@@ -103,3 +103,15 @@ def test_first_sitelink_created(monkeypatch):
     assert G.first_sitelink_created(9, ["en", "es"]) == datetime(2026, 8, 10, 12, 20)
     monkeypatch.setattr(G, "_get", lambda url, params: _Json({"entities": {"Q9": {}}}))
     assert G.first_sitelink_created(9, ["en"]) is None
+
+
+def test_announcement_proxy(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    revs = [{"timestamp": "2026-08-16T23:00:00Z", "comment": "copyedit"},
+            {"timestamp": "2026-08-17T02:57:00Z", "comment": "added death date"},
+            {"timestamp": "2026-08-17T03:10:00Z", "comment": "RIP"}]
+    monkeypatch.setattr(G, "_get", lambda url, params: _Json({"query": {"pages": [{"revisions": revs}]}}))
+    assert G.announcement_proxy("Hayden Panettiere", date(2026, 8, 17)) == datetime(2026, 8, 17, 2, 57)
+    monkeypatch.setattr(G, "_get", lambda url, params: _Json({"query": {"pages": []}}))
+    assert G.announcement_proxy("Nobody", date(2026, 8, 17)) is None
