@@ -135,7 +135,7 @@ def h9_events(con: duckdb.DuckDBPyConnection) -> list[dict]:
           AND e.start_hour < TIMESTAMP '{H9_TO}' AND l.title IS NOT NULL
         GROUP BY ALL ORDER BY e.breadth DESC, e.excess_views DESC LIMIT {H9_CAP}""")
     cols = rows.columns
-    return [dict(zip(cols, r)) for r in rows.fetchall()]
+    return [dict(zip(cols, r, strict=True)) for r in rows.fetchall()]
 
 
 def run_h9() -> dict:
