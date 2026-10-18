@@ -127,7 +127,7 @@ def test_append_scores_is_idempotent_per_day(tmp_path, monkeypatch):
     from lookedup.store import LocalStore
 
     def row(day, kind="live", hit=1):
-        r = {f: "" for f in LA.FIELDS}
+        r = dict.fromkeys(LA.FIELDS, "")
         return r | {"day": f"{day}", "kind": kind, "hit": str(hit), "forward_hit": str(hit)}
 
     store = LocalStore(tmp_path)
