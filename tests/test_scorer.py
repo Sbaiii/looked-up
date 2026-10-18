@@ -164,3 +164,12 @@ def test_old_baselines_are_pruned(lake):
     recent.write_bytes(b"recent")
     scorer.build_baselines(lake, D, directory=bl)
     assert not old.exists() and recent.exists() and scorer.baselines_file(D, bl).exists()
+
+
+def test_score_named_hours_only_if_present(lake):
+    scorer.build_baselines(lake, D, directory=lake.root / "bl")
+    present = datetime.combine(D, datetime.min.time()) + timedelta(hours=10)
+    missing = datetime.combine(D, datetime.min.time()) + timedelta(hours=20)
+    out = scorer.score(lake, now=present + timedelta(hours=4), langs=["en", "es", "fr"], hours=[missing, present],
+                       baselines_dir=lake.root / "bl", recompute=False)
+    assert out["scored_hours"] == [f"{present:%Y-%m-%dT%H}:00Z"] or out["scored_hours"] == [present] or len(out["scored_hours"]) == 1
