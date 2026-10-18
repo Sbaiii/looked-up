@@ -52,3 +52,24 @@ def test_great_circle_distance():
     assert abs(_km(0, 0, 0, 1) - 111.2) < 0.5                         # one degree along the equator
     assert abs(_km(48.8566, 2.3522, 51.5074, -0.1278) - 344) < 5     # Paris to London
     assert _km(None, 0, 0, 0) == float("inf")
+
+
+class _Json:
+    def __init__(self, data):
+        self.data = data
+
+    def json(self):
+        return self.data
+
+
+def test_usgs_quakes(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    feed = {"features": [{"id": "us7000t1bu", "properties": {"mag": 7.3, "place": "60 km WSW of Puerto Madero, Mexico",
+                                                            "time": 1784386119881}, "geometry": {"coordinates": [-93.2, 14.4, 30]}},
+                         {"id": "x", "properties": {"mag": 6.1, "place": None, "time": 0}, "geometry": {"coordinates": [0, 0, 0]}}]}
+    monkeypatch.setattr(G, "_get", lambda url, params: _Json(feed))
+    q = G.usgs_quakes(datetime(2026, 7, 16), datetime(2026, 10, 7), 6.0)
+    assert q[0]["usgs_id"] == "us7000t1bu" and q[0]["mag"] == 7.3 and (q[0]["lon"], q[0]["lat"]) == (-93.2, 14.4)
+    assert q[0]["origin"].tzinfo is None and q[0]["origin"].year == 2026
+    assert q[1]["place"] == "" and q[1]["origin"] == datetime(1970, 1, 1)
