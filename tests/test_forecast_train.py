@@ -175,3 +175,17 @@ def test_permutation_importance_ranks_the_signal_first():
     assert len(imp) == len(enc.features)
     assert imp[0]["feature"] in {"n_sitelinks", "excess_t"}               # the two columns built from fame
     assert [d["importance"] for d in imp] == sorted((d["importance"] for d in imp), reverse=True)
+
+
+def test_rolling_folds():
+    base = _rows(1100, seed=3)
+    rows = []
+    for i, r in enumerate(base):
+        start = datetime(2026, 8, 1) + timedelta(hours=1.6 * i)
+        for off in (1, 3):
+            rows.append(r | {"start_hour": start, "offset_h": off, "excess_hour_t": 5.0 + (i % 7)})
+    params = {"num_leaves": 7, "learning_rate": 0.2, "n_estimators": 20, "min_child_samples": 5,
+              "feature_fraction": 1.0, "lambda_l2": 0.0}
+    folds = E.rolling(rows, params, params)
+    assert [f["fold"] for f in folds] == [f"{lo}..{hi}" for lo, hi in E.FOLDS]
+    assert all(0 <= f["m1_international_1h"]["roc_auc"] <= 1 and f["m2_excess"]["n"] > 0 for f in folds)
