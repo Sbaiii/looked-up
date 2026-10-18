@@ -11,7 +11,7 @@ import pytest
 
 from lookedup.forecast import retrain as R
 from lookedup.forecast import train as T
-from lookedup.store import LocalStore
+from lookedup.store import LocalStore, Manifest
 
 SMALL = {"num_leaves": 7, "learning_rate": 0.2, "n_estimators": 20, "min_child_samples": 5, "feature_fraction": 1.0,
          "lambda_l2": 0.0}
@@ -55,7 +55,7 @@ def test_retrain_publishes_models_and_manifest(tmp_path, monkeypatch):
     store = LocalStore(tmp_path / "lake")
     batch = tmp_path / "batch.parquet"
     pq.write_table(pa.Table.from_pylist(_rows()), batch)
-    store.commit({f"{R.TRAINING}/batch.parquet": batch}, R.Manifest() if hasattr(R, "Manifest") else __import__("lookedup.store", fromlist=["Manifest"]).Manifest(), "seed")
+    store.commit({f"{R.TRAINING}/batch.parquet": batch}, Manifest(), "seed: the batch training table")
     res = R.retrain(store, now=datetime(2026, 10, 12), add_live_week=False)
     assert res["version"] == "2026-10-12" and res["rows"] == 1800 and len(res["bytes"]) == 8
     manifest = json.loads((tmp_path / "lake" / R.MANIFEST).read_text())
