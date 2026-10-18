@@ -65,7 +65,7 @@ def open_context(warehouse_db: Path, current_events: Path, cfg: AnalyticsConfig)
 
 
 def variant_events(ctx: Context, p: EventParams, name: str, spikes: str = "spikes_ok") -> str:
-    """Materialise the events of one parameter set as table ``name`` (no excess views)."""
+    """Materialise the events of one parameter set as table ``name``; excess views are summed over spike rows only."""
     ev, _ = events_sql(spikes, p)
     ctx.con.execute(f"CREATE OR REPLACE TABLE {name} AS {ev}")
     return name
