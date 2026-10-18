@@ -116,3 +116,14 @@ test.describe('with a German browser', () => {
     await expect(page.locator('[data-ui-lang="en"]')).toHaveAttribute('aria-pressed', 'true');
   });
 });
+
+test('a visitor who chose the flat map keeps it after interacting', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('lookedup_viz', '2d'));
+  await page.goto('./');
+  await ready(page);
+  await page.mouse.click(5, 5);
+  await page.waitForTimeout(2000);                              // the globe would load within 1.5 s of idle time
+  await expect(page.locator('#viz')).not.toHaveClass(/is-globe/);
+  if (await page.locator('#viz-mode').isVisible()) await expect(page.locator('#viz-mode')).toHaveText('3D globe');
+  expect(page.errors).toEqual([]);
+});
