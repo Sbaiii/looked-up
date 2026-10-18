@@ -113,7 +113,7 @@ def _burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: datet
     for r in revs:
         if not counted(r):
             continue
-        ts = datetime.fromisoformat(r["timestamp"].replace("Z", "+00:00")).timestamp()
+        ts = datetime.fromisoformat(r["timestamp"]).timestamp()
         b = det.add(lang, title, ts, r.get("user"), is_new=r.get("parentid") == 0)
         if b is not None and lo_s <= b.ts <= hi_s:
             return b.ts, b.kind
