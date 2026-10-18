@@ -42,8 +42,8 @@ def test_build_sitelinks_sorted_parquet(tmp_path):
     assert counts == {"en": 3, "fr": 1}
     t = pq.read_table(out)
     assert t.column_names == ["lang", "title", "qid"]
-    assert list(zip(t["lang"].to_pylist(), t["title"].to_pylist())) == sorted(
-        zip(t["lang"].to_pylist(), t["title"].to_pylist()))
+    assert list(zip(t["lang"].to_pylist(), t["title"].to_pylist(), strict=True)) == sorted(
+        zip(t["lang"].to_pylist(), t["title"].to_pylist(), strict=True))
 
 
 def test_join_coverage(tmp_path):
