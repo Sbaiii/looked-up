@@ -114,3 +114,17 @@ def test_live_relations(tmp_path):
     assert con.sql("SELECT lang, views, baseline_median FROM _fviews").fetchall() == [("en", 150, 40.0)]
     assert con.sql("SELECT category FROM _fev").fetchone() == ("death",)
     assert con.sql("SELECT entity_class, n_languages FROM _fdims").fetchone() == ("human", 2)
+
+
+def test_entity_classes(monkeypatch):
+    import json
+
+    import pyarrow as pa
+
+    import lookedup.analytics.entities as E
+    from lookedup.forecast import predict as P
+
+    monkeypatch.setattr(E, "fetch_claims", lambda qids, cache: pa.table({"qid": [1, 2], "label_en": ["A", "B"],
+        "claims_json": [json.dumps({"P31": [5]}), json.dumps({"P31": []})]}))
+    assert P.entity_classes({1, 2}) == {1: "human", 2: "other"}
+    assert P.entity_classes(set()) == {}
