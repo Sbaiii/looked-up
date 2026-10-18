@@ -486,3 +486,19 @@ def test_stream_error_backs_off(monkeypatch):
     monkeypatch.setattr(stop, "wait", wait)
     stream.consume(e, stop, max_backoff=4)
     assert waits == [1.0, 2.0, 4, 4]
+
+
+def test_resolver_loop_round(monkeypatch):
+    import threading
+
+    from lookedup_live import stream
+    e = Engine()
+    e.detector.bursts.append(B.Burst("en", "X", T0, "window", 5, 3))
+    rounds = iter([False, True])
+    stop = threading.Event()
+    monkeypatch.setattr(stop, "wait", lambda t: next(rounds))
+    monkeypatch.setattr(e.resolver, "resolve_pending", lambda: e.resolver.qids.update({"en|X": "Q42"}) or 1)
+    gc = []
+    monkeypatch.setattr(e.detector, "gc", lambda now: gc.append(now))
+    stream.resolver_loop(e, stop)
+    assert e.detector.bursts[0].qid == "Q42" and len(gc) == 1
