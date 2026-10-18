@@ -607,3 +607,15 @@ def test_shift_main_without_publishing(tmp_path, monkeypatch):
 
 def pytest_fail_if_called():
     raise AssertionError("must not be called with --no-publish")
+
+
+def test_restore_brings_back_baselines_and_bursts(tmp_path):
+    e = Engine()
+    e.detector.baselines.medians["en"].extend([2.0, 3.0])
+    e.detector.bursts.append(B.Burst("en", "X", T0, "window", 5, 3, qid="Q1"))
+    e.last_event_id = "[9]"
+    e.snapshot(tmp_path / "s.json.gz")
+    back = Engine()
+    assert back.restore(tmp_path / "s.json.gz") is True
+    assert list(back.detector.baselines.medians["en"]) == [2.0, 3.0]
+    assert back.detector.bursts[0].qid == "Q1" and back.last_event_id == "[9]"
