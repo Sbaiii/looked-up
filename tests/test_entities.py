@@ -161,3 +161,8 @@ def test_sparql_retries_then_raises(monkeypatch):
     with pytest.raises(requests.ConnectionError):
         E._sparql("SELECT 1")
     assert len(attempts) == 5
+
+
+def test_unparsable_death_dates_are_ignored():
+    assert not died_near({"P570": ["unknown", "2026-13-01"]}, date(2026, 8, 17), CFG)
+    assert died_near({"P570": ["unknown", "2026-08-16"]}, date(2026, 8, 17), CFG)
