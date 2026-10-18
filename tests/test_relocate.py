@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from lookedup.relocate import relocate
 
 
@@ -40,7 +42,7 @@ def test_short_copy_is_retried(tmp_path, monkeypatch):
     def flaky(a, b):
         attempts.append(1)
         if len(attempts) == 1:
-            open(b, "wb").write(b"x" * 10)                 # a truncated first copy
+            Path(b).write_bytes(b"x" * 10)                 # a truncated first copy
             return b
         return real(a, b)
 
