@@ -162,7 +162,7 @@ def search(train: list[dict], valid: list[dict], target: str, enc: Encoder, tria
     Xtr, ytr, Xva, yva = enc.matrix(train), labels(train, target), enc.matrix(valid), labels(valid, target)
     rng = np.random.default_rng(SEED)
     best, best_val = None, None
-    for i in range(trials):
+    for _ in range(trials):
         params = sample_params(rng)
         m = fit(Xtr, ytr, enc, params, kind)
         pv = score(m, Xva)
