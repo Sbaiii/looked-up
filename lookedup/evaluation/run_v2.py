@@ -80,7 +80,7 @@ class Events:
         cols = "qid, start_hour, lead_lang, breadth, event_class"
         r = self.con.execute(f"""SELECT {cols} FROM {table} WHERE qid IN (SELECT unnest(?::BIGINT[]))
             AND start_hour BETWEEN ? AND ? ORDER BY start_hour LIMIT 1""", [qids, lo, hi]).fetchone()
-        return dict(zip(["qid", "start_hour", "lead_lang", "breadth", "event_class"], r)) if r else None
+        return dict(zip(["qid", "start_hour", "lead_lang", "breadth", "event_class"], r, strict=True)) if r else None
 
 
 def _recall(rows: list[dict], key: str = "detected") -> dict:
@@ -255,7 +255,7 @@ def _dist(vals: list[float]) -> dict:
 
 def _claims(table: pa.Table) -> dict[int, dict]:
     """Claims JSON per QID from a claims table."""
-    return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist())}
+    return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist(), strict=True)}
 
 
 def _country(r: dict, claims: dict[int, dict]) -> int | None:
