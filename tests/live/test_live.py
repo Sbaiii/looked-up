@@ -570,3 +570,23 @@ def test_shift_final_publish_includes_state(tmp_path, monkeypatch):
     shift.publish(Engine(tmp_path), tmp_path, final=True)
     assert {"data/live/state.json.gz", "data/live/qids.json"} <= set(commits[0])
     assert (tmp_path / "state.json.gz").exists()
+
+
+def test_service_start_and_shutdown(monkeypatch, tmp_path):
+    svc = _service(monkeypatch, tmp_path)
+    started, snaps = [], []
+
+    class FakeThread:
+        def __init__(self, target, daemon):
+            self.target, self.daemon = target, daemon
+
+        def start(self):
+            started.append(self.daemon)
+
+    monkeypatch.setattr(svc.threading, "Thread", FakeThread)
+    monkeypatch.setattr(svc.engine, "restore", lambda path: snaps.append(("restore", path.name)) or False)
+    monkeypatch.setattr(svc.engine, "snapshot", lambda path: snaps.append(("snapshot", path.name)))
+    svc.start()
+    assert started == [True, True, True] and snaps == [("restore", "state.json.gz")]
+    svc.shutdown()
+    assert svc.stop.is_set() and snaps[-1] == ("snapshot", "state.json.gz")
