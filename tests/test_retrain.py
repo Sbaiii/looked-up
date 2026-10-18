@@ -61,3 +61,9 @@ def test_retrain_publishes_models_and_manifest(tmp_path, monkeypatch):
     manifest = json.loads((tmp_path / "lake" / R.MANIFEST).read_text())
     assert set(manifest["models"]) == set(res["bytes"]) and manifest["backtest"]["auc_international_t1"] == 0.875
     assert all((tmp_path / "lake" / R.MODELS_PREFIX / s["file"]).exists() for s in manifest["models"].values())
+
+
+def test_live_week_without_files(tmp_path):
+    from datetime import date
+
+    assert R.live_week(LocalStore(tmp_path / "lake"), date(2026, 10, 12), tmp_path) is None
