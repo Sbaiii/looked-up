@@ -437,3 +437,28 @@ def test_cold_start_replays_and_handles_events(monkeypatch):
     assert "since" in calls[0][1] and "Last-Event-ID" not in calls[0][0]
     assert e.covered_since is None                                   # the gap is marked before replaying
     assert e.last_event_id is None and not e.detector.articles      # stop is checked before each message
+
+
+def test_resumed_stream_handles_events(monkeypatch):
+    import threading
+
+    from lookedup_live import stream
+    stop, calls = threading.Event(), []
+    e = Engine()
+    e.last_event_id = "[6]"
+    lines = [f"id: [{7 + i}]\ndata: {json.dumps(ev(ts=T0 + i, user=str(i)))}".split("\n") + [""] for i in range(3)]
+    flat = [l for msg in lines for l in msg] + ["data: not json", ""]
+
+    class S:
+        headers = {}
+
+        def get(self, url, headers=None, params=None, stream=None, timeout=None):
+            calls.append((dict(headers), dict(params)))
+            return _Stream(flat)
+
+    monkeypatch.setattr(stream.requests, "Session", S)
+    monkeypatch.setattr(stop, "wait", lambda t: True)                # stop after the first connection ends
+    stream.consume(e, stop)
+    assert calls == [({"Last-Event-ID": "[6]"}, {})]
+    assert e.last_event_id == "[9]" and e.detector.articles[("en", "X")].count(T0 + 3, "10m") == 3
+    assert e.connected is False
