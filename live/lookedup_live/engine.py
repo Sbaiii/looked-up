@@ -32,7 +32,7 @@ def event_ts(event: dict) -> float:
     t = event.get("timestamp")
     if isinstance(t, (int, float)):
         return float(t)
-    return datetime.fromisoformat(event["meta"]["dt"].replace("Z", "+00:00")).timestamp()
+    return datetime.fromisoformat(event["meta"]["dt"]).timestamp()     # Python 3.11+ parses the trailing Z
 
 
 class Engine:
