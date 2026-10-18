@@ -153,3 +153,14 @@ def test_commit_gives_up_after_repeated_conflicts(tmp_path, monkeypatch):
     monkeypatch.setattr(scorer.time, "sleep", lambda s: None)
     with pytest.raises(RuntimeError, match="could not commit"):
         scorer._commit(Racy(), {}, "data: x")
+
+
+def test_old_baselines_are_pruned(lake):
+    bl = lake.root / "bl"
+    bl.mkdir()
+    old = scorer.baselines_file(D - timedelta(days=scorer.KEEP_BASELINE_DAYS + 1), bl)
+    recent = scorer.baselines_file(D - timedelta(days=1), bl)
+    old.write_bytes(b"old")
+    recent.write_bytes(b"recent")
+    scorer.build_baselines(lake, D, directory=bl)
+    assert not old.exists() and recent.exists() and scorer.baselines_file(D, bl).exists()
