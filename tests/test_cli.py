@@ -283,3 +283,17 @@ def test_verify_hour(monkeypatch, capsys):
     monkeypatch.setattr(hourly, "verify_alignment", lambda ts, work: {"file": f"{ts:%H}", "dump_en_total": 1})
     cli.main(["verify-hour", "--hour", "2026-09-13T14:00"])
     assert json.loads(capsys.readouterr().out) == {"file": "14", "dump_en_total": 1}
+
+
+def test_validate_exit_code(monkeypatch, capsys):
+    import lookedup.backfill as bf
+    from lookedup import store
+
+    monkeypatch.setattr(store, "open_store", lambda local=False: "lake")
+    monkeypatch.setattr(bf, "validate", lambda st, n, seed: [{"hour": "h", "matching_rows_pct": 99.995}])
+    cli.main(["validate"])
+    monkeypatch.setattr(bf, "validate", lambda st, n, seed: [{"hour": "h", "matching_rows_pct": 99.9}])
+    with pytest.raises(SystemExit) as e:
+        cli.main(["validate", "-n", "1"])
+    assert e.value.code == 1
+    capsys.readouterr()
