@@ -65,3 +65,11 @@ test('num and pct follow the locale', () => {
   assert.equal(i18n.num(1234567).replace(/\s/g, ' '), '1 234 567');
   assert.match(i18n.pct(0.5), /^50\s%$/);
 });
+
+test('langNative adds the native name only when it differs', () => {
+  i18n.use(dict('en'), 'en');
+  assert.equal(i18n.langNative('en'), 'English');
+  assert.equal(i18n.langNative('ja'), 'Japanese (日本語)');
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.langNative('fr'), 'français');
+});
