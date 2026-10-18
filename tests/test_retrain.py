@@ -45,3 +45,19 @@ def test_backtest_summary():
 def test_retrain_needs_training_data(tmp_path):
     with pytest.raises(RuntimeError, match="no training data"):
         R.retrain(LocalStore(tmp_path / "lake"), now=datetime(2026, 10, 12), add_live_week=False)
+
+
+def test_retrain_publishes_models_and_manifest(tmp_path, monkeypatch):
+    params = tmp_path / "params.json"
+    params.write_text(json.dumps({k: SMALL for k in [f"{t}_t{o}" for t in T.TARGETS for o in T.OFFSETS]
+                                  + [f"m2_{t}" for t in T.M2_TARGETS]}))
+    monkeypatch.setattr(R, "PARAMS", params)
+    store = LocalStore(tmp_path / "lake")
+    batch = tmp_path / "batch.parquet"
+    pq.write_table(pa.Table.from_pylist(_rows()), batch)
+    store.commit({f"{R.TRAINING}/batch.parquet": batch}, R.Manifest() if hasattr(R, "Manifest") else __import__("lookedup.store", fromlist=["Manifest"]).Manifest(), "seed")
+    res = R.retrain(store, now=datetime(2026, 10, 12), add_live_week=False)
+    assert res["version"] == "2026-10-12" and res["rows"] == 1800 and len(res["bytes"]) == 8
+    manifest = json.loads((tmp_path / "lake" / R.MANIFEST).read_text())
+    assert set(manifest["models"]) == set(res["bytes"]) and manifest["backtest"]["auc_international_t1"] == 0.875
+    assert all((tmp_path / "lake" / R.MODELS_PREFIX / s["file"]).exists() for s in manifest["models"].values())
