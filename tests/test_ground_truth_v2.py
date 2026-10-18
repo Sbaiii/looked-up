@@ -152,3 +152,16 @@ def test_expand_links_drop_files(monkeypatch):
     text = "[[File:Flag.svg|20px]] [[France national football team|France]] [[Image:x.png]] [[Kylian Mbappé]]"
     monkeypatch.setattr(G, "_get", lambda url, params: _Json({"expandtemplates": {"wikitext": text}}))
     assert G._expand_links("{{fb|FRA}}") == ["France national football team", "Kylian Mbappé"]
+
+
+def test_football_matches(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    monkeypatch.setattr(G, "_raw", lambda page: BOX)
+    monkeypatch.setattr(G, "_expand_links", lambda text: ["Flag of France", "France national football team"] if "FRA" in text
+                        else ["England national football team"])
+    [m] = G.football_matches("2026 FIFA World Cup final")
+    assert m["kickoff"] == datetime(2026, 7, 18, 21, 0)
+    assert m["teams"][0] == "France national football team" and m["match_article"] == "2026 FIFA World Cup final"
+    monkeypatch.setattr(G, "_raw", lambda page: BOX)
+    assert G.football_matches("2026 FIFA World Cup knockout stage")[0]["match_article"] is None
