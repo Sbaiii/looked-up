@@ -8,7 +8,7 @@ import logging
 import threading
 import time
 from collections.abc import Iterator
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import TYPE_CHECKING
 
 import requests
@@ -52,7 +52,7 @@ def consume(engine: Engine, stop: threading.Event, max_backoff: float = 60.0) ->
         if engine.last_event_id:
             headers["Last-Event-ID"] = engine.last_event_id
         else:
-            params["since"] = (datetime.now(timezone.utc) - COLD_START_REPLAY).strftime("%Y-%m-%dT%H:%M:%SZ")
+            params["since"] = (datetime.now(UTC) - COLD_START_REPLAY).strftime("%Y-%m-%dT%H:%M:%SZ")
             engine.mark_gap()
         try:
             with session.get(URL, headers=headers, params=params, stream=True, timeout=(10, 60)) as r:
