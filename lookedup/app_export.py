@@ -216,7 +216,7 @@ def stats_payload(days: dict[str, dict], generated_at: datetime, languages: list
 def rows(rel: duckdb.DuckDBPyRelation) -> list[dict]:
     """Fetch a DuckDB relation as a list of dicts keyed by column name."""
     cols = rel.columns
-    return [dict(zip(cols, r)) for r in rel.fetchall()]
+    return [dict(zip(cols, r, strict=True)) for r in rel.fetchall()]
 
 
 def group_langs(lang_rows: list[dict]) -> dict[str, list[dict]]:
@@ -318,7 +318,7 @@ def categories_for(events: list[dict]) -> dict[int, str]:
     cfg = load()
     qids = sorted({e["qid"] for e in events})
     claims = fetch_claims(qids, DATA_DIR / "warehouse" / "entity_claims.parquet")
-    cj = {q: json.loads(c) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist())}
+    cj = {q: json.loads(c) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist(), strict=True)}
     human = int(cfg.raw["human_class"][1:])
     out = {}
     for e in events:
@@ -331,7 +331,7 @@ def categories_for(events: list[dict]) -> dict[int, str]:
 def texts_from_table(table: pa.Table) -> dict[int, tuple[dict, str | None]]:
     """qid -> (descriptions {lang: text}, gender) from a (qid, descriptions_json, gender) table."""
     out = {}
-    for q, d, g in zip(table["qid"].to_pylist(), table["descriptions_json"].to_pylist(), table["gender"].to_pylist()):
+    for q, d, g in zip(table["qid"].to_pylist(), table["descriptions_json"].to_pylist(), table["gender"].to_pylist(), strict=True):
         out[q] = (json.loads(d) if d else {}, g)
     return out
 
