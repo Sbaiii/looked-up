@@ -388,3 +388,9 @@ def test_corrupt_qid_cache_is_ignored(tmp_path):
     bad.write_text("{not json")
     r = Resolver(bad)
     assert r.qids == {} and r.items == {}
+
+
+def test_parse_sse_messages():
+    from lookedup_live.stream import parse_sse
+    lines = [":ok", "id: [1]", "data: {\"a\":", "data: 1}", "", "event: message", "data: {}", "", "", "id: x"]
+    assert list(parse_sse(iter(lines))) == [("[1]", '{"a":\n1}'), (None, "{}")]
