@@ -39,3 +39,10 @@ test('label falls back to English, the lead language, any label, then the QID', 
   assert.equal(i18n.label({ qid: 'Q1', labels: { de: 'London' }, lead: 'ja' }), 'London');
   assert.equal(i18n.label({ qid: 'Q1' }), 'Q1');
 });
+
+test('desc uses the interface language, then English, then an empty string', () => {
+  i18n.use(dict('es'), 'es');
+  assert.equal(i18n.desc({ desc: { es: 'cantante', en: 'singer' } }), 'cantante');
+  assert.equal(i18n.desc({ desc: { en: 'singer' } }), 'singer');
+  assert.equal(i18n.desc({}), '');
+});
