@@ -502,3 +502,22 @@ def test_resolver_loop_round(monkeypatch):
     monkeypatch.setattr(e.detector, "gc", lambda now: gc.append(now))
     stream.resolver_loop(e, stop)
     assert e.detector.bursts[0].qid == "Q42" and len(gc) == 1
+
+
+def test_shift_fetches_state_or_cold_starts(tmp_path, monkeypatch):
+    import huggingface_hub
+    from lookedup_live import shift
+    src = tmp_path / "hub"
+    src.mkdir()
+    (src / "state.json.gz").write_bytes(b"state")
+    (src / "qids.json").write_bytes(b"{}")
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", lambda repo, path, **k: str(src / path.rsplit("/", 1)[1]))
+    out = tmp_path / "state"
+    out.mkdir()
+    assert shift.fetch_state(out) is True and (out / "state.json.gz").read_bytes() == b"state"
+
+    def missing(*a, **k):
+        raise FileNotFoundError("no state yet")
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", missing)
+    assert shift.fetch_state(tmp_path) is False
