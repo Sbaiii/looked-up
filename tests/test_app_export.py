@@ -212,3 +212,21 @@ def test_titles_from_sitelinks(tmp_path):
                              "qid": [597, 597, 597, 36433]}), sl)
     got = ax.titles_from_sitelinks(duckdb.connect(), sl, {597}, ["en", "pt"])
     assert got == {597: {"en": "Lisbon", "pt": "Lisboa"}}
+
+
+def _hourly_file(tmp_path, rows):
+    f = tmp_path / "day.parquet"
+    pq.write_table(pa.table({"ts_hour_start": [r[0] for r in rows], "lang": [r[1] for r in rows],
+                             "title": [r[2] for r in rows], "views_desktop": [r[3] for r in rows],
+                             "views_mobile": [0] * len(rows)}), f)
+    return f
+
+
+def test_sparklines_place_hours_around_the_start(tmp_path):
+    start = datetime(2026, 8, 17, 12)
+    f = _hourly_file(tmp_path, [(start, "en", "Lisbon", 100), (start, "pt", "Lisboa", 50),
+                                (start - timedelta(hours=1), "en", "Lisbon", 10), (start, "en", "Other", 999)])
+    ev = {"event_id": "E1", "qid": 597, "start_hour": start}
+    sp = ax.sparklines(duckdb.connect(), [f], [ev], {597: {"en": "Lisbon", "pt": "Lisboa"}})["E1"]
+    assert len(sp) == ax.SPARK_HOURS
+    assert sp[ax.SPARK_BEFORE] == 150 and sp[ax.SPARK_BEFORE - 1] == 10 and sum(sp) == 160
