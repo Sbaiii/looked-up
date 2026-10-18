@@ -76,7 +76,7 @@ def recall_vs_threshold(grid_csv: Path, out: Path) -> None:
         rows = [r for r in csv.DictReader(f) if r["window_hours"] == "6"]
     fig, ax = plt.subplots(figsize=(7, 3.8))
     best = 0.0
-    for n, colour in zip(("2", "3", "5"), (MUTED, ACCENT, INK)):
+    for n, colour in zip(("2", "3", "5"), (MUTED, ACCENT, INK), strict=True):
         sub = sorted((r for r in rows if r["min_languages"] == n), key=lambda r: float(r["r3_threshold"]))
         x = [str(int(float(r["r3_threshold"]))) for r in sub]
         y = [100 * float(r["recall_24h"]) for r in sub]
@@ -125,10 +125,10 @@ def deaths_by_languages(rows: list[dict], out: Path) -> None:
         xs = [i + (k - 1) * width for i in range(len(buckets))]
         ax.bar(xs, ys, width=width, color=colour, label=label)
         if key == "detected":
-            for x, y in zip(xs, ys):
+            for x, y in zip(xs, ys, strict=True):
                 ax.text(x, y + 1.5, f"{y:.0f} %", ha="center", fontsize=8.5, color=ACCENT)
     ns = [sum(lo <= int(r["n_languages"]) <= hi for r in rows) for _, lo, hi in buckets]
-    ax.set_xticks(range(len(buckets)), [f"{b[0]} languages\n(n = {n})" for b, n in zip(buckets, ns)])
+    ax.set_xticks(range(len(buckets)), [f"{b[0]} languages\n(n = {n})" for b, n in zip(buckets, ns, strict=True)])
     ax.axhline(60, color=GRID)
     ax.set_ylim(0, 100)
     ax.set_ylabel("deaths detected within 24 h (%)", color=INK)
