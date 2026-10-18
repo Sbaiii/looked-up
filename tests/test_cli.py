@@ -341,3 +341,12 @@ def test_forecast_evaluate_summary(monkeypatch, capsys):
     cli.main(["forecast-evaluate"])
     assert json.loads(capsys.readouterr().out) == {"split_sizes": {"train": 1}, "H6": "supported", "H7": "rejected",
                                                    "H8": "supported"}
+
+
+def test_compact_report(monkeypatch, capsys):
+    import lookedup.compact as cp
+
+    monkeypatch.setattr(cp, "compact_local", lambda root: [{"day": "d1", "hours": 24, "bytes_hourly_files": 200, "bytes_day_file": 100},
+                                                           {"day": "d2", "hours": 3, "bytes_hourly_files": 50, "bytes_day_file": 40}])
+    cli.main(["compact"])
+    assert "full days: 1; mean bytes/day 200 -> 100 (0.50x)" in capsys.readouterr().out
