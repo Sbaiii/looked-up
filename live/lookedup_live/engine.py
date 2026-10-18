@@ -8,7 +8,7 @@ import json
 import threading
 import time
 from collections import Counter, deque
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 
 from lookedup_live.bursts import Burst, Detector, live_events
@@ -24,7 +24,7 @@ HOURLY_KEEP = RULES["hourly_counts_hours"]
 
 def iso(ts: float | None) -> str | None:
     """Epoch seconds as an ISO timestamp in UTC (None stays None)."""
-    return None if ts is None else datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return None if ts is None else datetime.fromtimestamp(ts, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def event_ts(event: dict) -> float:
