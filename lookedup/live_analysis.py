@@ -19,7 +19,7 @@ import logging
 import statistics
 import sys
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, UTC
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -109,7 +109,7 @@ def burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: dateti
 def _burst_time(revs: list[dict], lang: str, title: str, lo: datetime, hi: datetime) -> tuple[float | None, str | None]:
     """(epoch seconds, kind) of the first edit burst of one article between ``lo`` and ``hi``, under the pre-registered rules; (None, None) without one."""
     det = Detector()
-    lo_s, hi_s = lo.replace(tzinfo=timezone.utc).timestamp(), hi.replace(tzinfo=timezone.utc).timestamp()
+    lo_s, hi_s = lo.replace(tzinfo=UTC).timestamp(), hi.replace(tzinfo=UTC).timestamp()
     for r in revs:
         if not counted(r):
             continue
@@ -155,10 +155,10 @@ def run_h9() -> dict:
             ts, kind = burst_time(revs, L["lang"], L["title"], start - timedelta(hours=24), start + timedelta(hours=24))
             if ts is not None and (best[0] is None or ts < best[0]):
                 best = (ts, L["lang"], kind)
-        start_s = start.replace(tzinfo=timezone.utc).timestamp()
+        start_s = start.replace(tzinfo=UTC).timestamp()
         rows.append({"event_id": e["event_id"], "qid": e["qid"], "label": e["label_en"], "category": e["category"],
                      "breadth": e["breadth"], "start_hour": f"{start:%Y-%m-%dT%H}:00Z",
-                     "burst_at": datetime.fromtimestamp(best[0], timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if best[0] else "",
+                     "burst_at": datetime.fromtimestamp(best[0], UTC).strftime("%Y-%m-%dT%H:%M:%SZ") if best[0] else "",
                      "burst_lang": best[1] or "", "burst_kind": best[2] or "",
                      "lead_minutes": round((start_s - best[0]) / 60) if best[0] else ""})
         if i % 100 == 0:
@@ -243,10 +243,10 @@ def score_day(store: Store, day: date) -> list[dict]:
     live_qids = {e["qid"] for e in lives}
     units = [("live", e["qid"], e["ts"], sorted(e["languages"])) for e in lives]
     units += [("single", b.qid, b.ts, [b.lang]) for b in bursts if b.qid and b.qid not in live_qids]
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     rows = []
     for kind, qid, ts, langs in units:
-        b = datetime.fromtimestamp(ts, timezone.utc).replace(tzinfo=None)
+        b = datetime.fromtimestamp(ts, UTC).replace(tzinfo=None)
         floor = b.replace(minute=0, second=0, microsecond=0)
         cand = [s for s in starts.get(qid, []) if floor - timedelta(hours=2) <= s <= floor + timedelta(hours=24)]
         first = min(cand) if cand else None
@@ -304,7 +304,7 @@ def snapshot(store: Store, base_url: str, day: date) -> dict:
     base = base_url.rstrip("/")
     bursts = session().get(f"{base}/bursts.json", params={"hours": 72}, timeout=30).json()["bursts"]
     stats = session().get(f"{base}/stats.json", timeout=30).json()
-    lo = datetime(day.year, day.month, day.day, tzinfo=timezone.utc).timestamp()
+    lo = datetime(day.year, day.month, day.day, tzinfo=UTC).timestamp()
     rows = [b for b in bursts if lo <= b["ts"] < lo + 86400]
     with tempfile.TemporaryDirectory() as tmpd:
         tmp = Path(tmpd)
