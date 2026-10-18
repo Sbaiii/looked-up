@@ -70,7 +70,7 @@ def ramp(x: float) -> tuple[int, int, int]:
     """Colour at position ``x`` in [0, 1] on the three-stop attention ramp, interpolated in RGB."""
     a, b = (RAMP[0], RAMP[1]) if x < 0.5 else (RAMP[1], RAMP[2])
     f = x * 2 if x < 0.5 else (x - 0.5) * 2
-    return tuple(round(p + (q - p) * f) for p, q in zip(_rgb(a), _rgb(b)))
+    return tuple(round(p + (q - p) * f) for p, q in zip(_rgb(a), _rgb(b), strict=True))
 
 
 def font(size: int, weight: int = 800, mono: bool = False) -> ImageFont.FreeTypeFont:
