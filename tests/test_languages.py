@@ -107,3 +107,25 @@ def test_write_config(tmp_path, monkeypatch):
                                    "speakers": 753359540, "human_views_7d": 10}
     assert doc["languages"][1]["name_en"] is None and doc["languages"][1]["speakers"] is None
     assert active_codes(out) == ["en"]
+
+
+def test_get_json_retries(monkeypatch):
+    import pytest
+    import requests
+
+    attempts = []
+
+    class S:
+        def get(self, url, params=None, timeout=None, **kw):
+            attempts.append(1)
+            if len(attempts) < 3:
+                raise requests.ConnectionError("blip")
+            return type("R", (), {"raise_for_status": lambda self: None, "json": lambda self: {"ok": True}})()
+
+    monkeypatch.setattr(L, "session", lambda: S())
+    monkeypatch.setattr(L.time, "sleep", lambda s: None)
+    assert L._get_json("https://meta.wikimedia.org/w/api.php", {}) == {"ok": True} and len(attempts) == 3
+    attempts.clear()
+    monkeypatch.setattr(L, "session", lambda: type("D", (), {"get": lambda self, *a, **k: (_ for _ in ()).throw(requests.ConnectionError("down"))})())
+    with pytest.raises(requests.ConnectionError):
+        L._get_json("https://x", {}, retries=2)
