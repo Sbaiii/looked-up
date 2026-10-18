@@ -358,7 +358,7 @@ def run() -> dict:
                     "What the model leans on", "Will it go international at t0 + 1 h? Permutation importance, validation")
     # backtest models (trained on train only) for inspection
     sizes = {}
-    for key, (model, enc, ab, *_rest) in models.items():
+    for key, (model, *_rest) in models.items():
         sizes[key] = T.save(model, DATA_DIR / "models" / "backtest" / f"{key}.txt")
     res["backtest_model_bytes"] = sizes
     (OUT / "phase4_metrics.json").write_text(json.dumps(res, indent=1, default=str))
