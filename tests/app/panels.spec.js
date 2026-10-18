@@ -23,3 +23,9 @@ test('the briefing panel follows the shown day', async ({ page }) => {
   expect(await page.locator('#brief-facts li').count()).toBeGreaterThan(0);
   await expect(page.locator('#day-brief')).toHaveText(await page.locator('#brief-text').textContent());
 });
+
+test('the legend shows the four ticks of the absolute scale', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#legend-ticks span')).toHaveText(['8', '50', '500', '5k+']);
+});
