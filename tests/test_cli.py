@@ -297,3 +297,24 @@ def test_validate_exit_code(monkeypatch, capsys):
         cli.main(["validate", "-n", "1"])
     assert e.value.code == 1
     capsys.readouterr()
+
+
+def test_wikidata_upload_switch(monkeypatch, tmp_path, capsys):
+    import lookedup.settings as settings
+    import lookedup.wikidata as wd
+    from lookedup import store
+
+    commits = []
+
+    class Lake:
+        def commit(self, files, delta, message, parent=None):
+            commits.append((list(files), message))
+
+    monkeypatch.setattr(settings, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(wd, "build_sitelinks", lambda langs, out: {"en": 2, "fr": 1})
+    monkeypatch.setattr(store, "open_store", lambda local=False: Lake())
+    cli.main(["wikidata", "--no-upload"])
+    assert commits == []
+    cli.main(["wikidata"])
+    assert commits == [([settings.SITELINKS_PATH], "data: refresh Wikidata sitelinks (3 rows)")]
+    capsys.readouterr()
