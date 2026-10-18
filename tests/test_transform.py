@@ -13,7 +13,7 @@ HOUR = datetime(2026, 9, 13, 14)
 
 
 def _rows(table: pa.Table) -> list[tuple]:
-    return sorted(zip(*(table[c].to_pylist() for c in table.column_names)))
+    return sorted(zip(*(table[c].to_pylist() for c in table.column_names), strict=True))
 
 
 def test_hourly_schema_and_rules(article_filter):
@@ -22,11 +22,11 @@ def test_hourly_schema_and_rules(article_filter):
     assert t.num_rows > 100
     assert set(t["ts_hour_start"].to_pylist()) == {HOUR}
     assert set(t["lang"].to_pylist()) <= set(LANGS)
-    for lang, title, d, m in zip(*(t[c].to_pylist() for c in ("lang", "title", "views_desktop", "views_mobile"))):
+    for lang, title, d, m in zip(*(t[c].to_pylist() for c in ("lang", "title", "views_desktop", "views_mobile")), strict=True):
         assert article_filter.is_article(lang, title), (lang, title)
         assert keep_row(d, m)
     # desktop and mobile are stored separately, never pre-summed (D2)
-    assert any(d > 0 and m > 0 for d, m in zip(t["views_desktop"].to_pylist(), t["views_mobile"].to_pylist()))
+    assert any(d > 0 and m > 0 for d, m in zip(t["views_desktop"].to_pylist(), t["views_mobile"].to_pylist(), strict=True))
 
 
 def test_hourly_sql_matches_python_reference(article_filter):
