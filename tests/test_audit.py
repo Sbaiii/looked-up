@@ -71,3 +71,15 @@ def test_h3_sample_is_seeded_with_96_hour_series(tmp_path, monkeypatch):
     assert [r["unit_id"] for r in rows[:2]] == ["u001", "u002"] and all(len(r["views_by_hour_d-3_to_d"].split()) == 96 for r in rows)
     t5 = [r for r in rows if r["title"] == "T5"]
     assert not t5 or t5[0]["views_by_hour_d-3_to_d"].split()[:3] == ["0", "1", "2"]
+
+
+def test_run_audit_sample_writes_into_out(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from lookedup.evaluation import metrics, run
+
+    seen = {}
+    monkeypatch.setattr(run, "OUT", tmp_path)
+    monkeypatch.setattr(metrics, "open_context", lambda w, c, cfg: SimpleNamespace(con="con"))
+    monkeypatch.setattr(audit, "sample", lambda con, cfg, out: seen.update(con=con, out=out) or 7)
+    assert run.audit_sample() == 7 and seen == {"con": "con", "out": tmp_path / "h3_sample.csv"}
