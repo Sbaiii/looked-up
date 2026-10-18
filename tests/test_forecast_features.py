@@ -28,7 +28,7 @@ def _con(spike_rows, view_rows, breadth=3):
 
 SPIKES = [("es", 0, 50, 500, 10), ("en", 2, 30, 300, 10), ("fr", 3, 20, 200, 10), ("de", 5, 9, 150, 10),
           ("it", 3, 7, 120, 10)]                      # it: below R3, counts for excess only
-VIEWS = [("es", h, 500 - 40 * h) for h in range(0, 10)] + [("en", h, 300) for h in range(2, 6)] + \
+VIEWS = [("es", h, 500 - 40 * h) for h in range(10)] + [("en", h, 300) for h in range(2, 6)] + \
         [("fr", 3, 200), ("de", 5, 150)]
 
 
