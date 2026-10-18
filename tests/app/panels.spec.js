@@ -29,3 +29,9 @@ test('the legend shows the four ticks of the absolute scale', async ({ page }) =
   await ready(page);
   await expect(page.locator('#legend-ticks span')).toHaveText(['8', '50', '500', '5k+']);
 });
+
+test('the update line names the data time in UTC and in local time', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#updated')).toHaveText(/^Updated .+ UTC · .+ your time$/);
+});
