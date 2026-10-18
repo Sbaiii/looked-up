@@ -22,7 +22,7 @@ def _spikes(rows):
 
 
 def _dicts(rel):
-    return [dict(zip(rel.columns, r)) for r in rel.fetchall()]
+    return [dict(zip(rel.columns, r, strict=True)) for r in rel.fetchall()]
 
 
 def _events(con, p=P):
