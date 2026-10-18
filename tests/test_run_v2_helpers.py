@@ -50,3 +50,11 @@ def test_first_event_in_window(tmp_path, monkeypatch):
     assert got == {"qid": 1, "start_hour": datetime(2026, 8, 10, 12), "lead_lang": "en", "breadth": 3, "event_class": "multi_language"}
     assert ev.first(ev.tables["primary"], [1], datetime(2026, 8, 11), datetime(2026, 8, 11, 23)) is None
     assert ev.first(ev.tables["primary"], [], datetime(2026, 8, 10), datetime(2026, 8, 13)) is None
+
+
+def test_variant_built_once(tmp_path, monkeypatch):
+    ev = _events(tmp_path, monkeypatch)
+    name = ev.variant(2)
+    assert name == "ev_n2" and ev.variant(2) == name
+    assert ev.con.sql(f"SELECT count(*) FROM {name}").fetchone()[0] == 1          # en and fr within the window
+    assert ev.con.sql(f"SELECT count(*) FROM {ev.variant(3)}").fetchone()[0] == 0
