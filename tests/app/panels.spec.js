@@ -71,3 +71,11 @@ test('a language without events on the day shows the empty line', async ({ page 
   }
   throw new Error('every language had single-language events in the fixture');
 });
+
+test('a data outage shows the error line instead of a blank hero', async ({ page }) => {
+  await page.route('https://huggingface.co/datasets/Sbaiiiiii/looked-up/resolve/main/data/app/today.json*',
+    (route) => route.fulfill({ status: 503, body: 'down' }));
+  await page.goto('./');
+  await expect(page.locator('#hero-label')).toHaveText('The data could not be loaded. Please try again later.');
+  await expect(page.locator('#hero-label')).not.toHaveClass(/skeleton/);
+});
