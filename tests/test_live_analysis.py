@@ -147,3 +147,24 @@ def test_score_day_without_bursts(tmp_path):
     from lookedup.store import LocalStore
 
     assert LA.score_day(LocalStore(tmp_path), date(2026, 10, 9)) == []
+
+
+def test_score_day_hits_and_singles(tmp_path, monkeypatch):
+    import json
+    from datetime import date
+
+    import lookedup.app_export as ax
+    from lookedup.store import LocalStore
+
+    day = date(2026, 10, 9)
+    t = datetime(2026, 10, 9, 12, 10, tzinfo=UTC).timestamp()
+    bursts = [{"lang": "en", "title": "X", "ts": t, "kind": "window", "edits_30m": 5, "editors_30m": 3, "qid": "Q1"},
+              {"lang": "fr", "title": "X", "ts": t + 600, "kind": "window", "edits_30m": 5, "editors_30m": 3, "qid": "Q1"},
+              {"lang": "de", "title": "Y", "ts": t, "kind": "window", "edits_30m": 6, "editors_30m": 4, "qid": "Q2"}]
+    (tmp_path / "data/live/bursts").mkdir(parents=True)
+    (tmp_path / "data/live/bursts/2026-10-09.jsonl").write_text("".join(json.dumps(b) + "\n" for b in bursts))
+    monkeypatch.setattr(ax, "events_from_spikes", lambda con, files: ([{"qid": 1, "start_hour": datetime(2026, 10, 9, 14)}], []))
+    rows = {r["qid"]: r for r in LA.score_day(LocalStore(tmp_path), day)}
+    assert rows["Q1"]["kind"] == "live" and rows["Q1"]["hit"] == 1 and rows["Q1"]["forward_hit"] == 1
+    assert rows["Q1"]["langs"] == "en fr" and rows["Q1"]["lead_minutes"] == 100     # dated at the fr burst, 12:20
+    assert rows["Q2"]["kind"] == "single" and rows["Q2"]["hit"] == 0 and rows["Q2"]["event_start"] == ""
