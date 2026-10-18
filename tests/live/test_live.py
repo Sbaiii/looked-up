@@ -37,7 +37,7 @@ def test_filters():
 
 def test_sliding_windows_and_distinct_editors_without_storing_users():
     d = B.Detector()
-    for i, (dt, u) in enumerate([(0, "a"), (300, "b"), (900, "a"), (2000, "c")]):
+    for dt, u in [(0, "a"), (300, "b"), (900, "a"), (2000, "c")]:
         d.add("en", "X", T0 + dt, u)
     c = d.counts("en", "X", T0 + 2000)
     assert c == {"edits_10m": 1, "edits_30m": 3, "edits_60m": 4, "editors_30m": 3}
