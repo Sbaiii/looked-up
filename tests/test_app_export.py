@@ -249,3 +249,36 @@ def test_live_forecasts_never_fail(tmp_path, monkeypatch):
 
     monkeypatch.setattr(P, "load_models", broken)
     assert ax.live_forecasts(duckdb.connect(), None, [], datetime(2026, 8, 17), None, [], {}, tmp_path) == ({}, {})
+
+
+def test_export_live_end_to_end(tmp_path, monkeypatch):
+    import json
+
+    from lookedup.scorer import spikes_path
+    from lookedup.store import LocalStore, Manifest, day_path
+
+    now = datetime(2026, 8, 17, 14, 30)
+    h = datetime(2026, 8, 17, 10)
+    lake = tmp_path / "lake"
+    spikes = {"qid": [597, 597], "lang": ["en", "pt"], "ts_hour_start": [h, h], "title": ["Lisbon", "Lisboa"],
+              "surprise": [50.0, 30.0], "views": [5000, 3000], "baseline_median": [100.0, 50.0], "is_automated": [False, False]}
+    (lake / spikes_path(h.date())).parent.mkdir(parents=True)
+    pq.write_table(pa.table(spikes), lake / spikes_path(h.date()))
+    hourly = lake / day_path(h)
+    hourly.parent.mkdir(parents=True)
+    pq.write_table(pa.table({"ts_hour_start": [h, h], "lang": ["en", "pt"], "title": ["Lisbon", "Lisboa"],
+                             "views_desktop": [4000, 2000], "views_mobile": [1000, 1000]}), hourly)
+    store = LocalStore(lake)
+    m = Manifest()
+    m.add(h, rows=2, source="hourly_dump")
+    store.commit({}, m, "seed manifest")
+    monkeypatch.setattr(ax, "titles_from_api", lambda qids, langs: {597: {"en": "Lisbon", "pt": "Lisboa"}})
+    monkeypatch.setattr(ax, "categories_for", lambda events: {597: "place"})
+    monkeypatch.setattr(ax, "texts_live", lambda events: {597: ({"en": "capital of Portugal"}, None)})
+    res = ax.export_live(store, now=now, languages=["en", "pt"])
+    assert res == {"today_events": 1, "days": ["2026-08-16", "2026-08-17"]}
+    today = json.loads((lake / ax.APP_PREFIX / "today.json").read_text())
+    assert [e["qid"] for e in today["events"]] == ["Q597"] and today["events"][0]["desc"] == {"en": "capital of Portugal"}
+    assert (lake / ax.APP_PREFIX / "today.json.gz").exists() and (lake / ax.og_file(h.date())).exists()
+    stats = json.loads((lake / ax.APP_PREFIX / "stats.json").read_text())
+    assert sorted(stats["days"]) == ["2026-08-16", "2026-08-17"] and stats["events"] == 1
