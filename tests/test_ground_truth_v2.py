@@ -73,3 +73,18 @@ def test_usgs_quakes(monkeypatch):
     assert q[0]["usgs_id"] == "us7000t1bu" and q[0]["mag"] == 7.3 and (q[0]["lon"], q[0]["lat"]) == (-93.2, 14.4)
     assert q[0]["origin"].tzinfo is None and q[0]["origin"].year == 2026
     assert q[1]["place"] == "" and q[1]["origin"] == datetime(1970, 1, 1)
+
+
+def test_wikidata_quakes(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    W = "http://www.wikidata.org/entity/"
+    rows = [{"item": {"value": W + "Q140616464"}, "t": {"value": "2026-07-17T00:00:00Z"},
+             "coord": {"value": "Point(-93.2 14.4)"}, "mag": {"value": "7.3"}, "country": {"value": W + "Q96"}},
+            {"item": {"value": W + "Q140616464"}, "t": {"value": "2026-07-17T00:00:00Z"}, "country": {"value": W + "Q774"}},
+            {"item": {"value": W + "Q1"}, "t": {"value": "2026-08-01T00:00:00Z"}}]
+    monkeypatch.setattr(G, "_sparql", lambda q: rows)
+    got = {q["qid"]: q for q in G.wikidata_quakes(date(2026, 7, 16), date(2026, 10, 7))}
+    assert got[140616464]["countries"] == {96, 774} and (got[140616464]["lon"], got[140616464]["lat"]) == (-93.2, 14.4)
+    assert got[140616464]["mag"] == 7.3 and got[140616464]["date"] == "2026-07-17"
+    assert got[1]["lon"] is None and got[1]["mag"] is None and got[1]["countries"] == set()
