@@ -69,7 +69,7 @@ def live_week(store: Store, monday: date, tmp: Path) -> pa.Table | None:
         return None
     cfg = load()
     claims = fetch_claims({e["qid"] for e in events}, DATA_DIR / "warehouse" / "entity_claims.parquet")
-    cj = {q: json.loads(c) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist())}
+    cj = {q: json.loads(c) for q, c in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist(), strict=True)}
     classes = {q: classify(c, cfg) for q, c in cj.items()}
     titles = titles_from_api({e["qid"] for e in events}, active_codes())
     live_relations(con, events, categories_for(events), classes, titles, hourly)
