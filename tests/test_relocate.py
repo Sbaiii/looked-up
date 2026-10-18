@@ -64,3 +64,12 @@ def test_skipped_prefixes_stay_behind(tmp_path):
     res = relocate(source=src, target=dst, skip=("raw",))
     assert (dst / "lake" / "m.json").exists() and not (dst / "raw").exists()
     assert (src / "raw" / "big.gz").exists() and res["moved"] == 1
+
+
+def test_old_readme_stays(tmp_path):
+    src, dst = tmp_path / "old", tmp_path / "new"
+    src.mkdir()
+    (src / "README.md").write_text("data moved")
+    (src / "a.txt").write_text("a")
+    res = relocate(source=src, target=dst)
+    assert res["moved"] == 1 and (src / "README.md").exists() and not (dst / "README.md").exists()
