@@ -71,3 +71,27 @@ def test_no_models_means_no_forecasts(tmp_path):
     manifest, models = P.load_models(LocalStore(tmp_path / "lake"), tmp_path)
     assert manifest == {} and models == {}
     assert P.forecast_open(None, [{"event_id": "E1"}], datetime(2026, 10, 10), datetime(2026, 10, 10), manifest, models) == {}
+
+
+def test_published_models_load(tmp_path):
+    import json
+
+    from lookedup.forecast import predict as P
+    from lookedup.store import LocalStore, Manifest
+
+    rows = [{"n_sitelinks": i % 30, "lead_lang": "en", "entity_class": "human", "breadth_t": 2} for i in range(200)]
+    enc = T.Encoder.fit(rows, features=["n_sitelinks", "breadth_t", "lead_lang"])
+    y = np.array([int(r["n_sitelinks"] > 20) for r in rows], dtype=float)
+    booster = T.fit(enc.matrix(rows), y, enc, {"num_leaves": 7, "learning_rate": 0.3, "n_estimators": 10,
+                                                 "min_child_samples": 5, "feature_fraction": 1.0, "lambda_l2": 0.0}, "binary")
+    T.save(booster, tmp_path / "out" / "v1" / "international_t1.txt")
+    manifest = {"version": "v1", "models": {"international_t1": {"file": "v1/international_t1.txt", "encoder": enc.to_json(),
+                                                                  "platt": [1.0, 0.0]}}}
+    (tmp_path / "out" / "models.json").write_text(json.dumps(manifest))
+    store = LocalStore(tmp_path / "lake")
+    store.commit({P.MANIFEST: tmp_path / "out" / "models.json",
+                  f"{P.MODELS_PREFIX}/v1/international_t1.txt": tmp_path / "out" / "v1" / "international_t1.txt"}, Manifest(), "m")
+    got_manifest, models = P.load_models(store, tmp_path / "tmp")
+    model, enc2, platt = models["international_t1"]
+    assert got_manifest["version"] == "v1" and platt == (1.0, 0.0) and enc2.features == enc.features
+    assert np.allclose(T.score(model, enc2.matrix(rows)), T.score(booster, enc.matrix(rows)))
