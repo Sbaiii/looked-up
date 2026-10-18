@@ -170,7 +170,7 @@ def build(start: date, end: date, sitelinks_path: Path, claims_cache: Path, out_
     n_lang = dict(con.execute(f"""select qid, count(distinct lang) from read_parquet('{sitelinks_path}')
                                   where qid in (select unnest(?::BIGINT[])) group by qid""", [qids]).fetchall())
     claims = fetch_claims(qids, claims_cache)
-    generic = {q for q, cj in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist())
+    generic = {q for q, cj in zip(claims["qid"].to_pylist(), claims["claims_json"].to_pylist(), strict=True)
                if is_generic(json.loads(cj), cfg)}
     min_langs = cfg.raw["evaluation"]["major_min_languages"]
     rows = []
