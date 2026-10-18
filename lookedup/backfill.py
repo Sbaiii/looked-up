@@ -93,7 +93,7 @@ def validate(store: Store, n: int = 3, seed: int | None = None) -> list[dict]:
 
             def rows(t: pa.Table) -> list[tuple]:
                 return sorted(zip(*(t[c].to_pylist() for c in
-                                    ("ts_hour_start", "lang", "title", "views_desktop", "views_mobile"))))
+                                    ("ts_hour_start", "lang", "title", "views_desktop", "views_mobile")), strict=True))
             a, b = rows(stored), rows(rebuilt)
             only_a, only_b = set(a) - set(b), set(b) - set(a)
             views = lambda rs: sum(r[3] + r[4] for r in rs)  # noqa: E731
