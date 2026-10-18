@@ -11,7 +11,7 @@ import logging
 import math
 import re
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, UTC
 
 import requests
 
@@ -115,7 +115,7 @@ def usgs_quakes(start: datetime, end: datetime, min_mag: float) -> list[dict]:
     for f in r.json()["features"]:
         p, g = f["properties"], f["geometry"]["coordinates"]
         out.append({"usgs_id": f["id"], "mag": p["mag"], "place": p["place"] or "",
-                    "origin": datetime.fromtimestamp(p["time"] / 1000, tz=timezone.utc).replace(tzinfo=None),
+                    "origin": datetime.fromtimestamp(p["time"] / 1000, tz=UTC).replace(tzinfo=None),
                     "lon": g[0], "lat": g[1]})
     return out
 
