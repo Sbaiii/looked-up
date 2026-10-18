@@ -134,3 +134,17 @@ def test_metrics_on_a_single_class_sample():
     assert m["roc_auc"] is None and m["pr_auc"] is None and m["positives"] == 0
     assert np.isnan(E.calib_slope(y, s))
     assert np.isnan(E.lift_top10(y, s))                                  # no positives: lift is undefined
+
+
+def test_m1_baselines():
+    tr, te = _rows(300, seed=1), _rows(200, seed=2)
+    y_tr = T.labels(tr, "international")
+    y_te = T.labels(te, "international")
+    out, sl = E.m1_baselines(tr, te, y_tr, y_te)
+    assert out["base_rate"]["roc_auc"] == 0.5 and len(sl) == len(te)
+    flagged = np.array([r["breadth_t"] >= 3 for r in te])
+    tp = int((flagged & (y_te == 1)).sum())
+    assert out["breadth_rule"]["rule_precision"] == tp / flagged.sum()
+    assert out["breadth_rule"]["rule_recall"] == tp / y_te.sum()
+    assert out["sitelinks_logistic"]["roc_auc"] > 0.6                 # fame does predict these synthetic rows
+
