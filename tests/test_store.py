@@ -317,3 +317,19 @@ def test_hub_maintenance_calls(tmp_path):
     hf.squash_history("squash")
     hf.upload_card(tmp_path / "README.md")
     assert calls == [("squash", "dataset"), ("card", "README.md", "dataset")]
+
+
+def test_sync_includes_sitelinks(tmp_path, monkeypatch):
+    import huggingface_hub
+
+    from lookedup.settings import SITELINKS_PATH
+    from lookedup.store import sync_to_local
+
+    hf = _hf(_FakeApi([]))
+    monkeypatch.setattr(hf, "head", lambda: "rev")
+    monkeypatch.setattr(hf, "read_manifest", lambda revision=None: Manifest())
+    got = []
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", lambda repo, path, **k: got.append(path))
+    sync_to_local(hf, LocalStore(tmp_path), datetime(2026, 8, 1))
+    sync_to_local(hf, LocalStore(tmp_path), datetime(2026, 8, 1), include_sitelinks=False)
+    assert got == [SITELINKS_PATH]
