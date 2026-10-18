@@ -109,3 +109,34 @@ def test_detection_delays(monkeypatch):
     res = detection_delays(ctx, "ev")
     assert res["n"] == 2
     assert sorted(d["delay_hours"] for d in res["rows"]) == [-1.0, 3.0]
+
+
+def _warehouse(tmp_path):
+    import duckdb
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    w = tmp_path / "w.duckdb"
+    con = duckdb.connect(str(w))
+    con.execute("""CREATE TABLE int_spikes AS SELECT * FROM (VALUES
+        (1, 'en', TIMESTAMP '2026-08-10 10:00', 20.0, false, false),
+        (1, 'fr', TIMESTAMP '2026-08-10 11:00', 15.0, false, false),
+        (1, 'de', TIMESTAMP '2026-08-10 12:00', 9.0, false, false),
+        (1, 'ja', TIMESTAMP '2026-08-10 13:00', 50.0, true, false)) t(qid, lang, ts_hour_start, surprise, is_automated, is_low_mobile)""")
+    con.close()
+    gt = tmp_path / "gt.parquet"
+    pq.write_table(pa.table({"date": [datetime(2026, 8, 10).date()] * 3, "qid": [1, 1, 2], "section": ["Sports", "Sports", "Law"],
+                             "link_title": ["X", "X", "Y"], "is_major": [True, True, False], "depth": [1, 2, 1]}), gt)
+    return w, gt
+
+
+def test_open_context(tmp_path, monkeypatch):
+    from lookedup.analytics.config import load
+    from lookedup.evaluation.metrics import open_context
+
+    monkeypatch.delenv("LOOKEDUP_PERIOD_END", raising=False)
+    ctx = open_context(*_warehouse(tmp_path), load())
+    assert ctx.con.sql("SELECT count(*) FROM spikes_ok").fetchone()[0] == 3
+    assert ctx.con.sql("SELECT count(*) FROM spikes_s1").fetchone()[0] == 4
+    assert ctx.con.sql("SELECT qid, sections FROM majors").fetchall() == [(1, ["Sports"])]
+    assert ctx.con.sql("SELECT count(*) FROM portal_qids").fetchone()[0] == 2
