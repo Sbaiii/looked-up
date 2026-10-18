@@ -97,3 +97,32 @@ def test_resolve_qids_batches(monkeypatch):
     monkeypatch.setattr(gt.time, "sleep", lambda s: None)
     gt.resolve_qids("en", [f"T{i}" for i in range(5)], batch=2)
     assert [c["titles"].count("|") + 1 for c in s.calls] == [2, 2, 1]
+
+
+def test_build_marks_major_pairs(tmp_path, monkeypatch):
+    import json
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    import lookedup.analytics.entities as E
+    import lookedup.evaluation.ground_truth as gt
+    from lookedup.analytics.config import load
+
+    wiki = "== Sports ==\n* [[Lisbon]] hosts the [[Final]].\n** [[Week]] note\n"
+    monkeypatch.setattr(gt, "fetch_day", lambda d: wiki)
+    monkeypatch.setattr(gt.time, "sleep", lambda s: None)
+    monkeypatch.setattr(gt, "resolve_qids", lambda lang, titles: {"Lisbon": 597, "Final": 7, "Week": 23387})
+    sl = tmp_path / "sitelinks.parquet"
+    pq.write_table(pa.table({"lang": ["en", "fr", "pt", "de", "en"], "title": ["L", "L", "L", "L", "F"],
+                             "qid": [597, 597, 597, 597, 7]}), sl)
+    cfg = load()
+    generic = int(next(iter(cfg.raw["generic_classes"]))[1:])            # e.g. a country is a generic link
+    monkeypatch.setattr(E, "fetch_claims", lambda qids, cache: pa.table({"qid": [597, 7, 23387], "label_en": [None] * 3,
+        "claims_json": [json.dumps({"P31": [515]}), json.dumps({"P31": [1]}), json.dumps({"P31": [generic]})]}))
+    res = gt.build(date(2026, 8, 10), date(2026, 8, 10), sl, tmp_path / "c.parquet", tmp_path / "gt.parquet", cfg)
+    rows = {r["link_title"]: r for r in pq.read_table(tmp_path / "gt.parquet").to_pylist()}
+    assert res["days"] == 1 and res["resolved"] == 3
+    assert rows["Week"]["is_generic"] and not rows["Week"]["is_major"]
+    assert rows["Lisbon"]["is_major"] == (4 >= cfg.raw["evaluation"]["major_min_languages"])
+    assert not rows["Final"]["is_major"]                                    # linked in one language only
