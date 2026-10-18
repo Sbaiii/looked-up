@@ -47,3 +47,19 @@ def test_no_event_time_for_old_articles_or_missing_pages(monkeypatch):
     assert T.event_time("Quake", date(2026, 8, 10)) is None
     monkeypatch.setattr(T, "_api", lambda params: {"query": {"pages": [{"title": "Nothing", "missing": True}]}})
     assert T.event_time("Nothing", date(2026, 8, 10)) is None
+
+
+def test_api_call_is_paced(monkeypatch):
+    import lookedup.evaluation.timestamps as T
+
+    slept, seen = [], []
+
+    class S:
+        def get(self, url, params=None, timeout=None):
+            seen.append(params)
+            return type("R", (), {"raise_for_status": lambda self: None, "json": lambda self: {"query": {}}})()
+
+    monkeypatch.setattr(T, "session", lambda: S())
+    monkeypatch.setattr(T.time, "sleep", lambda s: slept.append(s))
+    assert T._api({"action": "query"}) == {"query": {}}
+    assert slept == [0.35] and seen == [{"action": "query", "format": "json", "formatversion": 2}]
