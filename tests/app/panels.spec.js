@@ -14,3 +14,12 @@ test('About lists its lines and limits and links the dataset and repository', as
   await expect(page.locator('#about-links a')).toHaveCount(2);
   expect(page.errors).toEqual([]);
 });
+
+test('the briefing panel follows the shown day', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await expect(page.locator('#brief-date')).toHaveText('17 August');
+  await expect(page.locator('#brief-text')).toContainText('the world looked up');
+  expect(await page.locator('#brief-facts li').count()).toBeGreaterThan(0);
+  await expect(page.locator('#day-brief')).toHaveText(await page.locator('#brief-text').textContent());
+});
