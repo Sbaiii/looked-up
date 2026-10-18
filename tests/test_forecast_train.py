@@ -163,3 +163,15 @@ def test_fit_m1():
     model, (a, b) = E.fit_m1(rows[:300], rows[300:], "international", params, enc)
     p = T.calibrate(T.score(model, enc.matrix(rows[300:])), (a, b))
     assert np.isfinite(a) and np.isfinite(b) and ((0 < p) & (p < 1)).all()
+
+
+def test_permutation_importance_ranks_the_signal_first():
+    rows = _rows(500)
+    enc = T.Encoder.fit(rows)
+    params = {"num_leaves": 7, "learning_rate": 0.2, "n_estimators": 40, "min_child_samples": 5,
+              "feature_fraction": 1.0, "lambda_l2": 0.0}
+    model = T.fit(enc.matrix(rows), T.labels(rows, "international"), enc, params, "binary")
+    imp = E.permutation_importance(model, enc, rows, "international", repeats=2)
+    assert len(imp) == len(enc.features)
+    assert imp[0]["feature"] in {"n_sitelinks", "excess_t"}               # the two columns built from fame
+    assert [d["importance"] for d in imp] == sorted((d["importance"] for d in imp), reverse=True)
