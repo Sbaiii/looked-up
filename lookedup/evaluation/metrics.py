@@ -188,7 +188,7 @@ def h2_lead_language(ctx: Context, events: str, claims_cache: Path) -> dict:
     locs = {q for r in rows if not r[3] for q in (r[4] or [])}
     loc_claims = _claims(fetch_claims(locs, claims_cache)) if locs else {}
     events_country = {}
-    for event_id, qid, lead, countries, locations in rows:
+    for event_id, _qid, lead, countries, locations in rows:
         cs = list(countries or [])
         if not cs:
             for l in locations or []:
