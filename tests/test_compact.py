@@ -29,7 +29,7 @@ def test_compact_migrates_hour_files_to_a_day_file(tmp_path, article_filter):
     assert not (root / "data/hourly/year=2026/month=09/day=13").exists()
     day = pq.read_table(root / day_path(hours[0]))
     assert day.num_rows == rep["rows"]
-    keys = list(zip(day["lang"].to_pylist(), day["title"].to_pylist(), day["ts_hour_start"].to_pylist()))
+    keys = list(zip(day["lang"].to_pylist(), day["title"].to_pylist(), day["ts_hour_start"].to_pylist(), strict=True))
     assert keys == sorted(keys)
     m = json.loads((root / "data" / "manifest.json").read_text())
     assert m["schema_version"] == 2 and m["hour_count"] == 2
