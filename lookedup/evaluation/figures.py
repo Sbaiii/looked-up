@@ -43,7 +43,7 @@ def spread_chart(rows: list[tuple[str, int]], label: str, start: str, out: Path)
     ax.set_yticks(range(len(rows)), langs)
     ax.invert_yaxis()
     ax.set_xlabel("hours after the first language spiked", color=INK)
-    ax.set_xticks(range(0, max(lags) + 1))
+    ax.set_xticks(range(max(lags) + 1))
     ax.tick_params(axis="y", labelsize=8)
     fig.tight_layout(rect=(0, 0, 1, 0.86))
     _style(ax, f"Attention to {label} reached {len(rows)} languages in {max(lags)} hours",
