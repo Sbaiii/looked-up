@@ -106,3 +106,13 @@ test.describe('with a French browser', () => {
     await expect(page.locator('h1')).toHaveText("Aujourd'hui, le monde s'est intéressé à");
   });
 });
+
+test.describe('with a German browser', () => {
+  test.use({ locale: 'de-DE' });
+  test('a first visit falls back to English', async ({ page }) => {
+    await page.goto('./');
+    await ready(page);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('[data-ui-lang="en"]')).toHaveAttribute('aria-pressed', 'true');
+  });
+});
