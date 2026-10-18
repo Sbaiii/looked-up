@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 from lookedup import live_analysis as LA
 
@@ -21,7 +21,7 @@ def test_revision_filter():
 def test_burst_time_uses_the_live_rule_and_window():
     revs = [rev(m, u) for m, u in [(0, "a"), (5, "b"), (6, "bot2Bot"), (10, "a"), (12, "c"), (14, "b")]]
     ts, kind = LA.burst_time(revs, "en", "X", T0 - timedelta(hours=1), T0 + timedelta(hours=1))
-    assert kind == "window" and ts == (T0 + timedelta(minutes=14)).replace(tzinfo=timezone.utc).timestamp()
+    assert kind == "window" and ts == (T0 + timedelta(minutes=14)).replace(tzinfo=UTC).timestamp()
     assert LA.burst_time(revs, "en", "X", T0 + timedelta(hours=1), T0 + timedelta(hours=2)) == (None, None)
 
 
@@ -102,7 +102,7 @@ def test_daily_snapshot_writes_one_day(tmp_path, monkeypatch):
     from lookedup.store import LocalStore
 
     day = date(2026, 10, 11)
-    lo = datetime(2026, 10, 11, tzinfo=timezone.utc).timestamp()
+    lo = datetime(2026, 10, 11, tzinfo=UTC).timestamp()
     bursts = {"bursts": [{"ts": lo - 1, "title": "before"}, {"ts": lo, "title": "a"}, {"ts": lo + 86399, "title": "b"},
                          {"ts": lo + 86400, "title": "after"}]}
     stats = {"live_events_24h": 3}
