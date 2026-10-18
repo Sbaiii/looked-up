@@ -8,6 +8,7 @@ new location.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import shutil
@@ -72,9 +73,7 @@ def relocate(source: Path = LEGACY_DATA_DIR, target: Path = DATA_DIR, skip: tupl
         if moved % 25 == 0:
             log.info("moved %d files (%.1f GB)", moved, size / 1e9)
     for d in sorted((p for p in source.rglob("*") if p.is_dir()), key=lambda p: len(p.parts), reverse=True):
-        try:
+        with contextlib.suppress(OSError):      # a folder that is not empty stays
             d.rmdir()
-        except OSError:
-            pass
     (source / "README.md").write_text(NOTE.format(target=target), encoding="utf-8")
     return {"moved": moved, "skipped": skipped, "bytes": size, "target": str(target)}
