@@ -73,3 +73,20 @@ def test_old_readme_stays(tmp_path):
     (src / "a.txt").write_text("a")
     res = relocate(source=src, target=dst)
     assert res["moved"] == 1 and (src / "README.md").exists() and not (dst / "README.md").exists()
+
+
+def test_copy_gives_up(tmp_path, monkeypatch):
+    import pytest
+
+    from lookedup import relocate as R
+
+    src = tmp_path / "src.bin"
+    src.write_bytes(b"x")
+
+    def broken(a, b):
+        raise OSError("Operation timed out")
+
+    monkeypatch.setattr(R.shutil, "copyfile", broken)
+    monkeypatch.setattr(R.time, "sleep", lambda s: None)
+    with pytest.raises(OSError, match="timed out"):
+        R._copy_with_retry(src, tmp_path / "dst.bin", retries=2)
