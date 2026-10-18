@@ -35,7 +35,7 @@ def parse_sse(lines: Iterator[str]) -> Iterator[tuple[str | None, str]]:
             continue
         else:
             field, _, value = line.partition(":")
-            value = value[1:] if value.startswith(" ") else value
+            value = value.removeprefix(" ")
             if field == "id":
                 ev_id = value
             elif field == "data":
