@@ -85,3 +85,12 @@ test('initialLang prefers the stored choice, then a supported browser language, 
   store.lookedup_lang = 'xx';
   assert.equal(i18n.initialLang(), 'es');
 });
+
+test('initialLang survives blocked storage and an unsupported browser', (t) => {
+  globalThis.localStorage = { getItem: () => { throw new Error('blocked'); } };
+  t.after(() => { delete globalThis.localStorage; });
+  const langs = t.mock.getter(globalThis.navigator, 'languages', () => ['fr-CA']);
+  assert.equal(i18n.initialLang(), 'fr');
+  langs.mock.mockImplementation(() => ['de', 'ja']);
+  assert.equal(i18n.initialLang(), 'en');
+});
