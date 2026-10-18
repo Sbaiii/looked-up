@@ -48,3 +48,16 @@ def test_write_files(tmp_path, monkeypatch):
     assert doc["anchors"] == {"fr": "FRA", "sr": "SRB"} and doc["languages"]["fr"] == ["BEL", "FRA"]
     app = json.loads((tmp_path / "app" / "language_geo.json").read_text())
     assert sorted(app["languages"]["sr"]) == ["688", "XKX"]                 # Kosovo keeps its alpha-3 code
+
+
+def test_fetch_flattens_bindings(monkeypatch):
+    class R:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"results": {"bindings": [{"iso3": {"value": "FRA"}, "lang": {"value": WD + "Q150"},
+                                              "name": {"value": "France"}, "num": {"value": "250"}}]}}
+
+    monkeypatch.setattr(G, "session", lambda: type("S", (), {"get": lambda self, *a, **k: R()})())
+    assert G.fetch() == [{"iso3": "FRA", "lang": WD + "Q150", "name": "France", "num": "250"}]
