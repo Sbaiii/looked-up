@@ -177,3 +177,16 @@ def test_download_gives_up_after_retries(tmp_path, monkeypatch):
     with pytest.raises(requests.ConnectionError):
         dumps.download("https://x/f.gz", tmp_path / "f.gz", retries=3)
     assert len(calls) == 3 and not (tmp_path / "f.gz").exists()
+
+
+def test_download_resumes_after_a_cut(tmp_path, monkeypatch):
+    seen = []
+    replies = [_Stream(200, b"hello ", length=11), _Stream(206, b"world")]
+
+    def get(url, stream=True, timeout=None, headers=None):
+        seen.append(headers)
+        return replies.pop(0)
+
+    monkeypatch.setattr(dumps._session, "get", get)
+    assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"hello world"
+    assert seen == [{}, {"Range": "bytes=6-"}]
