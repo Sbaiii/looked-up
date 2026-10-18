@@ -87,7 +87,7 @@ def evaluate() -> dict:
         ORDER BY e.excess_views DESC LIMIT {cfg.raw['evaluation']['manual_review_top_n']}""").fetchall()
     cols = ["event_id", "qid", "label_en", "category", "start_hour", "lead_lang", "breadth", "peak_intensity",
             "excess_views", "languages"]
-    _csv(OUT / "nonportal_top30.csv", [dict(zip(cols, r)) | {"languages": " ".join(r[-1])} for r in rows])
+    _csv(OUT / "nonportal_top30.csv", [dict(zip(cols, r, strict=True)) | {"languages": " ".join(r[-1])} for r in rows])
     (OUT / "phase2_metrics.json").write_text(json.dumps(res, indent=1, default=metrics.to_jsonable))
     return res
 
