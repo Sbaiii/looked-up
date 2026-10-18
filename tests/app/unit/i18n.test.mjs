@@ -14,3 +14,10 @@ test('t picks the plural form, the zero form and fills placeholders', () => {
   assert.equal(i18n.within(2), '2 hours');
   assert.equal(i18n.t('hero.counter', { n: 3, within: i18n.within(1) }), '3 languages in 1 hour');
 });
+
+test('a missing key comes back as the key, and an unknown placeholder is kept', () => {
+  i18n.use({ locale: 'en-GB', greet: 'hello {who}' }, 'en');
+  assert.equal(i18n.t('no.such.key'), 'no.such.key');
+  assert.equal(i18n.t('greet'), 'hello {who}');
+  assert.equal(i18n.t('greet', { who: 'world' }), 'hello world');
+});
