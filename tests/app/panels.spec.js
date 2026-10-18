@@ -96,3 +96,13 @@ test('stats without a forecast block hide FIG. 05', async ({ page }) => {
   await ready(page);
   await expect(page.locator('#forecast')).toBeHidden();
 });
+
+test.describe('with a French browser', () => {
+  test.use({ locale: 'fr-FR' });
+  test('a first visit opens in French', async ({ page }) => {
+    await page.goto('./');
+    await ready(page);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+    await expect(page.locator('h1')).toHaveText("Aujourd'hui, le monde s'est intéressé à");
+  });
+});
