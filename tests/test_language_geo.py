@@ -61,3 +61,14 @@ def test_fetch_flattens_bindings(monkeypatch):
 
     monkeypatch.setattr(G, "session", lambda: type("S", (), {"get": lambda self, *a, **k: R()})())
     assert G.fetch() == [{"iso3": "FRA", "lang": WD + "Q150", "name": "France", "num": "250"}]
+
+
+def test_main_builds_and_writes(monkeypatch):
+    import lookedup.languages as langs
+
+    seen = {}
+    monkeypatch.setattr(G, "fetch", lambda: [row("FRA", "Q150", "France", "250")])
+    monkeypatch.setattr(langs, "active_codes", lambda: ["fr"])
+    monkeypatch.setattr(G, "write", lambda by_lang, countries: seen.update(by_lang=by_lang, countries=countries))
+    G.main()
+    assert seen["by_lang"] == {"fr": ["FRA"]} and seen["countries"]["FRA"]["num"] == "250"
