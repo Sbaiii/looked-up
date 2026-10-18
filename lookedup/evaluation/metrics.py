@@ -218,7 +218,7 @@ def h2_lead_language(ctx: Context, events: str, claims_cache: Path) -> dict:
 
 def _claims(table: pa.Table) -> dict[int, dict]:
     """Claims JSON per QID from a claims table."""
-    return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist())}
+    return {q: json.loads(c) for q, c in zip(table["qid"].to_pylist(), table["claims_json"].to_pylist(), strict=True)}
 
 
 def detection_delays(ctx: Context, events: str) -> dict:
