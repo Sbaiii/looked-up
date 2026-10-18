@@ -115,3 +115,15 @@ def test_announcement_proxy(monkeypatch):
     assert G.announcement_proxy("Hayden Panettiere", date(2026, 8, 17)) == datetime(2026, 8, 17, 2, 57)
     monkeypatch.setattr(G, "_get", lambda url, params: _Json({"query": {"pages": []}}))
     assert G.announcement_proxy("Nobody", date(2026, 8, 17)) is None
+
+
+def test_deaths_keep_widely_known_people(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    page = "===17===\n* [[Hayden Panettiere]], 37, American actress.\n* [[Local Figure]], 80, mayor.\n* [[Unresolved]], 50.\n"
+    monkeypatch.setattr(G, "_raw", lambda title: page)
+    monkeypatch.setattr(G, "resolve_qids", lambda lang, titles: {"Hayden Panettiere": 171571, "Local Figure": 9})
+    monkeypatch.setattr(G, "announcement_proxy", lambda title, day: datetime(2026, 8, 17, 2, 57))
+    rows = G.deaths([(2026, 8)], {171571: 28, 9: 2}, 5)
+    assert [(r["title"], r["qid"], r["n_languages"]) for r in rows] == [("Hayden Panettiere", 171571, 28)]
+    assert rows[0]["date"] == date(2026, 8, 17) and rows[0]["announcement"] == datetime(2026, 8, 17, 2, 57)
