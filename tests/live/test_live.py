@@ -116,7 +116,8 @@ def test_snapshot_round_trip_keeps_no_user_data(tmp_path):
     for i, u in enumerate("abcde"):
         e.handle(ev(title="Z", ts=T0 + 60 * i, user=u), event_id='[{"offset": 1}]', now=T0 + 300)
     e.snapshot(tmp_path / "s.json.gz")
-    raw = gzip.open(tmp_path / "s.json.gz", "rt").read()
+    with gzip.open(tmp_path / "s.json.gz", "rt") as f:
+        raw = f.read()
     assert '"a"' not in raw and "user" not in raw
     e2 = Engine()
     assert e2.restore(tmp_path / "s.json.gz") and e2.last_event_id == '[{"offset": 1}]'
