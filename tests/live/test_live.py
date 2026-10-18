@@ -521,3 +521,37 @@ def test_shift_fetches_state_or_cold_starts(tmp_path, monkeypatch):
 
     monkeypatch.setattr(huggingface_hub, "hf_hub_download", missing)
     assert shift.fetch_state(tmp_path) is False
+
+
+def test_shift_publish_commits_payloads_and_bursts(tmp_path, monkeypatch):
+    from lookedup_live import shift
+    commits = []
+
+    class Api:
+        def create_commit(self, repo, repo_type=None, operations=None, commit_message=None):
+            commits.append(([op.path_in_repo for op in operations], commit_message))
+
+    monkeypatch.setattr(shift, "_api", lambda: Api())
+    now = 1_791_000_000.0 + 900                                      # mid half-hour: no state handover this round
+    monkeypatch.setattr(shift.time, "time", lambda: now)
+    e = Engine(tmp_path)
+    e.detector.bursts.append(B.Burst("en", "X", now - 60, "window", 5, 3))
+    shift.publish(e, tmp_path)
+    paths, message = commits[0]
+    assert {"data/live/live.json", "data/live/stats.json"} <= set(paths)
+    assert sum(p.startswith("data/live/bursts/") for p in paths) == 2
+    assert "data/live/state.json.gz" not in paths and message.startswith("data: live layer")
+
+
+def test_shift_final_publish_includes_state(tmp_path, monkeypatch):
+    from lookedup_live import shift
+    commits = []
+
+    class Api:
+        def create_commit(self, repo, repo_type=None, operations=None, commit_message=None):
+            commits.append([op.path_in_repo for op in operations])
+
+    monkeypatch.setattr(shift, "_api", lambda: Api())
+    shift.publish(Engine(tmp_path), tmp_path, final=True)
+    assert {"data/live/state.json.gz", "data/live/qids.json"} <= set(commits[0])
+    assert (tmp_path / "state.json.gz").exists()
