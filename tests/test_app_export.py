@@ -230,3 +230,12 @@ def test_sparklines_place_hours_around_the_start(tmp_path):
     sp = ax.sparklines(duckdb.connect(), [f], [ev], {597: {"en": "Lisbon", "pt": "Lisboa"}})["E1"]
     assert len(sp) == ax.SPARK_HOURS
     assert sp[ax.SPARK_BEFORE] == 150 and sp[ax.SPARK_BEFORE - 1] == 10 and sum(sp) == 160
+
+
+def test_sparkline_future_hours_are_unknown(tmp_path):
+    start = datetime(2026, 8, 17, 12)
+    f = _hourly_file(tmp_path, [(start, "en", "Lisbon", 100)])
+    ev = {"event_id": "E1", "qid": 597, "start_hour": start}
+    sp = ax.sparklines(duckdb.connect(), [f], [ev], {597: {"en": "Lisbon"}}, last_hour=start + timedelta(hours=2))["E1"]
+    assert sp[ax.SPARK_BEFORE + 2] == 0 and sp[ax.SPARK_BEFORE + 3] is None and sp[-1] is None
+    assert ax.sparklines(duckdb.connect(), [], [ev], {}) == {}
