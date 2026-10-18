@@ -590,3 +590,20 @@ def test_service_start_and_shutdown(monkeypatch, tmp_path):
     assert started == [True, True, True] and snaps == [("restore", "state.json.gz")]
     svc.shutdown()
     assert svc.stop.is_set() and snaps[-1] == ("snapshot", "state.json.gz")
+
+
+def test_shift_main_without_publishing(tmp_path, monkeypatch):
+    import sys
+    from lookedup_live import shift
+    calls = []
+    monkeypatch.setattr(sys, "argv", ["shift", "--hours", "0", "--state-dir", str(tmp_path), "--no-publish"])
+    monkeypatch.setattr(shift, "consume", lambda engine, stop: calls.append("consume"))
+    monkeypatch.setattr(shift, "resolver_loop", lambda engine, stop: calls.append("resolve"))
+    monkeypatch.setattr(shift, "fetch_state", lambda d: pytest_fail_if_called())
+    monkeypatch.setattr(shift, "publish", lambda *a, **k: pytest_fail_if_called())
+    shift.main()
+    assert (tmp_path / "state.json.gz").exists() and sorted(calls) == ["consume", "resolve"]
+
+
+def pytest_fail_if_called():
+    raise AssertionError("must not be called with --no-publish")
