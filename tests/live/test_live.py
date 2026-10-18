@@ -633,3 +633,13 @@ def test_rules_location(monkeypatch, tmp_path):
     monkeypatch.setattr(rules, "__file__", str(tmp_path / "pkg" / "lookedup_live" / "rules.py"))
     with pytest.raises(FileNotFoundError, match="LIVE_CONFIG"):
         rules._find()
+
+
+def test_live_and_stats_endpoints(monkeypatch, tmp_path):
+    svc = _service(monkeypatch, tmp_path)
+    svc._cache.clear()
+    live = json.loads(svc.live().body)
+    stats = json.loads(svc.stats().body)
+    assert live["schema_version"] == 1 and "events" in live and "single_language_bursts" in live
+    assert "bursts_per_hour" in stats and "live_events_per_hour_week" in stats
+    assert svc.live().headers["cache-control"] == f"public, max-age={svc.CACHE_S}"
