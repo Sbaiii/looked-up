@@ -248,7 +248,7 @@ def _dist(vals: list[float]) -> dict:
 
     def q(p: float) -> float:
         """Quantile ``p`` of the sorted values, by nearest rank."""
-        return vals[min(len(vals) - 1, int(round(p * (len(vals) - 1))))]
+        return vals[min(len(vals) - 1, round(p * (len(vals) - 1)))]
     return {"n": len(vals), "median": statistics.median(vals), "p25": q(0.25), "p75": q(0.75), "min": vals[0],
             "max": vals[-1], "share_le_4h": sum(v <= 4 for v in vals) / len(vals)}
 
