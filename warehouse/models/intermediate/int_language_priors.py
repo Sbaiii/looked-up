@@ -6,6 +6,7 @@ from lookedup.analytics.scoring import prior_sql
 
 
 def model(dbt, session):
+    """The language prior (median, MAD) of each pending scored day, one row per language and day."""
     dbt.config(materialized="incremental")
     cfg = load()
     dbt.ref("stg_hourly").create_view("_stg_hourly_pr", replace=True)
