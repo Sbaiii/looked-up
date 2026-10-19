@@ -29,6 +29,11 @@ def parse(ts: str) -> datetime:
     return datetime.strptime(ts, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
 
 
+def delay(h, event_t):
+    """Hours from the event to ``h``, or None when nothing spiked."""
+    return round((h - event_t).total_seconds() / 3600, 2) if h else None
+
+
 def main() -> None:
     """For each event and article, find the first day-over-day and hour-over-hour spike from 6 h before the event and write the delays."""
     events = json.loads((DERIVED / "q5_events.json").read_text())
@@ -52,19 +57,16 @@ def main() -> None:
                     hoh = h
                     break
 
-            def delay(h):
-                return round((h - event_t).total_seconds() / 3600, 2) if h else None
-
             peak_h, peak_v = max(((h, v) for h, v, _ in s), key=lambda x: x[1])
             out.append({
                 "event": ev["key"], "entity": ent, "qid": qid, "lang": lang, "title": title,
                 "event_utc": f"{event_t:%Y-%m-%d %H:%M}", "public_utc": f"{public_t:%Y-%m-%d %H:%M}",
                 "dod_first_spike_hour": f"{dod:%Y-%m-%d %H:00}" if dod else "",
-                "dod_delay_h": delay(dod),
+                "dod_delay_h": delay(dod, event_t),
                 "hoh_first_spike_hour": f"{hoh:%Y-%m-%d %H:00}" if hoh else "",
-                "hoh_delay_h": delay(hoh),
+                "hoh_delay_h": delay(hoh, event_t),
                 # detection hour h is complete at h+1, then the dump appears ~2.2 h later
-                "hoh_visible_in_dumps_after_event_h": round(delay(hoh) + 1 + PUBLISH_LAG_H, 1) if hoh else None,
+                "hoh_visible_in_dumps_after_event_h": round(delay(hoh, event_t) + 1 + PUBLISH_LAG_H, 1) if hoh else None,
                 "peak_hour": f"{peak_h:%Y-%m-%d %H:00}", "peak_views": peak_v,
                 "views_in_event_hour": next((v for h, v, _ in s if h == event_t.replace(minute=0)), 0),
                 "baseline_same_hour_prev_day": next((b for h, _, b in s if h == event_t.replace(minute=0)), 0),
