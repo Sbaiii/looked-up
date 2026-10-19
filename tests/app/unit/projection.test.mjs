@@ -53,3 +53,12 @@ test('featureKey uses the ISO numeric id, then XKS for Kosovo, then the name', (
   assert.equal(featureKey({ properties: { name: 'Kosovo' } }), 'XKS');
   assert.equal(featureKey({ properties: { name: 'N. Cyprus' } }), 'N. Cyprus');
 });
+
+test('geomPath draws every ring of every part', () => {
+  const ring = [[0, 0], [10, 0], [10, 10], [0, 0]];
+  const multi = { type: 'MultiPolygon', coordinates: [[ring, ring], [ring]] };
+  const d = geomPath(multi);
+  assert.equal((d.match(/M/g) || []).length, 3);
+  assert.equal((d.match(/Z/g) || []).length, 3);
+  assert.equal(geomPath({ type: 'Point', coordinates: [0, 0] }), '');
+});
