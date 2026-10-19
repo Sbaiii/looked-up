@@ -15,7 +15,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score, brier_score_loss, mean_absolute_error, roc_auc_score
+from sklearn.metrics import (
+    average_precision_score,
+    brier_score_loss,
+    mean_absolute_error,
+    roc_auc_score,
+)
 
 from lookedup import db
 from lookedup.forecast import train as T
@@ -211,7 +216,8 @@ def plot_calibration(curves: dict[str, list[dict]], path: Path) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from lookedup.evaluation.figures import ACCENT, INK, MUTED, GRID, _style
+
+    from lookedup.evaluation.figures import ACCENT, GRID, INK, MUTED, _style
 
     fig, ax = plt.subplots(figsize=(5.6, 5))
     ax.plot([0, 1], [0, 1], color=GRID, lw=1)
@@ -233,6 +239,7 @@ def plot_importance(imp: list[dict], path: Path, title: str, subtitle: str) -> N
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+
     from lookedup.evaluation.figures import ACCENT, INK, _style
 
     top = imp[:10][::-1]
