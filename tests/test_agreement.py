@@ -56,3 +56,10 @@ def test_counts_and_shares_against_the_batch(lake, tmp_path):
     assert (res["batch_spikes"], res["production_spikes"], res["both"]) == (2, 3, 1)   # Sismo_X at 9 and 10, Quake_X at 10
     assert res["share_of_batch_reproduced"] == 0.5 and res["share_of_production_in_batch"] == pytest.approx(1 / 3)
     assert res["baseline_slots"] == 48                                                 # 2 candidate titles x 24 hours
+
+
+def test_shares_are_none_when_either_side_is_empty(lake, tmp_path):
+    res = agreement.production_vs_batch(_warehouse(tmp_path / "w.duckdb", []), D, [3, 4], lake_dir=lake)
+    assert (res["batch_spikes"], res["production_spikes"], res["both"]) == (0, 0, 0)
+    assert res["share_of_batch_reproduced"] is None and res["share_of_production_in_batch"] is None
+    assert res["baseline_slots"] == 0                                                  # no title reached the view floor
