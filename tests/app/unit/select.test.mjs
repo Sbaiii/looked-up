@@ -52,3 +52,14 @@ test('events older than the window are ignored', async () => {
   const r = await pickHero(async () => [old], now);
   assert.deepEqual([r.event, r.hours], [null, 24]);
 });
+
+test('windows are requested in order and the search stops at the first hero', async () => {
+  const { WINDOWS } = await import('../../../app/js/select.js');
+  const asked = [];
+  const windows = { 24: fx.quiet_day, 48: [...fx.quiet_day, ...fx.yesterday] };
+  await pickHero((h) => { asked.push(h); return windows[h] || []; }, now);      // a plain (non-async) callback works too
+  assert.deepEqual(asked, [24, 48]);
+  asked.length = 0;
+  await pickHero((h) => { asked.push(h); return []; }, now);
+  assert.deepEqual(asked, WINDOWS);
+});
