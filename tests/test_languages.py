@@ -129,3 +129,18 @@ def test_get_json_retries(monkeypatch):
     monkeypatch.setattr(L, "session", lambda: type("D", (), {"get": lambda self, *a, **k: (_ for _ in ()).throw(requests.ConnectionError("down"))})())
     with pytest.raises(requests.ConnectionError):
         L._get_json("https://x", {}, retries=2)
+
+
+def test_fetch_speakers_parses_bindings(monkeypatch):
+    seen = {}
+
+    class Up:
+        def get(self, url, params=None, **kw):
+            seen["query"] = params["query"]
+            data = {"results": {"bindings": [{"code": {"value": "en"}, "speakers": {"value": "1.5E9"}},
+                                             {"code": {"value": "fr"}, "speakers": {"value": "312000000"}}]}}
+            return type("R", (), {"raise_for_status": lambda self: None, "json": lambda self: data})()
+
+    monkeypatch.setattr(L, "session", lambda: Up())
+    assert L.fetch_speakers(["en", "fr"]) == {"en": 1_500_000_000, "fr": 312_000_000}
+    assert 'VALUES ?code { "en" "fr" }' in seen["query"]
