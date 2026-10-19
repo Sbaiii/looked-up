@@ -85,3 +85,19 @@ def test_live_week_skipped_before_production(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="no training data"):
         R.retrain(LocalStore(tmp_path / "lake"), now=datetime(2026, 10, 9))     # last full week ends before 7 Oct
     assert called == []
+
+
+def test_batch_table_stops_at_production(tmp_path, monkeypatch):
+    import duckdb
+
+    import lookedup.warehouse as W
+    from lookedup import db
+
+    wh = tmp_path / "w.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("""CREATE TABLE fct_event_snapshots AS SELECT * FROM (VALUES
+        ('a', TIMESTAMP '2026-10-06 23:00'), ('b', TIMESTAMP '2026-10-07 00:00'), ('c', TIMESTAMP '2026-09-01 08:00'))
+        t(event_id, start_hour)""")
+    con.close()
+    monkeypatch.setattr(W, "WAREHOUSE_DB", wh)
+    assert sorted(R.batch_table(db.connect())["event_id"].to_pylist()) == ["a", "c"]
