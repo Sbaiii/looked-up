@@ -40,3 +40,10 @@ test('a multipolygon uses its largest outer ring', () => {
   ] };
   assert.deepEqual(centroid(islands), [45, 45]);
 });
+
+test('a ring crossing the antimeridian is unwrapped before averaging', () => {
+  const fiji = { type: 'Polygon', coordinates: [[[178, -18], [-178, -18], [-178, -16], [178, -16], [178, -18]]] };
+  assert.deepEqual(centroid(fiji), [180, -17]);
+  const east = { type: 'Polygon', coordinates: [[[179, 0], [-177, 0], [-177, 2], [179, 2], [179, 0]]] };
+  assert.deepEqual(centroid(east), [-179, 1]);                          // past 180 it comes back as a western longitude
+});
