@@ -67,7 +67,8 @@ def test_h3_sample_is_seeded_with_96_hour_series(tmp_path, monkeypatch):
     n = audit.sample(con, load(), tmp_path / "a.csv")
     again = audit.sample(con, load(), tmp_path / "b.csv")
     assert n == again == 100 and (tmp_path / "a.csv").read_text() == (tmp_path / "b.csv").read_text()
-    rows = list(csv.DictReader(open(tmp_path / "a.csv", encoding="utf-8")))
+    with open(tmp_path / "a.csv", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
     assert [r["unit_id"] for r in rows[:2]] == ["u001", "u002"] and all(len(r["views_by_hour_d-3_to_d"].split()) == 96 for r in rows)
     t5 = [r for r in rows if r["title"] == "T5"]
     assert not t5 or t5[0]["views_by_hour_d-3_to_d"].split()[:3] == ["0", "1", "2"]
