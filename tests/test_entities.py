@@ -222,3 +222,13 @@ def test_api_fallback_retries_a_batch(tmp_path, monkeypatch):
     monkeypatch.setattr(E.time, "sleep", sleeps.append)
     t = E.fetch_claims([9], tmp_path / "claims.parquet")
     assert t["qid"].to_pylist() == [9] and t["label_en"].to_pylist() == [None] and sleeps[0] == 3
+
+
+def test_fetch_text_all_cached(tmp_path, monkeypatch):
+    from lookedup.analytics import entities as E
+
+    monkeypatch.setattr(E, "fetch_text_sparql", lambda qids, langs: [{"qid": q, "descriptions_json": "{}", "gender": None} for q in qids])
+    cache = tmp_path / "text.parquet"
+    E.fetch_text([4, 5], cache, ["en"])
+    monkeypatch.setattr(E, "fetch_text_sparql", lambda qids, langs: (_ for _ in ()).throw(AssertionError("no query expected")))
+    assert sorted(E.fetch_text({5, 4}, cache, ["en"])["qid"].to_pylist()) == [4, 5]
