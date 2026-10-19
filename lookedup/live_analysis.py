@@ -13,13 +13,13 @@ from __future__ import annotations
 
 import csv
 import json
-from collections.abc import Iterator
-from contextlib import contextmanager
 import logging
 import statistics
 import sys
 import time
-from datetime import date, datetime, timedelta, UTC
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -194,6 +194,7 @@ def plot_leads(leads: list[int], med: float | None) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+
     from lookedup.evaluation.figures import ACCENT, INK, _style
 
     if not leads:
