@@ -8,7 +8,7 @@ import json
 import threading
 import time
 from collections import Counter, deque
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 from lookedup_live.bursts import Burst, Detector, live_events
