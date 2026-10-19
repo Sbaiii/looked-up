@@ -656,3 +656,18 @@ def test_shift_main_resumes_publishes_and_hands_over(tmp_path, monkeypatch):
     monkeypatch.setattr(shift, "publish", publish)
     shift.main()
     assert calls == [(False, "[42]"), (False, "[42]"), (False, "[42]"), (True, "[42]")]   # 3 rounds of 10 min, then final
+
+
+def test_service_snapshot_loop(monkeypatch, tmp_path):
+    svc = _service(monkeypatch, tmp_path)
+    waits, snaps = [], []
+
+    class Stop:
+        def wait(self, s):
+            waits.append(s)
+            return len(waits) > 2                     # two rounds, then shutdown
+
+    monkeypatch.setattr(svc, "stop", Stop())
+    monkeypatch.setattr(svc.engine, "snapshot", lambda path: snaps.append(path))
+    svc._snapshots()
+    assert waits == [300, 300, 300] and snaps == [tmp_path / "state.json.gz"] * 2
