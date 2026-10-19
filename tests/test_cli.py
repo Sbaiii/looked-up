@@ -421,3 +421,28 @@ def test_push_uploads_missing_hours(monkeypatch, tmp_path):
     cli.main(["push"])
     hub = LocalStore(tmp_path / "hub").read_manifest()
     assert hub.present() == {h14, h15} and (tmp_path / "hub" / SITELINKS_PATH).exists() and len(cards) == 1
+
+
+def test_app_export_backfill_upload(monkeypatch, tmp_path, capsys):
+    import lookedup.app_export as ax
+    import lookedup.scorer as sc
+    from lookedup import settings, store
+
+    def backfill(st, out):
+        app = out / ax.APP_PREFIX
+        (app / "days").mkdir(parents=True)
+        for name in ("today.json", "today.json.gz", "days/2026-08-17.json", "card.png", "notes.txt"):
+            (app / name).write_text("x")
+        return {"days": 1}
+
+    commits = []
+    monkeypatch.setattr(store, "open_store", lambda local=False: "store")
+    monkeypatch.setattr(ax, "backfill", backfill)
+    monkeypatch.setattr(sc, "_commit", lambda st, files, msg: commits.append((st, sorted(files), msg)))
+    monkeypatch.setattr(settings, "DATA_DIR", tmp_path)
+    cli.main(["app-export", "--backfill", "--upload"])
+    [(st, files, msg)] = commits
+    p = ax.APP_PREFIX
+    assert st == "store" and msg == "data: app exports backfill, 1 day files"
+    assert files == sorted(f"{p}/{n}" for n in ("today.json", "today.json.gz", "days/2026-08-17.json", "card.png"))
+    capsys.readouterr()
