@@ -12,8 +12,8 @@ import pyarrow as pa
 
 from lookedup.analytics.config import load
 from lookedup.analytics.entities import classify, fetch_claims, fetch_text, is_generic
-from lookedup.languages import active_codes
 from lookedup.analytics.events import build_events
+from lookedup.languages import active_codes
 from lookedup.settings import DATA_DIR
 
 
