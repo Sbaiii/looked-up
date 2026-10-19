@@ -11,7 +11,7 @@ import logging
 import math
 import re
 import time
-from datetime import date, datetime, timedelta, UTC
+from datetime import UTC, date, datetime, timedelta
 
 import requests
 
