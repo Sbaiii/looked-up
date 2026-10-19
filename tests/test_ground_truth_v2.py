@@ -240,3 +240,11 @@ def test_raw_fetches_wikitext(monkeypatch):
     G, s, _ = _fake(monkeypatch, _Resp(200, "==August 2026=="))
     assert G._raw("Deaths in August 2026") == "==August 2026=="
     assert s.calls == [("GET", "https://en.wikipedia.org/w/index.php", {"title": "Deaths in August 2026", "action": "raw"})]
+
+
+def test_sparql_retries_bad_json(monkeypatch):
+    rows = [{"item": {"value": "http://www.wikidata.org/entity/Q1"}}]
+    G, s, sleeps = _fake(monkeypatch, _Resp(200), _Resp(200, payload={"results": {"bindings": rows}}))
+    assert G._sparql("SELECT ?item WHERE {}") == rows
+    assert [c[0] for c in s.calls] == ["POST", "POST"] and s.calls[0][2] == {"query": "SELECT ?item WHERE {}"}
+    assert sleeps == [5]
