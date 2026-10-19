@@ -84,7 +84,7 @@ def full(langs: set[str]) -> dict:
     with gzip.open(dest, "rb") as f:
         for line in io.BufferedReader(f, 1 << 24):
             # mariadb-dump 10.11 writes one "(...)," tuple per line after "INSERT INTO ... VALUES"
-            if not (line.startswith(b"(") or line.startswith(b"INSERT INTO")):
+            if not line.startswith((b"(", b"INSERT INTO")):
                 continue
             for _, item, site, page in TUPLE.findall(line):
                 total += 1
