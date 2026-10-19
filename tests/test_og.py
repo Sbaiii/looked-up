@@ -74,7 +74,7 @@ def test_quiet_day_card(tmp_path):
 
 
 def test_long_title_gets_an_ellipsis():
-    img, draw = og._base()
+    _img, draw = og._base()
     f = og.font(76, 800)
     lines = og._wrap(draw, " ".join(["word"] * 40), f, 500, 2)
     assert len(lines) == 2 and lines[-1].endswith("…")
