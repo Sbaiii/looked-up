@@ -181,3 +181,46 @@ def test_matches_resolve_qids(monkeypatch):
     monkeypatch.setattr(G, "resolve_qids", lambda lang, titles: {"Spain": 29, "2026 FIFA World Cup final": 7})
     [m] = G.matches(["2026 FIFA World Cup final"])
     assert m["team_qids"] == [29] and m["match_qid"] == 7
+
+
+class _Resp:
+    def __init__(self, status=200, text="", payload=None):
+        self.status_code, self.text, self._payload = status, text, payload
+
+    def raise_for_status(self):
+        import requests
+        if self.status_code >= 400:
+            raise requests.HTTPError(f"{self.status_code}")
+
+    def json(self):
+        if self._payload is None:
+            raise ValueError("not JSON")
+        return self._payload
+
+
+class _Session:
+    def __init__(self, *responses):
+        self.responses, self.calls = list(responses), []
+
+    def get(self, url, params=None, **kw):
+        self.calls.append(("GET", url, params))
+        return self.responses.pop(0)
+
+    def post(self, url, data=None, **kw):
+        self.calls.append(("POST", url, data))
+        return self.responses.pop(0)
+
+
+def _fake(monkeypatch, *responses):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    s, sleeps = _Session(*responses), []
+    monkeypatch.setattr(G, "session", lambda: s)
+    monkeypatch.setattr(G.time, "sleep", sleeps.append)
+    return G, s, sleeps
+
+
+def test_get_retries_then_succeeds(monkeypatch):
+    G, s, sleeps = _fake(monkeypatch, _Resp(503), _Resp(200, "ok"))
+    assert G._get("https://x.test", {"a": 1}).text == "ok"
+    assert len(s.calls) == 2 and sleeps == [3, 0.3]
