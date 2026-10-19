@@ -4,8 +4,8 @@ import json
 from datetime import datetime
 
 import pyarrow.parquet as pq
-
 from conftest import HOURLY_SAMPLE, LANGS
+
 from lookedup.compact import compact_local
 from lookedup.store import day_path
 from lookedup.transform import hourly_dump_to_table
