@@ -250,6 +250,7 @@ class HFStore:
     """The public Hugging Face dataset repo. Fails loudly on any upload error."""
 
     def __init__(self, repo_id: str = HF_REPO_ID, token: str | None = None, create: bool = False) -> None:
+        """Connect to the dataset repo with the given or saved token; with create, make the repo when it is missing."""
         from huggingface_hub import HfApi
 
         self.repo_id = repo_id
