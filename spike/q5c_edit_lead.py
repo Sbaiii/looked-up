@@ -48,7 +48,8 @@ def creation(lang: str, title: str) -> datetime | None:
 def main() -> None:
     """For each detected article, the first edit after the event (or its creation, for a new article) against when the spike showed in the dumps; writes q5_edit_lead.csv."""
     events = {e["key"]: e for e in json.loads((DERIVED / "q5_events.json").read_text())}
-    summary = list(csv.DictReader(open(DOCS / "q5_detection_summary.csv")))
+    with open(DOCS / "q5_detection_summary.csv") as f:
+        summary = list(csv.DictReader(f))
     out = []
     for s in summary:
         ev = events[s["event"]]
