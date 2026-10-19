@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as i18n from '../../../app/js/i18n.js';
-import { compose } from '../../../app/js/briefing.js';
+import { compose, leadEvent, leadKey } from '../../../app/js/briefing.js';
 
 const dict = (code) => JSON.parse(readFileSync(new URL(`../../../app/i18n/${code}.json`, import.meta.url)));
 const dolly = (gender) => ({
@@ -75,4 +75,13 @@ test('plural forms: zero, one and other', () => {
   assert.equal(i18n.t('event.languages', { n: 1 }), '1 language');
   assert.equal(i18n.t('event.languages', { n: 29 }), '29 languages');
   assert.equal(i18n.t('no.such.key'), 'no.such.key');                 // a missing key shows itself, never blank
+});
+
+test('leadKey picks the death sentence by gender and the plain sentence otherwise', () => {
+  assert.equal(leadKey({ category: 'sports' }), 'briefing.lead');
+  assert.equal(leadKey({ category: 'sports', gender: 'female' }), 'briefing.lead');
+  assert.equal(leadKey({ category: 'death', gender: 'female' }), 'briefing.lead_death_female');
+  assert.equal(leadKey({ category: 'death', gender: 'male' }), 'briefing.lead_death_male');
+  assert.equal(leadKey({ category: 'death', gender: 'other' }), 'briefing.lead_death_neutral');
+  assert.equal(leadKey({ category: 'death' }), 'briefing.lead_death_neutral');
 });
