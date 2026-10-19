@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 
 import duckdb
-
 from common import DERIVED, RAW
 
 q1 = json.loads((DERIVED / "q1_summary.json").read_text())
