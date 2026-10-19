@@ -21,13 +21,13 @@ import json
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 import duckdb
 
 from common import DERIVED, DOCS, RAW, download, hourly_url, session
 
-UTC = timezone.utc
+UTC = UTC
 RATIO, FLOOR = 5.0, 20
 PVC = "https://dumps.wikimedia.org/other/pageview_complete"
 
