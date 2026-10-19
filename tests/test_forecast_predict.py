@@ -136,3 +136,11 @@ def test_targets_without_a_model_are_skipped():
     out = forecast_open(_con(5), events, T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5),
                         manifest={"version": "v2"}, models=models)
     assert out == {"young": {"offset_h": 3, "model_version": "v2", "p_planetary": 0.6}}
+
+
+def test_platt_parameters_are_applied():
+    events = [{"event_id": "young", "qid": 1, "start_hour": T0, "lead_lang": "en", "breadth": 2, "event_class": "multi_language"}]
+    enc = T.Encoder({"lead_lang": ["en"], "entity_class": ["human"]})
+    models = {"international_t3": (Stub(0.6), enc, (1.0, -np.log(1.5)))}                 # odds 1.5 -> 1.0
+    out = forecast_open(_con(5), events, T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5), manifest={}, models=models)
+    assert out["young"]["p_international"] == 0.5 and out["young"]["model_version"] is None
