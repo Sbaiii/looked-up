@@ -125,7 +125,8 @@ def _wrap(draw: ImageDraw.ImageDraw, text: str, f: ImageFont.FreeTypeFont, width
         if draw.textlength(trial, font=f) <= width:
             line = trial
         else:
-            out.append(line)
+            if line:            # a first word wider than the card must not cost a line
+                out.append(line)
             line = w
     out.append(line)
     if len(out) > lines:

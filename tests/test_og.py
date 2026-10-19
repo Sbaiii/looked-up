@@ -92,3 +92,10 @@ def test_command_line_renders_a_day_file(tmp_path, monkeypatch, capsys):
     og.main()
     assert (tmp_path / "card.png").exists() and (tmp_path / "default.png").exists()
     assert "card.png" in capsys.readouterr().out
+
+
+def test_an_overlong_first_word_keeps_both_lines():
+    _img, draw = og._base()
+    f = og.font(76, 800)
+    lines = og._wrap(draw, "Antidisestablishmentarianism " * 12, f, 520, 2)
+    assert lines == ["Antidisestablishmentarianism", "Antidisestablishmentarianism…"]
