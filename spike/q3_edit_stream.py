@@ -13,7 +13,6 @@ import time
 from collections import Counter
 
 import httpx
-
 from common import DERIVED, HEADERS, RAW
 
 BASE = "https://stream.wikimedia.org/v2/stream/"
