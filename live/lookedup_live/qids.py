@@ -22,6 +22,7 @@ class Resolver:
     """Resolves bursting titles to Wikidata items with labels and descriptions, cached in memory and on disk."""
 
     def __init__(self, cache_file: Path | None = None) -> None:
+        """Empty caches with the project User-Agent, loaded from cache_file when a previous run saved one."""
         self.cache_file = cache_file
         self.qids: dict[str, str | None] = {}          # "lang|title" -> QID (None = no item)
         self.items: dict[str, dict] = {}               # QID -> {labels, desc}
