@@ -200,3 +200,15 @@ def test_search_is_reproducible():
     m2 = T.m2_rows([r | {"offset_h": 3} for r in rows], "excess_next24")
     params, mae = T.search(m2[:200], m2[200:], "excess_next24", T.Encoder.fit(m2), trials=1)
     assert mae >= 0 and set(params) == set(T.sample_params(np.random.default_rng(0)))
+
+
+def test_load_rows_joins_label_and_final_breadth():
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute("ATTACH ':memory:' AS wh")
+    con.execute("CREATE TABLE wh.main.fct_event_snapshots AS SELECT * FROM (VALUES ('a', 1, 2), ('a', 2, 4), ('b', 1, 2)) t(event_id, offset_h, breadth_t)")
+    con.execute("CREATE TABLE wh.main.fct_app_events AS SELECT * FROM (VALUES ('a', 'Alpha', 7), ('c', 'Gamma', 3)) t(event_id, label_en, breadth)")
+    rows = sorted(E.load_rows(con), key=lambda r: r["offset_h"])
+    assert rows == [{"event_id": "a", "offset_h": 1, "breadth_t": 2, "label_en": "Alpha", "final_breadth": 7},
+                    {"event_id": "a", "offset_h": 2, "breadth_t": 4, "label_en": "Alpha", "final_breadth": 7}]
