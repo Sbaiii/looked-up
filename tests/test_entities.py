@@ -190,3 +190,35 @@ def test_sparql_recovers_from_bad_json(monkeypatch):
     monkeypatch.setattr(E, "session", lambda: type("S", (), {"post": lambda self, *a, **k: R(answers.pop(0))})())
     monkeypatch.setattr(E.time, "sleep", sleeps.append)
     assert E._sparql("SELECT ?item WHERE {}") == rows and sleeps == [5]
+
+
+def test_api_fallback_retries_a_batch(tmp_path, monkeypatch):
+    import requests
+
+    from lookedup.analytics import entities as E
+
+    replies = [requests.ConnectionError("blip"),
+               {"entities": {"Q9": {"labels": {}, "claims": {}}}}]
+    sleeps = []
+
+    class R:
+        def __init__(self, data):
+            self.data = data
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self.data
+
+    def get(self, *a, **k):
+        x = replies.pop(0)
+        if isinstance(x, Exception):
+            raise x
+        return R(x)
+
+    monkeypatch.setattr(E, "fetch_claims_sparql", lambda todo: (_ for _ in ()).throw(requests.ConnectionError("down")))
+    monkeypatch.setattr(E, "session", lambda: type("S", (), {"get": get})())
+    monkeypatch.setattr(E.time, "sleep", sleeps.append)
+    t = E.fetch_claims([9], tmp_path / "claims.parquet")
+    assert t["qid"].to_pylist() == [9] and t["label_en"].to_pylist() == [None] and sleeps[0] == 3
