@@ -172,3 +172,12 @@ def test_rank_languages_downloads_missing_days(tmp_path, monkeypatch):
     assert (tmp_path / "work" / "agg-20261002.parquet").exists()
     assert not list((tmp_path / "raw" / "pageview_complete").iterdir())      # the raw day is deleted
     assert rows["en"]["human_views_7d"] == 70 and rows["fr"]["human_views_7d"] == 40
+
+
+def test_rank_languages_keeps_raw_and_reuses_aggregates(tmp_path, monkeypatch):
+    got = _download_pvc(tmp_path, monkeypatch)
+    day = date(2026, 10, 3)
+    L.rank_languages([day], work_dir=tmp_path / "work")
+    assert len(list((tmp_path / "raw" / "pageview_complete").iterdir())) == 1
+    L.rank_languages([day], work_dir=tmp_path / "work")
+    assert len(got) == 1                                                     # the aggregate is not rebuilt
