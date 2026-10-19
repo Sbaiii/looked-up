@@ -39,6 +39,7 @@ class Engine:
     """The live layer in one object: detector, QID resolver, stream position and the payload renderers."""
 
     def __init__(self, state_dir: Path | None = None) -> None:
+        """A fresh detector and resolver (QIDs cached under state_dir), disconnected, with no stream position yet."""
         self.state_dir = state_dir
         self.detector = Detector()
         self.resolver = Resolver(state_dir / "qids.json" if state_dir else None)
