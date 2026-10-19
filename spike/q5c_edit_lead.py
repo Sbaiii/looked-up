@@ -29,7 +29,7 @@ def first_rev_after(lang: str, title: str, after: datetime) -> dict | None:
     if not pages or "revisions" not in pages[0]:
         return None
     rev = pages[0]["revisions"][0]
-    return {"ts": datetime.fromisoformat(rev["timestamp"].replace("Z", "+00:00")),
+    return {"ts": datetime.fromisoformat(rev["timestamp"]),
             "user": rev.get("user", ""), "comment": rev.get("comment", "")[:120]}
 
 
@@ -42,7 +42,7 @@ def creation(lang: str, title: str) -> datetime | None:
     pages = r.get("query", {}).get("pages", [])
     if not pages or "revisions" not in pages[0]:
         return None
-    return datetime.fromisoformat(pages[0]["revisions"][0]["timestamp"].replace("Z", "+00:00"))
+    return datetime.fromisoformat(pages[0]["revisions"][0]["timestamp"])
 
 
 def main() -> None:
