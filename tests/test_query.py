@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
-
 from conftest import HOURLY_SAMPLE, LANGS
+
 from lookedup import query
 from lookedup.store import LocalStore, write_hours
 from lookedup.transform import hourly_dump_to_table
