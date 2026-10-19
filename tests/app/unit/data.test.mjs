@@ -21,3 +21,13 @@ test('today.json is fetched as its .gz twin and inflated', async (t) => {
   assert.deepEqual(await data.today(), { date: '2026-08-17' });
   assert.deepEqual(urls, [`${HUB}today.json.gz`]);
 });
+
+test('get memoises successes and forgets failures', async (t) => {
+  let calls = 0;
+  t.mock.method(globalThis, 'fetch', async () => (++calls === 1 ? new Response('down', { status: 503 }) : gz({ ok: calls })));
+  const data = await load();
+  await assert.rejects(data.stats(), /503 stats.json.gz/);
+  assert.deepEqual(await data.stats(), { ok: 2 });
+  assert.deepEqual(await data.stats(), { ok: 2 });
+  assert.equal(calls, 2);
+});
