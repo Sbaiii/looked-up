@@ -195,3 +195,26 @@ def test_run_h9_writes_rows(tmp_path, monkeypatch):
     assert [r["event_id"] for r in rows] == ["E1", "E2"]
     assert rows[0]["burst_lang"] == "en" and int(rows[0]["lead_minutes"]) > 0 and rows[1]["burst_at"] == ""
     assert res["events"] == 2 and res["with_burst"] == 1
+
+
+def test_h9_events_window_order_and_languages():
+    import duckdb
+
+    from lookedup import live_analysis as LA
+
+    con = duckdb.connect()
+    con.execute("ATTACH ':memory:' AS wh")
+    con.execute("""CREATE TABLE wh.main.fct_app_events AS SELECT * FROM (VALUES
+        ('A', 1, TIMESTAMP '2026-09-15 10:00', 3, 900, 'fr', 'death', 'Alpha', 'multi_language'),
+        ('B', 2, TIMESTAMP '2026-09-20 10:00', 4, 100, 'en', 'sports', 'Beta', 'multi_language'),
+        ('C', 3, TIMESTAMP '2026-09-21 10:00', 9, 100, 'en', 'other', 'Gamma', 'single_language'),
+        ('D', 4, TIMESTAMP '2026-10-10 00:00', 9, 100, 'en', 'other', 'Delta', 'multi_language'))
+        t(event_id, qid, start_hour, breadth, excess_views, lead_lang, category, label_en, event_class)""")
+    con.execute("""CREATE TABLE wh.main.fct_app_event_languages AS SELECT * FROM (VALUES
+        ('A', 'en', 'Alpha_en', 1), ('A', 'fr', 'Alpha_fr', 0), ('A', 'de', NULL, 2), ('A', 'es', 'Alpha_es', 1),
+        ('B', 'en', 'Beta', 0), ('C', 'en', 'Gamma', 0), ('D', 'en', 'Delta', 0))
+        t(event_id, lang, title, spread_lag_hours)""")
+    rows = LA.h9_events(con)
+    assert [r["event_id"] for r in rows] == ["B", "A"]                 # widest first; single-language and out of window left out
+    assert [l["lang"] for l in rows[1]["langs"]] == ["fr", "en", "es"]  # lead first, then by lag and code; no title, no row
+    assert rows[1]["langs"][0] == {"lang": "fr", "title": "Alpha_fr", "lag": 0}
