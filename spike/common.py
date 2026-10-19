@@ -73,8 +73,7 @@ def download(url: str, dest: Path, retries: int = 8) -> tuple[Path, float]:
                 total = have + int(r.headers.get("Content-Length", 0))
                 mode = "ab" if have and r.status_code == 206 else "wb"
                 with open(tmp, mode) as f:
-                    for chunk in r.iter_content(1 << 20):
-                        f.write(chunk)
+                    f.writelines(r.iter_content(1 << 20))
             if tmp.stat().st_size >= total:
                 break
         except requests.RequestException:
