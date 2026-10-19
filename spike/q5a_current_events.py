@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from common import RAW, session
 
@@ -21,7 +21,7 @@ def main() -> None:
     """Fetch the last 60 Current events pages (cached) and print entries matching the candidate keywords."""
     out = RAW / "events"
     out.mkdir(parents=True, exist_ok=True)
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     for i in range(1, 61):
         day = today - timedelta(days=i)
         title = f"Portal:Current_events/{day.year}_{day:%B}_{day.day}"
