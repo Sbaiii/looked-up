@@ -47,11 +47,15 @@ def test_retrain_needs_training_data(tmp_path):
         R.retrain(LocalStore(tmp_path / "lake"), now=datetime(2026, 10, 12), add_live_week=False)
 
 
-def test_retrain_publishes_models_and_manifest(tmp_path, monkeypatch):
+def _params(tmp_path, monkeypatch):
     params = tmp_path / "params.json"
     params.write_text(json.dumps({k: SMALL for k in [f"{t}_t{o}" for t in T.TARGETS for o in T.OFFSETS]
                                   + [f"m2_{t}" for t in T.M2_TARGETS]}))
     monkeypatch.setattr(R, "PARAMS", params)
+
+
+def test_retrain_publishes_models_and_manifest(tmp_path, monkeypatch):
+    _params(tmp_path, monkeypatch)
     store = LocalStore(tmp_path / "lake")
     batch = tmp_path / "batch.parquet"
     pq.write_table(pa.Table.from_pylist(_rows()), batch)
@@ -101,13 +105,6 @@ def test_batch_table_stops_at_production(tmp_path, monkeypatch):
     con.close()
     monkeypatch.setattr(W, "WAREHOUSE_DB", wh)
     assert sorted(R.batch_table(db.connect())["event_id"].to_pylist()) == ["a", "c"]
-
-
-def _params(tmp_path, monkeypatch):
-    params = tmp_path / "params.json"
-    params.write_text(json.dumps({k: SMALL for k in [f"{t}_t{o}" for t in T.TARGETS for o in T.OFFSETS]
-                                  + [f"m2_{t}" for t in T.M2_TARGETS]}))
-    monkeypatch.setattr(R, "PARAMS", params)
 
 
 def test_retrain_uploads_the_batch_once(tmp_path, monkeypatch):
