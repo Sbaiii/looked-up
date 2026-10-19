@@ -13,10 +13,9 @@ import json
 import resource
 import sys
 import time
-from datetime import datetime, timedelta, timezone, UTC
+from datetime import UTC, datetime, timedelta, timezone
 
 import duckdb
-
 from common import DERIVED, RAW, download, list_hourly
 
 WP_FILTER = "regexp_matches(project, '^[a-z0-9-]+(\\.m)?$')"
