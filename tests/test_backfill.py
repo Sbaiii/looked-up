@@ -6,8 +6,8 @@ import shutil
 from datetime import date, datetime
 
 import pytest
-
 from conftest import HOURLY_SAMPLE, LANGS, PVC_SAMPLE
+
 from lookedup import backfill, dumps
 from lookedup.store import LocalStore, Manifest
 
