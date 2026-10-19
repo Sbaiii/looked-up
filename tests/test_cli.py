@@ -90,9 +90,8 @@ def test_live_snapshot_without_a_host(monkeypatch, caplog):
 
 
 def test_live_commands_default_days(monkeypatch, capsys):
-    from lookedup import dumps
     import lookedup.live_analysis as la
-    from lookedup import store
+    from lookedup import dumps, store
 
     seen = {}
     monkeypatch.setattr(dumps, "utcnow", lambda: datetime(2026, 10, 12, 3, 30))
@@ -133,8 +132,7 @@ def test_sync_options(monkeypatch, capsys):
 
 def test_app_export_modes(monkeypatch, tmp_path, capsys):
     import lookedup.app_export as ax
-    from lookedup import settings
-    from lookedup import store
+    from lookedup import settings, store
 
     calls = []
     monkeypatch.setattr(store, "open_store", lambda local=False: f"store({local})")
@@ -218,9 +216,8 @@ def test_relocate_data_skips(monkeypatch, capsys):
 def test_baselines_day(monkeypatch, capsys):
     from datetime import date
 
-    from lookedup import dumps
     import lookedup.scorer as sc
-    from lookedup import store
+    from lookedup import dumps, store
 
     seen = []
     monkeypatch.setattr(dumps, "utcnow", lambda: datetime(2026, 10, 12, 3, 30))
@@ -300,9 +297,8 @@ def test_validate_exit_code(monkeypatch, capsys):
 
 
 def test_wikidata_upload_switch(monkeypatch, tmp_path, capsys):
-    from lookedup import settings
     import lookedup.wikidata as wd
-    from lookedup import store
+    from lookedup import settings, store
 
     commits = []
 
@@ -368,8 +364,8 @@ def test_ground_truth_paths(monkeypatch, capsys):
 def test_coverage_table(monkeypatch, tmp_path, capsys):
     import pyarrow as pa
     import pyarrow.parquet as pq
-
     from conftest import HOURLY_SAMPLE, LANGS
+
     from lookedup import store
     from lookedup.languages import article_filter
     from lookedup.settings import SITELINKS_PATH
@@ -391,8 +387,8 @@ def test_coverage_table(monkeypatch, tmp_path, capsys):
 def test_push_uploads_missing_hours(monkeypatch, tmp_path):
     import pyarrow as pa
     import pyarrow.parquet as pq
-
     from conftest import HOURLY_SAMPLE, LANGS
+
     from lookedup import store
     from lookedup.languages import article_filter
     from lookedup.settings import SITELINKS_PATH
