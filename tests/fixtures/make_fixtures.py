@@ -59,7 +59,7 @@ for t in ("Main_Page", "Wikipédia:Accueil_principal", "Wikipedia:Hauptseite", "
 def siblings(i: int) -> list[int]:
     """The line plus its other-access twin (en <-> en.m), so each Wikipedia title is complete."""
     p, t = lines[i].split(" ")[:2]
-    base = p[:-2] if p.endswith(".m") else p
+    base = p.removesuffix(".m")
     if base not in LANGS:
         return [i]
     return by_key.get((base, t), []) + by_key.get((base + ".m", t), [])
