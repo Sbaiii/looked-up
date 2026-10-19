@@ -103,3 +103,10 @@ def test_claims_by_qid():
     t = pa.table({"qid": [1, 2], "claims_json": ['{"P31": [5]}', '{"P17": [30]}']})
     assert R._claims(t) == {1: {"P31": [5]}, 2: {"P17": [30]}}
     assert R._claims(pa.table({"qid": pa.array([], pa.int64()), "claims_json": pa.array([], pa.string())})) == {}
+
+
+def test_country_from_article_then_us_state():
+    base = {"article_countries": [], "region_is_us_state": False, "place_qids": []}
+    assert R._country(base | {"article_countries": [17, 30]}, {}) == 17
+    assert R._country(base | {"region_is_us_state": True, "place_qids": [99]}, {}) == 30
+    assert R._country(base, {}) is None
