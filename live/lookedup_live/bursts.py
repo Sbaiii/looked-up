@@ -66,6 +66,7 @@ class Baselines:
     """Per wiki: median edits per edited article-hour, over the last 7 days of its own history."""
 
     def __init__(self) -> None:
+        """No hour started yet, no counts, and an empty seven-day median history per wiki."""
         self.hour: int | None = None
         self.current: dict[str, Counter] = defaultdict(Counter)       # wiki -> title -> edits this hour
         self.medians: dict[str, deque] = defaultdict(lambda: deque(maxlen=BASELINE_HOURS))
