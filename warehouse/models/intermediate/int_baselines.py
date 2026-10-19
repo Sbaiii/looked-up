@@ -11,6 +11,7 @@ from lookedup.analytics.scoring import scored_candidates_sql
 
 
 def model(dbt, session):
+    """Each pending day's candidate article-hours scored against their baselines, with that day's language prior as fallback."""
     dbt.config(materialized="incremental")
     cfg = load()
     dbt.ref("stg_hourly").create_view("_stg_hourly_bl", replace=True)
