@@ -9,7 +9,7 @@ from __future__ import annotations
 import gzip
 import json
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 import duckdb
 
@@ -27,7 +27,7 @@ NON_WIKIPEDIA = {
 
 def latest_files(n: int = 3) -> list[dict]:
     """The ``n`` most recent hourly dump files, reaching into the previous month when needed."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     files = list_hourly(now.year, now.month)
     if len(files) < n:
         prev = now.replace(day=1) - timedelta(days=1)
@@ -68,7 +68,7 @@ def load_sql(path) -> str:
 def main() -> None:
     """Run the Q1 measurements and write the report under data/derived/."""
     DERIVED.mkdir(parents=True, exist_ok=True)
-    report: dict = {"run_at": datetime.now(timezone.utc).isoformat()}
+    report: dict = {"run_at": datetime.now(UTC).isoformat()}
 
     # ---- 1a: latest 3 files, sizes, lines, projects, lag --------------------------
     files = latest_files(3)
@@ -94,7 +94,7 @@ def main() -> None:
     report["files"] = rows
 
     # lag distribution over the last 7 full days of listings
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     hist = []
     for d in range(1, 8):
         hist += day_listing(now - timedelta(days=d))
