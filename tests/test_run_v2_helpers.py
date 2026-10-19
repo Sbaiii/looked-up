@@ -81,3 +81,11 @@ def test_cached_refresh_rebuilds(tmp_path, monkeypatch):
     assert R._cached("quakes", lambda: [{"n": 2}], refresh=False) == [{"n": 1}]
     assert R._cached("quakes", lambda: [{"n": 2}], refresh=True) == [{"n": 2}]
     assert R._cached("quakes", lambda: [{"n": 3}], refresh=False) == [{"n": 2}]
+
+
+def test_write_skips_empty_and_writes_rows(tmp_path, monkeypatch):
+    monkeypatch.setattr(R, "OUT", tmp_path)
+    R._write("none.csv", [])
+    R._write("rows.csv", [{"qid": 1, "detected": True}, {"qid": 2, "detected": False}])
+    assert not (tmp_path / "none.csv").exists()
+    assert (tmp_path / "rows.csv").read_text(encoding="utf-8") == "qid,detected\n1,True\n2,False\n"
