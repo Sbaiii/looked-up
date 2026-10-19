@@ -13,7 +13,7 @@ import json
 import resource
 import sys
 import time
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import duckdb
 from common import DERIVED, RAW, download, list_hourly

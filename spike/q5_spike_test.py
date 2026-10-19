@@ -21,7 +21,7 @@ import json
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import duckdb
 from common import DERIVED, DOCS, RAW, download, hourly_url, session

@@ -9,7 +9,7 @@ from __future__ import annotations
 import gzip
 import json
 import time
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import duckdb
 from common import DERIVED, RAW, download, human, list_hourly, session

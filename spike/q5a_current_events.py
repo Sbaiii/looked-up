@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import sys
 import time
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from common import RAW, session
 
