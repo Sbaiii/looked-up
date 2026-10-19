@@ -248,3 +248,13 @@ def test_sparql_retries_bad_json(monkeypatch):
     assert G._sparql("SELECT ?item WHERE {}") == rows
     assert [c[0] for c in s.calls] == ["POST", "POST"] and s.calls[0][2] == {"query": "SELECT ?item WHERE {}"}
     assert sleeps == [5]
+
+
+def test_sparql_gives_up(monkeypatch):
+    import pytest
+    import requests
+
+    G, s, sleeps = _fake(monkeypatch, *[_Resp(429)] * 5)
+    with pytest.raises(requests.HTTPError):
+        G._sparql("SELECT 1")
+    assert len(s.calls) == 5 and sleeps == [5, 10, 15, 20]
