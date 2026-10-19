@@ -62,7 +62,7 @@ def test_future_rows_never_change_features():
 
 def test_targets():
     rows = _rows(_con(SPIKES, VIEWS, breadth=6), targets=True, data_end="2026-12-31 00:00:00")
-    r3 = [r for r in rows if r["offset_h"] == 3][0]               # T = +5
+    r3 = next(r for r in rows if r["offset_h"] == 3)               # T = +5
     assert r3["reach_international"] == 1 and r3["reach_planetary"] == 0
     # next 24 h after +5: es at +6..+9 (260, 220, 180, 140 views; baseline 10)
     assert r3["excess_next24"] == 250 + 210 + 170 + 130
