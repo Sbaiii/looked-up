@@ -68,7 +68,7 @@ def main() -> None:
     for ln in lines[:20000]:
         parts = ln.split(" ")
         if len(parts) == 6:
-            proj, title, page_id, access, total, hourly = parts
+            proj, _title, _page_id, access, total, hourly = parts
             h = decode_hourly(hourly)
             parsed.append((proj, access, int(total), sum(h.values()) == int(total)))
     res["sample_parsed"] = len(parsed)
