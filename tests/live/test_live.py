@@ -429,7 +429,7 @@ def test_cold_start_replays_and_handles_events(monkeypatch):
         def get(self, url, headers=None, params=None, stream=None, timeout=None):
             calls.append((dict(headers), dict(params)))
             stop.set()                                             # one connection only
-            return _Stream([f"id: [7]", f"data: {payload}", ""])
+            return _Stream(["id: [7]", f"data: {payload}", ""])
 
     monkeypatch.setattr(stream.requests, "Session", S)
     e.covered_since = T0 - 99
