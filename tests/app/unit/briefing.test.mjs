@@ -85,3 +85,11 @@ test('leadKey picks the death sentence by gender and the plain sentence otherwis
   assert.equal(leadKey({ category: 'death', gender: 'other' }), 'briefing.lead_death_neutral');
   assert.equal(leadKey({ category: 'death' }), 'briefing.lead_death_neutral');
 });
+
+test('leadEvent is the top-ranked multi-language event, null on a quiet day', () => {
+  const ev = (id, excess, breadth, cls = 'multi_language') => ({ id, excess, breadth, class: cls });
+  assert.equal(leadEvent([]), null);
+  assert.equal(leadEvent([ev('solo', 9e6, 1, 'single_language')]), null);
+  assert.equal(leadEvent([ev('a', 500, 3), ev('b', 900, 2), ev('solo', 9e6, 1, 'single_language')]).id, 'b');
+  assert.equal(leadEvent([ev('a', 900, 3), ev('b', 900, 7)]).id, 'b');            // ties go to the wider event
+});
