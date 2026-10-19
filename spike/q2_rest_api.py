@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from common import DERIVED, session
 
@@ -33,7 +33,7 @@ def get(url: str) -> tuple[int, dict | None, float, dict]:
 def main() -> None:
     """Probe the REST API (top articles, per-article history, top countries of a wiki) and save the results."""
     res: dict = {}
-    yday = datetime.now(timezone.utc) - timedelta(days=1)
+    yday = datetime.now(UTC) - timedelta(days=1)
     y, m, d = f"{yday:%Y}", f"{yday:%m}", f"{yday:%d}"
 
     # ---- 2a: top articles yesterday ----------------------------------------------
@@ -79,7 +79,7 @@ def main() -> None:
 
     # ---- 2c: geography --------------------------------------------------------------
     geo = {}
-    last_month = (datetime.now(timezone.utc).replace(day=1) - timedelta(days=1))
+    last_month = (datetime.now(UTC).replace(day=1) - timedelta(days=1))
     lm_y, lm_m = f"{last_month:%Y}", f"{last_month:%m}"
     code, body, _, _ = get(f"{API}/top-by-country/en.wikipedia/all-access/{lm_y}/{lm_m}")
     geo["top-by-country"] = {"url": f"top-by-country/en.wikipedia/all-access/{lm_y}/{lm_m}", "status": code,
@@ -109,7 +109,7 @@ def main() -> None:
     geo["countries_probe"] = served
     geo["countries_missing"] = [c for c, v in served.items() if v != 200]
     # same-day availability (today) for top-per-country and top
-    today = datetime.now(timezone.utc)
+    today = datetime.now(UTC)
     code, _, _, _ = get(f"{API}/top-per-country/FR/all-access/{today:%Y/%m/%d}")
     geo["top-per-country today"] = code
     code, _, _, _ = get(f"{API}/top/en.wikipedia/all-access/{today:%Y/%m/%d}")
