@@ -9,10 +9,9 @@ from __future__ import annotations
 import gzip
 import json
 import time
-from datetime import datetime, timedelta, timezone, UTC
+from datetime import UTC, datetime, timedelta, timezone
 
 import duckdb
-
 from common import DERIVED, RAW, download, human, list_hourly, session
 
 # ".m" also tags non-Wikipedia Wikimedia sites (commons.m, meta.m, ...). Exclude them
