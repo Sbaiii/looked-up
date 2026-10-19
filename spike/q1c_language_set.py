@@ -17,7 +17,6 @@ import sys
 from datetime import datetime, timedelta
 
 import duckdb
-
 from common import DERIVED, RAW
 from q1_hourly_dumps import NON_WIKIPEDIA
 
