@@ -31,3 +31,11 @@ test('get memoises successes and forgets failures', async (t) => {
   assert.deepEqual(await data.stats(), { ok: 2 });
   assert.equal(calls, 2);
 });
+
+test('the ?data= override accepts a relative folder and refuses anything else', async () => {
+  assert.equal((await load('?data=fixtures/app/')).BASE, 'fixtures/app/');
+  assert.equal((await load('?data=../secrets/')).BASE, HUB);
+  assert.equal((await load('?data=https://evil.example/')).BASE, HUB);
+  assert.equal((await load('?data=fixtures/app')).BASE, HUB);                 // must end with a slash
+  assert.equal((await load('')).BASE, HUB);
+});
