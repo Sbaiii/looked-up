@@ -47,3 +47,9 @@ test('a ring crossing the antimeridian is unwrapped before averaging', () => {
   const east = { type: 'Polygon', coordinates: [[[179, 0], [-177, 0], [-177, 2], [179, 2], [179, 0]]] };
   assert.deepEqual(centroid(east), [-179, 1]);                          // past 180 it comes back as a western longitude
 });
+
+test('featureKey uses the ISO numeric id, then XKS for Kosovo, then the name', () => {
+  assert.equal(featureKey({ id: '620', properties: { name: 'Portugal' } }), '620');
+  assert.equal(featureKey({ properties: { name: 'Kosovo' } }), 'XKS');
+  assert.equal(featureKey({ properties: { name: 'N. Cyprus' } }), 'N. Cyprus');
+});
