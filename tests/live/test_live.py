@@ -580,6 +580,7 @@ def test_service_start_and_shutdown(monkeypatch, tmp_path):
 
 def test_shift_main_without_publishing(tmp_path, monkeypatch):
     import sys
+
     from lookedup_live import shift
     calls = []
     monkeypatch.setattr(sys, "argv", ["shift", "--hours", "0", "--state-dir", str(tmp_path), "--no-publish"])
