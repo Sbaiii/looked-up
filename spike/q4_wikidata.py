@@ -20,7 +20,6 @@ import zlib
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-
 from common import DERIVED, RAW, download, session
 
 WD_API = "https://www.wikidata.org/w/api.php"
