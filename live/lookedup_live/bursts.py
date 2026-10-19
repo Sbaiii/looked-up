@@ -116,6 +116,7 @@ class Detector:
     """Applies the burst rules edit by edit, keeping only what the windows need."""
 
     def __init__(self) -> None:
+        """No articles tracked, fresh baselines and no bursts yet."""
         self.articles: dict[tuple[str, str], Article] = {}
         self.baselines = Baselines()
         self.bursts: deque[Burst] = deque()
