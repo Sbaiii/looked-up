@@ -5,8 +5,8 @@ import shutil
 from datetime import datetime, timedelta
 
 import pytest
-
 from conftest import HOURLY_SAMPLE, LANGS
+
 from lookedup import dumps, hourly
 from lookedup.store import LocalStore, Manifest
 
