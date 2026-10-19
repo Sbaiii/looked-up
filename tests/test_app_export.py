@@ -282,3 +282,12 @@ def test_export_live_end_to_end(tmp_path, monkeypatch):
     assert (lake / ax.APP_PREFIX / "today.json.gz").exists() and (lake / ax.og_file(h.date())).exists()
     stats = json.loads((lake / ax.APP_PREFIX / "stats.json").read_text())
     assert sorted(stats["days"]) == ["2026-08-16", "2026-08-17"] and stats["events"] == 1
+
+
+def test_titles_from_api_use_underscores(monkeypatch):
+    import lookedup.scorer as S
+
+    seen = []
+    monkeypatch.setattr(S, "labels_for", lambda qids, langs: seen.append((qids, langs)) or {7: {"en": "New York City", "fr": "New York"}})
+    assert ax.titles_from_api({9, 7}, ["en", "fr"]) == {7: {"en": "New_York_City", "fr": "New_York"}}
+    assert seen == [([7, 9], ["en", "fr"])]
