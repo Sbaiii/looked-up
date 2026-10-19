@@ -50,7 +50,7 @@ def test_run_on_the_hub_and_failures(monkeypatch, tmp_path):
 
 
 def test_refresh_mirrors_then_builds(monkeypatch):
-    import lookedup.store as store
+    from lookedup import store
 
     seen = {}
     monkeypatch.setattr(store, "HFStore", lambda: "hub")
