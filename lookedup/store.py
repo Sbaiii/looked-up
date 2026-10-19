@@ -155,11 +155,20 @@ def missing_hours(manifest: Manifest, expected: list[datetime]) -> list[datetime
 class Store(Protocol):
     """What the lake writers need from a backend: the head revision, the manifest, file fetches and atomic commits."""
 
-    def head(self) -> str | None: ...
-    def read_manifest(self, revision: str | None = None) -> Manifest: ...
-    def fetch(self, repo_path: str, dest_dir: Path, revision: str | None = None) -> Path | None: ...
-    def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None: ...
-    def list_prefix(self, prefix: str) -> list[str]: ...
+    def head(self) -> str | None:
+        """The current revision, or None for a backend without revisions."""
+
+    def read_manifest(self, revision: str | None = None) -> Manifest:
+        """The manifest at ``revision`` (default: the head)."""
+
+    def fetch(self, repo_path: str, dest_dir: Path, revision: str | None = None) -> Path | None:
+        """Download ``repo_path`` into ``dest_dir``; None when the file does not exist."""
+
+    def commit(self, files: dict[str, Path], delta: Manifest, message: str, parent: str | None = None) -> None:
+        """Write ``files`` and merge ``delta`` into the manifest atomically; StoreConflict if ``parent`` moved."""
+
+    def list_prefix(self, prefix: str) -> list[str]:
+        """Paths of the files under ``prefix``."""
 
 
 def write_hours(store: Store, tables: dict[datetime, tuple[pa.Table, str]], message: str,
