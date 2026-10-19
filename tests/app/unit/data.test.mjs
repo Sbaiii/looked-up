@@ -39,3 +39,13 @@ test('the ?data= override accepts a relative folder and refuses anything else', 
   assert.equal((await load('?data=fixtures/app')).BASE, HUB);                 // must end with a slash
   assert.equal((await load('')).BASE, HUB);
 });
+
+test('without DecompressionStream the plain JSON is fetched', async (t) => {
+  const urls = [];
+  t.mock.method(globalThis, 'fetch', async (url) => { urls.push(url); return Response.json({ plain: true }); });
+  const data = await load('', {});
+  assert.deepEqual(await data.get('stats.json'), { plain: true });
+  assert.deepEqual(urls, [`${HUB}stats.json`]);
+  t.mock.method(globalThis, 'fetch', async () => new Response('', { status: 404 }));
+  await assert.rejects(data.get('days/2026-01-01.json'), /404 days\/2026-01-01.json$/);
+});
