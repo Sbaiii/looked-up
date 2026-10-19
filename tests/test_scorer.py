@@ -173,3 +173,17 @@ def test_score_named_hours_only_if_present(lake):
     out = scorer.score(lake, now=present + timedelta(hours=4), langs=["en", "es", "fr"], hours=[missing, present],
                        baselines_dir=lake.root / "bl", recompute=False)
     assert out["scored_hours"] == [f"{present:%Y-%m-%dT%H}"]
+
+
+def test_spike_file_merges_runs(lake):
+    import pyarrow.parquet as pq
+
+    scorer.build_baselines(lake, D, directory=lake.root / "bl")
+    kw = {"langs": ["en", "es", "fr"], "baselines_dir": lake.root / "bl", "recompute": False}
+    first = scorer.score(lake, now=datetime.combine(D, datetime.min.time()) + timedelta(hours=13), max_hours=11, **kw)
+    second = scorer.score(lake, now=datetime.combine(D, datetime.min.time()) + timedelta(hours=14), max_hours=12, **kw)
+    assert len(first["scored_hours"]) == 11 and second["scored_hours"] == [f"{D:%Y-%m-%d}T11"]
+    t = pq.read_table(lake.root / scorer.spikes_path(D))
+    keys = list(zip(t["lang"].to_pylist(), t["title"].to_pylist(), t["ts_hour_start"].to_pylist(), strict=True))
+    assert len(keys) == len(set(keys))                                         # no hour written twice
+    assert {k[2].hour for k in keys} == {9, 10, 11} and set(t["qid"].to_pylist()) == {42}
