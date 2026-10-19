@@ -4,8 +4,8 @@ from collections import defaultdict
 from datetime import date, datetime
 
 import pyarrow as pa
-
 from conftest import HOURLY_SAMPLE, LANGS, PVC_SAMPLE
+
 from lookedup.parse import keep_row, normalize_title, parse_dump_line, parse_project
 from lookedup.transform import SCHEMA, hourly_dump_to_table, pageview_complete_to_tables
 
