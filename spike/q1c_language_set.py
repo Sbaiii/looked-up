@@ -68,7 +68,7 @@ res = {
     "coverage_pct": coverage,
     "top50": [[l, int(v), round(100 * (m or 0) / v, 1)] for l, v, m in rows[:50]],
     "langs_51_100": [l for l, _, _ in rows[50:100]],
-    "raw_top50_not_in_article_top50": sorted(set(l for l, _, _ in rows_raw[:50]) - set(l for l, _, _ in rows[:50])),
+    "raw_top50_not_in_article_top50": sorted({l for l, _, _ in rows_raw[:50]} - {l for l, _, _ in rows[:50]}),
 }
 (DERIVED / "q1c_language_set.json").write_text(json.dumps(res, indent=2))
 print(json.dumps({k: v for k, v in res.items() if k not in ("top50", "top50_raw")}, indent=2))
