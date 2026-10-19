@@ -66,7 +66,7 @@ def calib_curve(y: np.ndarray, p: np.ndarray, bins: int = 10) -> list[dict]:
 
 def lift_top10(y: np.ndarray, s: np.ndarray) -> float:
     """Positive rate among the top 10 % of scores, divided by the base rate."""
-    k = max(1, int(round(0.1 * len(y))))
+    k = max(1, round(0.1 * len(y)))
     top = np.argsort(-s, kind="stable")[:k]
     base = y.mean()
     return float(y[top].mean() / base) if base > 0 else float("nan")
@@ -75,7 +75,7 @@ def lift_top10(y: np.ndarray, s: np.ndarray) -> float:
 def m1_metrics(y: np.ndarray, s: np.ndarray, prob: bool = True) -> dict:
     """M1 scores for one model: ROC AUC, PR AUC and lift, plus Brier and calibration slope for probabilities."""
     two = len(set(y)) > 1
-    out = {"n": int(len(y)), "positives": int(y.sum()),
+    out = {"n": len(y), "positives": int(y.sum()),
            "roc_auc": float(roc_auc_score(y, s)) if two else None,
            "pr_auc": float(average_precision_score(y, s)) if two else None,
            "lift_top10": lift_top10(y, s)}
@@ -87,7 +87,7 @@ def m1_metrics(y: np.ndarray, s: np.ndarray, prob: bool = True) -> dict:
 def m2_metrics(y_log: np.ndarray, p_log: np.ndarray, hours: bool = False) -> dict:
     """M2 scores: MAE and MAPE in log1p space, plus the median absolute error in hours for fade time."""
     pos = y_log > 0
-    out = {"n": int(len(y_log)), "mae_log": float(mean_absolute_error(y_log, p_log)),
+    out = {"n": len(y_log), "mae_log": float(mean_absolute_error(y_log, p_log)),
            "mape_log": float(np.mean(np.abs(p_log[pos] - y_log[pos]) / y_log[pos])) if pos.any() else None}
     if hours:
         out["median_abs_error_hours"] = float(np.median(np.abs(np.expm1(p_log) - np.expm1(y_log))))
