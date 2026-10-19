@@ -32,3 +32,11 @@ test('centroid of a square is its centre, rounded to two decimals', () => {
   assert.deepEqual(centroid(tri), [0.33, 0.33]);
   assert.equal(centroid(null), null);
 });
+
+test('a multipolygon uses its largest outer ring', () => {
+  const islands = { type: 'MultiPolygon', coordinates: [
+    [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+    [[[40, 40], [50, 40], [50, 50], [40, 50], [40, 40]]],
+  ] };
+  assert.deepEqual(centroid(islands), [45, 45]);
+});
