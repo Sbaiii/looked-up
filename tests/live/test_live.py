@@ -552,20 +552,6 @@ def test_shift_final_publish_includes_state(tmp_path, monkeypatch):
             commits.append([op.path_in_repo for op in operations])
 
     monkeypatch.setattr(shift, "_api", lambda: Api())
-    shift.publish(Engine(tmp_path), tmp_path, final=True)
-    assert {"data/live/state.json.gz", "data/live/qids.json"} <= set(commits[0])
-    assert (tmp_path / "state.json.gz").exists()
-
-
-def test_shift_final_publish_includes_state(tmp_path, monkeypatch):
-    from lookedup_live import shift
-    commits = []
-
-    class Api:
-        def create_commit(self, repo, repo_type=None, operations=None, commit_message=None):
-            commits.append([op.path_in_repo for op in operations])
-
-    monkeypatch.setattr(shift, "_api", lambda: Api())
     monkeypatch.setattr(shift.time, "time", lambda: 1_791_000_000.0 + 900)
     shift.publish(Engine(tmp_path), tmp_path, final=True)
     assert {"data/live/state.json.gz", "data/live/qids.json"} <= set(commits[0])
