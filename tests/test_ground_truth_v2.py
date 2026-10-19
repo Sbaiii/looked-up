@@ -234,3 +234,9 @@ def test_get_raises_after_retries(monkeypatch):
     with pytest.raises(requests.HTTPError):
         G._get("https://x.test", {}, retries=3)
     assert len(s.calls) == 3 and sleeps == [3, 6]
+
+
+def test_raw_fetches_wikitext(monkeypatch):
+    G, s, _ = _fake(monkeypatch, _Resp(200, "==August 2026=="))
+    assert G._raw("Deaths in August 2026") == "==August 2026=="
+    assert s.calls == [("GET", "https://en.wikipedia.org/w/index.php", {"title": "Deaths in August 2026", "action": "raw"})]
