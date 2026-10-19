@@ -95,3 +95,11 @@ def test_delay_quartiles_by_nearest_rank():
     d = R._dist([5.0, 1.0, 3.0, 2.0, 4.0])
     assert (d["p25"], d["median"], d["p75"]) == (2.0, 3.0, 4.0)
     assert R._dist([7.0]) == {"n": 1, "median": 7.0, "p25": 7.0, "p75": 7.0, "min": 7.0, "max": 7.0, "share_le_4h": 0.0}
+
+
+def test_claims_by_qid():
+    import pyarrow as pa
+
+    t = pa.table({"qid": [1, 2], "claims_json": ['{"P31": [5]}', '{"P17": [30]}']})
+    assert R._claims(t) == {1: {"P31": [5]}, 2: {"P17": [30]}}
+    assert R._claims(pa.table({"qid": pa.array([], pa.int64()), "claims_json": pa.array([], pa.string())})) == {}
