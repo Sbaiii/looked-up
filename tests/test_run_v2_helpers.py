@@ -110,3 +110,12 @@ def test_country_from_article_then_us_state():
     assert R._country(base | {"article_countries": [17, 30]}, {}) == 17
     assert R._country(base | {"region_is_us_state": True, "place_qids": [99]}, {}) == 30
     assert R._country(base, {}) is None
+
+
+def test_country_from_places_region_first():
+    base = {"article_countries": [], "region_is_us_state": False}
+    claims = {10: {"P31": [515], "P17": [17]}, 20: {"P31": [6256]}, 30: {"P31": [107425], "P17": [148]}}
+    assert R._country(base | {"place_qids": [10, 20]}, claims) == 20          # the region (last) is a country itself
+    assert R._country(base | {"place_qids": [20, 30]}, claims) == 148         # the region's own country wins
+    assert R._country(base | {"place_qids": [10, 99]}, claims) == 17          # unknown region, then the locality's P17
+    assert R._country(base | {"place_qids": [99]}, claims) is None
