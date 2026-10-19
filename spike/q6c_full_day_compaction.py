@@ -14,7 +14,6 @@ import time
 from datetime import datetime, timedelta
 
 import duckdb
-
 from common import DERIVED, RAW
 
 day = datetime(2026, 8, 28)
