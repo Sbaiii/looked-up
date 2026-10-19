@@ -143,3 +143,11 @@ def test_main_pages_are_excluded(article_filter):
     assert not article_filter.is_article("en", "Main_Page")
     fr = article_filter.excluded_titles("fr")
     assert len(fr) >= 1 and all(not article_filter.is_article("fr", t) for t in fr)
+
+
+def test_hour_start_rejects_other_files():
+    import pytest
+
+    for name in ("projectviews-20261007-100000", "pageviews-20261007.gz", "pageviews-20261007-103000.gz"):
+        with pytest.raises(ValueError, match="not an hourly dump name"):
+            dumps.hour_start_from_name(name)
