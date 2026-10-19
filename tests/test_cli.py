@@ -16,7 +16,7 @@ def test_hour_argument_formats():
 
 
 def test_every_documented_command_is_registered(monkeypatch, capsys):
-    documented = re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.M)
+    documented = re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.MULTILINE)
     assert len(documented) >= 25
     for name in documented:
         with pytest.raises(SystemExit) as e:
