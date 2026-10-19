@@ -360,3 +360,20 @@ def test_hub_commit_sends_files_and_merged_manifest(tmp_path, monkeypatch):
     manifest = Manifest.from_json(k["operations"][-1].path_or_fileobj.decode())
     assert manifest.present() == {H14, H14 + timedelta(hours=1)}
     assert json.loads(k["operations"][-1].path_or_fileobj)
+
+
+def test_write_hours_gives_up_after_repeated_conflicts(tmp_path, monkeypatch):
+    import lookedup.store as S
+
+    tries = []
+
+    class AlwaysRaced(LocalStore):
+        def commit(self, files, delta, message, parent=None):
+            tries.append(parent)
+            raise StoreConflict("raced again")
+
+    monkeypatch.setattr(S.time, "sleep", lambda s: None)
+    with pytest.raises(RuntimeError, match="could not commit after 3 attempts: ours"):
+        write_hours(AlwaysRaced(tmp_path / "lake"), {H14: (_hour(H14, [("en", "A", 1, 1)]), "hourly_dump")}, "ours",
+                    attempts=3)
+    assert len(tries) == 3
