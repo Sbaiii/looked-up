@@ -7,6 +7,7 @@ import pyarrow as pa
 
 
 def model(dbt, session):
+    """One row per hour in the lake manifest: hour start, row count, source and day file."""
     dbt.config(materialized="table")
     root = dbt.config.get("lake_root")
     doc = json.loads(Path(root, "data", "manifest.json").read_text())
