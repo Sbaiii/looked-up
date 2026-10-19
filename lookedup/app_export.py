@@ -353,7 +353,12 @@ def live_forecasts(con: duckdb.DuckDBPyConnection, store: Store, events: list[di
                    tmp: Path) -> tuple[dict, dict]:
     """Phase 4: forecasts for open events (empty until models are published). Never fails the export."""
     try:
-        from lookedup.forecast.predict import entity_classes, forecast_open, live_relations, load_models
+        from lookedup.forecast.predict import (
+            entity_classes,
+            forecast_open,
+            live_relations,
+            load_models,
+        )
 
         manifest, models = load_models(store, tmp / "models")
         if not models or last_hour is None:
