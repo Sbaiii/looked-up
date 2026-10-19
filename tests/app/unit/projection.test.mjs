@@ -1,7 +1,7 @@
 // The flat-map projection, run with `npm run test:unit`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { H, LAT_BOTTOM, LAT_TOP, W, polygons, project, ringPath } from '../../../app/js/projection.js';
+import { H, LAT_BOTTOM, LAT_TOP, W, centroid, featureKey, geomPath, polygons, project, ringPath } from '../../../app/js/projection.js';
 
 test('equirectangular corners, latitude clamped to the cropped band', () => {
   assert.deepEqual(project([-180, LAT_TOP]), [0, 0]);
@@ -23,4 +23,12 @@ test('a ring crossing the antimeridian stays on the right edge', () => {
   const xs = [...ringPath(fiji).matchAll(/[ML](-?[\d.]+),/g)].map((m) => Number(m[1]));
   assert.ok(Math.min(...xs) > W * 0.99, 'no point jumps to the left edge');
   assert.ok(ringPath([[0, 0], [1, 0], [1, 1]]).endsWith('Z'));
+});
+
+test('centroid of a square is its centre, rounded to two decimals', () => {
+  const square = { type: 'Polygon', coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]] };
+  assert.deepEqual(centroid(square), [15, 15]);
+  const tri = { type: 'Polygon', coordinates: [[[0, 0], [1, 0], [0, 1], [0, 0]]] };
+  assert.deepEqual(centroid(tri), [0.33, 0.33]);
+  assert.equal(centroid(null), null);
 });
