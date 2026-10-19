@@ -166,3 +166,27 @@ def test_sparql_retries_then_raises(monkeypatch):
 def test_unparsable_death_dates_are_ignored():
     assert not died_near({"P570": ["unknown", "2026-13-01"]}, date(2026, 8, 17), CFG)
     assert died_near({"P570": ["unknown", "2026-08-16"]}, date(2026, 8, 17), CFG)
+
+
+def test_sparql_recovers_from_bad_json(monkeypatch):
+    from lookedup.analytics import entities as E
+
+    rows = [{"item": {"value": "http://www.wikidata.org/entity/Q5"}}]
+    answers = [None, {"results": {"bindings": rows}}]
+    sleeps = []
+
+    class R:
+        def __init__(self, data):
+            self.data = data
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            if self.data is None:
+                raise ValueError("HTML error page")
+            return self.data
+
+    monkeypatch.setattr(E, "session", lambda: type("S", (), {"post": lambda self, *a, **k: R(answers.pop(0))})())
+    monkeypatch.setattr(E.time, "sleep", sleeps.append)
+    assert E._sparql("SELECT ?item WHERE {}") == rows and sleeps == [5]
