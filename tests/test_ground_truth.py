@@ -51,9 +51,12 @@ class _Reply:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise RuntimeError(self.status_code)
+            import requests
+            raise requests.HTTPError(str(self.status_code))
 
     def json(self):
+        if self._data == "bad":
+            raise ValueError("not JSON")
         return self._data
 
 
@@ -126,3 +129,21 @@ def test_build_marks_major_pairs(tmp_path, monkeypatch):
     assert rows["Week"]["is_generic"] and not rows["Week"]["is_major"]
     assert rows["Lisbon"]["is_major"] == (4 >= cfg.raw["evaluation"]["major_min_languages"])
     assert not rows["Final"]["is_major"]                                    # linked in one language only
+
+
+def test_fetch_day_retries_then_raises(monkeypatch):
+    import pytest
+    import requests
+
+    import lookedup.evaluation.ground_truth as gt
+
+    sleeps = []
+    monkeypatch.setattr(gt.time, "sleep", sleeps.append)
+    s = _Session([_Reply(502), _Reply(200, "* back")])
+    monkeypatch.setattr(gt, "session", lambda: s)
+    assert gt.fetch_day(date(2026, 8, 12)) == "* back" and sleeps == [3]
+    s = _Session([_Reply(500)] * 2)
+    monkeypatch.setattr(gt, "session", lambda: s)
+    with pytest.raises(requests.HTTPError):
+        gt.fetch_day(date(2026, 8, 12), retries=2)
+
