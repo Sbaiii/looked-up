@@ -190,3 +190,10 @@ def test_download_resumes_after_a_cut(tmp_path, monkeypatch):
     monkeypatch.setattr(dumps._session, "get", get)
     assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"hello world"
     assert seen == [{}, {"Range": "bytes=6-"}]
+
+
+def test_session_is_shared_and_identifies_the_project():
+    from lookedup.settings import USER_AGENT
+
+    assert dumps.session() is dumps.session()
+    assert dumps.session().headers["User-Agent"] == USER_AGENT and "looked-up" in USER_AGENT
