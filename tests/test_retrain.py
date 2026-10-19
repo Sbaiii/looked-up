@@ -101,3 +101,19 @@ def test_batch_table_stops_at_production(tmp_path, monkeypatch):
     con.close()
     monkeypatch.setattr(W, "WAREHOUSE_DB", wh)
     assert sorted(R.batch_table(db.connect())["event_id"].to_pylist()) == ["a", "c"]
+
+
+def _params(tmp_path, monkeypatch):
+    params = tmp_path / "params.json"
+    params.write_text(json.dumps({k: SMALL for k in [f"{t}_t{o}" for t in T.TARGETS for o in T.OFFSETS]
+                                  + [f"m2_{t}" for t in T.M2_TARGETS]}))
+    monkeypatch.setattr(R, "PARAMS", params)
+
+
+def test_retrain_uploads_the_batch_once(tmp_path, monkeypatch):
+    _params(tmp_path, monkeypatch)
+    monkeypatch.setattr(R, "batch_table", lambda con: pa.Table.from_pylist(_rows()))
+    store = LocalStore(tmp_path / "lake")
+    res = R.retrain(store, now=datetime(2026, 10, 12), upload_batch=True, add_live_week=False)
+    assert res["rows"] == 1800
+    assert pq.read_table(tmp_path / "lake" / R.TRAINING / "batch.parquet").num_rows == 1800
