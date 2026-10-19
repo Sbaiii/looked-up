@@ -42,9 +42,10 @@ def main() -> None:
         event_t = datetime.fromisoformat(ev["event_utc"])
         public_t = datetime.fromisoformat(ev["public_utc"])
         series = defaultdict(list)
-        for r in csv.DictReader(open(DOCS / f"q5_{ev['key']}_hourly.csv")):
-            series[(r["entity"], r["qid"], r["lang"], r["title"])].append(
-                (parse(r["hour_start_utc"]), int(r["views"]), int(r["baseline_prev_day"])))
+        with open(DOCS / f"q5_{ev['key']}_hourly.csv") as f:
+            for r in csv.DictReader(f):
+                series[(r["entity"], r["qid"], r["lang"], r["title"])].append(
+                    (parse(r["hour_start_utc"]), int(r["views"]), int(r["baseline_prev_day"])))
         start = event_t.replace(minute=0) - timedelta(hours=6)
         for (ent, qid, lang, title), s in series.items():
             s.sort()
