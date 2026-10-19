@@ -147,3 +147,14 @@ def test_fetch_day_retries_then_raises(monkeypatch):
     with pytest.raises(requests.HTTPError):
         gt.fetch_day(date(2026, 8, 12), retries=2)
 
+
+def test_resolve_qids_retries_bad_json(monkeypatch):
+    import lookedup.evaluation.ground_truth as gt
+
+    good = {"query": {"pages": [{"title": "Lisbon", "pageprops": {"wikibase_item": "Q597"}}]}}
+    s = _Session([_Reply(data="bad"), _Reply(503), _Reply(data=good)])
+    sleeps = []
+    monkeypatch.setattr(gt, "session", lambda: s)
+    monkeypatch.setattr(gt.time, "sleep", sleeps.append)
+    assert gt.resolve_qids("en", ["Lisbon"]) == {"Lisbon": 597}
+    assert len(s.calls) == 3 and sleeps == [3, 6, 0.2]                  # two retries, then the polite pause
