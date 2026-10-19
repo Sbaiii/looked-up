@@ -6,7 +6,11 @@ import duckdb
 import pytest
 
 from lookedup.analytics.config import load
-from lookedup.analytics.scoring import automation_flags_sql, observation_counts, scored_candidates_sql
+from lookedup.analytics.scoring import (
+    automation_flags_sql,
+    observation_counts,
+    scored_candidates_sql,
+)
 
 CFG = load()
 D = date(2026, 8, 12)  # a Wednesday, 34 days after the period start: full 28-day lookback
