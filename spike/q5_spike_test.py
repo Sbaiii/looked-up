@@ -188,7 +188,7 @@ def analyse(ev: dict) -> list[dict]:
         """Sum redirect variants onto (hour, entity, lang)."""
         agg = {}
         for (h, lang, title), v in counts.items():
-            ent, canon = targets[(lang, title)]
+            ent, _canon = targets[(lang, title)]
             agg[(h, ent, lang)] = agg.get((h, ent, lang), 0) + v
         return agg
 
