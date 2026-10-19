@@ -308,3 +308,11 @@ def test_texts_live_fetches_for_event_qids(monkeypatch):
     assert ax.texts_live([]) == {} and calls == []
     assert ax.texts_live([{"qid": 5}, {"qid": 5}]) == {5: ({"fr": "ville"}, None)}
     assert calls == [({5}, "entity_text.parquet", ["en", "fr"])]
+
+
+def test_event_object_carries_a_forecast_only_when_given():
+    langs, titles = [_lang("a", "en", 1)], {"en": "Quake_X"}
+    fc = {"p_international": 0.42, "excess_next24": 1200}
+    assert ax.event_obj(_ev("a", 42, 3, 300), langs, titles, None, None, forecast=fc)["forecast"] == fc
+    plain = ax.event_obj(_ev("a", 42, 3, 300), langs, titles, None, None)
+    assert "forecast" not in plain and plain["category"] == "other"
