@@ -6,6 +6,7 @@ from lookedup.analytics.scoring import automation_flags_sql
 
 
 def model(dbt, session):
+    """The automation flags of each pending day's busy (lang, title, day) rows, appended day by day."""
     dbt.config(materialized="incremental")
     cfg = load()
     dbt.ref("stg_hourly").create_view("_stg_hourly_af", replace=True)
