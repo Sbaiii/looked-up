@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
 
 import requests
@@ -38,8 +38,8 @@ def list_hourly(year: int, month: int) -> list[dict]:
             {
                 "name": name,
                 "url": url + name,
-                "hour": datetime.strptime(day + hour, "%Y%m%d%H").replace(tzinfo=timezone.utc),
-                "posted": datetime.strptime(posted, "%d-%b-%Y %H:%M").replace(tzinfo=timezone.utc),
+                "hour": datetime.strptime(day + hour, "%Y%m%d%H").replace(tzinfo=UTC),
+                "posted": datetime.strptime(posted, "%d-%b-%Y %H:%M").replace(tzinfo=UTC),
                 "gz_bytes": int(size),
             }
         )
