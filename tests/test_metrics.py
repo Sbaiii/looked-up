@@ -189,3 +189,20 @@ def test_detection_delays_without_timestamps(monkeypatch):
     ctx.con.execute("ALTER TABLE majors ADD COLUMN title VARCHAR")
     monkeypatch.setattr(T, "event_time", lambda title, d: None)
     assert detection_delays(ctx, "ev") == {"n": 0, "rows": []}
+
+
+def test_detection_delay_shares(monkeypatch):
+    from datetime import datetime
+
+    import lookedup.evaluation.timestamps as T
+    from lookedup.evaluation.metrics import detection_delays
+
+    ctx = _ctx(monkeypatch)
+    ctx.con.execute("ALTER TABLE majors ADD COLUMN title VARCHAR")
+    ctx.con.execute("UPDATE majors SET title = 'Article ' || qid")
+    times = {"Article 1": datetime(2026, 8, 9, 15, 40), "Article 2": datetime(2026, 8, 1, 0, 0), "Article 3": datetime(2026, 8, 11, 7, 0)}
+    monkeypatch.setattr(T, "event_time", lambda title, d: {"time": times[title], "source": "infobox_timestamp"})
+    res = detection_delays(ctx, "ev")
+    vals = sorted(d["delay_hours"] for d in res["rows"])
+    assert res["n"] == 3 and res["median"] == vals[1] and res["p25"] == vals[0]
+    assert res["share_negative"] == sum(v < 0 for v in vals) / 3 and res["share_le_6h"] == sum(0 <= v <= 6 for v in vals) / 3
