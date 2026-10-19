@@ -63,3 +63,9 @@ test('windows are requested in order and the search stops at the first hero', as
   await pickHero((h) => { asked.push(h); return []; }, now);
   assert.deepEqual(asked, WINDOWS);
 });
+
+test('pickDay and pick return null on an empty or missing day', () => {
+  assert.equal(pickDay([]), null);
+  assert.equal(pickDay(undefined), null);
+  assert.equal(pick(null), null);
+});
