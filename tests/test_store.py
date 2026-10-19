@@ -333,3 +333,30 @@ def test_sync_includes_sitelinks(tmp_path, monkeypatch):
     sync_to_local(hf, LocalStore(tmp_path), datetime(2026, 8, 1))
     sync_to_local(hf, LocalStore(tmp_path), datetime(2026, 8, 1), include_sitelinks=False)
     assert got == [SITELINKS_PATH]
+
+
+def test_hub_commit_sends_files_and_merged_manifest(tmp_path, monkeypatch):
+    import json
+    from datetime import timedelta
+    from types import SimpleNamespace
+
+    from lookedup.store import MANIFEST_PATH
+
+    api = _FakeApi([])
+    sent = []
+    api.create_commit = lambda repo_id, **k: sent.append(k) or SimpleNamespace(oid="0123456789abcdef")
+    hf = _hf(api)
+    old = Manifest()
+    old.add(H14, rows=3, source="hourly_dump")
+    monkeypatch.setattr(hf, "read_manifest", lambda revision=None: old)
+    src = tmp_path / "day.parquet"
+    src.write_bytes(b"x")
+    delta = Manifest()
+    delta.add(H14 + timedelta(hours=1), rows=4, source="hourly_dump")
+    hf.commit({"data/hourly/x.parquet": src}, delta, "data: 1 hour", parent="abc")
+    [k] = sent
+    assert k["parent_commit"] == "abc" and k["commit_message"] == "data: 1 hour" and k["repo_type"] == "dataset"
+    assert [op.path_in_repo for op in k["operations"]] == ["data/hourly/x.parquet", MANIFEST_PATH]
+    manifest = Manifest.from_json(k["operations"][-1].path_or_fileobj.decode())
+    assert manifest.present() == {H14, H14 + timedelta(hours=1)}
+    assert json.loads(k["operations"][-1].path_or_fileobj)
