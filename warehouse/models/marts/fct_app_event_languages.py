@@ -6,6 +6,7 @@ from lookedup.analytics.events import build_events
 
 
 def model(dbt, session):
+    """The spiking languages of each product event, with the language's article title from the sitelinks."""
     dbt.config(materialized="table")
     cfg = load()
     spikes, scored = prepare_event_inputs(session, dbt.ref("int_spikes"), dbt.ref("int_baselines"), "al")
