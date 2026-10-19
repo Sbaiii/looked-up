@@ -144,3 +144,31 @@ def test_fetch_speakers_parses_bindings(monkeypatch):
     monkeypatch.setattr(L, "session", lambda: Up())
     assert L.fetch_speakers(["en", "fr"]) == {"en": 1_500_000_000, "fr": 312_000_000}
     assert 'VALUES ?code { "en" "fr" }' in seen["query"]
+
+
+def _download_pvc(tmp_path, monkeypatch):
+    import bz2
+
+    got = []
+
+    def download(url, dest):
+        got.append(url)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(bz2.compress(b"en.wikipedia Lisbon 2 desktop 70 A70\nfr.wikipedia Lisbonne 1 mobile-web 40 A40\n"))
+        return dest
+
+    monkeypatch.setattr(L, "download", download)
+    monkeypatch.setattr(L, "RAW_DIR", tmp_path / "raw")
+    monkeypatch.setattr(L, "fetch_siteinfo", lambda lang: {"main_page": "Main_Page", "namespaces": []})
+    monkeypatch.setattr(L, "NAMESPACES_FILE", tmp_path / "namespaces.json")
+    return got
+
+
+def test_rank_languages_downloads_missing_days(tmp_path, monkeypatch):
+    got = _download_pvc(tmp_path, monkeypatch)
+    day = date(2026, 10, 2)
+    rows = {r["code"]: r for r in L.rank_languages([day], work_dir=tmp_path / "work", keep_raw=False)}
+    assert len(got) == 1 and got[0] == L.pvc_url(day)
+    assert (tmp_path / "work" / "agg-20261002.parquet").exists()
+    assert not list((tmp_path / "raw" / "pageview_complete").iterdir())      # the raw day is deleted
+    assert rows["en"]["human_views_7d"] == 70 and rows["fr"]["human_views_7d"] == 40
