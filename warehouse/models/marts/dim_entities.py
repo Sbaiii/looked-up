@@ -18,6 +18,7 @@ from lookedup.settings import DATA_DIR
 
 
 def model(dbt, session):
+    """One row per QID that forms an event under the loosest ablation: label, class, death dates, descriptions, gender."""
     dbt.config(materialized="table")
     cfg = load()
     ab = cfg.raw["ablations"]
