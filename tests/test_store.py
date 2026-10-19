@@ -6,8 +6,8 @@ from datetime import datetime
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
-
 from conftest import HOURLY_SAMPLE, LANGS
+
 from lookedup.store import (
     LocalStore,
     Manifest,
