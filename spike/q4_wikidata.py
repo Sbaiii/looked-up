@@ -52,7 +52,7 @@ def dump_head() -> dict:
     r = session.get(DUMP, headers={"Range": "bytes=0-8388607"}, timeout=120)
     d = zlib.decompressobj(16 + zlib.MAX_WBITS)
     text = d.decompress(r.content)
-    create = re.search(rb"CREATE TABLE `wb_items_per_site` \(.*?\) ENGINE[^;]*;", text, re.S)
+    create = re.search(rb"CREATE TABLE `wb_items_per_site` \(.*?\) ENGINE[^;]*;", text, re.DOTALL)
     tuples = TUPLE.findall(text)
     sites = {}
     for _, _, s, _ in tuples:
