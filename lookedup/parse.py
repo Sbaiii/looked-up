@@ -113,6 +113,7 @@ class ArticleFilter:
     main_pages: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        """Index the namespace names per language (plus the canonical ones) and main page titles with underscores."""
         self._ns = {lang: frozenset(n.lower() for n in names) | CANONICAL_NAMESPACES
                     for lang, names in self.namespaces.items()}
         self._main = {lang: t.replace(" ", "_") for lang, t in self.main_pages.items()}
