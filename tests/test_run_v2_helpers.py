@@ -73,3 +73,11 @@ def test_cached_builds_once_then_reads(tmp_path, monkeypatch):
     assert R._cached("deaths", build, refresh=False) == [{"qid": 1, "day": "2026-08-01", "name": "Zoë"}]
     assert R._cached("deaths", build, refresh=False)[0]["day"] == "2026-08-01"
     assert len(calls) == 1 and "Zoë" in (tmp_path / "eval" / "gt2b_deaths.json").read_text(encoding="utf-8")
+
+
+def test_cached_refresh_rebuilds(tmp_path, monkeypatch):
+    monkeypatch.setattr(R, "CACHE", tmp_path)
+    R._cached("quakes", lambda: [{"n": 1}], refresh=False)
+    assert R._cached("quakes", lambda: [{"n": 2}], refresh=False) == [{"n": 1}]
+    assert R._cached("quakes", lambda: [{"n": 2}], refresh=True) == [{"n": 2}]
+    assert R._cached("quakes", lambda: [{"n": 3}], refresh=False) == [{"n": 2}]
