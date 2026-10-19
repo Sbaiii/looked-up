@@ -70,3 +70,11 @@ def test_evaluate_writes_its_outputs(stubbed):
     assert [r[1] for r in review[1:]] == ["1"]                    # e2 is in the portal, e3 before the evaluation period
     assert review[1][-1] == "en fr" and review[1][7] == "12.3"
     assert _read(stubbed / "detection_delays.csv") == [["note"], ["no timestamps"]]
+
+
+@pytest.mark.parametrize("r6", [0.69, None])
+def test_h1_rejected_below_threshold(stubbed, monkeypatch, r6):
+    from lookedup.evaluation import metrics
+
+    monkeypatch.setattr(metrics, "recall", lambda *a, **k: {"recall": r6, "pairs": 2, "detected": 1})
+    assert run.evaluate()["h1"]["verdict"] == "rejected"
