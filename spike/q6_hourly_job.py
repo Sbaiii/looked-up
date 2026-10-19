@@ -13,7 +13,7 @@ import json
 import resource
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 import duckdb
 
@@ -27,7 +27,7 @@ def main() -> None:
     timings: dict[str, float] = {}
     t_all = time.perf_counter()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     t = time.perf_counter()
     latest = list_hourly(now.year, now.month)[-1]
     timings["list_s"] = time.perf_counter() - t
