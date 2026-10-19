@@ -128,3 +128,11 @@ def test_entity_classes(monkeypatch):
         "claims_json": [json.dumps({"P31": [5]}), json.dumps({"P31": []})]}))
     assert P.entity_classes({1, 2}) == {1: "human", 2: "other"}
     assert P.entity_classes(set()) == {}
+
+
+def test_targets_without_a_model_are_skipped():
+    events = [{"event_id": "young", "qid": 1, "start_hour": T0, "lead_lang": "en", "breadth": 2, "event_class": "multi_language"}]
+    models = {k: v for k, v in _models().items() if k == "planetary_t3"}
+    out = forecast_open(_con(5), events, T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5),
+                        manifest={"version": "v2"}, models=models)
+    assert out == {"young": {"offset_h": 3, "model_version": "v2", "p_planetary": 0.6}}
