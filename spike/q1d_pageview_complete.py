@@ -11,7 +11,7 @@ from __future__ import annotations
 import bz2
 import json
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from common import DERIVED, session
 
@@ -25,8 +25,8 @@ def listing(year: int, month: int) -> list[dict]:
     r.raise_for_status()
     out = []
     for name, day, kind, posted, size in ROW.findall(r.text):
-        d = datetime.strptime(day, "%Y%m%d").replace(tzinfo=timezone.utc)
-        p = datetime.strptime(posted, "%d-%b-%Y %H:%M").replace(tzinfo=timezone.utc)
+        d = datetime.strptime(day, "%Y%m%d").replace(tzinfo=UTC)
+        p = datetime.strptime(posted, "%d-%b-%Y %H:%M").replace(tzinfo=UTC)
         out.append({"name": name, "day": d, "kind": kind, "posted": p, "bytes": int(size),
                     "url": f"{BASE}/{year}/{year}-{month:02d}/{name}",
                     "lag_h_after_day_end": round((p - d - timedelta(days=1)).total_seconds() / 3600, 1)})
@@ -40,7 +40,7 @@ def decode_hourly(s: str) -> dict[int, int]:
 
 def main() -> None:
     """Measure the lag and size of recent pageview_complete files and print the report."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     rows = listing(now.year, now.month)
     prev = now.replace(day=1) - timedelta(days=1)
     rows = listing(prev.year, prev.month) + rows
