@@ -377,3 +377,12 @@ def test_write_hours_gives_up_after_repeated_conflicts(tmp_path, monkeypatch):
         write_hours(AlwaysRaced(tmp_path / "lake"), {H14: (_hour(H14, [("en", "A", 1, 1)]), "hourly_dump")}, "ours",
                     attempts=3)
     assert len(tries) == 3
+
+
+def test_open_store_local_or_hub(monkeypatch):
+    import lookedup.store as S
+
+    made = []
+    monkeypatch.setattr(S, "HFStore", lambda **k: made.append(k) or "hub")
+    assert isinstance(S.open_store(local=True), LocalStore) and made == []
+    assert S.open_store() == "hub" and made == [{"create": True}]
