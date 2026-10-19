@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 
 import duckdb
-
 from common import DERIVED
 
 con = duckdb.connect()
