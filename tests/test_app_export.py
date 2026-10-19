@@ -316,3 +316,12 @@ def test_event_object_carries_a_forecast_only_when_given():
     assert ax.event_obj(_ev("a", 42, 3, 300), langs, titles, None, None, forecast=fc)["forecast"] == fc
     plain = ax.event_obj(_ev("a", 42, 3, 300), langs, titles, None, None)
     assert "forecast" not in plain and plain["category"] == "other"
+
+
+def test_live_forecasts_empty_without_models_or_hour(tmp_path, monkeypatch):
+    import lookedup.forecast.predict as P
+
+    monkeypatch.setattr(P, "load_models", lambda store, tmp: ({"trained": "2026-10-05"}, {}))
+    assert ax.live_forecasts(duckdb.connect(), None, [], T0, T0, [], {}, tmp_path) == ({}, {"trained": "2026-10-05"})
+    monkeypatch.setattr(P, "load_models", lambda store, tmp: ({"trained": "2026-10-05"}, {"m": object()}))
+    assert ax.live_forecasts(duckdb.connect(), None, [], T0, None, [], {}, tmp_path) == ({}, {"trained": "2026-10-05"})
