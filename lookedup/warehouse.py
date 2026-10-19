@@ -17,7 +17,14 @@ from datetime import date, datetime
 
 from lookedup.analytics.config import load
 from lookedup.languages import active_codes
-from lookedup.settings import DATA_DIR, DUCKDB_MAX_TEMP, DUCKDB_TEMP_DIR, HF_REPO_ID, LOCAL_LAKE_DIR, ROOT
+from lookedup.settings import (
+    DATA_DIR,
+    DUCKDB_MAX_TEMP,
+    DUCKDB_TEMP_DIR,
+    HF_REPO_ID,
+    LOCAL_LAKE_DIR,
+    ROOT,
+)
 
 log = logging.getLogger(__name__)
 
