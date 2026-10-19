@@ -8,7 +8,7 @@ import logging
 import threading
 import time
 from collections.abc import Iterator
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import requests
