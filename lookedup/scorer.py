@@ -36,8 +36,8 @@ from lookedup.analytics.entities import classify, died_near, fetch_claims
 from lookedup.analytics.events import events_sql
 from lookedup.analytics.production import daily_baselines_sql, score_hour_sql
 from lookedup.dumps import session, utcnow
-from lookedup.store import Manifest, Store, StoreConflict, day_path, write_parquet
 from lookedup.settings import BASELINES_DIR, DATA_DIR, MAX_HOURS_PER_RUN, WINDOW_HOURS
+from lookedup.store import Manifest, Store, StoreConflict, day_path, write_parquet
 
 log = logging.getLogger(__name__)
 
