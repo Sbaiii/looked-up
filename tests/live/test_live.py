@@ -630,3 +630,29 @@ def test_live_and_stats_endpoints(monkeypatch, tmp_path):
     assert live["schema_version"] == 1 and "events" in live and "single_language_bursts" in live
     assert "bursts_per_hour" in stats and "live_events_per_hour_week" in stats
     assert svc.live().headers["cache-control"] == f"public, max-age={svc.CACHE_S}"
+
+
+def test_shift_main_resumes_publishes_and_hands_over(tmp_path, monkeypatch):
+    import sys
+    from types import SimpleNamespace
+
+    from lookedup_live import shift
+    prev = Engine()
+    prev.last_event_id = "[42]"
+    prev.snapshot(tmp_path / "state.json.gz")
+    clock = [1_791_000_000.0]
+    monkeypatch.setattr(shift, "time", SimpleNamespace(time=lambda: clock[0], sleep=lambda s: clock.__setitem__(0, clock[0] + s)))
+    monkeypatch.setattr(sys, "argv", ["shift", "--hours", "0.5", "--every", "600", "--state-dir", str(tmp_path)])
+    monkeypatch.setattr(shift, "consume", lambda engine, stop: None)
+    monkeypatch.setattr(shift, "resolver_loop", lambda engine, stop: None)
+    monkeypatch.setattr(shift, "fetch_state", lambda d: True)
+    calls = []
+
+    def publish(engine, state_dir, final=False):
+        calls.append((final, engine.last_event_id))
+        if len(calls) == 1:
+            raise RuntimeError("Hub timeout")
+
+    monkeypatch.setattr(shift, "publish", publish)
+    shift.main()
+    assert calls == [(False, "[42]"), (False, "[42]"), (False, "[42]"), (True, "[42]")]   # 3 rounds of 10 min, then final
