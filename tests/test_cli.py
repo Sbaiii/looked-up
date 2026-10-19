@@ -446,3 +446,15 @@ def test_app_export_backfill_upload(monkeypatch, tmp_path, capsys):
     assert st == "store" and msg == "data: app exports backfill, 1 day files"
     assert files == sorted(f"{p}/{n}" for n in ("today.json", "today.json.gz", "days/2026-08-17.json", "card.png"))
     capsys.readouterr()
+
+
+def test_live_h9_writes_metrics(monkeypatch, tmp_path, capsys):
+    import json
+
+    import lookedup.live_analysis as la
+
+    monkeypatch.setattr(la, "OUT", tmp_path)
+    monkeypatch.setattr(la, "run_h9", lambda: {"verdict": "rejected", "median_lead_min": -106})
+    cli.main(["live-h9"])
+    assert json.loads((tmp_path / "phase5_metrics.json").read_text()) == {"H9": {"verdict": "rejected", "median_lead_min": -106}}
+    assert json.loads(capsys.readouterr().out)["verdict"] == "rejected"
