@@ -16,7 +16,7 @@ import csv
 import json
 import statistics
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone, UTC
+from datetime import UTC, datetime, timedelta, timezone
 
 from common import DERIVED, DOCS
 
