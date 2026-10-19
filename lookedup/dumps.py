@@ -13,7 +13,7 @@ import socket
 import threading
 import time
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, UTC
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import requests
