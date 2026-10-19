@@ -90,7 +90,7 @@ def test_live_snapshot_without_a_host(monkeypatch, caplog):
 
 
 def test_live_commands_default_days(monkeypatch, capsys):
-    import lookedup.dumps as dumps
+    from lookedup import dumps
     import lookedup.live_analysis as la
     from lookedup import store
 
@@ -119,7 +119,7 @@ def test_evaluate_modes(monkeypatch, capsys):
 
 
 def test_sync_options(monkeypatch, capsys):
-    import lookedup.store as store
+    from lookedup import store
 
     seen = []
     monkeypatch.setattr(store, "HFStore", lambda: "hub")
@@ -133,7 +133,7 @@ def test_sync_options(monkeypatch, capsys):
 
 def test_app_export_modes(monkeypatch, tmp_path, capsys):
     import lookedup.app_export as ax
-    import lookedup.settings as settings
+    from lookedup import settings
     from lookedup import store
 
     calls = []
@@ -165,7 +165,7 @@ def test_languages_command(monkeypatch, capsys):
 def test_hub_maintenance(monkeypatch, capsys):
     import json
 
-    import lookedup.store as store
+    from lookedup import store
 
     actions = []
 
@@ -218,7 +218,7 @@ def test_relocate_data_skips(monkeypatch, capsys):
 def test_baselines_day(monkeypatch, capsys):
     from datetime import date
 
-    import lookedup.dumps as dumps
+    from lookedup import dumps
     import lookedup.scorer as sc
     from lookedup import store
 
@@ -258,7 +258,7 @@ def test_top_command(monkeypatch):
 
 
 def test_card_upload(monkeypatch):
-    import lookedup.store as store
+    from lookedup import store
     from lookedup.settings import DATASET_CARD
 
     seen = []
@@ -300,7 +300,7 @@ def test_validate_exit_code(monkeypatch, capsys):
 
 
 def test_wikidata_upload_switch(monkeypatch, tmp_path, capsys):
-    import lookedup.settings as settings
+    from lookedup import settings
     import lookedup.wikidata as wd
     from lookedup import store
 
