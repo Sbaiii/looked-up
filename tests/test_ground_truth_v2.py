@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
-from lookedup.evaluation.ground_truth_v2 import DEATH_WORDS, _boxes, kickoff_utc, parse_deaths, place_parts
+from lookedup.evaluation.ground_truth_v2 import (
+    DEATH_WORDS,
+    _boxes,
+    kickoff_utc,
+    parse_deaths,
+    place_parts,
+)
 
 DEATHS = """==August 2026==
 ===1===
