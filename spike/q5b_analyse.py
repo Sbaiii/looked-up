@@ -16,7 +16,7 @@ import csv
 import json
 import statistics
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from common import DERIVED, DOCS
 
@@ -26,7 +26,7 @@ PUBLISH_LAG_H = 134 / 60  # median hourly-dump publication lag after the hour en
 
 def parse(ts: str) -> datetime:
     """A UTC hour from the hourly CSV format (YYYY-MM-DD HH:MM)."""
-    return datetime.strptime(ts, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+    return datetime.strptime(ts, "%Y-%m-%d %H:%M").replace(tzinfo=UTC)
 
 
 def delay(h, event_t):
