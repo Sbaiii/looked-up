@@ -291,3 +291,20 @@ def test_titles_from_api_use_underscores(monkeypatch):
     monkeypatch.setattr(S, "labels_for", lambda qids, langs: seen.append((qids, langs)) or {7: {"en": "New York City", "fr": "New York"}})
     assert ax.titles_from_api({9, 7}, ["en", "fr"]) == {7: {"en": "New_York_City", "fr": "New_York"}}
     assert seen == [([7, 9], ["en", "fr"])]
+
+
+def test_texts_live_fetches_for_event_qids(monkeypatch):
+    import lookedup.analytics.entities as E
+    import lookedup.languages as L
+
+    calls = []
+
+    def fetch_text(qids, path, langs):
+        calls.append((qids, path.name, langs))
+        return pa.table({"qid": [5], "descriptions_json": ['{"fr": "ville"}'], "gender": [None]})
+
+    monkeypatch.setattr(E, "fetch_text", fetch_text)
+    monkeypatch.setattr(L, "active_codes", lambda: ["en", "fr"])
+    assert ax.texts_live([]) == {} and calls == []
+    assert ax.texts_live([{"qid": 5}, {"qid": 5}]) == {5: ({"fr": "ville"}, None)}
+    assert calls == [({5}, "entity_text.parquet", ["en", "fr"])]
