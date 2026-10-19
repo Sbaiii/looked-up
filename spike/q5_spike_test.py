@@ -26,7 +26,6 @@ from datetime import UTC, datetime, timedelta, timezone
 import duckdb
 from common import DERIVED, DOCS, RAW, download, hourly_url, session
 
-UTC = UTC
 RATIO, FLOOR = 5.0, 20
 PVC = "https://dumps.wikimedia.org/other/pageview_complete"
 
