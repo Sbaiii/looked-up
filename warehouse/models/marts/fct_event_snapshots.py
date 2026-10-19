@@ -6,6 +6,7 @@ from lookedup.forecast.features import snapshot_sql
 
 
 def model(dbt, session):
+    """Decision-time features and M1/M2 targets per product event and offset, with targets cut at the period end."""
     dbt.config(materialized="table")
     cfg = load()
     dbt.ref("fct_app_events").create_view("_snap_events", replace=True)
