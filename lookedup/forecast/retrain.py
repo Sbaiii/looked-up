@@ -49,9 +49,9 @@ def batch_table(con: duckdb.DuckDBPyConnection) -> pa.Table:
 
 def live_week(store: Store, monday: date, tmp: Path) -> pa.Table | None:
     """Snapshots with targets for events starting in [monday, monday + 7 d), from production files."""
-    from lookedup.app_export import categories_for, events_from_spikes, titles_from_api
     from lookedup.analytics.config import load
     from lookedup.analytics.entities import classify, fetch_claims
+    from lookedup.app_export import categories_for, events_from_spikes, titles_from_api
     from lookedup.languages import active_codes
     from lookedup.scorer import spikes_path
     from lookedup.settings import DATA_DIR
