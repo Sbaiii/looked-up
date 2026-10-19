@@ -95,3 +95,11 @@ def test_verify_alignment(fake_server, monkeypatch, tmp_path):
     res = hourly.verify_alignment(h, tmp_path)
     assert res["file"] == "pageviews-20260913-150000.gz"
     assert res["dump_en_total"] > 0 and res["rest_same_hour_start"] == 42
+
+
+def test_plan_nothing_missing(monkeypatch):
+    m = Manifest()
+    for ts in hourly.expected_hours(NOW, 24):
+        m.add(ts, rows=1, source="hourly_dump")
+    monkeypatch.setattr(dumps, "available_hours", lambda *a: pytest.fail("no listing needed"))
+    assert hourly.plan(m, NOW, window_hours=24) == ([], [])
