@@ -6,6 +6,7 @@ from lookedup.analytics.events import build_events
 
 
 def model(dbt, session):
+    """Primary-configuration events joined to their entity, with the category set to death when a human died near the start."""
     dbt.config(materialized="table")
     cfg = load()
     spikes, scored = prepare_event_inputs(session, dbt.ref("int_spikes"), dbt.ref("int_baselines"), "ev")
