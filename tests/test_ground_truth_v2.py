@@ -224,3 +224,13 @@ def test_get_retries_then_succeeds(monkeypatch):
     G, s, sleeps = _fake(monkeypatch, _Resp(503), _Resp(200, "ok"))
     assert G._get("https://x.test", {"a": 1}).text == "ok"
     assert len(s.calls) == 2 and sleeps == [3, 0.3]
+
+
+def test_get_raises_after_retries(monkeypatch):
+    import pytest
+    import requests
+
+    G, s, sleeps = _fake(monkeypatch, _Resp(500), _Resp(500), _Resp(500))
+    with pytest.raises(requests.HTTPError):
+        G._get("https://x.test", {}, retries=3)
+    assert len(s.calls) == 3 and sleeps == [3, 6]
