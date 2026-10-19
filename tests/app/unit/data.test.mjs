@@ -49,3 +49,26 @@ test('without DecompressionStream the plain JSON is fetched', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => new Response('', { status: 404 }));
   await assert.rejects(data.get('days/2026-01-01.json'), /404 days\/2026-01-01.json$/);
 });
+
+/** A window with DecompressionStream and an in-memory Cache API. */
+function withCaches() {
+  const store = new Map();
+  const opened = [];
+  const cache = {
+    match: async (url) => (store.has(url) ? new Response(store.get(url)) : undefined),
+    put: async (url, res) => { store.set(url, await res.text()); },
+  };
+  return { win: { DecompressionStream, caches: { open: async (name) => { opened.push(name); return cache; } } }, store, opened };
+}
+
+test('an old day is cached, then served from the cache by a later page', async (t) => {
+  const { win, store, opened } = withCaches();
+  globalThis.caches = win.caches;
+  t.after(() => { delete globalThis.caches; });
+  let calls = 0;
+  t.mock.method(globalThis, 'fetch', async () => { calls++; return gz({ date: '2026-07-19' }); });
+  assert.deepEqual(await (await load('', win)).dayFile('2026-07-19'), { date: '2026-07-19' });
+  assert.ok(store.has(`${HUB}days/2026-07-19.json`) && opened.includes('lookedup-days-v1'));
+  assert.deepEqual(await (await load('', win)).dayFile('2026-07-19'), { date: '2026-07-19' });   // a new page, same cache
+  assert.equal(calls, 1);
+});
