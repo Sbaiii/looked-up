@@ -72,3 +72,13 @@ test('an old day is cached, then served from the cache by a later page', async (
   assert.deepEqual(await (await load('', win)).dayFile('2026-07-19'), { date: '2026-07-19' });   // a new page, same cache
   assert.equal(calls, 1);
 });
+
+test('a day from yesterday is fetched but never cached', async (t) => {
+  const { win, store } = withCaches();
+  globalThis.caches = win.caches;
+  t.after(() => { delete globalThis.caches; });
+  t.mock.method(globalThis, 'fetch', async () => gz({ fresh: true }));
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  assert.deepEqual(await (await load('', win)).dayFile(yesterday), { fresh: true });
+  assert.equal(store.size, 0);
+});
