@@ -11,7 +11,7 @@ from __future__ import annotations
 import bz2
 import json
 import re
-from datetime import datetime, timedelta, timezone, UTC
+from datetime import UTC, datetime, timedelta, timezone
 
 from common import DERIVED, session
 
