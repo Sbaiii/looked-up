@@ -99,3 +99,12 @@ def test_an_overlong_first_word_keeps_both_lines():
     f = og.font(76, 800)
     lines = og._wrap(draw, "Antidisestablishmentarianism " * 12, f, 520, 2)
     assert lines == ["Antidisestablishmentarianism", "Antidisestablishmentarianism…"]
+
+
+def test_ellipsis_line_fits_the_width():
+    _img, draw = og._base()
+    f = og.font(76, 800)
+    for text in ("ab cd " * 60, "Wikipedia readers everywhere " * 8, "Mm Mmm " * 30):
+        lines = og._wrap(draw, text, f, 520, 2)
+        assert len(lines) == 2 and lines[-1].endswith("…")
+        assert draw.textlength(lines[-1], font=f) <= 520
