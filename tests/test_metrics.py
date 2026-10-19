@@ -179,3 +179,13 @@ def test_h2_lead_language(monkeypatch, tmp_path):
     # country through its location (hit); QID 3: led by en in a French-speaking country (miss)
     assert res["geolocatable"] == 3 and res["lead_is_official"] == 2 and res["verdict"] == "supported"
     assert res["geolocatable_non_english_countries"] == 2 and res["share_non_english_countries"] == 0.5
+
+
+def test_detection_delays_without_timestamps(monkeypatch):
+    import lookedup.evaluation.timestamps as T
+    from lookedup.evaluation.metrics import detection_delays
+
+    ctx = _ctx(monkeypatch)
+    ctx.con.execute("ALTER TABLE majors ADD COLUMN title VARCHAR")
+    monkeypatch.setattr(T, "event_time", lambda title, d: None)
+    assert detection_delays(ctx, "ev") == {"n": 0, "rows": []}
