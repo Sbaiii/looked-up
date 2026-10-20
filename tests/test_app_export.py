@@ -408,3 +408,11 @@ def test_gzip_twin_is_deterministic(tmp_path):
     first = (tmp_path / "a.json.gz").read_bytes()
     ax.dump({"schema_version": 1, "events": [1, 2, 3]}, tmp_path / "a.json")
     assert (tmp_path / "a.json.gz").read_bytes() == first
+
+
+def test_event_object_fills_missing_numbers():
+    e = _ev("a", 42, 3, None) | {"max_spread_lag_hours": None, "peak_intensity": 12.345}
+    obj = ax.event_obj(e, [_lang("a", "fr", None, 1) | {"peak_surprise": 9.87}], {"fr": "Séisme_X", "en": "Quake_X"}, None, None)
+    assert obj["excess"] == 0 and obj["spread_h"] == 0 and obj["peak"] == 12.3
+    assert list(obj["labels"]) == ["en", "fr"] and obj["langs"][0] == {"lang": "fr", "first": "2026-08-17T03:00Z", "lag": 1,
+                                                                      "surprise": 9.9, "excess": 0}
