@@ -189,3 +189,10 @@ def test_phase2b_evaluation_end_to_end(tmp_path, monkeypatch):
     assert g3["n"] == 1 and g3["detected"] == 1 and g3["excluded"] == 2                # the duplicate counts once
     assert g3["excluded_reasons"] == {"no Wikipedia kick-off time": 1, "out of the scored period": 1}
     assert (tmp_path / "phase2b_metrics.json").exists() and (tmp_path / "phase2b_gt3_excluded.csv").exists()
+
+
+def test_phase2b_death_breakdowns(tmp_path, monkeypatch):
+    g1 = _phase2b(tmp_path, monkeypatch)["gt1"]
+    assert g1["by_languages"]["10-19"] == {"n": 1, "detected": 1, "recall": 1.0}
+    assert g1["by_languages"]["5-9"] == {"n": 1, "detected": 0, "recall": 0.0} and g1["by_languages"][">=20"]["n"] == 0
+    assert set(g1["ablation"]) == {"n2", "n3", "n5"} and g1["by_class"] == {"multi_language": 1, "single_language": 0}
