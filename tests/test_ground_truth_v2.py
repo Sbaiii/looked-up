@@ -277,3 +277,20 @@ def test_first_sitelink_created_skips_pages_without_revisions(monkeypatch):
 
     monkeypatch.setattr(G, "_get", get)
     assert G.first_sitelink_created(9, ["en", "fr"]) == datetime(2026, 8, 10, 15)
+
+
+def test_quakes_skip_far_and_late_articles(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    origin = datetime(2026, 8, 10, 12, 0)
+    monkeypatch.setattr(G, "usgs_quakes", lambda s, e, m: [{"usgs_id": "u1", "mag": 6.8, "place": "Alaska Peninsula",
+                                                             "origin": origin, "lon": -158.0, "lat": 55.0}])
+    monkeypatch.setattr(G, "wikidata_quakes", lambda s, e: [
+        {"qid": 1, "date": "2026-08-10", "lon": 120.0, "lat": -8.0, "mag": 6.8, "countries": {252}},     # 12,000 km away
+        {"qid": 3, "date": "2026-08-11", "lon": -158.1, "lat": 55.1, "mag": 6.7, "countries": {30}}])    # near, but late
+    created = []
+    monkeypatch.setattr(G, "first_sitelink_created", lambda qid, langs: created.append(qid) or origin + timedelta(hours=72))
+    monkeypatch.setattr(G, "resolve_qids", lambda lang, names: {})
+    [q] = G.quakes(origin - timedelta(days=1), origin + timedelta(days=1), ["en"])
+    assert created == [3] and q["article_qid"] is None and q["article_created"] is None and q["article_countries"] == []
+    assert (q["locality"], q["region"]) == (None, "Alaska Peninsula") and q["place_qids"] == []
