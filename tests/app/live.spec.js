@@ -115,3 +115,12 @@ test('?live= reads another workers.dev host', async ({ page }) => {
   await ready(page);
   await expect(page.locator('#live-list li').first()).toContainText('Event 7');
 });
+
+test('?live= on another domain falls back to the default Worker', async ({ page }) => {
+  const asked = [];
+  page.on('request', (r) => asked.push(r.url()));
+  await page.goto(`./?live=${encodeURIComponent('https://evil.example/live.json')}`);
+  await ready(page);
+  await expect(page.locator('#live-list li').first()).toContainText('Saïdou Simporé');
+  expect(asked.some((u) => u.startsWith('https://evil.example'))).toBe(false);
+});
