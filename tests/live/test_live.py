@@ -779,3 +779,12 @@ def test_stats_per_hour_and_language():
     st = e.stats(now=now)
     assert st["bursts_24h"] == 3 and st["bursts_per_language"] == {"en": 2, "fr": 1}
     assert sum(st["bursts_per_hour"].values()) == 3 and list(st["bursts_per_hour"]) == sorted(st["bursts_per_hour"])
+
+
+def test_burst_again_after_the_cooldown():
+    d = B.Detector()
+    first = [d.add("en", "X", T0 + 60 * i, u) for i, u in enumerate("abcde")]
+    assert first[-1] is not None
+    later = T0 + B.COOLDOWN_S + 600
+    again = [d.add("en", "X", later + 60 * i, u) for i, u in enumerate("fghij")]
+    assert again[-1] is not None and again[-1].ts == later + 240
