@@ -232,3 +232,12 @@ def test_fetch_text_all_cached(tmp_path, monkeypatch):
     E.fetch_text([4, 5], cache, ["en"])
     monkeypatch.setattr(E, "fetch_text_sparql", lambda qids, langs: (_ for _ in ()).throw(AssertionError("no query expected")))
     assert sorted(E.fetch_text({5, 4}, cache, ["en"])["qid"].to_pylist()) == [4, 5]
+
+
+def test_dates_keep_only_time_values():
+    from lookedup.analytics.entities import _dates
+
+    claims = {"P570": [{"mainsnak": {"datavalue": {"value": {"time": "+2026-08-28T00:00:00Z"}}}},
+                       {"mainsnak": {"snaktype": "somevalue"}},
+                       {"mainsnak": {"datavalue": {"value": "2026"}}}]}
+    assert _dates(claims, "P570") == ["+2026-08-28T00:00:00Z"] and _dates(claims, "P569") == []
