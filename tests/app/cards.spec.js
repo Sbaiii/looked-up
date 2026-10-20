@@ -27,3 +27,10 @@ test('each card has a sparkline labelled for screen readers', async ({ page }) =
   await expect(spark).toHaveAttribute('aria-label', /Views across all languages/);
   expect(await spark.locator('polyline').count()).toBeGreaterThan(0);
 });
+
+test('the tier badge title explains the tier', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const badge = page.locator('#cards .card').first().locator('.badge--planetary');
+  await expect(badge).toHaveAttribute('title', 'Spiking in 20 languages or more');
+});
