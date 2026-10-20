@@ -4,6 +4,7 @@ import gzip
 import json
 import sys
 from pathlib import Path
+from typing import ClassVar
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "live"))   # the live service is its own package
 
@@ -424,7 +425,7 @@ def test_cold_start_replays_and_handles_events(monkeypatch):
     payload = json.dumps(ev(ts=T0))
 
     class S:
-        headers = {}
+        headers: ClassVar[dict] = {}
 
         def get(self, url, headers=None, params=None, stream=None, timeout=None):
             calls.append((dict(headers), dict(params)))
@@ -450,7 +451,7 @@ def test_resumed_stream_handles_events(monkeypatch):
     flat = [l for msg in lines for l in msg] + ["data: not json", ""]
 
     class S:
-        headers = {}
+        headers: ClassVar[dict] = {}
 
         def get(self, url, headers=None, params=None, stream=None, timeout=None):
             calls.append((dict(headers), dict(params)))
@@ -473,7 +474,7 @@ def test_stream_error_backs_off(monkeypatch):
     stop = threading.Event()
 
     class S:
-        headers = {}
+        headers: ClassVar[dict] = {}
 
         def get(self, *a, **k):
             raise requests.ConnectionError("down")
@@ -717,7 +718,6 @@ def test_consume_returns_at_once_when_stopped(monkeypatch):
     import threading
 
     import requests
-
     from lookedup_live import stream
     stop = threading.Event()
     stop.set()
