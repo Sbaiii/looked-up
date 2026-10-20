@@ -108,3 +108,14 @@ def test_ellipsis_line_fits_the_width():
         lines = og._wrap(draw, text, f, 520, 2)
         assert len(lines) == 2 and lines[-1].endswith("…")
         assert draw.textlength(lines[-1], font=f) <= 520
+
+
+def test_command_line_default_only_or_nothing(tmp_path, monkeypatch, capsys):
+    import sys
+
+    monkeypatch.setattr(sys, "argv", ["og", "--default", str(tmp_path / "default.png")])
+    og.main()
+    assert (tmp_path / "default.png").exists() and capsys.readouterr().out.strip().endswith("default.png")
+    monkeypatch.setattr(sys, "argv", ["og"])
+    og.main()
+    assert capsys.readouterr().out == "" and sorted(p.name for p in tmp_path.iterdir()) == ["default.png"]
