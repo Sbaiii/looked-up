@@ -34,3 +34,18 @@ test('the tier badge title explains the tier', async ({ page }) => {
   const badge = page.locator('#cards .card').first().locator('.badge--planetary');
   await expect(badge).toHaveAttribute('title', 'Spiking in 20 languages or more');
 });
+
+test('Wikipedia links: the lead language, then the interface language when it differs', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const pillay = page.locator('#cards .card[data-qid="Q242078"] .card__links a');
+  await expect(pillay).toHaveCount(1);
+  await expect(pillay).toHaveAttribute('hreflang', 'en');
+  const pt = page.locator('#cards .card[data-qid="Q804"] .card__links a');
+  await expect(pt).toHaveCount(2);
+  await expect(pt.nth(0)).toHaveAttribute('hreflang', 'pt');
+  await expect(pt.nth(1)).toHaveAttribute('hreflang', 'en');
+  await page.click('[data-ui-lang="fr"]');
+  await expect(page.locator('#cards .card[data-qid="Q242078"] .card__links a')).toHaveCount(2);
+  await expect(page.locator('#cards .card[data-qid="Q242078"] .card__links a').nth(1)).toHaveAttribute('hreflang', 'fr');
+});
