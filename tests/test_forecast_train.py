@@ -219,3 +219,12 @@ def test_encoder_missing_values_are_nan():
     X = enc.matrix([{"lead_lang": "fr", "n_sitelinks": 12}, {"lead_lang": "xx", "n_sitelinks": None}, {}])
     assert X[0].tolist() == [1.0, 12.0]
     assert np.isnan(X[1]).all() and np.isnan(X[2]).all()
+
+
+def test_decay_ratios_skip_quiet_hours():
+    rows = [{"category": "death", "excess_hour_t": 10.0, "excess_next24": 30.0}] * 20
+    rows += [{"category": None, "excess_hour_t": 10.0, "excess_next24": 10.0}] * 3
+    rows += [{"category": "sports", "excess_hour_t": 0.0, "excess_next24": 999.0}] * 25
+    out = E.decay_ratios(rows)
+    assert out == {"death": 3.0, "_all": 3.0}                           # sports never had a non-zero hour; "other" has 3 rows
+    assert E.decay_ratios([]) == {"_all": 0.0}
