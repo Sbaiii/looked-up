@@ -69,3 +69,9 @@ def test_targets():
     # peak = 500 + ... at +3? totals: +0 500, +2 720, +3 880, +4 640, +5 780 -> peak 880 at +3; half = 440
     assert r3["fade_hours"] == 1                                   # +6: 260 < 440
     assert r3["fade_observable"]
+
+
+def test_single_language_events_get_no_snapshots():
+    con = _con(SPIKES, VIEWS)
+    con.execute("UPDATE events SET event_class = 'single_language'")
+    assert _rows(con) == []
