@@ -116,3 +116,10 @@ def test_hours_filter_and_view_floor():
     rows = [("en", "A", _at(D, 9), 100, 100), ("en", "A", _at(D, 10), 100, 100), ("en", "Small", _at(D, 9), 50, 49)]
     assert set(_score_day(_con(rows), D)) == {("A", 9), ("A", 10)}             # 99 views: under the floor
     assert set(_score_day(_con(rows), D, hours=[10])) == {("A", 10)}
+
+
+def test_language_without_prior_falls_back_to_zero():
+    con = _con([("ja", "新作", _at(D, 9), 150, 50)])
+    s = _score_day(con, D)[("新作", 9)]
+    assert s["baseline_level"] == "prior" and s["baseline_median"] == 0 and s["baseline_mad"] == 0
+    assert s["surprise"] == 200.0                                        # (200 - 0) / (0 + 0 + 1)
