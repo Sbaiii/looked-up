@@ -386,3 +386,10 @@ def test_open_store_local_or_hub(monkeypatch):
     monkeypatch.setattr(S, "HFStore", lambda **k: made.append(k) or "hub")
     assert isinstance(S.open_store(local=True), LocalStore) and made == []
     assert S.open_store() == "hub" and made == [{"create": True}]
+
+
+def test_merge_day_with_nothing_new():
+    h1 = datetime(2026, 10, 7, 1)
+    existing = _hour(h1, [("fr", "B", 5, 0), ("en", "A", 9, 9)])
+    merged = merge_day(existing, [])
+    assert list(zip(merged["lang"].to_pylist(), merged["title"].to_pylist(), strict=True)) == [("en", "A"), ("fr", "B")]
