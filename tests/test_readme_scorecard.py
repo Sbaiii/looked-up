@@ -78,3 +78,12 @@ def test_headline_counts_the_table():
     counts = Counter(re.search(r"\| (\w+) \|$", l).group(1) for l in rows)
     m = re.search(r"(\d+) pre-registered hypotheses: \*\*(\d+) supported, (\d+) rejected, (\d+) inconclusive\*\*", README)
     assert [int(g) for g in m.groups()] == [len(rows), counts["supported"], counts["rejected"], counts["inconclusive"]]
+
+
+def test_nonportal_claim_matches_the_review():
+    import csv
+
+    with open(ROOT / "docs" / "analysis" / "nonportal_review.csv", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    real = sum(r["review"] == "real" for r in rows)
+    assert f"{real} of the {len(rows)} largest events the English Current events portal never linked are" in README.replace("\n", " ")
