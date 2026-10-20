@@ -134,3 +134,14 @@ def test_retrain_adds_the_last_complete_live_week(tmp_path, monkeypatch):
     res = R.retrain(store, now=datetime(2026, 10, 23))           # labels complete up to Tue 20 Oct
     assert weeks == [date(2026, 10, 12)] and res["rows"] == 1800 + 300
     assert (tmp_path / "lake" / R.TRAINING / "live-2026-10-12.parquet").exists()
+
+
+def test_retrain_without_a_live_week_file(tmp_path, monkeypatch):
+    _params(tmp_path, monkeypatch)
+    monkeypatch.setattr(R, "live_week", lambda store, monday, tmp: None)
+    store = LocalStore(tmp_path / "lake")
+    batch = tmp_path / "batch.parquet"
+    pq.write_table(pa.Table.from_pylist(_rows()), batch)
+    store.commit({f"{R.TRAINING}/batch.parquet": batch}, Manifest(), "seed: the batch training table")
+    assert R.retrain(store, now=datetime(2026, 10, 23))["rows"] == 1800
+    assert sorted(p.name for p in (tmp_path / "lake" / R.TRAINING).iterdir()) == ["batch.parquet"]
