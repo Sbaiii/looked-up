@@ -97,3 +97,11 @@ test('at most four live events are listed', async ({ page }) => {
   await expect(page.locator('#live-list li').last()).toContainText('Event 4');
   await expect(page.locator('#live-state')).toHaveText('');
 });
+
+test('a fresh feed with an hour-long gap still rests', async ({ page }) => {
+  await feed(page, { events: [liveEvent(1)], gap: 60 });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#right-now')).toHaveClass(/is-resting/);
+  await expect(page.locator('#live-list li')).toHaveCount(0);
+});
