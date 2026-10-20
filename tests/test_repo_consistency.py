@@ -83,3 +83,9 @@ def test_app_reads_where_the_export_writes():
 def test_browser_fixtures_mock_the_app_data_url():
     base = re.search(r"DEFAULT_BASE = '([^']+)'", (ROOT / "app" / "js" / "data.js").read_text(encoding="utf-8")).group(1)
     assert f"page.route('{base}**'" in (ROOT / "tests" / "app" / "fixtures.js").read_text(encoding="utf-8")
+
+
+def test_live_strip_points_at_the_deployed_worker():
+    name = re.search(r'^name = "([^"]+)"', (ROOT / "worker" / "wrangler.toml").read_text(encoding="utf-8"), re.M).group(1)
+    url = re.search(r"const DEFAULT = '([^']+)'", (ROOT / "app" / "js" / "live.js").read_text(encoding="utf-8")).group(1)
+    assert url.startswith(f"https://{name}.") and url.endswith(".workers.dev/live.json")
