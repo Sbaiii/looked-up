@@ -54,3 +54,19 @@ def test_connect_views(lake, tmp_path):
     con = query.connect(local=True)
     assert con.sql("SELECT count(*) FROM hourly").fetchone()[0] == lake.num_rows
     assert con.sql("SELECT qid FROM sitelinks WHERE title = 'Lisbon'").fetchone()[0] == 597
+
+
+class _Con:
+    def __init__(self):
+        self.sql = []
+
+    def execute(self, q):
+        self.sql.append(q)
+
+
+def test_hub_connection_loads_httpfs_and_the_token(monkeypatch):
+    con = _Con()
+    monkeypatch.setattr(query.db, "connect", lambda: con)
+    monkeypatch.setenv("HF_TOKEN", "hf_abc")
+    assert query._base("hf://datasets/user/repo") is con
+    assert con.sql == ["INSTALL httpfs; LOAD httpfs;", "CREATE SECRET hf (TYPE huggingface, TOKEN 'hf_abc')"]
