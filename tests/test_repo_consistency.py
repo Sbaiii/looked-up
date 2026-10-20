@@ -72,8 +72,6 @@ def test_live_rules_have_one_source():
 
 
 def test_app_reads_where_the_export_writes():
-    import re
-
     from lookedup.app_export import APP_PREFIX
     from lookedup.settings import HF_REPO_ID
 
