@@ -96,3 +96,9 @@ def test_custom_view_floor(tmp_path, article_filter):
     src.write_text("en A 3 0\nen B 1 0\n")
     assert [r[2] for r in _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter))] == []
     assert [r[2] for r in _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter, min_views=2))] == ["A"]
+
+
+def test_path_with_a_quote(tmp_path, article_filter):
+    src = tmp_path / "o'clock dump"
+    src.write_text("en Lisbon 9 0\n")
+    assert _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter)) == [(HOUR, "en", "Lisbon", 9, 0)]
