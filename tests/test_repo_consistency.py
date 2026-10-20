@@ -161,3 +161,11 @@ def test_workflows_use_the_required_python():
     for wf in sorted((ROOT / ".github" / "workflows").glob("*.yml")):
         for v in re.findall(r'python-version: "([\d.]+)"', wf.read_text(encoding="utf-8")):
             assert v == need, wf.name
+
+
+def test_ops_workflow_table_lists_every_workflow():
+    ops = (ROOT / "docs" / "ops.md").read_text(encoding="utf-8")
+    section = ops[ops.index("## Workflows"):]
+    section = section[:section.index("\n## ", 5)]
+    rows = set(re.findall(r"^\| `([\w-]+\.yml)`", section, re.M))
+    assert {p.name for p in (ROOT / ".github" / "workflows").glob("*.yml")} <= rows
