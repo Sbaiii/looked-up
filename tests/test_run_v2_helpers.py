@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import ClassVar
 
 from lookedup.evaluation import run_v2 as R
 
@@ -123,7 +124,7 @@ def test_country_from_places_region_first():
 
 class _FakeEvents:
     """Events answered from a {qid: (start_hour, lead_lang, breadth)} table, the same for every variant."""
-    hits: dict = {}
+    hits: ClassVar[dict] = {}
 
     def __init__(self, cfg):
         import duckdb
