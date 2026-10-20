@@ -103,3 +103,13 @@ def test_resume_skips_files_already_in_place(tmp_path, monkeypatch):
     monkeypatch.setattr(R, "_copy_with_retry", lambda s, d: (_ for _ in ()).throw(AssertionError("no second copy")))
     res = R.relocate(source=src, target=dst)
     assert res["moved"] == 1 and res["bytes"] == 5 and not (src / "lake" / "a.parquet").exists()
+
+
+def test_partial_target_file_is_replaced(tmp_path):
+    src, dst = tmp_path / "old", tmp_path / "new"
+    src.mkdir()
+    (src / "a.bin").write_bytes(b"complete")
+    dst.mkdir()
+    (dst / "a.bin").write_bytes(b"comp")                                 # half-written by an earlier run
+    assert relocate(source=src, target=dst)["moved"] == 1
+    assert (dst / "a.bin").read_bytes() == b"complete"
