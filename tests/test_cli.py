@@ -489,3 +489,37 @@ def test_compact_report_without_full_days(monkeypatch, capsys):
     cli.main(["compact"])
     out = capsys.readouterr().out
     assert '"day": "d2"' in out and "full days" not in out
+
+
+def test_push_skips_sitelinks_already_on_the_hub(monkeypatch, tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    from conftest import HOURLY_SAMPLE, LANGS
+
+    from lookedup import store
+    from lookedup.languages import article_filter
+    from lookedup.settings import SITELINKS_PATH
+    from lookedup.store import LocalStore, write_hours
+    from lookedup.transform import hourly_dump_to_table
+
+    h14 = datetime(2026, 9, 13, 14)
+    local = LocalStore(tmp_path / "local")
+    write_hours(local, {h14: (hourly_dump_to_table(HOURLY_SAMPLE, h14, LANGS, article_filter()), "hourly_dump")}, "local")
+    (tmp_path / "local" / SITELINKS_PATH).parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.table({"lang": ["en"], "title": ["X"], "qid": [1]}), tmp_path / "local" / SITELINKS_PATH)
+
+    class FakeHub(LocalStore):
+        repo_id = "user/repo"
+
+        def __init__(self, create=False):
+            super().__init__(tmp_path / "hub")
+            self.api = type("Api", (), {"file_exists": lambda self, *a, **k: True})()
+
+        def upload_card(self, path):
+            pass
+
+    monkeypatch.setattr(store, "LocalStore", lambda root=None: local if root is None else LocalStore(root))
+    monkeypatch.setattr(store, "HFStore", FakeHub)
+    cli.main(["push"])
+    assert LocalStore(tmp_path / "hub").read_manifest().present() == {h14}
+    assert not (tmp_path / "hub" / SITELINKS_PATH).exists()
