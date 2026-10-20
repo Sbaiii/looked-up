@@ -802,3 +802,11 @@ def test_new_article_rule_expires():
     d.add("fr", "Tard", T0, "a", is_new=True)
     late = [d.add("fr", "Tard", T0 + B.NEW_ARTICLE_WINDOW_S + 600 * i, u) for i, u in enumerate("abab", start=1)]
     assert late == [None] * 4                                        # too late for the new-article rule, too slow for the window
+
+
+def test_baseline_needs_a_day_of_history():
+    b = B.Baselines()
+    b.medians["en"].extend([6.0] * 23)
+    assert b.get("en") == B.DEFAULT_BASELINE
+    b.medians["en"].append(6.0)
+    assert b.get("en") == 6.0
