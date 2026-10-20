@@ -5,7 +5,7 @@
 | `tests/test_*.py` | The Python pipeline: parsing, storage, scoring, events, evaluation, forecasts, app export | `.venv/bin/pytest` |
 | `tests/live/` | The Python reference implementation of the live layer | `.venv/bin/pytest tests/live` |
 | `tests/app/*.spec.js` | The web app in a browser (desktop and phone), with the Hub data mocked from `tests/app/fixtures/` | `npx playwright test` |
-| `tests/app/unit/` | The app's pure modules (briefing, hero selection, colour scale, map projection, translations and formats) | `npm run test:unit` |
+| `tests/app/unit/` | The app's pure modules (briefing, hero selection, colour scale, map projection, translations and formats, the Hub data client) | `npm run test:unit` |
 | `worker/test/` | The Cloudflare Worker (rules, encoding, storage) in miniflare | `cd worker && npm test` |
 
 - `tests/fixtures/` holds small real samples (a dump excerpt, a Current events page, a minute of recent changes).
