@@ -142,3 +142,15 @@ def test_ops_reference_lists_every_command():
     ops = (ROOT / "docs" / "ops.md").read_text(encoding="utf-8")
     listed = set(re.findall(r"lookedup\.cli ([a-z0-9-]+)", ops)) | ({"backfill"} if "lookedup.backfill" in ops else set())
     assert documented <= listed, sorted(documented - listed)
+
+
+def test_one_user_agent_everywhere():
+    from lookedup.settings import USER_AGENT
+
+    copies = {
+        "spike/common.py": r'^UA = "([^"]+)"',
+        "live/lookedup_live/__init__.py": r'^USER_AGENT = "([^"]+)"',
+        "worker/src/index.ts": r"^const UA = '([^']+)';",
+    }
+    for path, pattern in copies.items():
+        assert re.search(pattern, (ROOT / path).read_text(encoding="utf-8"), re.M).group(1) == USER_AGENT, path
