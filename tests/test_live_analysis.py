@@ -223,3 +223,15 @@ def test_h9_events_window_order_and_languages():
 def test_burst_after_the_window_stops_the_search():
     revs = [rev(m, u) for m, u in [(0, "a"), (5, "b"), (10, "a"), (12, "c"), (14, "b"), (200, "d")]]
     assert LA.burst_time(revs, "en", "X", T0 - timedelta(hours=2), T0 - timedelta(hours=1)) == (None, None)
+
+
+def test_append_scores_without_rows_commits_nothing(tmp_path, monkeypatch):
+    from datetime import date
+
+    import lookedup.scorer as sc
+    from lookedup.store import LocalStore
+
+    monkeypatch.setattr(LA, "score_day", lambda st, day: [])
+    monkeypatch.setattr(sc, "_commit", lambda *a: (_ for _ in ()).throw(AssertionError("nothing to commit")))
+    res = LA.append_scores(LocalStore(tmp_path), date(2026, 10, 9))
+    assert res["units_today"] == 0 and res["day"] == "2026-10-09" and not (tmp_path / LA.LEAD_CSV).exists()
