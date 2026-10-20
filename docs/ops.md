@@ -140,6 +140,7 @@ write to the lake on Hugging Face and never commit to this repository (enforced 
 | `wikidata-monthly.yml` | cron `30 6 8 * *` | rebuild `data/wikidata/sitelinks.parquet` |
 | `pages.yml` | push to `app/**`, `workflow_dispatch` | deploy `app/` to GitHub Pages ([sbaiii.github.io/looked-up](https://sbaiii.github.io/looked-up/)); data is read from the Hub at runtime, so hourly updates need no redeploy |
 | `worker.yml` | push to `worker/**` or `config/live.yml`, `workflow_dispatch` | tests (vitest) and deploys the **live layer** Worker when the Cloudflare secrets exist (ADR 0032) |
+| `worker-observe.yml` | `workflow_dispatch` (`minutes`, default 11) | tails the live Worker and summarises CPU and wall time per poll, against the free plan's 10 ms (ADR 0033) |
 | `live.yml` | `workflow_dispatch` only (**disabled**) | the old Actions shifts of ADR 0030, kept for a one-off manual run |
 | `space.yml` | push to `live/**`, `workflow_dispatch` | would deploy `live/` to a Space; Gradio and Docker Spaces need a paid plan (ADR 0032), so it only warns |
 | `hub-maintenance.yml` | cron `41 4 2 * *`, `workflow_dispatch` | **squash the dataset repo's history** (`cli hub --squash`) and report storage |
