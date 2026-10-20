@@ -251,3 +251,12 @@ def test_download_trickle_flagged_after_the_read(tmp_path, monkeypatch):
     monkeypatch.setattr(_FakeWatchdog, "stalls", [True, False])
     monkeypatch.setattr(dumps.time, "sleep", lambda s: None)
     assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"slowdone"
+
+
+def test_download_incomplete_after_all_attempts(tmp_path, monkeypatch):
+    import pytest
+
+    monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: _Stream(206, b"a", length=100))
+    with pytest.raises(RuntimeError, match="incomplete download after 3 attempts"):
+        dumps.download("https://x/f.gz", tmp_path / "f.gz", retries=3)
+    assert not (tmp_path / "f.gz").exists() and (tmp_path / "f.gz.part").read_bytes() == b"aaa"
