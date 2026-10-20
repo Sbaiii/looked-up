@@ -157,3 +157,8 @@ def test_decode_pvc_hours_sums_repeated_letters_and_ignores_noise():
     assert decode_pvc_hours("A1A2B5") == {0: 3, 1: 5}
     assert decode_pvc_hours("Y3Z4") == {}                                   # only A..X are hours
     assert decode_pvc_hours("A10\n") == {0: 10}
+
+
+@pytest.mark.parametrize("title", ["Category_talk:Physics", "User_talk:Alice", "Template_talk:Infobox", "Help:Contents"])
+def test_underscored_talk_namespaces_are_not_articles(title):
+    assert not ArticleFilter().is_article("en", title)
