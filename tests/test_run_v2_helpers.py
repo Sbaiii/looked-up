@@ -119,3 +119,73 @@ def test_country_from_places_region_first():
     assert R._country(base | {"place_qids": [20, 30]}, claims) == 148         # the region's own country wins
     assert R._country(base | {"place_qids": [10, 99]}, claims) == 17          # unknown region, then the locality's P17
     assert R._country(base | {"place_qids": [99]}, claims) is None
+
+
+class _FakeEvents:
+    """Events answered from a {qid: (start_hour, lead_lang, breadth)} table, the same for every variant."""
+    hits: dict = {}
+
+    def __init__(self, cfg):
+        import duckdb
+
+        self.con = duckdb.connect()
+        self.con.execute("ATTACH ':memory:' AS wh")
+        self.con.execute("CREATE TABLE wh.main.stg_sitelinks AS SELECT * FROM (VALUES (1, 'en'), (1, 'fr')) t(qid, lang)")
+        self.tables = {"primary": "primary"}
+
+    def variant(self, n):
+        return f"ev_n{n}"
+
+    def first(self, table, qids, lo, hi):
+        found = [(s, q) for q in qids if q in self.hits for s in [self.hits[q][0]] if lo <= s <= hi]
+        if not found:
+            return None
+        s, q = min(found)
+        return {"qid": q, "start_hour": s, "lead_lang": self.hits[q][1], "breadth": self.hits[q][2],
+                "event_class": "multi_language"}
+
+
+def _phase2b(tmp_path, monkeypatch):
+    import json
+
+    import pyarrow as pa
+
+    cache = tmp_path / "eval"
+    cache.mkdir()
+    gts = {
+        "deaths": [{"date": "2026-08-01", "title": "Seen", "qid": 1, "n_languages": 12, "announcement": "2026-08-01T09:30:00"},
+                   {"date": "2026-08-02", "title": "Missed", "qid": 2, "n_languages": 6, "announcement": None},
+                   {"date": "2026-07-01", "title": "Too early", "qid": 3, "n_languages": 30, "announcement": None}],
+        "quakes": [{"usgs_id": "u1", "origin": "2026-08-10T12:20:00", "mag": 7.1, "place": "near X, Japan", "article_qid": 10,
+                    "article_countries": [17], "place_qids": [], "region_is_us_state": False},
+                   {"usgs_id": "u2", "origin": "2026-08-20T03:00:00", "mag": 6.2, "place": "Y", "article_qid": None,
+                    "article_countries": [], "place_qids": [], "region_is_us_state": False}],
+        "matches": [{"kickoff": "2026-07-18T21:00:00", "teams": ["France", "England"], "team_qids": [20, 21], "match_qid": None},
+                    {"kickoff": "2026-07-18T21:00:00", "teams": ["France", "England"], "team_qids": [20, 21], "match_qid": None},
+                    {"kickoff": None, "teams": ["A", "B"], "team_qids": [], "match_qid": None},
+                    {"kickoff": "2026-07-10T19:00:00", "teams": ["C", "D"], "team_qids": [22], "match_qid": None}]}
+    for name, rows in gts.items():
+        (cache / f"gt2b_{name}.json").write_text(json.dumps(rows))
+    _FakeEvents.hits = {1: (datetime(2026, 8, 1, 11), "en", 9), 10: (datetime(2026, 8, 10, 14), "ja", 7),
+                        20: (datetime(2026, 7, 18, 20), "fr", 21)}
+    claims = {17: {"P37": [5287]}}
+    monkeypatch.setattr(R, "CACHE", cache)
+    monkeypatch.setattr(R, "OUT", tmp_path)
+    monkeypatch.setattr(R, "Events", _FakeEvents)
+    monkeypatch.setattr(R, "active_codes", lambda: ["en", "fr", "ja"])
+    monkeypatch.setattr(R, "fetch_claims", lambda qids, cache: pa.table({
+        "qid": sorted(qids), "claims_json": [json.dumps(claims.get(q, {})) for q in sorted(qids)]}))
+    return R.evaluate()
+
+
+def test_phase2b_evaluation_end_to_end(tmp_path, monkeypatch):
+    res = _phase2b(tmp_path, monkeypatch)
+    g1, g2, g3 = res["gt1"], res["gt2"], res["gt3"]
+    assert (g1["entries_total"], g1["out_of_window"], g1["n"], g1["detected"]) == (3, 1, 2, 1)
+    assert g1["verdict_h1b_1"] == "rejected" and g1["delay_from_announcement"]["median"] == 2.0   # 09:30 -> 11:00, floored to 09:00
+    assert g2["m65_plus"] == {"n": 1, "detected": 1, "recall": 1.0} and g2["m60_65"]["detected"] == 0
+    assert g2["h2b"] == {"qualifying": 1, "lead_is_country_language": 1, "share": 1.0}
+    assert g2["verdict_h5"] == "inconclusive (< 5 detected)" and g2["verdict_h2b"] == "inconclusive (< 5 qualifying)"
+    assert g3["n"] == 1 and g3["detected"] == 1 and g3["excluded"] == 2                # the duplicate counts once
+    assert g3["excluded_reasons"] == {"no Wikipedia kick-off time": 1, "out of the scored period": 1}
+    assert (tmp_path / "phase2b_metrics.json").exists() and (tmp_path / "phase2b_gt3_excluded.csv").exists()
