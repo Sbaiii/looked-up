@@ -92,3 +92,12 @@ def test_english_lead_share():
     h2 = _metrics("phase2_metrics.json")["h2"]
     assert 0 < h2["base_rate_lead_en"] < 0.5                               # "only": English leads a minority of events
     assert f"English leads only {_pct(h2['base_rate_lead_en'])} of events" in README
+
+
+def _doc(name: str) -> str:
+    return (ROOT / "docs" / "analysis" / name).read_text(encoding="utf-8")
+
+
+def test_phase2_results_page():
+    r6 = _metrics("phase2_metrics.json")["h1"]["recall_6h"]
+    assert f"**{_pct(r6['recall'])}** ({r6['detected']:,} / {r6['pairs']:,})" in _doc("phase2_results.md")
