@@ -43,7 +43,7 @@ con.execute(f"""
 """)
 
 
-def rank(where: str):
+def rank(where: str) -> tuple[list[tuple], int, dict[int, float]]:
     """Languages ranked by views under the SQL filter ``where``, the total, and the cumulative share held by the top 10 to 100."""
     rows = con.execute(f"""
         SELECT lang, sum(views), sum(views) FILTER (WHERE mobile) FROM d WHERE {where}
