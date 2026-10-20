@@ -178,3 +178,10 @@ def test_documented_commands_exist():
     for doc in ("README.md", "docs/ops.md", "tests/README.md"):
         used = set(re.findall(r"lookedup\.cli ([a-z][a-z0-9-]+)", (ROOT / doc).read_text(encoding="utf-8")))
         assert used <= known, (doc, sorted(used - known))
+
+
+def test_documented_npm_scripts_exist():
+    scripts = set(json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["scripts"])
+    for doc in ("README.md", "docs/ops.md", "tests/README.md"):
+        used = set(re.findall(r"npm run ([\w:-]+)", (ROOT / doc).read_text(encoding="utf-8")))
+        assert used <= scripts, (doc, sorted(used - scripts))
