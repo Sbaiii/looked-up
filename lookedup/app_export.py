@@ -235,8 +235,9 @@ def sparklines(con: duckdb.DuckDBPyConnection, hourly_files: list[Path], events:
     if not events or not hourly_files:
         return {}
     con.execute("CREATE OR REPLACE TEMP TABLE _k(qid BIGINT, lang VARCHAR, title VARCHAR)")
-    con.executemany("INSERT INTO _k VALUES (?, ?, ?)",
-                    [(q, l, t.replace(" ", "_")) for q in {e["qid"] for e in events} for l, t in titles.get(q, {}).items()])
+    keys = [(q, l, t.replace(" ", "_")) for q in {e["qid"] for e in events} for l, t in titles.get(q, {}).items()]
+    if keys:                    # executemany refuses an empty list: events without titles keep flat sparklines
+        con.executemany("INSERT INTO _k VALUES (?, ?, ?)", keys)
     con.execute("CREATE OR REPLACE TEMP TABLE _ev(event_id VARCHAR, qid BIGINT, start_hour TIMESTAMP)")
     con.executemany("INSERT INTO _ev VALUES (?, ?, ?)", [(e["event_id"], e["qid"], e["start_hour"]) for e in events])
     paths = ", ".join(f"'{p}'" for p in hourly_files)

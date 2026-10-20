@@ -351,3 +351,10 @@ def test_export_languages_are_active_codes(monkeypatch):
 
     monkeypatch.setattr(L, "active_codes", lambda: ["en", "ja"])
     assert ax._languages() == ["en", "ja"]
+
+
+def test_sparklines_without_any_title(tmp_path):
+    f = tmp_path / "h.parquet"
+    pq.write_table(pa.table({"ts_hour_start": [T0], "lang": ["en"], "title": ["X"], "views_desktop": [1], "views_mobile": [1]}), f)
+    sparks = ax.sparklines(duckdb.connect(), [f], [_ev("a", 42, 3, 300)], {}, last_hour=T0)
+    assert set(sparks) == {"a"} and sparks["a"][ax.SPARK_BEFORE] == 0
