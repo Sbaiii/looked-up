@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from lookedup import db
@@ -28,8 +28,6 @@ def production_vs_batch(warehouse_db: Path, day: date, hours: list[int], lake_di
     con.execute("SET memory_limit = '7GB'; SET preserve_insertion_order = false")
     con.execute(f"ATTACH '{warehouse_db}' AS wh (READ_ONLY)")
     # only the files needed: 28 lookback days for the baselines, plus the scored day
-    from datetime import timedelta
-
     days = [day - timedelta(days=k) for k in range(cfg.baseline["lookback_days"], -1, -1)]
     _hourly_view(con, "src", days, lake_dir)
     hrs = ", ".join(str(h) for h in hours)
