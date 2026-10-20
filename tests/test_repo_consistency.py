@@ -154,3 +154,10 @@ def test_one_user_agent_everywhere():
     }
     for path, pattern in copies.items():
         assert re.search(pattern, (ROOT / path).read_text(encoding="utf-8"), re.M).group(1) == USER_AGENT, path
+
+
+def test_workflows_use_the_required_python():
+    need = re.search(r'requires-python = ">=(\d+\.\d+)"', (ROOT / "pyproject.toml").read_text(encoding="utf-8")).group(1)
+    for wf in sorted((ROOT / ".github" / "workflows").glob("*.yml")):
+        for v in re.findall(r'python-version: "([\d.]+)"', wf.read_text(encoding="utf-8")):
+            assert v == need, wf.name
