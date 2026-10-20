@@ -16,7 +16,10 @@
 - `test_cli.py` checks that every documented command is registered and passes its options through, with the work
   functions replaced by fakes; `test_figures.py` renders every results figure into a temp folder.
 - `test_retrain.py` runs the weekly retrain end to end on a tiny warehouse; `tests/app/panels.spec.js` covers the
-  panels around the day view, including the interface language a first visit picks from the browser.
+  panels around the day view, including the interface language a first visit picks from the browser;
+  `tests/app/cards.spec.js` the event cards and the hero (sparklines, Wikipedia links, the URL guard).
+- `test_agreement.py`, `test_run.py` and the end-to-end tests in `test_run_v2_helpers.py` and
+  `test_forecast_train.py` run each evaluation on synthetic data, with the ground truths and warehouse faked.
 - Network calls (Wikimedia, Wikidata, the Hub) are always replaced by small fakes in the unit tests.
 - `test_repo_consistency.py` keeps the docs in step with the code: the ADR, config, analysis and spike indexes,
   the README links, the schema against the model files, the three app translations and the two copies of the live rules.
