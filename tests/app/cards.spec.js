@@ -68,3 +68,11 @@ test('unknown hours split the sparkline, and a card with no known hour draws no 
   await expect(page.locator(`#cards .card[data-qid="Q242078"] svg.spark polyline`)).toHaveCount(2);
   await expect(page.locator(`#cards .card[data-qid="Q804"] svg.spark polyline`)).toHaveCount(0);
 });
+
+test('no description, no description line', async ({ page }) => {
+  await serveToday(page, (d) => { d.events[0].desc = {}; });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#cards .card[data-qid="Q242078"] .card__desc')).toHaveCount(0);
+  await expect(page.locator('#cards .card[data-qid="Q804"] .card__desc')).toHaveCount(await page.locator('#cards .card[data-qid="Q804"] .card__desc').count());
+});
