@@ -75,3 +75,10 @@ def test_single_language_events_get_no_snapshots():
     con = _con(SPIKES, VIEWS)
     con.execute("UPDATE events SET event_class = 'single_language'")
     assert _rows(con) == []
+
+
+def test_snapshot_clock_features():
+    by = {r["offset_h"]: r for r in _rows(_con(SPIKES, VIEWS))}
+    assert [by[k]["hours_since_start"] for k in (0, 1, 3)] == [2, 3, 5]
+    assert by[0]["hour_utc"] == 14 and by[0]["weekday"] == 0                  # Monday 10 Aug, 14:00
+    assert by[3]["hour_utc"] == 17
