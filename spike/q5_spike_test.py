@@ -22,6 +22,7 @@ import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import duckdb
 from common import DERIVED, DOCS, RAW, download, hourly_url, session
@@ -113,7 +114,7 @@ def window_hours(t0: datetime) -> list[datetime]:
 
 def fetch_hourly(hours: list[datetime]) -> list:
     """Download hourly files; file for hour-start h is named h+1h."""
-    def one(h):
+    def one(h: datetime) -> Path:
         """Download the dump file for the hour starting at ``h``."""
         url = hourly_url(h + timedelta(hours=1))
         return download(url, RAW / "pageviews" / url.rsplit("/", 1)[1])[0]
@@ -182,7 +183,7 @@ def analyse(ev: dict) -> list[dict]:
         base.update(pvc_counts(d, targets))
 
     # collapse redirects onto (entity, lang)
-    def collapse(counts):
+    def collapse(counts: dict[tuple, int]) -> dict[tuple, int]:
         """Sum redirect variants onto (hour, entity, lang)."""
         agg = {}
         for (h, lang, title), v in counts.items():
