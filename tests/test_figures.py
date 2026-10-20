@@ -20,7 +20,8 @@ def _png(path: Path) -> tuple[int, int]:
 
 
 def _rows(name: str) -> list[dict]:
-    return list(csv.DictReader(open(ANALYSIS / name, encoding="utf-8")))
+    with open(ANALYSIS / name, encoding="utf-8") as f:
+        return list(csv.DictReader(f))
 
 
 def test_spread_chart_and_breadth_histogram(tmp_path):
