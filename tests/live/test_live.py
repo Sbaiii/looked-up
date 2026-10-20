@@ -679,3 +679,11 @@ def test_burst_on_a_known_title_is_not_queued():
     bursts = [e.handle(ev(title="Comet", ts=T0 + 60 * i, user=u), now=T0 + 600) for i, u in enumerate("abcde")]
     b = next(x for x in bursts if x is not None)
     assert b.qid == "Q42" and e.resolver.pending == set()
+
+
+def test_attach_qids_keeps_existing_qids():
+    e = Engine()
+    e.detector.bursts.extend([B.Burst("en", "A", T0, "window", 5, 3, qid="Q1"), B.Burst("en", "B", T0, "window", 5, 3)])
+    e.resolver.qids |= {"en|A": "Q999", "en|B": "Q2"}
+    e.attach_qids()
+    assert [b.qid for b in e.detector.bursts] == ["Q1", "Q2"]
