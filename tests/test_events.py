@@ -138,3 +138,14 @@ def test_event_id_and_language_order():
     [ev], _ = _events(_spikes([(7, "fr", 2, 20), (7, "en", 0, 20), (7, "de", 2, 20), (7, "ja", 1, 20)]))
     assert ev["event_id"] == "Q7@20260810T12"
     assert ev["languages"] == ["en", "ja", "de", "fr"]                    # by lag, then by code
+
+
+def test_excess_from_scored_hours():
+    con = _spikes([(1, "es", 0, 50), (1, "en", 1, 30), (1, "fr", 2, 12)])
+    con.execute("CREATE TABLE scored AS SELECT qid, lang, ts_hour_start + INTERVAL 1 HOUR AS ts_hour_start, 400 AS views, "
+                "100.0 AS baseline_median FROM spikes")                      # the hour after each spike: 300 more views
+    con.execute("INSERT INTO scored SELECT qid, lang, ts_hour_start, views, baseline_median FROM spikes")
+    ev, _ = build_events(con, "spikes", P, scored="scored")
+    [e] = _dicts(ev)
+    assert e["excess_views"] == 3 * 900 + 3 * 300
+    assert e["lead_excess_share"] == pytest.approx(1200 / 3600)
