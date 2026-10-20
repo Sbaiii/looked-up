@@ -102,3 +102,11 @@ test('facts: the fastest fact uses 3+ language events when none reached 5, and i
   assert.equal(facts([ev('A', 4, 3), ev('B', 3, 1)])[0][2].qid, 'B');
   assert.deepEqual(facts([ev('A', 2, 0), ev('B', 2, 1)]).map(([k]) => k), ['widest']);
 });
+
+test('facts: no non-English lead, no non-English fact', async () => {
+  const { facts } = await import('../../../app/js/briefing.js');
+  i18n.use(dict('en'), 'en');
+  const ev = (qid, breadth) => ({ id: `${qid}@x`, qid, class: 'multi_language', breadth, spread_h: 1, lead: 'en',
+    excess: 1e5, labels: { en: qid }, langs: [] });
+  assert.deepEqual(facts([ev('A', 6), ev('B', 9)]).map(([k]) => k), ['fastest', 'widest']);
+});
