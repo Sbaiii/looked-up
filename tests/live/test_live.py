@@ -760,3 +760,11 @@ def test_live_event_language_order_and_no_double_listing():
     [ev] = live["events"]
     assert [l["lang"] for l in ev["languages"]] == ["en", "fr"] and ev["breadth"] == 2 and ev["minutes_since_first_burst"] == 15
     assert [b["title"] for b in live["single_language_bursts"]] == ["Y"]
+
+
+def test_single_bursts_are_capped():
+    from lookedup_live.engine import SINGLES_SHOWN
+    e = Engine()
+    now = T0 + 3600
+    e.detector.bursts.extend(B.Burst("en", f"T{i}", now - 60 * i, "window", 5, 3) for i in range(1, SINGLES_SHOWN + 4))
+    assert len(e.live(now=now)["single_language_bursts"]) == SINGLES_SHOWN
