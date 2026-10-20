@@ -29,7 +29,7 @@ def parse(ts: str) -> datetime:
     return datetime.strptime(ts, "%Y-%m-%d %H:%M").replace(tzinfo=UTC)
 
 
-def delay(h, event_t):
+def delay(h: datetime | None, event_t: datetime) -> float | None:
     """Hours from the event to ``h``, or None when nothing spiked."""
     return round((h - event_t).total_seconds() / 3600, 2) if h else None
 
