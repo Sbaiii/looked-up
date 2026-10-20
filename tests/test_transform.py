@@ -102,3 +102,12 @@ def test_path_with_a_quote(tmp_path, article_filter):
     src = tmp_path / "o'clock dump"
     src.write_text("en Lisbon 9 0\n")
     assert _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter)) == [(HOUR, "en", "Lisbon", 9, 0)]
+
+
+def test_plain_text_pageview_complete(tmp_path, article_filter):
+    src = tmp_path / "day.txt"
+    src.write_text("en.wikipedia Lisbon 597 desktop 12 A5O7\nen.wikipedia Lisbon 597 mobile-web 9 A4\n")
+    tables = pageview_complete_to_tables(src, date(2026, 9, 13), ["en"], article_filter)
+    assert _rows(tables[datetime(2026, 9, 13, 0)]) == [(datetime(2026, 9, 13, 0), "en", "Lisbon", 5, 4)]
+    assert _rows(tables[datetime(2026, 9, 13, 14)]) == [(datetime(2026, 9, 13, 14), "en", "Lisbon", 7, 0)]
+    assert tables[datetime(2026, 9, 13, 1)].num_rows == 0
