@@ -232,3 +232,13 @@ def test_download_resumes_after_a_watchdog_stall(tmp_path, monkeypatch):
     monkeypatch.setattr(dumps.time, "sleep", lambda s: None)
     assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"hello world"
     assert seen == [{}, {"Range": "bytes=6-"}]
+
+
+def test_download_read_error_without_stall_propagates(tmp_path, monkeypatch):
+    import pytest
+
+    monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: _Dying(200, b"x", length=5))
+    monkeypatch.setattr(dumps, "_Watchdog", _FakeWatchdog)
+    monkeypatch.setattr(_FakeWatchdog, "stalls", [False])
+    with pytest.raises(OSError, match="socket shut down"):
+        dumps.download("https://x/f.gz", tmp_path / "f.gz")
