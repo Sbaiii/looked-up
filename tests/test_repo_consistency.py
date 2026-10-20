@@ -89,3 +89,11 @@ def test_live_strip_points_at_the_deployed_worker():
     name = re.search(r'^name = "([^"]+)"', (ROOT / "worker" / "wrangler.toml").read_text(encoding="utf-8"), re.M).group(1)
     url = re.search(r"const DEFAULT = '([^']+)'", (ROOT / "app" / "js" / "live.js").read_text(encoding="utf-8")).group(1)
     assert url.startswith(f"https://{name}.") and url.endswith(".workers.dev/live.json")
+
+
+def test_card_spread_phrase_matches_the_app():
+    from lookedup import og
+
+    within = json.loads((ROOT / "app" / "i18n" / "en.json").read_text(encoding="utf-8"))["within"]
+    assert og.within(0) == within["zero"]
+    assert og.within(1) == within["one"].format(n=1) and og.within(6) == within["other"].format(n=6)
