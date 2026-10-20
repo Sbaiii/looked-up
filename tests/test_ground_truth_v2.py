@@ -299,3 +299,12 @@ def test_quakes_skip_far_and_late_articles(monkeypatch):
 def test_boxes_ignore_non_field_lines():
     text = "intro |x=1\n{{Football box\n|date=2026-07-18\n<!-- a comment -->\n|team1=FRA\n}}\n|team2=after the box\n"
     assert _boxes(text) == [{"date": "2026-07-18", "team1": "FRA"}]
+
+
+def test_football_matches_without_a_team_link(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    monkeypatch.setattr(G, "_raw", lambda page: BOX)
+    monkeypatch.setattr(G, "_expand_links", lambda text: ["France national football team"] if "FRA" in text else ["Flag of TBD"])
+    [m] = G.football_matches("2026 FIFA World Cup knockout stage")
+    assert m["teams"] == ["France national football team"]
