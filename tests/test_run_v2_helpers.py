@@ -196,3 +196,14 @@ def test_phase2b_death_breakdowns(tmp_path, monkeypatch):
     assert g1["by_languages"]["10-19"] == {"n": 1, "detected": 1, "recall": 1.0}
     assert g1["by_languages"]["5-9"] == {"n": 1, "detected": 0, "recall": 0.0} and g1["by_languages"][">=20"]["n"] == 0
     assert set(g1["ablation"]) == {"n2", "n3", "n5"} and g1["by_class"] == {"multi_language": 1, "single_language": 0}
+
+
+def test_phase2b_quake_verdict_and_rows(tmp_path, monkeypatch):
+    import csv
+
+    g2 = _phase2b(tmp_path, monkeypatch)["gt2"]
+    assert g2["verdict_h1b_2"] == "supported" and g2["with_article"] == 1 and g2["h5_delay"]["n"] == 1
+    with open(tmp_path / "phase2b_gt2_earthquakes.csv", encoding="utf-8") as f:
+        rows = {r["usgs_id"]: r for r in csv.DictReader(f)}
+    assert rows["u1"]["country"] == "17" and rows["u1"]["lead_is_country_language"] == "True" and rows["u1"]["delay_h"] == "2.0"
+    assert rows["u2"]["detected"] == "False" and rows["u2"]["lead_is_country_language"] == ""
