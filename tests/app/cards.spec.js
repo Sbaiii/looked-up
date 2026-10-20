@@ -85,3 +85,14 @@ test('the hero label links the interface-language article when there is one', as
   await page.click('[data-ui-lang="fr"]');
   await expect(link).toHaveAttribute('href', /^https:\/\/fr\.wikipedia\.org\//);
 });
+
+test('hero counter and subtitle', async ({ page }) => {
+  await serveToday(page, (d) => { for (const e of d.events) e.excess = e.qid === 'Q804' ? 9e6 : 1000; });
+  await page.goto('./');
+  await ready(page);
+  const ev = JSON.parse(fs.readFileSync(TODAY, 'utf8')).events.find((e) => e.qid === 'Q804');
+  await expect(page.locator('#hero-counter')).toHaveText(new RegExp(`^${ev.breadth} languages in `));
+  await expect(page.locator('#hero-sub')).toContainText('International');
+  await expect(page.locator('#hero-sub')).toContainText('led by');
+  await expect(page.locator('#hero-sub')).toContainText('9 million more views');
+});
