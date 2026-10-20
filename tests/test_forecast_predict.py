@@ -159,3 +159,10 @@ def test_missing_model_files_are_skipped(tmp_path):
     store.commit({P.MANIFEST: tmp_path / "models.json"}, Manifest(), "manifest without its model file")
     got, models = P.load_models(store, tmp_path / "tmp")
     assert got["version"] == "v1" and models == {}
+
+
+def test_event_past_every_tier_gets_no_probability():
+    events = [{"event_id": "wide", "qid": 2, "start_hour": T0, "lead_lang": "en", "breadth": 25, "event_class": "multi_language"}]
+    models = {k: v for k, v in _models().items() if not k.startswith("m2_")}
+    out = forecast_open(_con(25), events, T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5), manifest={}, models=models)
+    assert out == {"wide": {"offset_h": 3, "model_version": None}}
