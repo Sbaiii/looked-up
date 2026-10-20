@@ -795,3 +795,10 @@ def test_anonymous_edits_are_not_editors():
     out = [d.add("en", "X", T0 + 60 * i, u) for i, u in enumerate([None, None, None, "a", "b"])]
     assert out == [None] * 5                                         # 5 edits, 2 editors
     assert d.counts("en", "X", T0 + 300) == {"edits_10m": 5, "edits_30m": 5, "edits_60m": 5, "editors_30m": 2}
+
+
+def test_new_article_rule_expires():
+    d = B.Detector()
+    d.add("fr", "Tard", T0, "a", is_new=True)
+    late = [d.add("fr", "Tard", T0 + B.NEW_ARTICLE_WINDOW_S + 600 * i, u) for i, u in enumerate("abab", start=1)]
+    assert late == [None] * 4                                        # too late for the new-article rule, too slow for the window
