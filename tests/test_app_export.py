@@ -416,3 +416,13 @@ def test_event_object_fills_missing_numbers():
     assert obj["excess"] == 0 and obj["spread_h"] == 0 and obj["peak"] == 12.3
     assert list(obj["labels"]) == ["en", "fr"] and obj["langs"][0] == {"lang": "fr", "first": "2026-08-17T03:00Z", "lag": 1,
                                                                       "surprise": 9.9, "excess": 0}
+
+
+def test_period_payload_shape(monkeypatch):
+    monkeypatch.setattr(ax, "TOP_EVENTS", 10)
+    events = [_ev("a", 1, 6, 900), _ev("s", 2, 1, 50, lead="ja", cls="single_language")]
+    langs = ax.group_langs([_lang("a", "en", 600), _lang("s", "ja", 50)])
+    p = ax.period_payload("day", events, langs, {1: {"en": "A"}, 2: {"ja": "S"}}, {}, {}, T0, date="2026-08-17")
+    assert p["kind"] == "day" and p["date"] == "2026-08-17" and p["generated_at"] == "2026-08-17T02:00:00Z"
+    assert [e["id"] for e in p["events"]] == ["a"] and [e["id"] for e in p["single_language_events"]] == ["s"]
+    assert p["summary"]["events"] == 1 and p["summary"]["single_language"] == 1
