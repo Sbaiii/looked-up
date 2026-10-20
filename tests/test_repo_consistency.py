@@ -196,3 +196,16 @@ def test_readme_language_claim_matches_the_ranking():
     m = re.search(r"takes (\d+) language editions \(([\d.]+) % of human article views among the (\d+) largest", readme)
     assert int(m.group(1)) == doc["top_n"] and int(m.group(3)) == len(doc["languages"])
     assert float(m.group(2)) == round(100 * last["cumulative_share_of_candidates"], 1)
+
+
+def test_dataset_card_language_table():
+    import yaml
+
+    doc = yaml.safe_load((ROOT / "config" / "languages.yml").read_text(encoding="utf-8"))
+    card = (ROOT / "dataset" / "README.md").read_text(encoding="utf-8")
+    rows = re.findall(r"^\| (\d+) \| `([\w-]+)` \| ([^|]+) \| ([^|]+) \| ([\d.]+) M \| (\d+) % \|$", card, re.M)
+    assert len(rows) == doc["top_n"]
+    for (rank, code, name, native, views, mobile), lang in zip(rows, doc["languages"], strict=False):
+        assert (int(rank), code, name.strip(), native.strip()) == (lang["rank"], lang["code"], lang["name_en"], lang["name_native"])
+        assert float(views) == round(lang["human_views_7d"] / 7 / 1e6, 1), code
+        assert int(mobile) == round(100 * lang["mobile_share"]), code
