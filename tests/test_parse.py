@@ -162,3 +162,9 @@ def test_decode_pvc_hours_sums_repeated_letters_and_ignores_noise():
 @pytest.mark.parametrize("title", ["Category_talk:Physics", "User_talk:Alice", "Template_talk:Infobox", "Help:Contents"])
 def test_underscored_talk_namespaces_are_not_articles(title):
     assert not ArticleFilter().is_article("en", title)
+
+
+def test_invalid_titles_are_never_articles():
+    f = ArticleFilter()
+    assert not f.is_article("en", "") and not f.is_article("en", "-")
+    assert f.is_article("en", "--") and f.is_article("en", "Special") and not f.is_article("en", "Special:")
