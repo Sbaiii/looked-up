@@ -202,3 +202,13 @@ def test_day_aggregate_skips_bad_lines(tmp_path):
     out = tmp_path / "agg.parquet"
     L._day_aggregate(src, out)
     assert duckdb.sql(f"SELECT lang, title, desktop FROM '{out}'").fetchall() == [("fr", "Lisbonne", 30)]
+
+
+def test_shipped_languages_are_complete():
+    doc = yaml.safe_load(L.LANGUAGES_FILE.read_text(encoding="utf-8"))
+    active = doc["languages"][:doc["top_n"]]
+    assert [l["rank"] for l in active] == list(range(1, doc["top_n"] + 1))
+    for l in active:
+        assert l["name_en"] and l["name_native"] and l["speakers"] > 0, l["code"]
+    shares = [l["cumulative_share_of_candidates"] for l in doc["languages"]]
+    assert shares == sorted(shares) and shares[-1] <= 1.0
