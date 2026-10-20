@@ -101,3 +101,10 @@ def _doc(name: str) -> str:
 def test_phase2_results_page():
     r6 = _metrics("phase2_metrics.json")["h1"]["recall_6h"]
     assert f"**{_pct(r6['recall'])}** ({r6['detected']:,} / {r6['pairs']:,})" in _doc("phase2_results.md")
+
+
+def test_phase2b_results_page():
+    g1 = _metrics("phase2b_metrics.json")["gt1"]
+    page = _doc("phase2b_results.md")
+    assert f"**{_pct(g1['recall'])}** ({g1['detected']} / {g1['n']})" in page
+    assert f"{g1['out_of_window']} are out of window" in page and f"leaving **{g1['n']} scored**" in page
