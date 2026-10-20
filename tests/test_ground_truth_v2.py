@@ -258,3 +258,8 @@ def test_sparql_gives_up(monkeypatch):
     with pytest.raises(requests.HTTPError):
         G._sparql("SELECT 1")
     assert len(s.calls) == 5 and sleeps == [5, 10, 15, 20]
+
+
+def test_parse_deaths_skips_unlinked_bullets():
+    text = "*[[Too Early]], 90, before any day heading.\n===3===\n*An unnamed person, 70.\n*[[Real Person]], 61, writer.\n"
+    assert [(r["date"], r["title"]) for r in parse_deaths(text, 2026, 8)] == [(date(2026, 8, 3), "Real Person")]
