@@ -117,3 +117,17 @@ def test_phase4_results_page():
     assert f"{m['H7']['sitelinks_pr_auc']:.3f} vs {m['H7']['model_pr_auc']:.3f}, **{100 * m['H7']['ratio']:.0f} %**" in page
     h8 = m["H8"]
     assert f"{h8['model_mae_log']:.3f} vs {h8['category_decay_mae_log']:.3f}, **−{100 * h8['improvement']:.0f} %**" in page
+
+
+def _whole(x: float) -> int:
+    """Round half away from zero, as the results pages do (−294.5 -> −295)."""
+    import math
+
+    return int(math.copysign(math.floor(abs(x) + 0.5), x))
+
+
+def test_phase5_results_page():
+    h9 = _metrics("phase5_metrics.json")["H9"]
+    expect = (f"median **{_whole(h9['median_lead_minutes'])} min** (IQR {_whole(h9['p25'])} to {_whole(h9['p75'])}), "
+              f"n = {h9['with_burst']}").replace("-", "−")
+    assert expect in _doc("phase5_results.md")
