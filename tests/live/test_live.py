@@ -740,3 +740,12 @@ def test_baseline_roll_skips_an_empty_wiki():
     b.current["fr"]                                                 # touched but empty
     b.roll()
     assert list(b.medians["en"]) == [3] and "fr" not in b.medians
+
+
+def test_live_payload_drops_bursts_outside_the_window():
+    from lookedup_live.engine import LIVE_WINDOW_S
+    e = Engine()
+    now = T0 + 10 * 3600
+    e.detector.bursts.extend([B.Burst("en", "Old", now - LIVE_WINDOW_S - 60, "window", 9, 9),
+                              B.Burst("en", "New", now - 60, "window", 5, 3)])
+    assert [b["title"] for b in e.live(now=now)["single_language_bursts"]] == ["New"]
