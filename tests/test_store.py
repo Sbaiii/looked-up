@@ -415,3 +415,12 @@ def test_hub_store_without_create(monkeypatch):
     monkeypatch.setattr(S, "hf_token", lambda: None)
     hf = S.HFStore("user/repo")
     assert hf.repo_id == "user/repo" and hf.token is None and hf.api.token is None
+
+
+def test_manifest_merge_newer_entry_wins():
+    h = datetime(2026, 10, 7, 9)
+    m, other = Manifest(), Manifest()
+    m.add(h, rows=10, source="pageview_complete")
+    other.add(h, rows=12, source="hourly_dump")
+    m.merge(other)
+    assert m.hours["2026-10-07T09:00:00Z"]["rows"] == 12 and m.hours["2026-10-07T09:00:00Z"]["source"] == "hourly_dump"
