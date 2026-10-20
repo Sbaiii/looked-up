@@ -154,3 +154,37 @@ def test_target_without_any_calibration_positive_is_skipped():
     models, specs = R.train_all(rows, params, cutoff)
     assert not any(k.startswith("planetary") for k in models) and not any(k.startswith("planetary") for k in specs)
     assert {f"international_t{o}" for o in T.OFFSETS} <= set(models) and "m2_excess_next24" in models
+
+
+def _live_lake(tmp_path, monday):
+    from lookedup.scorer import spikes_path
+    from lookedup.store import day_path
+
+    lake = tmp_path / "lake"
+    for d in (monday, monday + timedelta(days=1)):
+        for path in (spikes_path(d), day_path(datetime(d.year, d.month, d.day))):
+            (lake / path).parent.mkdir(parents=True, exist_ok=True)
+            pq.write_table(pa.table({"ts_hour_start": [datetime(d.year, d.month, d.day, 5)]}), lake / path)
+    return LocalStore(lake)
+
+
+def test_live_week_builds_labelled_snapshots(tmp_path, monkeypatch):
+    from datetime import date
+
+    import lookedup.analytics.entities as E
+    import lookedup.app_export as ax
+
+    monday = date(2026, 10, 12)
+    store = _live_lake(tmp_path, monday)
+    events = [{"event_id": "in", "qid": 1, "start_hour": datetime(2026, 10, 13, 5)},
+              {"event_id": "before", "qid": 2, "start_hour": datetime(2026, 10, 11, 22)}]
+    seen = {}
+    monkeypatch.setattr(ax, "events_from_spikes", lambda con, files: (events, []))
+    monkeypatch.setattr(E, "fetch_claims", lambda qids, cache: pa.table({"qid": [1], "label_en": ["X"], "claims_json": ['{"P31": [5]}']}))
+    monkeypatch.setattr(ax, "titles_from_api", lambda qids, langs: {1: {"en": "X"}})
+    monkeypatch.setattr(ax, "categories_for", lambda ev: {1: "human"})
+    monkeypatch.setattr(R, "live_relations", lambda con, ev, cats, classes, titles, hourly: seen.update(ev=[e["event_id"] for e in ev], classes=classes))
+    monkeypatch.setattr(R, "snapshots", lambda con, targets, data_end: seen.update(end=data_end) or [{"event_id": "in", "offset_h": 0}])
+    t = R.live_week(store, monday, tmp_path / "tmp")
+    assert t.to_pylist() == [{"event_id": "in", "offset_h": 0}]
+    assert seen["ev"] == ["in"] and seen["classes"] == {1: "human"} and seen["end"] == "2026-10-13 05:00:00"
