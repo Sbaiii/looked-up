@@ -110,3 +110,11 @@ test('facts: no non-English lead, no non-English fact', async () => {
     excess: 1e5, labels: { en: qid }, langs: [] });
   assert.deepEqual(facts([ev('A', 6), ev('B', 9)]).map(([k]) => k), ['fastest', 'widest']);
 });
+
+test('compose leaves the about line empty without a description', () => {
+  i18n.use(dict('en'), 'en');
+  const ev = { ...dolly('female'), desc: {} };
+  const out = compose({ events: [ev] }, '2026-08-25');
+  assert.equal(out.about, '');
+  assert.equal(out.top.qid, 'Q180453');
+});
