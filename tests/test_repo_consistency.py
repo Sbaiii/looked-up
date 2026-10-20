@@ -107,3 +107,12 @@ def test_every_category_has_a_label():
     for code in ("en", "fr", "es"):
         labels = json.loads((ROOT / "app" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))["event"]["category"]
         assert possible <= set(labels), (code, possible - set(labels))
+
+
+def test_every_tier_has_a_label_and_help():
+    from lookedup.analytics.config import load
+
+    tiers = {name for name, _ in load().product_event.tiers}
+    for code in ("en", "fr", "es"):
+        d = json.loads((ROOT / "app" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))
+        assert tiers <= set(d["tier"]) and tiers <= set(d["tier_help"]), code
