@@ -242,3 +242,12 @@ def test_download_read_error_without_stall_propagates(tmp_path, monkeypatch):
     monkeypatch.setattr(_FakeWatchdog, "stalls", [False])
     with pytest.raises(OSError, match="socket shut down"):
         dumps.download("https://x/f.gz", tmp_path / "f.gz")
+
+
+def test_download_trickle_flagged_after_the_read(tmp_path, monkeypatch):
+    replies = [_Stream(200, b"slow", length=8), _Stream(206, b"done")]
+    monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: replies.pop(0))
+    monkeypatch.setattr(dumps, "_Watchdog", _FakeWatchdog)
+    monkeypatch.setattr(_FakeWatchdog, "stalls", [True, False])
+    monkeypatch.setattr(dumps.time, "sleep", lambda s: None)
+    assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"slowdone"
