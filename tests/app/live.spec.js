@@ -105,3 +105,13 @@ test('a fresh feed with an hour-long gap still rests', async ({ page }) => {
   await expect(page.locator('#right-now')).toHaveClass(/is-resting/);
   await expect(page.locator('#live-list li')).toHaveCount(0);
 });
+
+test('?live= reads another workers.dev host', async ({ page }) => {
+  const other = 'https://staging.example.workers.dev/live.json';
+  await page.route(`${other}*`, (route) => route.fulfill({ status: 200, contentType: 'application/json',
+    body: JSON.stringify({ schema_version: 1, generated_at: new Date().toISOString(), status: { gap_minutes: 0 },
+      events: [liveEvent(7)], single_language_bursts: [] }) }));
+  await page.goto(`./?live=${encodeURIComponent(other)}`);
+  await ready(page);
+  await expect(page.locator('#live-list li').first()).toContainText('Event 7');
+});
