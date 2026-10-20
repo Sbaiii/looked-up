@@ -110,3 +110,9 @@ def test_prior_baseline_for_short_history():
     s = _score_day(_con(rows), day)[("Young", 9)]
     assert s["baseline_level"] == "prior" and not s["unseen"] and s["baseline_median"] == 8 and s["baseline_mad"] == 3
     assert s["r1"]                                                      # seen before: R1 still applies
+
+
+def test_hours_filter_and_view_floor():
+    rows = [("en", "A", _at(D, 9), 100, 100), ("en", "A", _at(D, 10), 100, 100), ("en", "Small", _at(D, 9), 50, 49)]
+    assert set(_score_day(_con(rows), D)) == {("A", 9), ("A", 10)}             # 99 views: under the floor
+    assert set(_score_day(_con(rows), D, hours=[10])) == {("A", 10)}
