@@ -223,3 +223,14 @@ def test_dataset_card_event_rule():
     assert (f"noticed (≥ {tiers['noticed']} languages), international (≥ {tiers['international']}) or planetary "
             f"(≥ {tiers['planetary']})") in card
     assert f"The evaluated Phase 2 definition used ≥ {cfg.event.min_languages} languages" in card
+
+
+def test_readme_tiers_and_baseline():
+    from lookedup.analytics.config import load
+
+    cfg = load()
+    tiers = dict(cfg.product_event.tiers)
+    readme = " ".join((ROOT / "README.md").read_text(encoding="utf-8").split())
+    assert f"own {cfg.baseline['lookback_days']}-day baseline" in readme
+    assert (f"Tiers: noticed ≥ {tiers['noticed']} languages, international ≥ {tiers['international']}, "
+            f"planetary ≥ {tiers['planetary']}") in readme
