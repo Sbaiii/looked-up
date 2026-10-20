@@ -187,3 +187,10 @@ def test_spike_file_merges_runs(lake):
     keys = list(zip(t["lang"].to_pylist(), t["title"].to_pylist(), t["ts_hour_start"].to_pylist(), strict=True))
     assert len(keys) == len(set(keys))                                         # no hour written twice
     assert {k[2].hour for k in keys} == {9, 10, 11} and set(t["qid"].to_pylist()) == {42}
+
+
+def test_baselines_skip_a_day_that_cannot_be_fetched(lake, monkeypatch):
+    real = lake.fetch
+    gone = scorer.day_path(datetime.combine(D - timedelta(days=2), datetime.min.time()))
+    monkeypatch.setattr(lake, "fetch", lambda p, d, rev=None: None if p == gone else real(p, d, rev))
+    assert scorer.build_baselines(lake, D, directory=lake.root / "bl")["day_files"] == 2
