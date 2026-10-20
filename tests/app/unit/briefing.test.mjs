@@ -93,3 +93,12 @@ test('leadEvent is the top-ranked multi-language event, null on a quiet day', ()
   assert.equal(leadEvent([ev('a', 500, 3), ev('b', 900, 2), ev('solo', 9e6, 1, 'single_language')]).id, 'b');
   assert.equal(leadEvent([ev('a', 900, 3), ev('b', 900, 7)]).id, 'b');            // ties go to the wider event
 });
+
+test('facts: the fastest fact uses 3+ language events when none reached 5, and is skipped below that', async () => {
+  const { facts } = await import('../../../app/js/briefing.js');
+  i18n.use(dict('en'), 'en');
+  const ev = (qid, breadth, spread_h, lead = 'en') => ({ id: `${qid}@x`, qid, class: 'multi_language', breadth, spread_h,
+    lead, excess: 1000 * breadth, labels: { en: qid }, langs: [] });
+  assert.equal(facts([ev('A', 4, 3), ev('B', 3, 1)])[0][2].qid, 'B');
+  assert.deepEqual(facts([ev('A', 2, 0), ev('B', 2, 1)]).map(([k]) => k), ['widest']);
+});
