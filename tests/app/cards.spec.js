@@ -57,3 +57,14 @@ test('URLs that are not https are replaced by #', async ({ page }) => {
   await expect(page.locator('#cards .card[data-qid="Q242078"] .card__links a').first()).toHaveAttribute('href', '#');
   expect(page.errors).toEqual([]);
 });
+
+test('unknown hours split the sparkline, and a card with no known hour draws no line', async ({ page }) => {
+  await serveToday(page, (d) => {
+    d.events[0].spark = [1, 2, 3, null, null, 4, 5, ...Array(41).fill(null)];
+    d.events[1].spark = Array(48).fill(null);
+  });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator(`#cards .card[data-qid="Q242078"] svg.spark polyline`)).toHaveCount(2);
+  await expect(page.locator(`#cards .card[data-qid="Q804"] svg.spark polyline`)).toHaveCount(0);
+});
