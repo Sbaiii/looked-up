@@ -56,3 +56,26 @@ test('the About section states the H9 lead times', async ({ page }) => {
   await page.click('[data-ui-lang="es"]');
   await expect(page.locator('#live-kicker')).toHaveText('Ahora mismo · los editores están confirmando');
 });
+
+/** Serve a fresh live feed with these events, bursts and gap. */
+async function feed(page, { events = [], bursts = [], gap = 0 } = {}) {
+  const now = Date.now();
+  await page.route(LIVE, (route) => route.fulfill({ status: 200, contentType: 'application/json',
+    body: JSON.stringify({ schema_version: 1, generated_at: new Date(now).toISOString(), status: { gap_minutes: gap },
+      events, single_language_bursts: bursts }) }));
+  return now;
+}
+
+test('quiet: no two-language rush, so the busiest single-language edits are listed', async ({ page }) => {
+  const now = await feed(page, { bursts: [
+    { lang: 'es', title: 'Partido_Pueblo', first_burst: new Date(Date.now() - 8 * 60e3).toISOString() },
+    { lang: 'de', title: 'Berlin', first_burst: new Date(Date.now() - 20 * 60e3).toISOString() }] });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#live-state')).toHaveText('No article is being rushed in two languages right now.');
+  const items = page.locator('#live-list li');
+  await expect(items).toHaveCount(2);
+  await expect(items.first()).toContainText('Partido Pueblo');
+  await expect(items.first()).toContainText('Spanish · first burst');
+  expect(now).toBeGreaterThan(0);
+});
