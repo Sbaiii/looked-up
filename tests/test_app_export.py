@@ -358,3 +358,46 @@ def test_sparklines_without_any_title(tmp_path):
     pq.write_table(pa.table({"ts_hour_start": [T0], "lang": ["en"], "title": ["X"], "views_desktop": [1], "views_mobile": [1]}), f)
     sparks = ax.sparklines(duckdb.connect(), [f], [_ev("a", 42, 3, 300)], {}, last_hour=T0)
     assert set(sparks) == {"a"} and sparks["a"][ax.SPARK_BEFORE] == 0
+def test_backfill_warehouse_then_live_days(tmp_path, monkeypatch):
+    import json
+
+    import lookedup.settings as S
+    import lookedup.warehouse as W
+    from lookedup.scorer import spikes_path
+    from lookedup.store import LocalStore, day_path
+
+    wh_day, live_h = datetime(2026, 8, 15, 9), datetime(2026, 8, 16, 10)
+    wh = tmp_path / "w.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("""CREATE TABLE fct_app_events AS SELECT 'E1' AS event_id, 1::BIGINT AS qid, TIMESTAMP '2026-08-15 09:00' AS start_hour,
+        'en' AS lead_lang, 2 AS breadth, 40.0::DOUBLE AS peak_intensity, 900.0::DOUBLE AS excess_views, 1 AS max_spread_lag_hours,
+        'multi_language' AS event_class, 'noticed' AS tier, 'human' AS category""")
+    con.execute("""CREATE TABLE fct_app_event_languages AS SELECT * FROM (VALUES
+        ('E1', 'en', TIMESTAMP '2026-08-15 09:00', 0, 40.0::DOUBLE, 600.0::DOUBLE),
+        ('E1', 'fr', TIMESTAMP '2026-08-15 10:00', 1, 20.0::DOUBLE, 300.0::DOUBLE))
+        t(event_id, lang, first_spike, spread_lag_hours, peak_surprise, excess_views)""")
+    con.execute("CREATE TABLE dim_entities AS SELECT 1::BIGINT AS qid, '{\"en\": \"a person\"}' AS descriptions_json, 'female' AS gender")
+    con.close()
+    local = tmp_path / "mirror"
+    (local / "data" / "wikidata").mkdir(parents=True)
+    pq.write_table(pa.table({"qid": [1, 1], "lang": ["en", "fr"], "title": ["Ada", "Ada_fr"]}), local / "data/wikidata/sitelinks.parquet")
+    for h in (wh_day, live_h):
+        (local / day_path(h)).parent.mkdir(parents=True, exist_ok=True)
+        pq.write_table(pa.table({"ts_hour_start": [h], "lang": ["en"], "title": ["Ada"], "views_desktop": [10], "views_mobile": [5]}),
+                       local / day_path(h))
+    lake = tmp_path / "lake"
+    (lake / spikes_path(live_h.date())).parent.mkdir(parents=True)
+    pq.write_table(pa.table({"qid": [597, 597], "lang": ["en", "pt"], "ts_hour_start": [live_h, live_h], "title": ["Lisbon", "Lisboa"],
+                             "surprise": [50.0, 30.0], "views": [5000, 3000], "baseline_median": [100.0, 50.0],
+                             "is_automated": [False, False]}), lake / spikes_path(live_h.date()))
+    monkeypatch.setattr(W, "WAREHOUSE_DB", wh)
+    monkeypatch.setattr(S, "LOCAL_LAKE_DIR", local)
+    monkeypatch.setattr(ax, "categories_for", lambda events: {597: "place"})
+    monkeypatch.setattr(ax, "texts_live", lambda events: {597: ({"en": "capital of Portugal"}, None)})
+    out = tmp_path / "out"
+    res = ax.backfill(LocalStore(lake), out, now=datetime(2026, 8, 16, 14, 30), languages=["en", "fr", "pt"])
+    assert (res["days"], res["first"], res["last"], res["events"]) == (2, "2026-08-15", "2026-08-16", 2)
+    stats = json.loads((out / ax.APP_PREFIX / "stats.json").read_text())
+    assert sorted(stats["days"]) == ["2026-08-15", "2026-08-16"]
+    today = json.loads((out / ax.APP_PREFIX / "today.json").read_text())
+    assert {e["qid"] for e in today["events"]} >= {"Q597"}
