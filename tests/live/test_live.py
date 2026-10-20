@@ -768,3 +768,14 @@ def test_single_bursts_are_capped():
     now = T0 + 3600
     e.detector.bursts.extend(B.Burst("en", f"T{i}", now - 60 * i, "window", 5, 3) for i in range(1, SINGLES_SHOWN + 4))
     assert len(e.live(now=now)["single_language_bursts"]) == SINGLES_SHOWN
+
+
+def test_stats_per_hour_and_language():
+    e = Engine()
+    now = T0 + 5 * 3600
+    e.detector.bursts.extend([B.Burst("en", "A", now - 25 * 3600, "window", 5, 3),            # older than a day
+                              B.Burst("en", "B", now - 3600, "window", 5, 3), B.Burst("fr", "C", now - 3500, "window", 5, 3),
+                              B.Burst("en", "D", now - 60, "window", 5, 3)])
+    st = e.stats(now=now)
+    assert st["bursts_24h"] == 3 and st["bursts_per_language"] == {"en": 2, "fr": 1}
+    assert sum(st["bursts_per_hour"].values()) == 3 and list(st["bursts_per_hour"]) == sorted(st["bursts_per_hour"])
