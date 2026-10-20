@@ -26,6 +26,9 @@
   - The window now widens in 10-day steps, up to 40, until it holds ≥ 5 positives. Planetary ended at 30–40 days
     with 5–6 positives.
   - Those days are kept out of the model fit.
+  - If even 40 days hold no positive (or no negative), that model is not trained that week and the manifest
+    leaves it out, so the app shows no chance for that target. Before, the Platt fit failed and stopped the whole
+    retrain, international models included.
 
 ### What the app shows
 
