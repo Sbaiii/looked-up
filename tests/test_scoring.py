@@ -101,3 +101,12 @@ def test_hour_level_baseline_when_day_type_is_short():
     rows.append(("en", "Daily", _at(day, 9), 200, 100))
     s = _score_day(_con(rows), day)[("Daily", 9)]
     assert s["baseline_level"] == "hour" and s["baseline_median"] == 20 and s["baseline_mad"] == 0
+
+
+def test_prior_baseline_for_short_history():
+    day = date(2026, 7, 14)                                             # 5 days after the period start
+    rows = [("en", "Young", _at(day - timedelta(days=i), 9), 10, 10) for i in range(1, 6)]
+    rows.append(("en", "Young", _at(day, 9), 200, 100))
+    s = _score_day(_con(rows), day)[("Young", 9)]
+    assert s["baseline_level"] == "prior" and not s["unseen"] and s["baseline_median"] == 8 and s["baseline_mad"] == 3
+    assert s["r1"]                                                      # seen before: R1 still applies
