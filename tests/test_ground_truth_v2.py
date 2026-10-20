@@ -294,3 +294,8 @@ def test_quakes_skip_far_and_late_articles(monkeypatch):
     [q] = G.quakes(origin - timedelta(days=1), origin + timedelta(days=1), ["en"])
     assert created == [3] and q["article_qid"] is None and q["article_created"] is None and q["article_countries"] == []
     assert (q["locality"], q["region"]) == (None, "Alaska Peninsula") and q["place_qids"] == []
+
+
+def test_boxes_ignore_non_field_lines():
+    text = "intro |x=1\n{{Football box\n|date=2026-07-18\n<!-- a comment -->\n|team1=FRA\n}}\n|team2=after the box\n"
+    assert _boxes(text) == [{"date": "2026-07-18", "team1": "FRA"}]
