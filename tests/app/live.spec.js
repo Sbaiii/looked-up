@@ -63,11 +63,10 @@ async function feed(page, { events = [], bursts = [], gap = 0 } = {}) {
   await page.route(LIVE, (route) => route.fulfill({ status: 200, contentType: 'application/json',
     body: JSON.stringify({ schema_version: 1, generated_at: new Date(now).toISOString(), status: { gap_minutes: gap },
       events, single_language_bursts: bursts }) }));
-  return now;
 }
 
 test('quiet: no two-language rush, so the busiest single-language edits are listed', async ({ page }) => {
-  const now = await feed(page, { bursts: [
+  await feed(page, { bursts: [
     { lang: 'es', title: 'Partido_Pueblo', first_burst: new Date(Date.now() - 8 * 60e3).toISOString() },
     { lang: 'de', title: 'Berlin', first_burst: new Date(Date.now() - 20 * 60e3).toISOString() }] });
   await page.goto('./');
@@ -77,5 +76,15 @@ test('quiet: no two-language rush, so the busiest single-language edits are list
   await expect(items).toHaveCount(2);
   await expect(items.first()).toContainText('Partido Pueblo');
   await expect(items.first()).toContainText('Spanish · first burst');
-  expect(now).toBeGreaterThan(0);
+});
+
+const liveEvent = (i) => ({ qid: `Q${i}`, labels: { en: `Event ${i}` }, desc: {}, first_burst: new Date(Date.now() - 5 * 60e3).toISOString(),
+  languages: [{ lang: 'en' }, { lang: 'fr' }] });
+
+test('a partial view of the last minutes is flagged under the live events', async ({ page }) => {
+  await feed(page, { events: [liveEvent(1)], gap: 12 });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#live-list li')).toHaveCount(1);
+  await expect(page.locator('#live-state')).toHaveText('Partial view: the last 12 minutes are still filling in.');
 });
