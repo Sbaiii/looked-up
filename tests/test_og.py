@@ -159,3 +159,13 @@ def test_ramp_matches_the_dark_theme():
     css = (APP / "styles.css").read_text(encoding="utf-8")
     first = {k: v.lower() for k, v in re.findall(r"--(ramp-\d):\s*(#[0-9a-fA-F]{6})", css)[:3]}
     assert (first["ramp-0"], first["ramp-1"], first["ramp-2"]) == og.RAMP
+
+
+def test_country_colours_take_the_strongest_language(tmp_path, monkeypatch):
+    import json
+
+    (tmp_path / "geo.json").write_text(json.dumps({"languages": {"fr": ["250", "056"], "nl": ["056", "528"]}}))
+    monkeypatch.setattr(og, "GEO", tmp_path / "geo.json")
+    c = og.country_colours({"langs": [{"lang": "fr", "surprise": 50}, {"lang": "nl", "surprise": 500}, {"lang": "xx", "surprise": 900}]})
+    assert c["056"] == og.ramp(og.scale(500)) and c["250"] == og.ramp(og.scale(50)) and c["528"] == c["056"]
+    assert og.country_colours({"langs": [{"lang": "fr", "surprise": 8}]}) == {}             # at the threshold: no colour
