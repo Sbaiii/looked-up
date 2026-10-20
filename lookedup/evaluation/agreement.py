@@ -11,6 +11,16 @@ from lookedup.analytics.production import daily_baselines_sql, score_hour_sql
 from lookedup.settings import LOCAL_LAKE_DIR
 
 
+def _hourly_view(con, name: str, days: list[date], lake_dir: Path) -> None:
+    """A view ``name`` over the lake's day files for ``days``, with the columns the scoring SQL reads."""
+    files = ", ".join(f"'{lake_dir}/data/hourly/year={d:%Y}/month={d:%m}/day={d:%d}.parquet'" for d in days)
+    con.execute(f"""CREATE VIEW {name} AS SELECT ts_hour_start, ts_hour_start::DATE AS day,
+        hour(ts_hour_start)::INT AS hour_of_day, (isodow(ts_hour_start) - 1) IN (5, 6) AS is_weekend,
+        lang, title, views_desktop, views_mobile, views_desktop + views_mobile AS views,
+        views_mobile / (views_desktop + views_mobile)::DOUBLE AS mobile_share
+        FROM read_parquet([{files}])""")
+
+
 def production_vs_batch(warehouse_db: Path, day: date, hours: list[int], lake_dir: Path = LOCAL_LAKE_DIR) -> dict:
     """Score held-out hours with the production scorer and compare its spikes with the batch warehouse (ADR 0014)."""
     cfg = load()
@@ -21,12 +31,7 @@ def production_vs_batch(warehouse_db: Path, day: date, hours: list[int], lake_di
     from datetime import timedelta
 
     days = [day - timedelta(days=k) for k in range(cfg.baseline["lookback_days"], -1, -1)]
-    files = ", ".join(f"'{lake_dir}/data/hourly/year={d:%Y}/month={d:%m}/day={d:%d}.parquet'" for d in days)
-    con.execute(f"""CREATE VIEW src AS SELECT ts_hour_start, ts_hour_start::DATE AS day,
-        hour(ts_hour_start)::INT AS hour_of_day, (isodow(ts_hour_start) - 1) IN (5, 6) AS is_weekend,
-        lang, title, views_desktop, views_mobile, views_desktop + views_mobile AS views,
-        views_mobile / (views_desktop + views_mobile)::DOUBLE AS mobile_share
-        FROM read_parquet([{files}])""")
+    _hourly_view(con, "src", days, lake_dir)
     hrs = ", ".join(str(h) for h in hours)
     s = cfg.spike
     con.execute(f"""CREATE TABLE cand_titles AS SELECT DISTINCT lang, title FROM src
@@ -34,11 +39,7 @@ def production_vs_batch(warehouse_db: Path, day: date, hours: list[int], lake_di
     con.execute(f"CREATE TABLE bl AS {daily_baselines_sql('src', day, cfg, restrict='cand_titles')}")
     r3 = cfg.spike.r3_threshold
     # production sees only the previous day and the current day
-    two = ", ".join(f"'{lake_dir}/data/hourly/year={d:%Y}/month={d:%m}/day={d:%d}.parquet'" for d in days[-2:])
-    con.execute(f"""CREATE VIEW src2 AS SELECT ts_hour_start, ts_hour_start::DATE AS day,
-        hour(ts_hour_start)::INT AS hour_of_day, (isodow(ts_hour_start) - 1) IN (5, 6) AS is_weekend,
-        lang, title, views_desktop, views_mobile, views_desktop + views_mobile AS views,
-        views_mobile / (views_desktop + views_mobile)::DOUBLE AS mobile_share FROM read_parquet([{two}])""")
+    _hourly_view(con, "src2", days[-2:], lake_dir)
     con.execute("CREATE TABLE prod (lang VARCHAR, title VARCHAR, ts_hour_start TIMESTAMP)")
     for h in hours:
         con.execute(f"""INSERT INTO prod SELECT lang, title, ts_hour_start FROM ({score_hour_sql('src2', 'bl', day, h, cfg)})
