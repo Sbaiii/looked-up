@@ -424,3 +424,9 @@ def test_manifest_merge_newer_entry_wins():
     other.add(h, rows=12, source="hourly_dump")
     m.merge(other)
     assert m.hours["2026-10-07T09:00:00Z"]["rows"] == 12 and m.hours["2026-10-07T09:00:00Z"]["source"] == "hourly_dump"
+
+
+def test_expected_hours_on_the_hour():
+    assert expected_hours(datetime(2026, 10, 7, 12, 0), 2) == [datetime(2026, 10, 7, 10), datetime(2026, 10, 7, 11)]
+    assert expected_hours(datetime(2026, 10, 7, 12, 59, 59), 1) == [datetime(2026, 10, 7, 11)]
+    assert expected_hours(datetime(2026, 10, 7, 12), 0) == []
