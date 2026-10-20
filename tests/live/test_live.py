@@ -687,3 +687,13 @@ def test_attach_qids_keeps_existing_qids():
     e.resolver.qids |= {"en|A": "Q999", "en|B": "Q2"}
     e.attach_qids()
     assert [b.qid for b in e.detector.bursts] == ["Q1", "Q2"]
+
+
+def test_resolver_item_without_the_sitelink(monkeypatch):
+    from lookedup_live import qids
+    monkeypatch.setattr(qids.time, "sleep", lambda s: None)
+    r = qids.Resolver()
+    r.session = _WD([_Ok({"entities": {"Q5": {"sitelinks": {"enwiki": {"title": "Human"}}, "labels": {}, "descriptions": {}}}})])
+    r.want("fr", "Humain")
+    assert r.resolve_pending() == 1
+    assert r.get("fr", "Humain") is None and "fr|Humain" in r.qids and r.items["Q5"] == {"labels": {}, "desc": {}}
