@@ -90,3 +90,16 @@ def test_copy_gives_up(tmp_path, monkeypatch):
     monkeypatch.setattr(R.time, "sleep", lambda s: None)
     with pytest.raises(OSError, match="timed out"):
         R._copy_with_retry(src, tmp_path / "dst.bin", retries=2)
+
+
+def test_resume_skips_files_already_in_place(tmp_path, monkeypatch):
+    from lookedup import relocate as R
+
+    src, dst = tmp_path / "old", tmp_path / "new"
+    (src / "lake").mkdir(parents=True)
+    (src / "lake" / "a.parquet").write_bytes(b"12345")
+    (dst / "lake").mkdir(parents=True)
+    (dst / "lake" / "a.parquet").write_bytes(b"12345")                  # copied before the run was cut
+    monkeypatch.setattr(R, "_copy_with_retry", lambda s, d: (_ for _ in ()).throw(AssertionError("no second copy")))
+    res = R.relocate(source=src, target=dst)
+    assert res["moved"] == 1 and res["bytes"] == 5 and not (src / "lake" / "a.parquet").exists()
