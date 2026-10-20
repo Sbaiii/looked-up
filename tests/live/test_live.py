@@ -723,3 +723,12 @@ def test_consume_returns_at_once_when_stopped(monkeypatch):
     stop.set()
     monkeypatch.setattr(requests.Session, "get", lambda *a, **k: pytest_fail_if_called())
     stream.consume(Engine(), stop)
+
+
+def test_shift_api_uses_the_token(monkeypatch):
+    import huggingface_hub
+    from lookedup_live import shift
+    made = []
+    monkeypatch.setattr(huggingface_hub, "HfApi", lambda token=None: made.append(token) or "api")
+    monkeypatch.setenv("HF_TOKEN", "hf_test")
+    assert shift._api() == "api" and made == ["hf_test"]
