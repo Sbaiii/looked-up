@@ -78,3 +78,17 @@ def test_default_social_card(tmp_path):
 
     out = og.render_default(tmp_path / "card.png")
     assert _png(Path(out)) == (og.W, og.H) == (1200, 630)
+
+
+def test_no_subtitle_and_undetected_match(tmp_path):
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    F._style(ax, "Only a title")
+    assert [t.get_text() for t in fig.texts] == ["Only a title"]
+    plt.close(fig)
+    rows = [{"kickoff": "2026-08-30 19:00:00", "start_hour": "2026-08-30 21:00:00", "breadth": 6,
+             "teams": "Spain national football team vs Brazil national football team"},
+            {"kickoff": "2026-08-31 19:00:00", "start_hour": "", "breadth": "", "teams": "C vs D"}]
+    F.matches_timeline(rows, tmp_path / "m.png")
+    _png(tmp_path / "m.png")
