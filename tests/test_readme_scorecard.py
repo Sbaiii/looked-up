@@ -28,7 +28,6 @@ def test_phase2_rows():
     assert f"{_pct(r6['recall'])} ({r6['detected']:,} / {r6['pairs']:,})" in _row("H1")
     assert f"{_pct(h2['share'])} ({h2['lead_is_official']} / {h2['geolocatable']})" in _row("H2")
     assert f"{h4['median_a']} h vs {h4['median_b']} h" in _row("H4")
-    assert f"English leads only {_pct(h2['base_rate_lead_en'])} of events" in README
 
 
 def test_h3_row():
@@ -92,4 +91,4 @@ def test_nonportal_claim_matches_the_review():
 def test_english_lead_share():
     h2 = _metrics("phase2_metrics.json")["h2"]
     assert 0 < h2["base_rate_lead_en"] < 0.5                               # "only": English leads a minority of events
-    assert f"{_pct(h2['base_rate_lead_en'])} of events" in README
+    assert f"English leads only {_pct(h2['base_rate_lead_en'])} of events" in README
