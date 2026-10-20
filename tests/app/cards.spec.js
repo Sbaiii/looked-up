@@ -74,5 +74,4 @@ test('no description, no description line', async ({ page }) => {
   await page.goto('./');
   await ready(page);
   await expect(page.locator('#cards .card[data-qid="Q242078"] .card__desc')).toHaveCount(0);
-  await expect(page.locator('#cards .card[data-qid="Q804"] .card__desc')).toHaveCount(await page.locator('#cards .card[data-qid="Q804"] .card__desc').count());
 });
