@@ -116,3 +116,11 @@ def test_product_config_lowers_min_languages_only():
 
 def test_spikes_without_a_qid_are_ignored():
     assert _events(_spikes([(None, "es", 0, 50), (None, "en", 1, 30), (None, "fr", 2, 30)]))[0] == []
+
+
+def test_repeated_language_spikes_count_once():
+    con = _spikes([(1, "es", 0, 20), (1, "es", 1, 60), (1, "es", 2, 15), (1, "en", 1, 30), (1, "fr", 2, 12)])
+    [ev], _ = _events(con)
+    langs = {r["lang"]: r for r in _dicts(build_events(con, "spikes", P)[1])}
+    assert ev["breadth"] == 3 and ev["peak_intensity"] == 60
+    assert langs["es"]["spike_hours"] == 3 and langs["es"]["peak_surprise"] == 60 and langs["es"]["first_spike"] == T0
