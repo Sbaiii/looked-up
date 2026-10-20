@@ -209,3 +209,17 @@ def test_dataset_card_language_table():
         assert (int(rank), code, name.strip(), native.strip()) == (lang["rank"], lang["code"], lang["name_en"], lang["name_native"])
         assert float(views) == round(lang["human_views_7d"] / 7 / 1e6, 1), code
         assert int(mobile) == round(100 * lang["mobile_share"]), code
+
+
+def test_dataset_card_event_rule():
+    from lookedup.analytics.config import load
+
+    cfg = load()
+    p, lookback = cfg.product_event, cfg.baseline["lookback_days"]
+    card = " ".join((ROOT / "dataset" / "README.md").read_text(encoding="utf-8").split())
+    assert (f"spiking in at least {p.min_languages} languages within {p.window_hours} hours, measured against its own "
+            f"{lookback}-day baseline") in card
+    tiers = dict(p.tiers)
+    assert (f"noticed (≥ {tiers['noticed']} languages), international (≥ {tiers['international']}) or planetary "
+            f"(≥ {tiers['planetary']})") in card
+    assert f"The evaluated Phase 2 definition used ≥ {cfg.event.min_languages} languages" in card
