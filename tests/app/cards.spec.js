@@ -49,3 +49,11 @@ test('Wikipedia links: the lead language, then the interface language when it di
   await expect(page.locator('#cards .card[data-qid="Q242078"] .card__links a')).toHaveCount(2);
   await expect(page.locator('#cards .card[data-qid="Q242078"] .card__links a').nth(1)).toHaveAttribute('hreflang', 'fr');
 });
+
+test('URLs that are not https are replaced by #', async ({ page }) => {
+  await serveToday(page, (d) => { d.events[0].urls.en = 'javascript:alert(1)'; });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#cards .card[data-qid="Q242078"] .card__links a').first()).toHaveAttribute('href', '#');
+  expect(page.errors).toEqual([]);
+});
