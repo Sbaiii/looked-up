@@ -125,3 +125,11 @@ def test_every_language_is_on_the_map():
     for code in active_codes():
         assert geo["languages"].get(code), code
         assert code in geo["anchors"], code
+
+
+def test_interface_languages_match_the_translation_files():
+    js = (ROOT / "app" / "js" / "i18n.js").read_text(encoding="utf-8")
+    ui = set(re.findall(r"'(\w\w)'", re.search(r"UI_LANGS = \[(.*?)\]", js).group(1)))
+    assert ui == {p.stem for p in (ROOT / "app" / "i18n").glob("*.json")}
+    html = (ROOT / "app" / "index.html").read_text(encoding="utf-8")
+    assert ui == set(re.findall(r'data-ui-lang="(\w\w)"', html))
