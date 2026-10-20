@@ -671,3 +671,11 @@ def test_service_snapshot_loop(monkeypatch, tmp_path):
     monkeypatch.setattr(svc.engine, "snapshot", lambda path: snaps.append(path))
     svc._snapshots()
     assert waits == [300, 300, 300] and snaps == [tmp_path / "state.json.gz"] * 2
+
+
+def test_burst_on_a_known_title_is_not_queued():
+    e = Engine()
+    e.resolver.qids["en|Comet"] = "Q42"
+    bursts = [e.handle(ev(title="Comet", ts=T0 + 60 * i, user=u), now=T0 + 600) for i, u in enumerate("abcde")]
+    b = next(x for x in bursts if x is not None)
+    assert b.qid == "Q42" and e.resolver.pending == set()
