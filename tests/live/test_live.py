@@ -697,3 +697,17 @@ def test_resolver_item_without_the_sitelink(monkeypatch):
     r.want("fr", "Humain")
     assert r.resolve_pending() == 1
     assert r.get("fr", "Humain") is None and "fr|Humain" in r.qids and r.items["Q5"] == {"labels": {}, "desc": {}}
+
+
+def test_resolver_loop_without_new_qids(monkeypatch):
+    import threading
+
+    from lookedup_live import stream
+    e = Engine()
+    rounds = iter([False, True])
+    stop = threading.Event()
+    monkeypatch.setattr(stop, "wait", lambda t: next(rounds))
+    monkeypatch.setattr(e.resolver, "resolve_pending", lambda: 0)
+    monkeypatch.setattr(e, "attach_qids", lambda: pytest_fail_if_called())
+    monkeypatch.setattr(e.detector, "gc", lambda now: None)
+    stream.resolver_loop(e, stop)
