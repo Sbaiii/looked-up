@@ -164,3 +164,17 @@ def test_parse_dedupes_interlanguage_links():
     text = "'''Politics'''\n*{{ill|Fawzi Mansouri|ar|فوزي المنصوري}} meets {{ill|Fawzi Mansouri|ar|فوزي المنصوري}}\n"
     links = parse_day(text, DAY)
     assert [(l.lang, l.title) for l in links] == [("ar", "فوزي المنصوري")]
+
+
+def test_resolve_qids_gives_up(monkeypatch):
+    import pytest
+    import requests
+
+    import lookedup.evaluation.ground_truth as gt
+
+    s = _Session([_Reply(503)] * 5)
+    monkeypatch.setattr(gt, "session", lambda: s)
+    monkeypatch.setattr(gt.time, "sleep", lambda x: None)
+    with pytest.raises(requests.HTTPError):
+        gt.resolve_qids("en", ["Lisbon"])
+    assert len(s.calls) == 5
