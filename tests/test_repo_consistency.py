@@ -185,3 +185,14 @@ def test_documented_npm_scripts_exist():
     for doc in ("README.md", "docs/ops.md", "tests/README.md"):
         used = set(re.findall(r"npm run ([\w:-]+)", (ROOT / doc).read_text(encoding="utf-8")))
         assert used <= scripts, (doc, sorted(used - scripts))
+
+
+def test_readme_language_claim_matches_the_ranking():
+    import yaml
+
+    doc = yaml.safe_load((ROOT / "config" / "languages.yml").read_text(encoding="utf-8"))
+    last = doc["languages"][doc["top_n"] - 1]
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    m = re.search(r"takes (\d+) language editions \(([\d.]+) % of human article views among the (\d+) largest", readme)
+    assert int(m.group(1)) == doc["top_n"] and int(m.group(3)) == len(doc["languages"])
+    assert float(m.group(2)) == round(100 * last["cumulative_share_of_candidates"], 1)
