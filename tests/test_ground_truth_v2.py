@@ -263,3 +263,17 @@ def test_sparql_gives_up(monkeypatch):
 def test_parse_deaths_skips_unlinked_bullets():
     text = "*[[Too Early]], 90, before any day heading.\n===3===\n*An unnamed person, 70.\n*[[Real Person]], 61, writer.\n"
     assert [(r["date"], r["title"]) for r in parse_deaths(text, 2026, 8)] == [(date(2026, 8, 3), "Real Person")]
+
+
+def test_first_sitelink_created_skips_pages_without_revisions(monkeypatch):
+    import lookedup.evaluation.ground_truth_v2 as G
+
+    def get(url, params):
+        if "wikidata" in url:
+            return _Json({"entities": {"Q9": {"sitelinks": {"enwiki": {"title": "Quake"}, "frwiki": {"title": "Séisme"}}}}})
+        if url.startswith("https://fr."):
+            return _Json({"query": {"pages": [{"missing": True}]}})
+        return _Json({"query": {"pages": [{"revisions": [{"timestamp": "2026-08-10T15:00:00Z"}]}]}})
+
+    monkeypatch.setattr(G, "_get", get)
+    assert G.first_sitelink_created(9, ["en", "fr"]) == datetime(2026, 8, 10, 15)
