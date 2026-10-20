@@ -206,3 +206,24 @@ def test_detection_delay_shares(monkeypatch):
     vals = sorted(d["delay_hours"] for d in res["rows"])
     assert res["n"] == 3 and res["median"] == vals[1] and res["p25"] == vals[0]
     assert res["share_negative"] == sum(v < 0 for v in vals) / 3 and res["share_le_6h"] == sum(0 <= v <= 6 for v in vals) / 3
+
+
+def test_h2_skips_events_without_a_tracked_official_language(monkeypatch, tmp_path):
+    import json
+
+    import pyarrow as pa
+
+    import lookedup.analytics.entities as E
+    from lookedup.evaluation.metrics import h2_lead_language
+
+    ctx = _ctx(monkeypatch)
+    ctx.con.execute("ALTER TABLE ev ADD COLUMN event_id VARCHAR")
+    ctx.con.execute("UPDATE ev SET event_id = 'E' || qid")
+    ctx.con.execute("ATTACH ':memory:' AS wh")
+    ctx.con.execute("""CREATE TABLE wh.main.dim_entities AS SELECT * FROM (VALUES
+        (1, [30], []), (2, [77], []), (3, [], [])) t(qid, countries, locations)""")
+    claims = {30: {"P37": [1860]}, 77: {"P37": [999999]}}               # 77: a language outside our set
+    monkeypatch.setattr(E, "fetch_claims", lambda qids, cache: pa.table({
+        "qid": sorted(qids), "label_en": [None] * len(qids), "claims_json": [json.dumps(claims[q]) for q in sorted(qids)]}))
+    res = h2_lead_language(ctx, "ev", tmp_path / "claims.parquet")
+    assert res["geolocatable"] == 1 and res["lead_is_official"] == 1          # only QID 1 can be placed
