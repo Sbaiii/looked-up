@@ -458,3 +458,25 @@ def test_live_h9_writes_metrics(monkeypatch, tmp_path, capsys):
     cli.main(["live-h9"])
     assert json.loads((tmp_path / "phase5_metrics.json").read_text()) == {"H9": {"verdict": "rejected", "median_lead_min": -106}}
     assert json.loads(capsys.readouterr().out)["verdict"] == "rejected"
+
+
+def test_coverage_table_without_out(monkeypatch, tmp_path, capsys):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    from conftest import HOURLY_SAMPLE, LANGS
+
+    from lookedup import store
+    from lookedup.languages import article_filter
+    from lookedup.settings import SITELINKS_PATH
+    from lookedup.store import LocalStore, write_hours
+    from lookedup.transform import hourly_dump_to_table
+
+    h = datetime(2026, 9, 13, 14)
+    lake = LocalStore(tmp_path / "lake")
+    write_hours(lake, {h: (hourly_dump_to_table(HOURLY_SAMPLE, h, LANGS, article_filter()), "hourly_dump")}, "seed")
+    (tmp_path / "lake" / SITELINKS_PATH).parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.table({"lang": ["en"], "title": ["Main_Page"], "qid": [5296]}), tmp_path / "lake" / SITELINKS_PATH)
+    monkeypatch.setattr(store, "open_store", lambda local=False: lake)
+    monkeypatch.chdir(tmp_path)
+    cli.main(["coverage", "--hours", "1"])
+    assert "| **all** |" in capsys.readouterr().out and not list(tmp_path.glob("*.md"))
