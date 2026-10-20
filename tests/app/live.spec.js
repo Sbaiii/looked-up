@@ -88,3 +88,12 @@ test('a partial view of the last minutes is flagged under the live events', asyn
   await expect(page.locator('#live-list li')).toHaveCount(1);
   await expect(page.locator('#live-state')).toHaveText('Partial view: the last 12 minutes are still filling in.');
 });
+
+test('at most four live events are listed', async ({ page }) => {
+  await feed(page, { events: [1, 2, 3, 4, 5, 6].map(liveEvent) });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#live-list li')).toHaveCount(4);
+  await expect(page.locator('#live-list li').last()).toContainText('Event 4');
+  await expect(page.locator('#live-state')).toHaveText('');
+});
