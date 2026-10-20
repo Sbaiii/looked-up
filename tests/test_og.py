@@ -132,3 +132,14 @@ def test_draw_map_skips_rings_past_the_edge(tmp_path, monkeypatch):
     og.draw_map(img, (0, 0, 100, 50), {"A": (255, 0, 0), "B": (0, 0, 255)})
     assert img.getpixel((26, 13)) == (255, 0, 0) and img.getpixel((95, 8)) == (0, 0, 255)   # B's far ring is dropped
     assert og._polygons("M0,0L1,1Z M0,0L1,0L1,1Z") == [[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]]
+
+
+APP = og.ROOT / "app"
+
+
+def test_hero_rule_matches_the_app():
+    import re
+
+    js = (APP / "js" / "select.js").read_text(encoding="utf-8")
+    assert int(re.search(r"HERO_MIN_EXCESS = (\d+)", js).group(1)) == og.HERO_MIN_EXCESS
+    assert set(re.findall(r"'(\w+)'", re.search(r"STRONG = new Set\(\[(.*?)\]\)", js).group(1))) == og.STRONG_TIERS
