@@ -711,3 +711,15 @@ def test_resolver_loop_without_new_qids(monkeypatch):
     monkeypatch.setattr(e, "attach_qids", lambda: pytest_fail_if_called())
     monkeypatch.setattr(e.detector, "gc", lambda now: None)
     stream.resolver_loop(e, stop)
+
+
+def test_consume_returns_at_once_when_stopped(monkeypatch):
+    import threading
+
+    import requests
+
+    from lookedup_live import stream
+    stop = threading.Event()
+    stop.set()
+    monkeypatch.setattr(requests.Session, "get", lambda *a, **k: pytest_fail_if_called())
+    stream.consume(Engine(), stop)
