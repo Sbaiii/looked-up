@@ -151,3 +151,11 @@ def test_colour_scale_bounds_match_the_app():
     js = (APP / "js" / "scale.js").read_text(encoding="utf-8")
     assert float(re.search(r"export const MIN = ([\d.]+);", js).group(1)) == og.SCALE_MIN
     assert float(re.search(r"export const MAX = ([\d.]+);", js).group(1)) == og.SCALE_MAX
+
+
+def test_ramp_matches_the_dark_theme():
+    import re
+
+    css = (APP / "styles.css").read_text(encoding="utf-8")
+    first = {k: v.lower() for k, v in re.findall(r"--(ramp-\d):\s*(#[0-9a-fA-F]{6})", css)[:3]}
+    assert (first["ramp-0"], first["ramp-1"], first["ramp-2"]) == og.RAMP
