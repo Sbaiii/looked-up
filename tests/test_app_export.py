@@ -426,3 +426,9 @@ def test_period_payload_shape(monkeypatch):
     assert p["kind"] == "day" and p["date"] == "2026-08-17" and p["generated_at"] == "2026-08-17T02:00:00Z"
     assert [e["id"] for e in p["events"]] == ["a"] and [e["id"] for e in p["single_language_events"]] == ["s"]
     assert p["summary"]["events"] == 1 and p["summary"]["single_language"] == 1
+
+
+def test_stats_update_takes_a_new_forecast():
+    old = ax.stats_payload({"2026-08-16": _day_summary(2)}, datetime(2026, 8, 17), ["en"], forecast={"auc": 0.875})
+    new = ax._update_stats(old, {}, datetime(2026, 8, 18), ["en"], forecast={"auc": 0.9})
+    assert new["forecast"] == {"auc": 0.9} and sorted(new["days"]) == ["2026-08-16"]
