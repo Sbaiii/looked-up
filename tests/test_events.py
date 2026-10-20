@@ -112,3 +112,7 @@ def test_product_config_lowers_min_languages_only():
     assert cfg.product_event.min_languages == 2
     assert cfg.product_event.window_hours == cfg.event.window_hours
     assert dict(cfg.tiers) == {"planetary": 20, "international": 5, "noticed": 2}
+
+
+def test_spikes_without_a_qid_are_ignored():
+    assert _events(_spikes([(None, "es", 0, 50), (None, "en", 1, 30), (None, "fr", 2, 30)]))[0] == []
