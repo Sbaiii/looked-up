@@ -166,3 +166,11 @@ def test_event_past_every_tier_gets_no_probability():
     models = {k: v for k, v in _models().items() if not k.startswith("m2_")}
     out = forecast_open(_con(25), events, T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5), manifest={}, models=models)
     assert out == {"wide": {"offset_h": 3, "model_version": None}}
+
+
+def test_attention_left_only_at_three_hours():
+    events = [{"event_id": "young", "qid": 1, "start_hour": T0, "lead_lang": "en", "breadth": 2, "event_class": "multi_language"}]
+    out = forecast_open(_con(5), events, T0 + timedelta(hours=3), last_hour=T0 + timedelta(hours=2), manifest={}, models=_models())
+    young = out["young"]
+    assert young["offset_h"] == 1 and young["p_international"] == 0.6
+    assert "predicted_excess_24h" not in young and "fade_eta" not in young
