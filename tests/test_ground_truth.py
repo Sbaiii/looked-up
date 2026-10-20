@@ -158,3 +158,9 @@ def test_resolve_qids_retries_bad_json(monkeypatch):
     monkeypatch.setattr(gt.time, "sleep", sleeps.append)
     assert gt.resolve_qids("en", ["Lisbon"]) == {"Lisbon": 597}
     assert len(s.calls) == 3 and sleeps == [3, 6, 0.2]                  # two retries, then the polite pause
+
+
+def test_parse_dedupes_interlanguage_links():
+    text = "'''Politics'''\n*{{ill|Fawzi Mansouri|ar|فوزي المنصوري}} meets {{ill|Fawzi Mansouri|ar|فوزي المنصوري}}\n"
+    links = parse_day(text, DAY)
+    assert [(l.lang, l.title) for l in links] == [("ar", "فوزي المنصوري")]
