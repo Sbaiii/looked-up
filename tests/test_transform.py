@@ -75,3 +75,10 @@ def test_pvc_prefilter_skips_other_wikis_and_bad_lines(tmp_path):
     out = tmp_path / "out.tsv"
     assert _pvc_to_tsv(src, {"en"}, out) == 1
     assert out.read_text().split("\t")[:3] == ["en", "0", "Lisbon"]
+
+
+def test_title_spellings_merge(tmp_path, article_filter):
+    src = tmp_path / "dump"
+    src.write_text("en Caf%C3%A9_Society 3 0\nen Café_Society 2 0\nen.m Café_Society 4 0\nen New%20York 5 0\n")
+    rows = _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter))
+    assert rows == [(HOUR, "en", "Café_Society", 5, 4), (HOUR, "en", "New_York", 5, 0)]
