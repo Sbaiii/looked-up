@@ -151,3 +151,9 @@ def test_hour_start_rejects_other_files():
     for name in ("projectviews-20261007-100000", "pageviews-20261007.gz", "pageviews-20261007-103000.gz"):
         with pytest.raises(ValueError, match="not an hourly dump name"):
             dumps.hour_start_from_name(name)
+
+
+def test_decode_pvc_hours_sums_repeated_letters_and_ignores_noise():
+    assert decode_pvc_hours("A1A2B5") == {0: 3, 1: 5}
+    assert decode_pvc_hours("Y3Z4") == {}                                   # only A..X are hours
+    assert decode_pvc_hours("A10\n") == {0: 10}
