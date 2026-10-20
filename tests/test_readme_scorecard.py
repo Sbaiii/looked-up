@@ -146,3 +146,16 @@ def test_app_forecast_copy_fame_share():
     words = {"en": "a fifth", "fr": "un cinquième", "es": "una quinta parte"}
     for code, w in words.items():
         assert w in json.loads((ROOT / "app" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))["forecast"]["summary"], code
+
+
+def test_app_forecast_copy_names_the_test_window():
+    from datetime import date
+
+    from lookedup.forecast.retrain import backtest_summary
+
+    lo, hi = (date.fromisoformat(d) for d in backtest_summary()["test_window"])
+    days = (hi - lo).days + 1
+    for code, word in (("en", "days"), ("fr", "jours"), ("es", "días")):
+        f = json.loads((ROOT / "app" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))["forecast"]
+        for text in (f["auc"], f["summary"]):
+            assert re.search(rf"\b{days} (\w+ )?{word}\b", text), (code, text)
