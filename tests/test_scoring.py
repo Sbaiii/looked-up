@@ -134,3 +134,10 @@ def test_prior_needs_seven_days_seen():
     rows += [("en", "Today", _at(D, 9), 900, 900)]                                                 # the scored day itself
     (lang, median, mad), = _con(rows).sql(prior_sql("stg", D, CFG, sample_mod=1)).fetchall()
     assert (lang, median, mad) == ("en", 20.0, 0.0)
+
+
+def test_automation_flags_skip_quiet_articles():
+    rows = [("en", "Quiet", _at(D, h), 10, 0) for h in range(24)]                             # 240 a day, desktop only
+    rows += [("en", "Quiet", _at(D - timedelta(days=1), h), 900, 0) for h in range(24)]       # busy, but another day
+    rel = _con(rows).sql(automation_flags_sql("stg", D, CFG))
+    assert rel.fetchall() == []
