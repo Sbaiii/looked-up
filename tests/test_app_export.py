@@ -344,3 +344,10 @@ def test_live_forecasts_for_open_events(tmp_path, monkeypatch):
     out = ax.live_forecasts(duckdb.connect(), None, events, now, now, [], {}, tmp_path)
     assert out == ({"open": {"p_international": 0.3}}, {"version": "v9"})
     assert seen["ev"] == ["open"] and seen["classes"] == {1} and seen["titles"] == {1: {"en": "T1"}}
+
+
+def test_export_languages_are_active_codes(monkeypatch):
+    import lookedup.languages as L
+
+    monkeypatch.setattr(L, "active_codes", lambda: ["en", "ja"])
+    assert ax._languages() == ["en", "ja"]
