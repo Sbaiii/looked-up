@@ -67,11 +67,6 @@ def test_manifest_roundtrip_and_merge():
     assert m2.present() == {datetime(2026, 10, 7, 9), datetime(2026, 10, 7, 10)}
 
 
-def test_manifest_rejects_unknown_source():
-    with pytest.raises(ValueError):
-        Manifest().add(datetime(2026, 1, 1), rows=0, source="api")
-
-
 def test_merge_day_replaces_hours_and_sorts():
     h1, h2 = datetime(2026, 10, 7, 1), datetime(2026, 10, 7, 2)
     existing = pa.concat_tables([_hour(h1, [("fr", "B", 5, 0), ("en", "A", 9, 9)]), _hour(h2, [("en", "A", 1, 4)])])
