@@ -86,7 +86,7 @@ def test_browser_fixtures_mock_the_app_data_url():
 
 
 def test_live_strip_points_at_the_deployed_worker():
-    name = re.search(r'^name = "([^"]+)"', (ROOT / "worker" / "wrangler.toml").read_text(encoding="utf-8"), re.M).group(1)
+    name = re.search(r'^name = "([^"]+)"', (ROOT / "worker" / "wrangler.toml").read_text(encoding="utf-8"), re.MULTILINE).group(1)
     url = re.search(r"const DEFAULT = '([^']+)'", (ROOT / "app" / "js" / "live.js").read_text(encoding="utf-8")).group(1)
     assert url.startswith(f"https://{name}.") and url.endswith(".workers.dev/live.json")
 
@@ -138,7 +138,7 @@ def test_interface_languages_match_the_translation_files():
 def test_ops_reference_lists_every_command():
     from lookedup import cli
 
-    documented = set(re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.M))
+    documented = set(re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.MULTILINE))
     ops = (ROOT / "docs" / "ops.md").read_text(encoding="utf-8")
     listed = set(re.findall(r"lookedup\.cli ([a-z0-9-]+)", ops)) | ({"backfill"} if "lookedup.backfill" in ops else set())
     assert documented <= listed, sorted(documented - listed)
@@ -153,7 +153,7 @@ def test_one_user_agent_everywhere():
         "worker/src/index.ts": r"^const UA = '([^']+)';",
     }
     for path, pattern in copies.items():
-        assert re.search(pattern, (ROOT / path).read_text(encoding="utf-8"), re.M).group(1) == USER_AGENT, path
+        assert re.search(pattern, (ROOT / path).read_text(encoding="utf-8"), re.MULTILINE).group(1) == USER_AGENT, path
 
 
 def test_workflows_use_the_required_python():
@@ -167,14 +167,14 @@ def test_ops_workflow_table_lists_every_workflow():
     ops = (ROOT / "docs" / "ops.md").read_text(encoding="utf-8")
     section = ops[ops.index("## Workflows"):]
     section = section[:section.index("\n## ", 5)]
-    rows = set(re.findall(r"^\| `([\w-]+\.yml)`", section, re.M))
+    rows = set(re.findall(r"^\| `([\w-]+\.yml)`", section, re.MULTILINE))
     assert {p.name for p in (ROOT / ".github" / "workflows").glob("*.yml")} <= rows
 
 
 def test_documented_commands_exist():
     from lookedup import cli
 
-    known = set(re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.M))
+    known = set(re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.MULTILINE))
     for doc in ("README.md", "docs/ops.md", "tests/README.md"):
         used = set(re.findall(r"lookedup\.cli ([a-z][a-z0-9-]+)", (ROOT / doc).read_text(encoding="utf-8")))
         assert used <= known, (doc, sorted(used - known))
@@ -203,7 +203,7 @@ def test_dataset_card_language_table():
 
     doc = yaml.safe_load((ROOT / "config" / "languages.yml").read_text(encoding="utf-8"))
     card = (ROOT / "dataset" / "README.md").read_text(encoding="utf-8")
-    rows = re.findall(r"^\| (\d+) \| `([\w-]+)` \| ([^|]+) \| ([^|]+) \| ([\d.]+) M \| (\d+) % \|$", card, re.M)
+    rows = re.findall(r"^\| (\d+) \| `([\w-]+)` \| ([^|]+) \| ([^|]+) \| ([\d.]+) M \| (\d+) % \|$", card, re.MULTILINE)
     assert len(rows) == doc["top_n"]
     for (rank, code, name, native, views, mobile), lang in zip(rows, doc["languages"], strict=False):
         assert (int(rank), code, name.strip(), native.strip()) == (lang["rank"], lang["code"], lang["name_en"], lang["name_native"])
