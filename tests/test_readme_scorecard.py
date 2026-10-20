@@ -138,3 +138,11 @@ def test_planetary_test_events():
     counts = {m1[f"planetary_t{o}"]["model"]["positives"] for o in (0, 1, 3)}
     assert len(counts) == 1
     assert f"Planetary forecasts rest on {counts.pop()} test events" in " ".join(README.split())
+
+
+def test_app_forecast_copy_fame_share():
+    ratio = _metrics("phase4_metrics.json")["H7"]["ratio"]
+    assert round(1 / ratio) == 5                                            # "a fifth"
+    words = {"en": "a fifth", "fr": "un cinquième", "es": "una quinta parte"}
+    for code, w in words.items():
+        assert w in json.loads((ROOT / "app" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))["forecast"]["summary"], code
