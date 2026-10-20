@@ -106,6 +106,15 @@ npm run test:unit && npx playwright test                      # app unit and smo
 .venv/bin/python -m lookedup.cli forecast-evaluate            # pre-registered backtest (scores the test set once)
 .venv/bin/python -m lookedup.cli forecast-retrain             # production models -> data/models/ (Mondays in CI)
 .venv/bin/python -m lookedup.cli refresh-warehouse            # extend the warehouse to yesterday (weekly, by hand)
+.venv/bin/python -m lookedup.cli ground-truth                 # Portal:Current events -> data/eval/ (Phase 2 ground truth)
+.venv/bin/python -m lookedup.cli live-h9                      # Phase 5 backtest: edit bursts against reading spikes
+.venv/bin/python -m lookedup.cli live-score [--day 2026-10-12]     # score one day of live bursts (H10, daily in CI)
+.venv/bin/python -m lookedup.cli live-snapshot [--day 2026-10-12]  # copy a day of bursts from the live host to the lake
+.venv/bin/python -m lookedup.cli top --lang en --hour 2026-10-06T14:00   # top articles of one hour (smoke test)
+.venv/bin/python -m lookedup.cli coverage --hours 24          # Wikidata join coverage per language
+.venv/bin/python -m lookedup.cli verify-hour --hour 2026-10-06T14:00     # file name = end of hour, against the REST API
+.venv/bin/python -m lookedup.cli card                         # upload dataset/README.md as the dataset card
+.venv/bin/python -m lookedup.cli compact                      # one-off: hourly files -> day files in a local lake
 (cd worker && npm ci && npm test)                              # the live Worker's tests (rules from config/live.yml)
 (cd live && ../.venv/bin/uvicorn lookedup_live.app:app --port 7860)   # the reference live layer locally
 ```
