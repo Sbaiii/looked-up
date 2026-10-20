@@ -87,3 +87,9 @@ def test_nonportal_claim_matches_the_review():
         rows = list(csv.DictReader(f))
     real = sum(r["review"] == "real" for r in rows)
     assert f"{real} of the {len(rows)} largest events the English Current events portal never linked are" in README.replace("\n", " ")
+
+
+def test_english_lead_share():
+    h2 = _metrics("phase2_metrics.json")["h2"]
+    assert 0 < h2["base_rate_lead_en"] < 0.5                               # "only": English leads a minority of events
+    assert f"{_pct(h2['base_rate_lead_en'])} of events" in README
