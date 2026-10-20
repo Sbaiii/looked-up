@@ -241,3 +241,23 @@ def test_dates_keep_only_time_values():
                        {"mainsnak": {"snaktype": "somevalue"}},
                        {"mainsnak": {"datavalue": {"value": "2026"}}}]}
     assert _dates(claims, "P570") == ["+2026-08-28T00:00:00Z"] and _dates(claims, "P569") == []
+
+
+def test_api_fallback_gives_up(tmp_path, monkeypatch):
+    import pytest
+    import requests
+
+    from lookedup.analytics import entities as E
+
+    tries = []
+
+    def get(self, *a, **k):
+        tries.append(1)
+        raise requests.ConnectionError("API down too")
+
+    monkeypatch.setattr(E, "fetch_claims_sparql", lambda todo: (_ for _ in ()).throw(requests.ConnectionError("down")))
+    monkeypatch.setattr(E, "session", lambda: type("S", (), {"get": get})())
+    monkeypatch.setattr(E.time, "sleep", lambda s: None)
+    with pytest.raises(requests.ConnectionError, match="API down too"):
+        E.fetch_claims([9], tmp_path / "claims.parquet")
+    assert len(tries) == 5 and not (tmp_path / "claims.parquet").exists()
