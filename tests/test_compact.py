@@ -52,3 +52,22 @@ def test_compact_skips_stray_files(tmp_path):
     month.mkdir(parents=True)
     (month / "day=13").write_text("not a folder")
     assert compact_local(tmp_path) == []
+
+
+def test_compact_leaves_other_days_alone(tmp_path, article_filter):
+    root = tmp_path / "lake"
+    ts = datetime(2026, 9, 13, 14)
+    t = hourly_dump_to_table(HOURLY_SAMPLE, ts, LANGS, article_filter)
+    rel = "data/hourly/year=2026/month=09/day=13/hour=14.parquet"
+    (root / rel).parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(t, root / rel)
+    other = {"path": "data/hourly/year=2026/month=09/day=12.parquet", "rows": 5, "bytes": 9, "source": "hourly_dump",
+             "ingested_at": "x"}
+    manifest = {"schema_version": 1, "hours": {
+        "2026-09-13T14:00:00Z": {"path": rel, "rows": t.num_rows, "bytes": 1, "source": "hourly_dump", "ingested_at": "x"},
+        "2026-09-12T10:00:00Z": dict(other)}}
+    (root / "data" / "manifest.json").write_text(json.dumps(manifest))
+    compact_local(root)
+    m = json.loads((root / "data" / "manifest.json").read_text())
+    assert m["hours"]["2026-09-12T10:00:00Z"]["path"] == other["path"] and m["hours"]["2026-09-12T10:00:00Z"]["bytes"] == 9
+    assert m["hours"]["2026-09-13T14:00:00Z"]["path"] == day_path(ts)
