@@ -105,3 +105,18 @@ test('no open forecast, no "Most likely to spread next"', async ({ page }) => {
   await expect(page.locator('.card__forecast')).toHaveCount(0);
   await expect(page.locator('#forecast-note')).toBeHidden();
 });
+
+test('"Most likely to spread next" ranks open events by chance, three at most', async ({ page }) => {
+  await serveToday(page, (d) => {
+    const start = new Date(Date.parse(d.generated_at) - 3600e3).toISOString().slice(0, 13) + ':00Z';
+    d.events.slice(0, 5).forEach((e, i) => { e.start = start; e.forecast = { p_international: [0.1, 0.9, 0.4, 0.7, 0.2][i] }; });
+    for (const e of d.events.slice(5)) delete e.forecast;
+  });
+  await page.goto('./');
+  await ready(page);
+  const items = page.locator('#next-list li');
+  await expect(items).toHaveCount(3);
+  await expect(items.nth(0)).toContainText('90% chance');
+  await expect(items.nth(1)).toContainText('70% chance');
+  await expect(items.nth(2)).toContainText('40% chance');
+});
