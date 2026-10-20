@@ -132,3 +132,9 @@ def test_spikes_after_the_breadth_window_are_left_out():
     rows += [(1, "ja", 25, 20)]
     [ev], el = _events(_spikes(rows))
     assert ev["breadth"] == 4 and "ja" not in el and el["it"] == 10
+
+
+def test_event_id_and_language_order():
+    [ev], _ = _events(_spikes([(7, "fr", 2, 20), (7, "en", 0, 20), (7, "de", 2, 20), (7, "ja", 1, 20)]))
+    assert ev["event_id"] == "Q7@20260810T12"
+    assert ev["languages"] == ["en", "ja", "de", "fr"]                    # by lag, then by code
