@@ -402,3 +402,21 @@ def test_local_commit_of_a_file_already_in_place(tmp_path):
     target.write_text('{"ok": 1}')
     store.commit({"data/app/today.json": target}, Manifest(), "in place")
     assert target.read_text() == '{"ok": 1}' and store.read_manifest().present() == set()
+
+
+def test_hub_store_without_create(monkeypatch):
+    import huggingface_hub
+
+    import lookedup.store as S
+
+    class Api:
+        def __init__(self, token=None):
+            self.token = token
+
+        def repo_exists(self, *a, **k):
+            raise AssertionError("no repo check without create")
+
+    monkeypatch.setattr(huggingface_hub, "HfApi", Api)
+    monkeypatch.setattr(S, "hf_token", lambda: None)
+    hf = S.HFStore("user/repo")
+    assert hf.repo_id == "user/repo" and hf.token is None and hf.api.token is None
