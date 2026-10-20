@@ -261,3 +261,13 @@ def test_api_fallback_gives_up(tmp_path, monkeypatch):
     with pytest.raises(requests.ConnectionError, match="API down too"):
         E.fetch_claims([9], tmp_path / "claims.parquet")
     assert len(tries) == 5 and not (tmp_path / "claims.parquet").exists()
+
+
+def test_gender_ignores_non_item_values(monkeypatch):
+    from lookedup.analytics import entities as E
+
+    W = "http://www.wikidata.org/entity/"
+    answers = [[], [{"item": {"value": W + "Q7"}, "g": {"value": "http://www.wikidata.org/.well-known/genid/abc"}}]]
+    monkeypatch.setattr(E, "_sparql", lambda q: answers.pop(0))
+    monkeypatch.setattr(E.time, "sleep", lambda s: None)
+    assert E.fetch_text_sparql([7], ["en"]) == [{"qid": 7, "descriptions_json": "{}", "gender": None}]
