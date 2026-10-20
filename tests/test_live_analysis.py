@@ -218,3 +218,8 @@ def test_h9_events_window_order_and_languages():
     assert [r["event_id"] for r in rows] == ["B", "A"]                 # widest first; single-language and out of window left out
     assert [l["lang"] for l in rows[1]["langs"]] == ["fr", "en", "es"]  # lead first, then by lag and code; no title, no row
     assert rows[1]["langs"][0] == {"lang": "fr", "title": "Alpha_fr", "lag": 0}
+
+
+def test_burst_after_the_window_stops_the_search():
+    revs = [rev(m, u) for m, u in [(0, "a"), (5, "b"), (10, "a"), (12, "c"), (14, "b"), (200, "d")]]
+    assert LA.burst_time(revs, "en", "X", T0 - timedelta(hours=2), T0 - timedelta(hours=1)) == (None, None)
