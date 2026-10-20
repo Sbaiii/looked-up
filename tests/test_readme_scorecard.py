@@ -1,4 +1,4 @@
-"""The README scorecard quotes the committed results: each number must match docs/analysis/."""
+"""The README scorecard and the phase results pages quote the committed results: each number must match docs/analysis/."""
 from __future__ import annotations
 
 import json
