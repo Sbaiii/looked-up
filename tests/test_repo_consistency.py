@@ -97,3 +97,13 @@ def test_card_spread_phrase_matches_the_app():
     within = json.loads((ROOT / "app" / "i18n" / "en.json").read_text(encoding="utf-8"))["within"]
     assert og.within(0) == within["zero"]
     assert og.within(1) == within["one"].format(n=1) and og.within(6) == within["other"].format(n=6)
+
+
+def test_every_category_has_a_label():
+    from lookedup.analytics.config import load
+
+    raw = load().raw
+    possible = set(raw["categories"]) | set(raw["occupations"]) | {"death", "human", "other"}
+    for code in ("en", "fr", "es"):
+        labels = json.loads((ROOT / "app" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))["event"]["category"]
+        assert possible <= set(labels), (code, possible - set(labels))
