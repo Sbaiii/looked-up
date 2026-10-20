@@ -116,3 +116,12 @@ def test_every_tier_has_a_label_and_help():
     for code in ("en", "fr", "es"):
         d = json.loads((ROOT / "app" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))
         assert tiers <= set(d["tier"]) and tiers <= set(d["tier_help"]), code
+
+
+def test_every_language_is_on_the_map():
+    from lookedup.languages import active_codes
+
+    geo = json.loads((ROOT / "app" / "data" / "language_geo.json").read_text(encoding="utf-8"))
+    for code in active_codes():
+        assert geo["languages"].get(code), code
+        assert code in geo["anchors"], code
