@@ -20,3 +20,6 @@
 - Network calls (Wikimedia, Wikidata, the Hub) are always replaced by small fakes in the unit tests.
 - `test_repo_consistency.py` keeps the docs in step with the code: the ADR, config, analysis and spike indexes,
   the README links, the schema against the model files, the three app translations and the two copies of the live rules.
+  It also checks the code against itself across languages: the social card against the app (hero rule, colour
+  scale, ramp), the app's data URL against the export, one User-Agent everywhere, and the ops command and workflow
+  references against the command line and `.github/workflows/`.
