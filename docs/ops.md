@@ -144,7 +144,7 @@ write to the lake on Hugging Face and never commit to this repository (enforced 
 | `space.yml` | push to `live/**`, `workflow_dispatch` | would deploy `live/` to a Space; Gradio and Docker Spaces need a paid plan (ADR 0032), so it only warns |
 | `hub-maintenance.yml` | cron `41 4 2 * *`, `workflow_dispatch` | **squash the dataset repo's history** (`cli hub --squash`) and report storage |
 | `backfill.yml` | manual | parallel resumable backfill from `pageview_complete` |
-| `tests.yml` | push, PR | pytest |
+| `tests.yml` | push, PR | pytest, then the app unit tests and Playwright (Chromium) in a second job |
 
 All workflows have `contents: read`; pipelines write only to the Hub. When `HF_TOKEN` is missing, the scheduled jobs
 skip with a warning.
