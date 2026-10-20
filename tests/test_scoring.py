@@ -87,3 +87,17 @@ def test_automation_flags():
     assert f["Cookie"]["is_low_mobile"] and f["Cookie"]["is_automated"]
     assert f["Crawler"]["is_flat"] and not f["Crawler"]["is_low_mobile"] and f["Crawler"]["is_automated"]
     assert not f["Human"]["is_automated"]
+
+
+def _score_day(con, day, hours=None):
+    rel = con.sql(scored_candidates_sql("stg", day, CFG, "prior", hours))
+    return {(r[rel.columns.index("title")], r[rel.columns.index("hour_of_day")]): dict(zip(rel.columns, r, strict=True))
+            for r in rel.fetchall()}
+
+
+def test_hour_level_baseline_when_day_type_is_short():
+    day = date(2026, 7, 19)                                             # Sunday: 3 weekend days but 10 days of history
+    rows = [("en", "Daily", _at(day - timedelta(days=i), 9), 10, 10) for i in range(1, 11)]
+    rows.append(("en", "Daily", _at(day, 9), 200, 100))
+    s = _score_day(_con(rows), day)[("Daily", 9)]
+    assert s["baseline_level"] == "hour" and s["baseline_median"] == 20 and s["baseline_mad"] == 0
