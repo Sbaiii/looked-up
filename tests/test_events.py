@@ -124,3 +124,11 @@ def test_repeated_language_spikes_count_once():
     langs = {r["lang"]: r for r in _dicts(build_events(con, "spikes", P)[1])}
     assert ev["breadth"] == 3 and ev["peak_intensity"] == 60
     assert langs["es"]["spike_hours"] == 3 and langs["es"]["peak_surprise"] == 60 and langs["es"]["first_spike"] == T0
+
+
+def test_spikes_after_the_breadth_window_are_left_out():
+    rows = [(1, l, h, 20) for l, h in [("en", 0), ("fr", 1), ("de", 2)]]
+    rows += [(1, "it", h, 20) for h in range(10, 30, 4)]                 # keeps the episode alive past 24 h
+    rows += [(1, "ja", 25, 20)]
+    [ev], el = _events(_spikes(rows))
+    assert ev["breadth"] == 4 and "ja" not in el and el["it"] == 10
