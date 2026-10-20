@@ -131,3 +131,10 @@ def test_phase5_results_page():
     expect = (f"median **{_whole(h9['median_lead_minutes'])} min** (IQR {_whole(h9['p25'])} to {_whole(h9['p75'])}), "
               f"n = {h9['with_burst']}").replace("-", "−")
     assert expect in _doc("phase5_results.md")
+
+
+def test_planetary_test_events():
+    m1 = _metrics("phase4_metrics.json")["m1"]
+    counts = {m1[f"planetary_t{o}"]["model"]["positives"] for o in (0, 1, 3)}
+    assert len(counts) == 1
+    assert f"Planetary forecasts rest on {counts.pop()} test events" in " ".join(README.split())
