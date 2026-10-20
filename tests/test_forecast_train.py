@@ -212,3 +212,10 @@ def test_load_rows_joins_label_and_final_breadth():
     rows = sorted(E.load_rows(con), key=lambda r: r["offset_h"])
     assert rows == [{"event_id": "a", "offset_h": 1, "breadth_t": 2, "label_en": "Alpha", "final_breadth": 7},
                     {"event_id": "a", "offset_h": 2, "breadth_t": 4, "label_en": "Alpha", "final_breadth": 7}]
+
+
+def test_encoder_missing_values_are_nan():
+    enc = T.Encoder({"lead_lang": ["en", "fr"]}, features=["lead_lang", "n_sitelinks"])
+    X = enc.matrix([{"lead_lang": "fr", "n_sitelinks": 12}, {"lead_lang": "xx", "n_sitelinks": None}, {}])
+    assert X[0].tolist() == [1.0, 12.0]
+    assert np.isnan(X[1]).all() and np.isnan(X[2]).all()
