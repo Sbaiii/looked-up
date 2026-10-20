@@ -78,3 +78,8 @@ def test_app_reads_where_the_export_writes():
     js = (ROOT / "app" / "js" / "data.js").read_text(encoding="utf-8")
     base = re.search(r"DEFAULT_BASE = '([^']+)'", js).group(1)
     assert base == f"https://huggingface.co/datasets/{HF_REPO_ID}/resolve/main/{APP_PREFIX}/"
+
+
+def test_browser_fixtures_mock_the_app_data_url():
+    base = re.search(r"DEFAULT_BASE = '([^']+)'", (ROOT / "app" / "js" / "data.js").read_text(encoding="utf-8")).group(1)
+    assert f"page.route('{base}**'" in (ROOT / "tests" / "app" / "fixtures.js").read_text(encoding="utf-8")
