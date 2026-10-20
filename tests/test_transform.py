@@ -89,3 +89,10 @@ def test_non_articles_are_dropped(tmp_path, article_filter):
     src.write_text("en Main_Page 900 0\nen Special:Search 900 0\nen.d Lisbon 900 0\nen Talk:Lisbon 900 0\n"
                    "en - 900 0\nen Lisbon 900 0\n")
     assert [r[2] for r in _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter))] == ["Lisbon"]
+
+
+def test_custom_view_floor(tmp_path, article_filter):
+    src = tmp_path / "dump"
+    src.write_text("en A 3 0\nen B 1 0\n")
+    assert [r[2] for r in _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter))] == []
+    assert [r[2] for r in _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter, min_views=2))] == ["A"]
