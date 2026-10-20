@@ -51,3 +51,9 @@ def test_phase4_rows():
     assert f"AUC {m['H6']['roc_auc']:.3f}, slope {m['H6']['calibration_slope']:.2f}" in _row("H6")
     assert f"| {100 * m['H7']['ratio']:.0f} % |" in _row("H7")
     assert f"{100 * m['H8']['improvement']:.0f} % lower" in _row("H8")
+
+
+def test_phase5_row():
+    h9 = _metrics("phase5_metrics.json")["H9"]
+    assert h9["median_lead_minutes"] < 0                                  # readers first
+    assert f"readers first, by a median {-h9['median_lead_minutes']:.0f} min" in _row("H9")
