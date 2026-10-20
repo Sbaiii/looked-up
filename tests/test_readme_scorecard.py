@@ -44,3 +44,10 @@ def test_phase2b_rows():
     assert f"{g3['detected']} / {g3['n']}, under the 5 needed" in _row("H1b-3")
     assert f"{g2['h2b']['lead_is_country_language']} / {g2['h2b']['qualifying']}, under the 5 needed" in _row("H2b")
     assert f"{g2['h5_delay']['median']:.0f} h from {g2['h5_delay']['n']} quakes" in _row("H5")
+
+
+def test_phase4_rows():
+    m = _metrics("phase4_metrics.json")
+    assert f"AUC {m['H6']['roc_auc']:.3f}, slope {m['H6']['calibration_slope']:.2f}" in _row("H6")
+    assert f"| {100 * m['H7']['ratio']:.0f} % |" in _row("H7")
+    assert f"{100 * m['H8']['improvement']:.0f} % lower" in _row("H8")
