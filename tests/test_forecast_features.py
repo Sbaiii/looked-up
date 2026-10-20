@@ -82,3 +82,11 @@ def test_snapshot_clock_features():
     assert [by[k]["hours_since_start"] for k in (0, 1, 3)] == [2, 3, 5]
     assert by[0]["hour_utc"] == 14 and by[0]["weekday"] == 0                  # Monday 10 Aug, 14:00
     assert by[3]["hour_utc"] == 17
+
+
+def test_fade_cap_and_observability():
+    flat = [("es", h, 500) for h in range(80)] + [("en", h, 300) for h in range(2, 80)]
+    rows = _rows(_con(SPIKES[:2], flat, breadth=2), targets=True, data_end="2026-08-11 00:00:00")
+    r0 = rows[0]
+    assert r0["fade_hours"] == 48                                         # never halves within the horizon
+    assert r0["fade_observable"] is False and r0["reach_international"] == 0
