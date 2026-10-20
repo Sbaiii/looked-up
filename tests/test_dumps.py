@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from typing import ClassVar
 
 from lookedup import dumps
 
@@ -201,7 +202,7 @@ def test_session_is_shared_and_identifies_the_project():
 
 class _FakeWatchdog:
     """Reports a stall for each response listed in ``stalls`` (by call order)."""
-    stalls: list = []
+    stalls: ClassVar[list] = []
 
     def __init__(self, response):
         self.stalled = _FakeWatchdog.stalls.pop(0)
