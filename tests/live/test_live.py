@@ -788,3 +788,10 @@ def test_burst_again_after_the_cooldown():
     later = T0 + B.COOLDOWN_S + 600
     again = [d.add("en", "X", later + 60 * i, u) for i, u in enumerate("fghij")]
     assert again[-1] is not None and again[-1].ts == later + 240
+
+
+def test_anonymous_edits_are_not_editors():
+    d = B.Detector()
+    out = [d.add("en", "X", T0 + 60 * i, u) for i, u in enumerate([None, None, None, "a", "b"])]
+    assert out == [None] * 5                                         # 5 edits, 2 editors
+    assert d.counts("en", "X", T0 + 300) == {"edits_10m": 5, "edits_30m": 5, "edits_60m": 5, "editors_30m": 2}
