@@ -108,3 +108,12 @@ def test_phase2b_results_page():
     page = _doc("phase2b_results.md")
     assert f"**{_pct(g1['recall'])}** ({g1['detected']} / {g1['n']})" in page
     assert f"{g1['out_of_window']} are out of window" in page and f"leaving **{g1['n']} scored**" in page
+
+
+def test_phase4_results_page():
+    m = _metrics("phase4_metrics.json")
+    page = _doc("phase4_results.md")
+    assert f"AUC **{m['H6']['roc_auc']:.3f}**, slope **{m['H6']['calibration_slope']:.2f}**" in page
+    assert f"{m['H7']['sitelinks_pr_auc']:.3f} vs {m['H7']['model_pr_auc']:.3f}, **{100 * m['H7']['ratio']:.0f} %**" in page
+    h8 = m["H8"]
+    assert f"{h8['model_mae_log']:.3f} vs {h8['category_decay_mae_log']:.3f}, **−{100 * h8['improvement']:.0f} %**" in page
