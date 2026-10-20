@@ -188,3 +188,13 @@ def test_live_week_builds_labelled_snapshots(tmp_path, monkeypatch):
     t = R.live_week(store, monday, tmp_path / "tmp")
     assert t.to_pylist() == [{"event_id": "in", "offset_h": 0}]
     assert seen["ev"] == ["in"] and seen["classes"] == {1: "human"} and seen["end"] == "2026-10-13 05:00:00"
+
+
+def test_live_week_without_events_in_the_week(tmp_path, monkeypatch):
+    from datetime import date
+
+    import lookedup.app_export as ax
+
+    monday = date(2026, 10, 12)
+    monkeypatch.setattr(ax, "events_from_spikes", lambda con, files: ([{"event_id": "x", "qid": 1, "start_hour": datetime(2026, 10, 20, 1)}], []))
+    assert R.live_week(_live_lake(tmp_path, monday), monday, tmp_path / "tmp") is None
