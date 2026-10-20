@@ -393,3 +393,12 @@ def test_merge_day_with_nothing_new():
     existing = _hour(h1, [("fr", "B", 5, 0), ("en", "A", 9, 9)])
     merged = merge_day(existing, [])
     assert list(zip(merged["lang"].to_pylist(), merged["title"].to_pylist(), strict=True)) == [("en", "A"), ("fr", "B")]
+
+
+def test_local_commit_of_a_file_already_in_place(tmp_path):
+    store = LocalStore(tmp_path / "lake")
+    target = tmp_path / "lake" / "data" / "app" / "today.json"
+    target.parent.mkdir(parents=True)
+    target.write_text('{"ok": 1}')
+    store.commit({"data/app/today.json": target}, Manifest(), "in place")
+    assert target.read_text() == '{"ok": 1}' and store.read_manifest().present() == set()
