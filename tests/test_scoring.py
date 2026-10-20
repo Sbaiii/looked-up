@@ -123,3 +123,14 @@ def test_language_without_prior_falls_back_to_zero():
     s = _score_day(con, D)[("新作", 9)]
     assert s["baseline_level"] == "prior" and s["baseline_median"] == 0 and s["baseline_mad"] == 0
     assert s["surprise"] == 200.0                                        # (200 - 0) / (0 + 0 + 1)
+
+
+def test_prior_needs_seven_days_seen():
+    from lookedup.analytics.scoring import prior_sql
+
+    rows = [("en", "Regular", _at(D - timedelta(days=i), 9), 10, 10) for i in range(1, 8)]        # 7 days at 20 views
+    rows += [("en", "Regular", _at(D - timedelta(days=1), 10), 30, 30)]                           # plus one 60-view hour
+    rows += [("en", "Rare", _at(D - timedelta(days=i), 9), 500, 500) for i in range(1, 4)]        # only 3 days
+    rows += [("en", "Today", _at(D, 9), 900, 900)]                                                 # the scored day itself
+    (lang, median, mad), = _con(rows).sql(prior_sql("stg", D, CFG, sample_mod=1)).fetchall()
+    assert (lang, median, mad) == ("en", 20.0, 0.0)
