@@ -29,3 +29,8 @@ def test_phase2_rows():
     assert f"{_pct(h2['share'])} ({h2['lead_is_official']} / {h2['geolocatable']})" in _row("H2")
     assert f"{h4['median_a']} h vs {h4['median_b']} h" in _row("H4")
     assert f"English leads only {_pct(h2['base_rate_lead_en'])} of events" in README
+
+
+def test_h3_row():
+    h = _metrics("h3_results.json")
+    assert f"{h['non_events_flagged']} / {h['non_events']}, under the 20 needed" in _row("H3")
