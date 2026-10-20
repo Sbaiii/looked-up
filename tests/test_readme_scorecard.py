@@ -69,3 +69,12 @@ def test_verdicts_match():
     for hyp, v in verdicts.items():
         shown = re.search(r"\| (\w+) \|$", _row(hyp)).group(1)
         assert v.startswith(shown), (hyp, shown, v)
+
+
+def test_headline_counts_the_table():
+    from collections import Counter
+
+    rows = [l for l in README.splitlines() if re.match(r"\| \*\*H\d", l)]
+    counts = Counter(re.search(r"\| (\w+) \|$", l).group(1) for l in rows)
+    m = re.search(r"(\d+) pre-registered hypotheses: \*\*(\d+) supported, (\d+) rejected, (\d+) inconclusive\*\*", README)
+    assert [int(g) for g in m.groups()] == [len(rows), counts["supported"], counts["rejected"], counts["inconclusive"]]
