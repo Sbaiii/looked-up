@@ -188,3 +188,17 @@ def test_fetch_siteinfo_namespace_without_canonical(monkeypatch):
                        "namespaces": {"100": {"id": 100, "name": "Portal", "canonical": ""}, "101": {"id": 101, "name": "Portal talk"}}}}
     monkeypatch.setattr(L, "_get_json", lambda url, params: reply)
     assert L.fetch_siteinfo("en")["namespaces"] == ["portal", "portal talk"]
+
+
+def test_day_aggregate_skips_bad_lines(tmp_path):
+    import bz2
+
+    import duckdb
+
+    lines = ["fr.wikipedia Lisbonne 1 desktop 30 A30\n", "fr.wikipedia broken\n", "fr.wikipedia Tab\tTitle 1 desktop 9 A9\n",
+             "fr.wikipedia Paris 1 desktop x9 A9\n"]
+    src = tmp_path / "day.bz2"
+    src.write_bytes(bz2.compress("".join(lines).encode()))
+    out = tmp_path / "agg.parquet"
+    L._day_aggregate(src, out)
+    assert duckdb.sql(f"SELECT lang, title, desktop FROM '{out}'").fetchall() == [("fr", "Lisbonne", 30)]
