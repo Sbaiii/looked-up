@@ -325,3 +325,22 @@ def test_live_forecasts_empty_without_models_or_hour(tmp_path, monkeypatch):
     assert ax.live_forecasts(duckdb.connect(), None, [], T0, T0, [], {}, tmp_path) == ({}, {"trained": "2026-10-05"})
     monkeypatch.setattr(P, "load_models", lambda store, tmp: ({"trained": "2026-10-05"}, {"m": object()}))
     assert ax.live_forecasts(duckdb.connect(), None, [], T0, None, [], {}, tmp_path) == ({}, {"trained": "2026-10-05"})
+
+
+def test_live_forecasts_for_open_events(tmp_path, monkeypatch):
+    import lookedup.forecast.predict as P
+
+    now = T0 + timedelta(hours=6)
+    events = [_ev("open", 1, 3, 300), _ev("solo", 2, 1, 50, cls="single_language"),
+              _ev("old", 3, 4, 900, start=now - timedelta(hours=30))]
+    seen = {}
+    monkeypatch.setattr(P, "load_models", lambda store, tmp: ({"version": "v9"}, {"m": object()}))
+    monkeypatch.setattr(P, "entity_classes", lambda qids: seen.setdefault("classes", qids) and {1: "human"})
+    monkeypatch.setattr(P, "live_relations", lambda con, ev, cats, cls, titles, files: seen.update(ev=[e["event_id"] for e in ev], titles=titles, cats=cats))
+    monkeypatch.setattr(P, "forecast_open", lambda con, ev, n, last, manifest, models: {"open": {"p_international": 0.3}})
+    monkeypatch.setattr(ax, "categories_for", lambda ev: {1: "human"})
+    monkeypatch.setattr(ax, "_languages", lambda: ["en", "fr"])
+    monkeypatch.setattr(ax, "titles_from_api", lambda qids, langs: {q: {"en": f"T{q}"} for q in qids})
+    out = ax.live_forecasts(duckdb.connect(), None, events, now, now, [], {}, tmp_path)
+    assert out == ({"open": {"p_international": 0.3}}, {"version": "v9"})
+    assert seen["ev"] == ["open"] and seen["classes"] == {1} and seen["titles"] == {1: {"en": "T1"}}
