@@ -34,3 +34,13 @@ def test_phase2_rows():
 def test_h3_row():
     h = _metrics("h3_results.json")
     assert f"{h['non_events_flagged']} / {h['non_events']}, under the 20 needed" in _row("H3")
+
+
+def test_phase2b_rows():
+    b = _metrics("phase2b_metrics.json")
+    g1, g2, g3 = b["gt1"], b["gt2"], b["gt3"]
+    assert f"{_pct(g1['recall'])} ({g1['detected']} / {g1['n']})" in _row("H1b-1")
+    assert f"{g2['m65_plus']['detected']} / {g2['m65_plus']['n']}" in _row("H1b-2")
+    assert f"{g3['detected']} / {g3['n']}, under the 5 needed" in _row("H1b-3")
+    assert f"{g2['h2b']['lead_is_country_language']} / {g2['h2b']['qualifying']}, under the 5 needed" in _row("H2b")
+    assert f"{g2['h5_delay']['median']:.0f} h from {g2['h5_delay']['n']} quakes" in _row("H5")
