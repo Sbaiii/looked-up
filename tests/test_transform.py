@@ -82,3 +82,10 @@ def test_title_spellings_merge(tmp_path, article_filter):
     src.write_text("en Caf%C3%A9_Society 3 0\nen Café_Society 2 0\nen.m Café_Society 4 0\nen New%20York 5 0\n")
     rows = _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter))
     assert rows == [(HOUR, "en", "Café_Society", 5, 4), (HOUR, "en", "New_York", 5, 0)]
+
+
+def test_non_articles_are_dropped(tmp_path, article_filter):
+    src = tmp_path / "dump"
+    src.write_text("en Main_Page 900 0\nen Special:Search 900 0\nen.d Lisbon 900 0\nen Talk:Lisbon 900 0\n"
+                   "en - 900 0\nen Lisbon 900 0\n")
+    assert [r[2] for r in _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter))] == ["Lisbon"]
