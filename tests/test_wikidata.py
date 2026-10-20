@@ -75,3 +75,16 @@ def test_build_sitelinks_writes_in_batches(tmp_path, monkeypatch):
     out = tmp_path / "s.parquet"
     assert W.build_sitelinks(["en"], out, dump) == {"en": 5}
     assert pq.read_table(out).num_rows == 5
+
+
+def test_build_sitelinks_exact_batches(tmp_path, monkeypatch):
+    import lookedup.wikidata as W
+
+    monkeypatch.setattr(W, "BATCH", 2)
+    rows = ",".join(f"({i},{i},'enwiki','Title {i}')" for i in range(4))
+    dump = tmp_path / "wb.sql.gz"
+    with gzip.open(dump, "wt") as f:
+        f.write(f"INSERT INTO `wb_items_per_site` VALUES {rows};\n")
+    out = tmp_path / "s.parquet"
+    assert W.build_sitelinks(["en"], out, dump) == {"en": 4}
+    assert pq.read_table(out)["title"].to_pylist() == [f"Title_{i}" for i in range(4)]
