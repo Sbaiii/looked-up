@@ -144,3 +144,18 @@ def test_platt_parameters_are_applied():
     models = {"international_t3": (Stub(0.6), enc, (1.0, -np.log(1.5)))}                 # odds 1.5 -> 1.0
     out = forecast_open(_con(5), events, T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5), manifest={}, models=models)
     assert out["young"]["p_international"] == 0.5 and out["young"]["model_version"] is None
+
+
+def test_missing_model_files_are_skipped(tmp_path):
+    import json
+
+    from lookedup.forecast import predict as P
+    from lookedup.store import LocalStore, Manifest
+
+    enc = T.Encoder({"lead_lang": ["en"]}, features=["lead_lang"])
+    manifest = {"version": "v1", "models": {"planetary_t1": {"file": "v1/planetary_t1.txt", "encoder": enc.to_json()}}}
+    (tmp_path / "models.json").write_text(json.dumps(manifest))
+    store = LocalStore(tmp_path / "lake")
+    store.commit({P.MANIFEST: tmp_path / "models.json"}, Manifest(), "manifest without its model file")
+    got, models = P.load_models(store, tmp_path / "tmp")
+    assert got["version"] == "v1" and models == {}
