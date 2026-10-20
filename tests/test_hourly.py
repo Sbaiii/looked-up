@@ -113,3 +113,13 @@ def test_plan_fills_a_gap(fake_server):
     todo, unpublished = hourly.plan(m, NOW, window_hours=8)
     assert [f.ts_hour_start for f in todo] == [datetime(2026, 10, 7, 6)]
     assert unpublished == []                                            # 10:00 and 11:00 are already in the manifest
+
+
+def test_process_hour_deletes_the_raw_dump(fake_server, tmp_path, article_filter):
+    ts = datetime(2026, 10, 7, 5)
+    work = tmp_path / "work"
+    work.mkdir()
+    f = dumps.HourlyFile(name=dumps.file_name(ts), url=dumps.file_url(ts), ts_hour_start=ts, posted=ts, size=1)
+    t = hourly.process_hour(f, LANGS, article_filter, work)
+    assert t.num_rows > 0 and set(t["ts_hour_start"].to_pylist()) == {ts}
+    assert list(work.iterdir()) == []
