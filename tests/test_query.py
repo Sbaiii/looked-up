@@ -70,3 +70,12 @@ def test_hub_connection_loads_httpfs_and_the_token(monkeypatch):
     monkeypatch.setenv("HF_TOKEN", "hf_abc")
     assert query._base("hf://datasets/user/repo") is con
     assert con.sql == ["INSTALL httpfs; LOAD httpfs;", "CREATE SECRET hf (TYPE huggingface, TOKEN 'hf_abc')"]
+
+
+def test_hub_without_token_and_local_without_httpfs(monkeypatch, tmp_path):
+    cons = []
+    monkeypatch.setattr(query.db, "connect", lambda: cons.append(_Con()) or cons[-1])
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    query._base("hf://datasets/user/repo")
+    query._base(str(tmp_path))
+    assert cons[0].sql == ["INSTALL httpfs; LOAD httpfs;"] and cons[1].sql == []
