@@ -50,3 +50,13 @@ def test_dbt_vars_carry_the_period_thresholds_and_languages():
     assert v["period_start"] == f"{cfg.period_start:%Y-%m-%d}"
     assert v["r3_threshold"] == cfg.spike.r3_threshold
     assert v["languages"] == active_codes() and len(v["languages"]) == 30
+
+
+def test_optional_sections_need_their_files(tmp_path):
+    from lookedup.analytics.config import ANALYTICS_FILE
+
+    cfg = load(ANALYTICS_FILE, tmp_path / "none_v2.yml", tmp_path / "none_product.yml")
+    assert "v2" not in cfg.raw and "product" not in cfg.raw
+    (tmp_path / "empty.yml").write_text("")
+    cfg = load(ANALYTICS_FILE, tmp_path / "empty.yml", tmp_path / "empty.yml")
+    assert cfg.raw["v2"] == {} and cfg.raw["product"] == {}                 # an empty file reads as no settings
