@@ -749,3 +749,14 @@ def test_live_payload_drops_bursts_outside_the_window():
     e.detector.bursts.extend([B.Burst("en", "Old", now - LIVE_WINDOW_S - 60, "window", 9, 9),
                               B.Burst("en", "New", now - 60, "window", 5, 3)])
     assert [b["title"] for b in e.live(now=now)["single_language_bursts"]] == ["New"]
+
+
+def test_live_event_language_order_and_no_double_listing():
+    e = Engine()
+    now = T0 + 3600
+    e.detector.bursts.extend([B.Burst("fr", "X", now - 500, "window", 5, 3, "Q9"), B.Burst("en", "X", now - 900, "window", 5, 3, "Q9"),
+                              B.Burst("de", "Y", now - 100, "window", 5, 3, "Q8")])
+    live = e.live(now=now)
+    [ev] = live["events"]
+    assert [l["lang"] for l in ev["languages"]] == ["en", "fr"] and ev["breadth"] == 2 and ev["minutes_since_first_burst"] == 15
+    assert [b["title"] for b in live["single_language_bursts"]] == ["Y"]
