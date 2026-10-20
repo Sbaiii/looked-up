@@ -401,3 +401,10 @@ def test_backfill_warehouse_then_live_days(tmp_path, monkeypatch):
     assert sorted(stats["days"]) == ["2026-08-15", "2026-08-16"]
     today = json.loads((out / ax.APP_PREFIX / "today.json").read_text())
     assert {e["qid"] for e in today["events"]} >= {"Q597"}
+
+
+def test_gzip_twin_is_deterministic(tmp_path):
+    ax.dump({"schema_version": 1, "events": [1, 2, 3]}, tmp_path / "a.json")
+    first = (tmp_path / "a.json.gz").read_bytes()
+    ax.dump({"schema_version": 1, "events": [1, 2, 3]}, tmp_path / "a.json")
+    assert (tmp_path / "a.json.gz").read_bytes() == first
