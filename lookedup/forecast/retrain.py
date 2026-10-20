@@ -92,6 +92,10 @@ def train_all(rows: list[dict], params: dict, cutoff: datetime) -> tuple[dict, d
                 ca = T.m1_rows([r for r in rows if cal_lo <= r["start_hour"] < cutoff], target, off)
                 if T.labels(ca, target).sum() >= 5:
                     break
+            if len(set(T.labels(ca, target))) < 2:     # Platt needs both outcomes: publish no model rather than crash
+                log.warning("%s: no %s outcome in the last %d days, model not trained", key,
+                            "positive" if not T.labels(ca, target).sum() else "negative", days)
+                continue
             tr = T.m1_rows([r for r in rows if r["start_hour"] < cal_lo], target, off)
             enc = T.Encoder.fit(tr)
             booster = T.fit(enc.matrix(tr), T.labels(tr, target), enc, params[key], "binary")

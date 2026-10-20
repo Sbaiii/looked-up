@@ -145,3 +145,12 @@ def test_retrain_without_a_live_week_file(tmp_path, monkeypatch):
     store.commit({f"{R.TRAINING}/batch.parquet": batch}, Manifest(), "seed: the batch training table")
     assert R.retrain(store, now=datetime(2026, 10, 23))["rows"] == 1800
     assert sorted(p.name for p in (tmp_path / "lake" / R.TRAINING).iterdir()) == ["batch.parquet"]
+
+
+def test_target_without_any_calibration_positive_is_skipped():
+    rows = [r | {"reach_planetary": 0} for r in _rows()]
+    cutoff = max(r["start_hour"] for r in rows) + timedelta(hours=1)
+    params = {k: SMALL for k in [f"{t}_t{o}" for t in T.TARGETS for o in T.OFFSETS] + [f"m2_{t}" for t in T.M2_TARGETS]}
+    models, specs = R.train_all(rows, params, cutoff)
+    assert not any(k.startswith("planetary") for k in models) and not any(k.startswith("planetary") for k in specs)
+    assert {f"international_t{o}" for o in T.OFFSETS} <= set(models) and "m2_excess_next24" in models
