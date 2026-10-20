@@ -90,3 +90,8 @@ def test_fade_cap_and_observability():
     r0 = rows[0]
     assert r0["fade_hours"] == 48                                         # never halves within the horizon
     assert r0["fade_observable"] is False and r0["reach_international"] == 0
+
+
+def test_custom_offsets():
+    rel = _con(SPIKES, VIEWS).sql(snapshot_sql("events", "spikes", "views", "dims", offsets=(1,)))
+    assert [r[rel.columns.index("offset_h")] for r in rel.fetchall()] == [1]
