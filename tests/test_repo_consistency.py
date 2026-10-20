@@ -169,3 +169,12 @@ def test_ops_workflow_table_lists_every_workflow():
     section = section[:section.index("\n## ", 5)]
     rows = set(re.findall(r"^\| `([\w-]+\.yml)`", section, re.M))
     assert {p.name for p in (ROOT / ".github" / "workflows").glob("*.yml")} <= rows
+
+
+def test_documented_commands_exist():
+    from lookedup import cli
+
+    known = set(re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.M))
+    for doc in ("README.md", "docs/ops.md", "tests/README.md"):
+        used = set(re.findall(r"lookedup\.cli ([a-z][a-z0-9-]+)", (ROOT / doc).read_text(encoding="utf-8")))
+        assert used <= known, (doc, sorted(used - known))
