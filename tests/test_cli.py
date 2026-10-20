@@ -480,3 +480,12 @@ def test_coverage_table_without_out(monkeypatch, tmp_path, capsys):
     monkeypatch.chdir(tmp_path)
     cli.main(["coverage", "--hours", "1"])
     assert "| **all** |" in capsys.readouterr().out and not list(tmp_path.glob("*.md"))
+
+
+def test_compact_report_without_full_days(monkeypatch, capsys):
+    import lookedup.compact as cp
+
+    monkeypatch.setattr(cp, "compact_local", lambda root: [{"day": "d2", "hours": 3, "bytes_hourly_files": 50, "bytes_day_file": 40}])
+    cli.main(["compact"])
+    out = capsys.readouterr().out
+    assert '"day": "d2"' in out and "full days" not in out
