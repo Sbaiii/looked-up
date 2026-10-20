@@ -143,3 +143,11 @@ def test_hero_rule_matches_the_app():
     js = (APP / "js" / "select.js").read_text(encoding="utf-8")
     assert int(re.search(r"HERO_MIN_EXCESS = (\d+)", js).group(1)) == og.HERO_MIN_EXCESS
     assert set(re.findall(r"'(\w+)'", re.search(r"STRONG = new Set\(\[(.*?)\]\)", js).group(1))) == og.STRONG_TIERS
+
+
+def test_colour_scale_bounds_match_the_app():
+    import re
+
+    js = (APP / "js" / "scale.js").read_text(encoding="utf-8")
+    assert float(re.search(r"export const MIN = ([\d.]+);", js).group(1)) == og.SCALE_MIN
+    assert float(re.search(r"export const MAX = ([\d.]+);", js).group(1)) == og.SCALE_MAX
