@@ -26,3 +26,5 @@
   It also checks the code against itself across languages: the social card against the app (hero rule, colour
   scale, ramp), the app's data URL against the export, one User-Agent everywhere, and the ops command and workflow
   references against the command line and `.github/workflows/`.
+- `test_readme_scorecard.py` keeps every number in the README scorecard and the phase results pages equal to the
+  committed results in `docs/analysis/`, verdicts and headline counts included.
