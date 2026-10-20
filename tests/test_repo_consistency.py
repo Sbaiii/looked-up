@@ -69,3 +69,14 @@ def test_live_rules_have_one_source():
     worker = json.loads((ROOT / "worker" / "src" / "rules.json").read_text())
     assert worker["live_event_window_minutes"] == live["live_event_window_minutes"]
     assert worker["burst"] == live["burst"]
+
+
+def test_app_reads_where_the_export_writes():
+    import re
+
+    from lookedup.app_export import APP_PREFIX
+    from lookedup.settings import HF_REPO_ID
+
+    js = (ROOT / "app" / "js" / "data.js").read_text(encoding="utf-8")
+    base = re.search(r"DEFAULT_BASE = '([^']+)'", js).group(1)
+    assert base == f"https://huggingface.co/datasets/{HF_REPO_ID}/resolve/main/{APP_PREFIX}/"
