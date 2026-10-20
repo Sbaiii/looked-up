@@ -181,3 +181,10 @@ def test_rank_languages_keeps_raw_and_reuses_aggregates(tmp_path, monkeypatch):
     assert len(list((tmp_path / "raw" / "pageview_complete").iterdir())) == 1
     L.rank_languages([day], work_dir=tmp_path / "work")
     assert len(got) == 1                                                     # the aggregate is not rebuilt
+
+
+def test_fetch_siteinfo_namespace_without_canonical(monkeypatch):
+    reply = {"query": {"general": {"mainpage": "Main Page"},
+                       "namespaces": {"100": {"id": 100, "name": "Portal", "canonical": ""}, "101": {"id": 101, "name": "Portal talk"}}}}
+    monkeypatch.setattr(L, "_get_json", lambda url, params: reply)
+    assert L.fetch_siteinfo("en")["namespaces"] == ["portal", "portal talk"]
