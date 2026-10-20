@@ -732,3 +732,11 @@ def test_shift_api_uses_the_token(monkeypatch):
     monkeypatch.setattr(huggingface_hub, "HfApi", lambda token=None: made.append(token) or "api")
     monkeypatch.setenv("HF_TOKEN", "hf_test")
     assert shift._api() == "api" and made == ["hf_test"]
+
+
+def test_baseline_roll_skips_an_empty_wiki():
+    b = B.Baselines()
+    b.current["en"]["A"] += 3
+    b.current["fr"]                                                 # touched but empty
+    b.roll()
+    assert list(b.medians["en"]) == [3] and "fr" not in b.medians
