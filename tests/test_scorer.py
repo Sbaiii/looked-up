@@ -194,3 +194,13 @@ def test_baselines_skip_a_day_that_cannot_be_fetched(lake, monkeypatch):
     gone = scorer.day_path(datetime.combine(D - timedelta(days=2), datetime.min.time()))
     monkeypatch.setattr(lake, "fetch", lambda p, d, rev=None: None if p == gone else real(p, d, rev))
     assert scorer.build_baselines(lake, D, directory=lake.root / "bl")["day_files"] == 2
+
+
+def test_qids_for_skips_items_without_the_sitelink(monkeypatch):
+    class S:
+        def get(self, url, params=None, timeout=None):
+            return _WDR({"entities": {"Q1": {"sitelinks": {}}, "Q2": {"sitelinks": {"frwiki": {"title": "Deux"}}}}})
+
+    monkeypatch.setattr(scorer, "session", lambda: S())
+    monkeypatch.setattr(scorer.time, "sleep", lambda s: None)
+    assert scorer.qids_for([("fr", "Un"), ("fr", "Deux")]) == {("fr", "Deux"): 2}
