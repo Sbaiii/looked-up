@@ -103,3 +103,13 @@ def test_plan_nothing_missing(monkeypatch):
         m.add(ts, rows=1, source="hourly_dump")
     monkeypatch.setattr(dumps, "available_hours", lambda *a: pytest.fail("no listing needed"))
     assert hourly.plan(m, NOW, window_hours=24) == ([], [])
+
+
+def test_plan_fills_a_gap(fake_server):
+    m = Manifest()
+    for ts in hourly.expected_hours(NOW, 8):
+        if ts != datetime(2026, 10, 7, 6):
+            m.add(ts, rows=1, source="hourly_dump")
+    todo, unpublished = hourly.plan(m, NOW, window_hours=8)
+    assert [f.ts_hour_start for f in todo] == [datetime(2026, 10, 7, 6)]
+    assert unpublished == []                                            # 10:00 and 11:00 are already in the manifest
