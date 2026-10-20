@@ -133,3 +133,12 @@ def test_interface_languages_match_the_translation_files():
     assert ui == {p.stem for p in (ROOT / "app" / "i18n").glob("*.json")}
     html = (ROOT / "app" / "index.html").read_text(encoding="utf-8")
     assert ui == set(re.findall(r'data-ui-lang="(\w\w)"', html))
+
+
+def test_ops_reference_lists_every_command():
+    from lookedup import cli
+
+    documented = set(re.findall(r"^  ([a-z][a-z0-9-]+)\s", cli.__doc__, re.M))
+    ops = (ROOT / "docs" / "ops.md").read_text(encoding="utf-8")
+    listed = set(re.findall(r"lookedup\.cli ([a-z0-9-]+)", ops)) | ({"backfill"} if "lookedup.backfill" in ops else set())
+    assert documented <= listed, sorted(documented - listed)
