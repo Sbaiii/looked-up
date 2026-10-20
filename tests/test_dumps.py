@@ -197,3 +197,38 @@ def test_session_is_shared_and_identifies_the_project():
 
     assert dumps.session() is dumps.session()
     assert dumps.session().headers["User-Agent"] == USER_AGENT and "looked-up" in USER_AGENT
+
+
+class _FakeWatchdog:
+    """Reports a stall for each response listed in ``stalls`` (by call order)."""
+    stalls: list = []
+
+    def __init__(self, response):
+        self.stalled = _FakeWatchdog.stalls.pop(0)
+        self.min_bps, self.window = 20_000, 60.0
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+    def add(self, n):
+        pass
+
+
+class _Dying(_Stream):
+    def iter_content(self, n):
+        yield self.body
+        raise OSError("socket shut down by the watchdog")
+
+
+def test_download_resumes_after_a_watchdog_stall(tmp_path, monkeypatch):
+    replies = [_Dying(200, b"hello ", length=11), _Stream(206, b"world")]
+    seen = []
+    monkeypatch.setattr(dumps._session, "get", lambda url, stream=True, timeout=None, headers=None: seen.append(headers) or replies.pop(0))
+    monkeypatch.setattr(dumps, "_Watchdog", _FakeWatchdog)
+    monkeypatch.setattr(_FakeWatchdog, "stalls", [True, False])
+    monkeypatch.setattr(dumps.time, "sleep", lambda s: None)
+    assert dumps.download("https://x/f.gz", tmp_path / "f.gz").read_bytes() == b"hello world"
+    assert seen == [{}, {"Range": "bytes=6-"}]
