@@ -75,3 +75,13 @@ test('no description, no description line', async ({ page }) => {
   await ready(page);
   await expect(page.locator('#cards .card[data-qid="Q242078"] .card__desc')).toHaveCount(0);
 });
+
+test('the hero label links the interface-language article when there is one', async ({ page }) => {
+  await serveToday(page, (d) => { for (const e of d.events) e.excess = e.qid === 'Q804' ? 9e6 : 1000; });
+  await page.goto('./');
+  await ready(page);
+  const link = page.locator('#hero-label a');
+  await expect(link).toHaveAttribute('href', /^https:\/\/en\.wikipedia\.org\//);
+  await page.click('[data-ui-lang="fr"]');
+  await expect(link).toHaveAttribute('href', /^https:\/\/fr\.wikipedia\.org\//);
+});
