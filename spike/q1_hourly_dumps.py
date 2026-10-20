@@ -10,6 +10,7 @@ import gzip
 import json
 import time
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import duckdb
 from common import DERIVED, RAW, download, human, list_hourly, session
@@ -40,10 +41,10 @@ def day_listing(day: datetime) -> list[dict]:
     return files
 
 
-def scan_raw(path):
+def scan_raw(path: Path) -> tuple[int, int, dict[bytes, int]]:
     """Uncompressed bytes, line count, projects (pure Python streaming pass)."""
     raw_bytes = lines = 0
-    projects: dict[str, int] = {}
+    projects: dict[bytes, int] = {}
     with gzip.open(path, "rb") as f:
         for line in f:
             raw_bytes += len(line)
@@ -54,7 +55,7 @@ def scan_raw(path):
     return raw_bytes, lines, projects
 
 
-def load_sql(path) -> str:
+def load_sql(path: Path) -> str:
     """DuckDB SQL reading one gzipped dump as (project, page_title, views, bytes), skipping malformed lines."""
     return f"""
         SELECT * FROM read_csv('{path}',
