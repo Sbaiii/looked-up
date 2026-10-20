@@ -96,3 +96,12 @@ test('hero counter and subtitle', async ({ page }) => {
   await expect(page.locator('#hero-sub')).toContainText('led by');
   await expect(page.locator('#hero-sub')).toContainText('9 million more views');
 });
+
+test('no open forecast, no "Most likely to spread next"', async ({ page }) => {
+  await serveToday(page, (d) => { for (const e of d.events) delete e.forecast; });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#next')).toBeHidden();
+  await expect(page.locator('.card__forecast')).toHaveCount(0);
+  await expect(page.locator('#forecast-note')).toBeHidden();
+});
