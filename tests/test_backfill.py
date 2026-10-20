@@ -82,3 +82,9 @@ def test_backfill_entry_point(monkeypatch):
     bf.main(["--from", "2026-07-09", "--to", "2026-07-09", "--oldest-first", "--keep-raw"])
     assert seen == [("store(True)", date(2026, 7, 9), date(2026, 7, 10), True, False),
                     ("store(False)", date(2026, 7, 9), date(2026, 7, 9), False, True)]
+
+
+def test_backfill_keeps_raw_when_asked(fake_dumps, tmp_path):
+    store = LocalStore(tmp_path / "lake")
+    assert backfill.backfill(store, DAY, DAY, keep_raw=True) == 24
+    assert len(list((tmp_path / "raw").rglob("*.bz2"))) == 1
