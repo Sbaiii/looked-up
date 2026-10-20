@@ -57,3 +57,15 @@ def test_phase5_row():
     h9 = _metrics("phase5_metrics.json")["H9"]
     assert h9["median_lead_minutes"] < 0                                  # readers first
     assert f"readers first, by a median {-h9['median_lead_minutes']:.0f} min" in _row("H9")
+
+
+def test_verdicts_match():
+    m2, b, m4 = _metrics("phase2_metrics.json"), _metrics("phase2b_metrics.json"), _metrics("phase4_metrics.json")
+    verdicts = {"H1": m2["h1"]["verdict"], "H2": m2["h2"]["verdict"], "H3": _metrics("h3_results.json")["verdict"],
+                "H4": m2["h4"]["verdict"], "H1b-1": b["gt1"]["verdict_h1b_1"], "H1b-2": b["gt2"]["verdict_h1b_2"],
+                "H1b-3": b["gt3"]["verdict_h1b_3"], "H2b": b["gt2"]["verdict_h2b"], "H5": b["gt2"]["verdict_h5"],
+                "H6": m4["H6"]["verdict"], "H7": m4["H7"]["verdict"], "H8": m4["H8"]["verdict"],
+                "H9": _metrics("phase5_metrics.json")["H9"]["verdict"]}
+    for hyp, v in verdicts.items():
+        shown = re.search(r"\| (\w+) \|$", _row(hyp)).group(1)
+        assert v.startswith(shown), (hyp, shown, v)
