@@ -113,3 +113,15 @@ def test_partial_target_file_is_replaced(tmp_path):
     (dst / "a.bin").write_bytes(b"comp")                                 # half-written by an earlier run
     assert relocate(source=src, target=dst)["moved"] == 1
     assert (dst / "a.bin").read_bytes() == b"complete"
+
+
+def test_progress_logged_every_25_files(tmp_path, caplog):
+    import logging
+
+    src, dst = tmp_path / "old", tmp_path / "new"
+    src.mkdir()
+    for i in range(26):
+        (src / f"f{i:02d}.bin").write_bytes(b"x")
+    with caplog.at_level(logging.INFO, logger="lookedup.relocate"):
+        assert relocate(source=src, target=dst)["moved"] == 26
+    assert [r.getMessage() for r in caplog.records if r.getMessage().startswith("moved")] == ["moved 25 files (0.0 GB)"]
