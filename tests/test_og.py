@@ -119,3 +119,16 @@ def test_command_line_default_only_or_nothing(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["og"])
     og.main()
     assert capsys.readouterr().out == "" and sorted(p.name for p in tmp_path.iterdir()) == ["default.png"]
+
+
+def test_draw_map_skips_rings_past_the_edge(tmp_path, monkeypatch):
+    import json
+
+    world = {"w": 100, "h": 50, "countries": [{"k": "A", "d": "M10,10L30,10L30,30Z"},
+                                              {"k": "B", "d": "M150,10L160,10L160,20Z M80,5L98,5L98,20Z"}]}
+    (tmp_path / "world.json").write_text(json.dumps(world))
+    monkeypatch.setattr(og, "WORLD", tmp_path / "world.json")
+    img, _ = og._base()
+    og.draw_map(img, (0, 0, 100, 50), {"A": (255, 0, 0), "B": (0, 0, 255)})
+    assert img.getpixel((26, 13)) == (255, 0, 0) and img.getpixel((95, 8)) == (0, 0, 255)   # B's far ring is dropped
+    assert og._polygons("M0,0L1,1Z M0,0L1,0L1,1Z") == [[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]]
