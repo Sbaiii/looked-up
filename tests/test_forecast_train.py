@@ -228,3 +228,53 @@ def test_decay_ratios_skip_quiet_hours():
     out = E.decay_ratios(rows)
     assert out == {"death": 3.0, "_all": 3.0}                           # sports never had a non-zero hour; "other" has 3 rows
     assert E.decay_ratios([]) == {"_all": 0.0}
+
+
+def _backtest_rows(n=900, seed=3):
+    rng = np.random.default_rng(seed)
+    start, out = datetime(2026, 8, 1), []
+    for i in range(n):
+        fame = int(rng.integers(1, 30))
+        big = rng.random() < fame / 30
+        s = start + timedelta(hours=1.75 * i)                     # 1 Aug to 6 Oct: train, validation and test
+        for off in T.OFFSETS:
+            out.append({"event_id": f"E{i}", "offset_h": off, "start_hour": s, "snapshot_ts": s + timedelta(hours=off),
+                        "label_en": f"Event {i}", "final_breadth": 25 if big and fame > 20 else 6 if big else 2,
+                        "breadth_t": 2, "max_surprise_t": 10.0 + fame, "sum_surprise_t": 20.0, "excess_t": 100.0 * fame,
+                        "lead_share_t": 0.5, "new_langs_last_hour": 0, "hours_since_start": off, "is_death": int(fame % 7 == 0),
+                        "hour_utc": i % 24, "weekday": i % 7, "n_sitelinks": fame, "views_t": 10.0 * fame, "views_slope": 0.0,
+                        "peak_views_so_far": 20.0, "lead_views_share": 0.5, "lead_lang": "en" if i % 3 else "es",
+                        "entity_class": "human", "reach_international": int(big), "reach_planetary": int(big and fame > 20),
+                        "excess_next24": 50.0 * fame + rng.random(), "fade_hours": 1 + fame % 5, "fade_observable": True,
+                        "excess_hour_t": 10.0 + fame, "hours_since_peak": 1, "category": "death" if fame % 7 == 0 else "human"})
+    return out
+
+
+def test_backtest_run_end_to_end(tmp_path, monkeypatch):
+    import json
+
+    import pytest
+
+    pytest.importorskip("matplotlib")
+    import duckdb
+
+    import lookedup.warehouse as W
+
+    small = {"num_leaves": 7, "learning_rate": 0.2, "n_estimators": 20, "min_child_samples": 5, "feature_fraction": 1.0,
+             "lambda_l2": 0.0}
+    duckdb.connect(str(tmp_path / "w.duckdb")).close()
+    monkeypatch.setattr(W, "WAREHOUSE_DB", tmp_path / "w.duckdb")
+    monkeypatch.setattr(E, "load_rows", lambda con: _backtest_rows())
+    monkeypatch.setattr(E.T, "search", lambda tr, va, target, enc: (small, 0.5))
+    for name, value in {"OUT": tmp_path / "analysis", "FIG": tmp_path / "fig", "PARAMS_FILE": tmp_path / "params.json",
+                        "DATA_DIR": tmp_path / "data"}.items():
+        monkeypatch.setattr(E, name, value)
+    res = E.run()
+    assert set(res["split_sizes"]) == {"train", "valid", "test"} and all(res["split_sizes"].values())
+    assert {"H6", "H7", "H8"} <= set(res) and res["H6"]["verdict"] in ("supported", "rejected")
+    assert len(res["m1"]) == 6 and set(res["m2"]) == {"excess_next24", "fade_hours"}
+    assert [e["why"] for e in res["examples"]] == ["confident hit", "false alarm", "missed", "median call", "largest attention left"]
+    assert json.loads((tmp_path / "params.json").read_text())["international_t1"] == small
+    assert (tmp_path / "fig" / "phase4_calibration.png").exists() and (tmp_path / "fig" / "phase4_importance.png").exists()
+    assert len(list((tmp_path / "data" / "models" / "backtest").glob("*.txt"))) == 8
+    assert json.loads((tmp_path / "analysis" / "phase4_metrics.json").read_text())["backtest_model_bytes"]
