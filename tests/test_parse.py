@@ -168,3 +168,9 @@ def test_invalid_titles_are_never_articles():
     f = ArticleFilter()
     assert not f.is_article("en", "") and not f.is_article("en", "-")
     assert f.is_article("en", "--") and f.is_article("en", "Special") and not f.is_article("en", "Special:")
+
+
+def test_parse_dump_line_edge_columns():
+    assert parse_dump_line("en Lisbon 42 0 \n") is None                     # five columns
+    assert parse_dump_line("en.m Lisbon 7 0") == ("en.m", "Lisbon", 7)
+    assert parse_dump_line("") is None
