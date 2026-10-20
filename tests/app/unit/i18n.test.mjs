@@ -94,3 +94,12 @@ test('initialLang survives blocked storage and an unsupported browser', (t) => {
   langs.mock.mockImplementation(() => ['de', 'ja']);
   assert.equal(i18n.initialLang(), 'en');
 });
+
+test('compact counts in words, short weekday dates, and an unknown code kept as is', () => {
+  i18n.use(dict('en'), 'en');
+  assert.equal(i18n.compact(10452570), '10.5 million');
+  assert.equal(i18n.dayShort('2026-08-17'), 'Mon 17 Aug');
+  assert.equal(i18n.langName('zz-not-a-language-tag-really'), 'zz-not-a-language-tag-really');
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.compact(2_000_000), '2 millions');
+});
