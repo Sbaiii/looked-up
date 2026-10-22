@@ -140,3 +140,11 @@ test('a quiet feed links each single-language burst', async ({ page }) => {
   await expect(page.locator('#live-list li strong a')).toHaveAttribute('href', 'https://es.wikipedia.org/wiki/Partido_Pueblo');
   await expect(page.locator('#live-list li strong a')).toHaveText('Partido Pueblo');
 });
+
+test('an unexpected language code gives plain text, never a link', async ({ page }) => {
+  await feed(page, { bursts: [{ lang: 'javascript:alert(1)//', title: 'X', first_burst: new Date().toISOString() }] });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#live-list li strong')).toHaveText('X');
+  await expect(page.locator('#live-list li strong a')).toHaveCount(0);
+});
