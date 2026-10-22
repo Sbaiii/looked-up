@@ -8,6 +8,7 @@ import * as viz from './viz.js';
 import { compose, excessPhrase } from './briefing.js';
 import { pickDay, pickHero, rank } from './select.js';
 import { renderLive, startLive } from './live.js';
+import { DAY_COLUMNS, dayRows, toCsv } from './csv.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 12;
@@ -87,6 +88,19 @@ async function copyLink(hash, button) {
     const old = button.textContent;
     button.textContent = t('ui.copied');
     setTimeout(() => { button.textContent = old; }, 1600);
+}
+
+/** Save the shown day's events as looked-up-YYYY-MM-DD.csv (with a BOM, so spreadsheets read it as UTF-8). */
+function downloadDay() {
+    const d = shownDay();
+    const iso = d.today ? todayIso() : d.iso;
+    const csv = toCsv(dayRows(state.payload, iso, { label, desc }), DAY_COLUMNS);
+    const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
+    const a = el('a', { href: url, download: `looked-up-${iso}.csv` });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /** The document title for the current URL: an event, a day, a language panel or the front page. */
@@ -648,6 +662,7 @@ function wire() {
     });
     $('copy-day').addEventListener('click', (e) => copyLink(dayHash(shownDay()) === '#/today'
         ? `#/day/${todayIso()}` : dayHash(shownDay()), e.currentTarget));
+    $('download-day').addEventListener('click', downloadDay);
     $('more').addEventListener('click', () => { state.shown += PAGE; renderCards(); });
     $('replay').addEventListener('click', () => { if (state.hero.event) select(state.hero.event, { animate: true }); });
     $('lang-select').addEventListener('change', (e) => { state.lang = e.target.value; renderLanguages(); setHash(`#/lang/${state.lang}`); });

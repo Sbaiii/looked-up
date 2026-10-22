@@ -22,7 +22,8 @@
     "menu": "Sections",
     "copy": "Copier le lien",
     "copied": "Lien copié",
-    "copy_day": "Copier le lien de ce jour"
+    "copy_day": "Copier le lien de ce jour",
+    "download_day": "Télécharger ce jour (CSV)"
   },
   "hero": {
     "kicker": "fig. 00 · dernières 24 heures",

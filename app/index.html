@@ -139,7 +139,10 @@
                     </div>
                     <div class="scrubber__head">
                         <p class="scrubber__out" aria-live="polite"><output id="day-out" for="day-slider"></output> <span id="day-archive" class="badge badge--archive" data-i18n="timeline.archive" hidden>Archive</span> · <span id="day-count"></span></p>
-                        <button type="button" class="linkbtn" id="copy-day" data-i18n="ui.copy_day">Copy link to this day</button>
+                        <span class="scrubber__links">
+                            <button type="button" class="linkbtn" id="copy-day" data-i18n="ui.copy_day">Copy link to this day</button>
+                            <button type="button" class="linkbtn" id="download-day" data-i18n="ui.download_day">Download this day (CSV)</button>
+                        </span>
                     </div>
                     <p class="day-brief" id="day-brief"></p>
                     <p class="help keys-help" id="keys-help" data-i18n="timeline.keys">Keys: ← → change the day · T today · / search</p>

@@ -22,7 +22,8 @@
     "menu": "Sections",
     "copy": "Copy link",
     "copied": "Link copied",
-    "copy_day": "Copy link to this day"
+    "copy_day": "Copy link to this day",
+    "download_day": "Download this day (CSV)"
   },
   "hero": {
     "kicker": "fig. 00 · last 24 hours",
