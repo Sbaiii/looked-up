@@ -48,3 +48,31 @@ test('headings and caption follow the interface language', async ({ page }) => {
   await expect(page.locator('#spread thead th')).toHaveText(['Idioma', 'Primer pico (UTC)', 'Tras el primero', 'Sorpresa máxima', 'Visitas de más']);
   await expect(page.locator('#spread-caption')).toContainText('los idiomas en el orden de su pico');
 });
+
+test('clicking a heading sorts the rows by it, and clicking again reverses', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.click('#cards .card[data-qid="Q242078"] .card__title button');
+  await page.click('#spread summary');
+  const excess = () => page.locator('#spread-rows tr').evaluateAll((rs) => rs.map((r) => Number(r.cells[4].textContent.replace(/\D/g, ''))));
+  await page.click('#spread [data-sort="excess"]');
+  let got = await excess();
+  expect(got).toEqual([...got].sort((a, b) => b - a));
+  await expect(page.locator('#spread th:has([data-sort="excess"])')).toHaveAttribute('aria-sort', 'descending');
+  await page.click('#spread [data-sort="excess"]');
+  got = await excess();
+  expect(got).toEqual([...got].sort((a, b) => a - b));
+  await expect(page.locator('#spread th:has([data-sort="excess"])')).toHaveAttribute('aria-sort', 'ascending');
+});
+
+test('the lag column is the default sort and the chosen sort stays for the next event', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.click('#cards .card[data-qid="Q242078"] .card__title button');
+  await expect(page.locator('#spread th:has([data-sort="lag"])')).toHaveAttribute('aria-sort', 'ascending');
+  await page.click('#spread summary');
+  await page.click('#spread [data-sort="name"]');
+  await page.click('#cards .card[data-qid="Q804"] .card__title button');
+  const names = await page.locator('#spread-rows th').allTextContents();
+  expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en')));
+});
