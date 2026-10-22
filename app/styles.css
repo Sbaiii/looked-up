@@ -419,3 +419,9 @@ input[type='date'] {
     background: var(--paper-2); color-scheme: dark;
 }
 :root[data-theme='light'] input[type='date'] { color-scheme: light; }
+.lang-chip {
+    display: inline-flex; align-items: center; gap: 0.3rem; margin: 0 0 0.8rem; padding: 0 0.2rem 0 0.8rem;
+    border: 1px solid var(--accent); border-radius: 999px; background: var(--accent-soft); font-size: 0.82rem;
+}
+.lang-chip[hidden] { display: none; }
+.lang-chip .linkbtn { text-decoration: none; padding: 0.2rem 0.6rem; min-height: 2rem; }
