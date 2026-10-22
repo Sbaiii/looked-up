@@ -28,3 +28,13 @@ test('the chip shows the language, and ✕ removes the filter', async ({ page })
   await expect(page.locator('#lang-chip')).toBeHidden();
   await expect(page.locator('#cards .card')).toHaveCount(12);
 });
+
+test('chip text and clear label follow the interface language', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.selectOption('#lang-select', 'ja');
+  await page.click('#lang-filter');
+  await page.click('[data-ui-lang="fr"]');
+  await expect(page.locator('#lang-chip-text')).toHaveText('En pic en japonais');
+  await expect(page.locator('#lang-chip-clear')).toHaveAttribute('aria-label', 'Retirer le filtre de langue');
+});
