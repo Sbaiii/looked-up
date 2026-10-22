@@ -40,3 +40,13 @@ test('a category chip filters the cards', async ({ page }) => {
   await page.click('#cat-filters [data-category=""]');
   await expect(page.locator('#cards .card')).toHaveCount(Math.min(today.events.length, 12));
 });
+
+test('a category the new day does not have resets to all', async ({ page }) => {
+  await page.goto('./#/day/2026-08-16');
+  await ready(page);
+  await page.click('#cat-filters [data-category="human"]');
+  await expect(page.locator('#cards .card')).toHaveCount(2);
+  await page.click('#next-day');                                  // 17 Aug has no "human" event
+  await expect(page.locator('#cat-filters [data-category=""]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#cards .card')).toHaveCount(12);
+});
