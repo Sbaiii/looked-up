@@ -78,8 +78,8 @@ class Events:
         if not qids:
             return None
         cols = "qid, start_hour, lead_lang, breadth, event_class"
-        r = self.con.execute(f"""SELECT {cols} FROM {table} WHERE qid IN (SELECT unnest(?::BIGINT[]))
-            AND start_hour BETWEEN ? AND ? ORDER BY start_hour LIMIT 1""", [qids, lo, hi]).fetchone()
+        r = db.one(self.con, f"""SELECT {cols} FROM {table} WHERE qid IN (SELECT unnest(?::BIGINT[]))
+            AND start_hour BETWEEN ? AND ? ORDER BY start_hour LIMIT 1""", [qids, lo, hi])
         return dict(zip(["qid", "start_hour", "lead_lang", "breadth", "event_class"], r, strict=True)) if r else None
 
 
