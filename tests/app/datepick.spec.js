@@ -12,3 +12,12 @@ test('a date in the window opens that day on the slider', async ({ page }) => {
   await expect(page.locator('#bars rect.is-on')).toHaveCount(1);
   expect(page.errors).toEqual([]);
 });
+
+test('an older date opens as an archive day', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.fill('#day-pick', '2026-07-27');
+  await page.locator('#day-pick').dispatchEvent('change');
+  await expect(page).toHaveURL(/#\/day\/2026-07-27$/);
+  await expect(page.locator('#day-archive')).toBeVisible();
+});
