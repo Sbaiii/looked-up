@@ -67,3 +67,14 @@ test('K on the first card and J on the last card stay put', async ({ page }) => 
   await page.keyboard.press('j');
   await expect(page.locator('.card.is-selected')).toHaveAttribute('data-qid', last);
 });
+
+test('J moves between the cards the search leaves', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.fill('#card-search', 'pillay');
+  await page.locator('body').click({ position: { x: 1, y: 1 } });
+  await page.keyboard.press('j');
+  await expect(page.locator('.card.is-selected')).toHaveAttribute('data-qid', 'Q242078');
+  await page.keyboard.press('j');
+  await expect(page.locator('.card.is-selected')).toHaveAttribute('data-qid', 'Q242078');
+});
