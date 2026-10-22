@@ -94,6 +94,8 @@
     "all": "All tiers",
     "intl": "International and up",
     "planet": "Planetary only",
+    "category": "Category",
+    "all_categories": "All categories",
     "empty": "No event matches this filter on this day.",
     "search": "Search this day's events",
     "search_hint": "Name, description or Q-number",

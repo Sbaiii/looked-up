@@ -94,6 +94,8 @@
     "all": "Todos los niveles",
     "intl": "Internacional o más",
     "planet": "Solo planetario",
+    "category": "Categoría",
+    "all_categories": "Todas las categorías",
     "empty": "Ningún evento coincide con este filtro ese día.",
     "search": "Buscar en los eventos del día",
     "search_hint": "Nombre, descripción o número Q",
