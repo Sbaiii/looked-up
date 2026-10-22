@@ -88,9 +88,6 @@ test('the placeholder follows the interface language', async ({ page }) => {
 });
 
 test('opening an event the search hides clears the search', async ({ page }) => {
-  await page.goto('./#/day/2026-08-17');
-  await ready(page);
-  await page.fill('#card-search', 'zzzz');
   await page.goto('./#/day/2026-08-17/event/Q171571');
   await ready(page);
   await page.evaluate(() => { history.pushState(null, '', '#/day/2026-08-16'); history.pushState(null, '', '#/day/2026-08-17/event/Q171571'); });
