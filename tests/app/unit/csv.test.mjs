@@ -31,3 +31,9 @@ test('dayRows lists multi-language events, then single-language ones, with names
   assert.equal(rows[1].label, 'LQ2');
   assert.deepEqual(Object.keys(rows[0]), DAY_COLUMNS);
 });
+
+test('non-Latin text passes through and carriage returns are quoted', () => {
+  assert.equal(field('東京'), '東京');
+  assert.equal(field('Пиллэй, Нави'), '"Пиллэй, Нави"');
+  assert.equal(field('a\rb'), '"a\rb"');
+});
