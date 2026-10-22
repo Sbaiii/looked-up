@@ -234,3 +234,10 @@ def test_readme_tiers_and_baseline():
     assert f"own {cfg.baseline['lookback_days']}-day baseline" in readme
     assert (f"Tiers: noticed ≥ {tiers['noticed']} languages, international ≥ {tiers['international']}, "
             f"planetary ≥ {tiers['planetary']}") in readme
+
+
+def test_no_fetchone_in_the_package():
+    """DuckDB 2.0 removed relation fetchone() and blocks a connection after a partly read execute() (ADR 0034)."""
+    for base in ("lookedup", "live/lookedup_live"):
+        for p in (ROOT / base).rglob("*.py"):
+            assert ".fetchone()" not in p.read_text(encoding="utf-8"), p.relative_to(ROOT)
