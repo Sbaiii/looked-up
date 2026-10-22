@@ -22,6 +22,15 @@ function el(tag, text, cls) {
     return e;
 }
 
+/** A link to a Wikipedia article (language code, title with underscores); plain text for anything unexpected. */
+function article(lang, title, text) {
+    if (!/^[a-z][a-z-]*$/.test(lang || '') || !title) return el('strong', text);
+    const a = el('a', text);
+    a.href = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+    a.rel = 'noopener';
+    return el('strong', null, null).appendChild(a).parentNode;
+}
+
 const list = (codes) => {
     const names = codes.map(langName);
     try { return new Intl.ListFormat(document.documentElement.lang, { type: 'conjunction' }).format(names); } catch { return names.join(', '); }
@@ -51,7 +60,7 @@ export function renderLive() {
         const li = el('li');
         const name = eventLabel({ labels: ev.labels, lead: ev.languages[0]?.lang, qid: ev.qid });
         const d = ev.desc?.[document.documentElement.lang] || ev.desc?.en;
-        li.append(el('strong', name));
+        li.append(article(ev.languages[0]?.lang, ev.languages[0]?.title, name));
         if (d) li.append(el('span', d));
         li.append(el('span', `${t('live.languages', { langs: list(ev.languages.map((l) => l.lang)) })} · ${t('live.since', { n: Math.max(0, Math.round((now - Date.parse(ev.first_burst)) / 60e3)) })}`));
         ul.append(li);
@@ -60,7 +69,7 @@ export function renderLive() {
         state.textContent = t('live.quiet');
         for (const b of (last.single_language_bursts || []).slice(0, 5)) {     // ranked by editors (ADR 0032)
             const li = el('li');
-            li.append(el('strong', b.title.replace(/_/g, ' ')),
+            li.append(article(b.lang, b.title, b.title.replace(/_/g, ' ')),
                 el('span', `${langName(b.lang)} · ${t('live.since', { n: Math.max(0, Math.round((now - Date.parse(b.first_burst)) / 60e3)) })}`));
             ul.append(li);
         }
