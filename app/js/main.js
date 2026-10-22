@@ -139,7 +139,6 @@ async function route({ scroll = true } = {}) {
 
 /* ---------------------------------------------------------------- theme and language */
 
-/** Wire the theme button: toggle light and dark, remember it, update theme-color and redraw the map colours. */
 /** The card order chosen on an earlier visit, if it is still one of the orders. */
 function restoreSort() {
     let saved = null;
@@ -147,6 +146,7 @@ function restoreSort() {
     if (saved && saved in SORTS) { state.sort = saved; $('card-sort').value = saved; }
 }
 
+/** Wire the theme button: toggle light and dark, remember it, update theme-color and redraw the map colours. */
 function initTheme() {
     $('theme').addEventListener('click', () => {
         const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
