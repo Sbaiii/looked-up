@@ -56,10 +56,11 @@ export function t(key, vars = {}) {
     return s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 }
 
-/** Translate every [data-i18n] text and [data-i18n-aria] label, plus the page title and description. */
+/** Translate every [data-i18n] text, [data-i18n-aria] label and [data-i18n-placeholder], plus the page title and description. */
 export function applyStatic(root = document) {
     root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
     root.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+    root.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)); });
     document.title = t('meta.title');
     document.querySelector('meta[name="description"]').setAttribute('content', t('meta.description'));
 }
