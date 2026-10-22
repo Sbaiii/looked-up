@@ -321,7 +321,9 @@ select, input[type='search'] {
     background: var(--paper-2);
 }
 input[type='search']::placeholder { color: var(--faint); }
-.search { margin: 0 0 1rem; max-width: none; }
+.cardtools .field { max-width: none; }
+.cardtools { display: grid; gap: 0.8rem; margin: 0 0 1rem; }
+@media (min-width: 640px) { .cardtools { grid-template-columns: minmax(0, 1fr) auto; align-items: end; } }
 .langpanel { display: grid; gap: 1rem 2rem; }
 @media (min-width: 640px) { .langpanel { grid-template-columns: 1fr 1fr; } }
 .mini { list-style: none; display: grid; gap: 0.45rem; counter-reset: mini; }
