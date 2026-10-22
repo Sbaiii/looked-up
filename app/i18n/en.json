@@ -85,7 +85,7 @@
     "pick": "Go to a date",
     "prev": "Previous day",
     "next": "Next day",
-    "keys": "Keys: ← → change the day · T today · / search",
+    "keys": "Keys: ← → change the day · J K next and previous event · T today · / search",
     "today": "Today",
     "archive": "Archive",
     "count": {

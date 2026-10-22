@@ -85,7 +85,7 @@
     "pick": "Aller à une date",
     "prev": "Jour précédent",
     "next": "Jour suivant",
-    "keys": "Clavier : ← → change de jour · T aujourd'hui · / recherche",
+    "keys": "Clavier : ← → change de jour · J K événement suivant et précédent · T aujourd'hui · / recherche",
     "today": "Aujourd'hui",
     "archive": "Archives",
     "count": {

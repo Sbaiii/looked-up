@@ -37,7 +37,7 @@ test('the keyboard help line: shown with a mouse, hidden on touch screens, trans
   await ready(page);
   const help = page.locator('#keys-help');
   if (isMobile) { await expect(help).toBeHidden(); return; }
-  await expect(help).toHaveText('Keys: ← → change the day · T today · / search');
+  await expect(help).toHaveText('Keys: ← → change the day · J K next and previous event · T today · / search');
   await page.click('[data-ui-lang="es"]');
-  await expect(help).toHaveText('Teclado: ← → cambia de día · T hoy · / buscar');
+  await expect(help).toHaveText('Teclado: ← → cambia de día · J K evento siguiente y anterior · T hoy · / buscar');
 });
