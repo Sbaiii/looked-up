@@ -32,3 +32,13 @@ test('a Q-number finds the event', async ({ page }) => {
   await expect(page.locator('#cards .card')).toHaveCount(1);
   await expect(page.locator('#cards .card')).toHaveAttribute('data-qid', 'Q804');
 });
+
+test('no result: the empty line quotes the search, in the interface language', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.fill('#card-search', 'zzzz nothing');
+  await expect(page.locator('#cards .empty')).toHaveText('No event on this day matches “zzzz nothing”.');
+  await expect(page.locator('#more')).toBeHidden();
+  await page.click('[data-ui-lang="fr"]');
+  await expect(page.locator('#cards .empty')).toHaveText('Aucun événement de ce jour ne correspond à « zzzz nothing ».');
+});
