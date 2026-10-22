@@ -15,3 +15,13 @@ test('most extra views first', async ({ page }) => {
   expect(await qids(page)).toEqual(first12([...today.events].sort((a, b) => b.excess - a.excess)));
   expect(page.errors).toEqual([]);
 });
+
+test('widest first is the file order and the default', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#card-sort')).toHaveValue('widest');
+  expect(await qids(page)).toEqual(first12(today.events));
+  await page.selectOption('#card-sort', 'views');
+  await page.selectOption('#card-sort', 'widest');
+  expect(await qids(page)).toEqual(first12(today.events));
+});
