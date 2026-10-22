@@ -39,3 +39,12 @@ test('row contents: language, first spike hour, +lag, peak surprise, extra views
   const row = page.locator('#spread-rows tr', { hasText: 'German' });
   await expect(row.locator('td')).toHaveText(['09:00', `+${de.lag} h`, '1,886.4', de.excess.toLocaleString('en-GB')]);
 });
+
+test('headings and caption follow the interface language', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.click('[data-ui-lang="es"]');
+  await expect(page.locator('#spread summary')).toHaveText('La difusión en una tabla');
+  await expect(page.locator('#spread thead th')).toHaveText(['Idioma', 'Primer pico (UTC)', 'Tras el primero', 'Sorpresa máxima', 'Visitas de más']);
+  await expect(page.locator('#spread-caption')).toContainText('los idiomas en el orden de su pico');
+});
