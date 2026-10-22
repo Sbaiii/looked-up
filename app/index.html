@@ -156,7 +156,7 @@
                     <button type="button" role="radio" aria-checked="false" data-tier="international" data-i18n="timeline.intl">International and up</button>
                     <button type="button" role="radio" aria-checked="false" data-tier="planetary" data-i18n="timeline.planet">Planetary only</button>
                 </div>
-                <div class="filters filters--small" id="cat-filters" role="radiogroup" data-i18n-aria="timeline.category" aria-label="Category"></div>
+                <div class="filters filters--small" id="cat-filters" aria-controls="cards" role="radiogroup" data-i18n-aria="timeline.category" aria-label="Category"></div>
                 <div class="cardtools">
                     <label class="field search">
                         <span class="meta" data-i18n="timeline.search">Search this day's events</span>
@@ -164,7 +164,7 @@
                     </label>
                     <label class="field">
                         <span class="meta" data-i18n="timeline.sort">Order</span>
-                        <select id="card-sort">
+                        <select id="card-sort" aria-controls="cards">
                             <option value="widest" data-i18n="timeline.sort_widest">Widest first</option>
                             <option value="views" data-i18n="timeline.sort_views">Most extra views</option>
                             <option value="fastest" data-i18n="timeline.sort_fastest">Fastest spread</option>
