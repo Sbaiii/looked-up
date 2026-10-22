@@ -490,6 +490,7 @@ function showDay(d, payload, qid) {
     $('day-slider').setAttribute('aria-valuetext', dayLabel(d));
     $('day-out').textContent = dayLabel(d);
     $('day-archive').hidden = !d.archive;
+    $('day-pick').value = d.today ? todayIso() : d.iso;
     renderBars();
     state.payload = payload;
     state.shown = PAGE;
@@ -633,6 +634,7 @@ function buildDays() {
     days.push({ iso: todayIso(), count: state.today.summary?.events ?? state.today.events.length, today: true });
     state.days = days;
     $('day-slider').max = days.length - 1;
+    $('day-pick').max = todayIso();
 }
 
 /** Redraw the whole page, for example after the language changes. */
@@ -663,6 +665,12 @@ function wire() {
     $('copy-day').addEventListener('click', (e) => copyLink(dayHash(shownDay()) === '#/today'
         ? `#/day/${todayIso()}` : dayHash(shownDay()), e.currentTarget));
     $('download-day').addEventListener('click', downloadDay);
+    $('day-pick').addEventListener('change', (e) => {
+        const iso = e.target.value;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+        setHash(iso === todayIso() ? '#/today' : `#/day/${iso}`);
+        route({ scroll: false });       // slider day, archive day, or the latest day when there is no file
+    });
     $('more').addEventListener('click', () => { state.shown += PAGE; renderCards(); });
     $('replay').addEventListener('click', () => { if (state.hero.event) select(state.hero.event, { animate: true }); });
     $('lang-select').addEventListener('change', (e) => { state.lang = e.target.value; renderLanguages(); setHash(`#/lang/${state.lang}`); });
