@@ -77,3 +77,10 @@ test('an empty search keeps every event; a description in Japanese is searchable
   assert.equal(visible(evs, { query: '' }).length, 2);
   assert.deepEqual(visible(evs, { query: fold('作家') }).map((e) => e.qid), ['Q1']);
 });
+
+test('sortSpread copes with no rows and an unknown key', async () => {
+  const { sortSpread } = await import('../../../app/js/filters.js');
+  assert.deepEqual(sortSpread(undefined), []);
+  const rows = [{ lang: 'fr', lag: 1 }, { lang: 'en', lag: 0 }];
+  assert.deepEqual(sortSpread(rows, 'nonsense').map((r) => r.lang), ['en', 'fr']);
+});
