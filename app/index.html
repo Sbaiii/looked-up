@@ -173,6 +173,7 @@
                         </select>
                     </label>
                 </div>
+                <p class="lang-chip" id="lang-chip" hidden><span id="lang-chip-text"></span> <button type="button" class="linkbtn" id="lang-chip-clear" data-i18n-aria="timeline.lang_clear" aria-label="Remove the language filter">✕</button></p>
                 <p class="help shown" id="cards-shown" aria-live="polite" hidden></p>
                 <ol class="cards" id="cards"></ol>
                 <button type="button" class="btn btn--wide" id="more" data-i18n="event.more" hidden>Show more</button>
@@ -209,6 +210,7 @@
                     <div>
                         <h3 class="h3" data-i18n="languages.top">Top events</h3>
                         <ol class="mini" id="lang-top"></ol>
+                        <button type="button" class="linkbtn" id="lang-filter" data-i18n="languages.filter">Show only these events in the day's list</button>
                     </div>
                     <div>
                         <h3 class="h3" data-i18n="languages.only">Only here</h3>

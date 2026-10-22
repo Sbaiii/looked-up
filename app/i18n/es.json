@@ -108,7 +108,9 @@
     "sort_views": "Más visitas de más",
     "sort_fastest": "Difusión más rápida",
     "sort_latest": "Más recientes",
-    "sort_earliest": "Más antiguos"
+    "sort_earliest": "Más antiguos",
+    "lang_filter": "Con pico en {lang}",
+    "lang_clear": "Quitar el filtro de idioma"
   },
   "languages": {
     "kicker": "fig. 02 · por idioma",
@@ -118,7 +120,8 @@
     "top": "Principales eventos",
     "only": "Solo aquí",
     "only_help": "Atención de una sola comunidad: al menos el 95 % de las visitas adicionales vino de este idioma.",
-    "none": "Nada para este idioma ese día."
+    "none": "Nada para este idioma ese día.",
+    "filter": "Mostrar solo estos eventos en la lista del día"
   },
   "briefing": {
     "kicker": "fig. 03 · el día en palabras",

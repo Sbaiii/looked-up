@@ -108,7 +108,9 @@
     "sort_views": "Most extra views",
     "sort_fastest": "Fastest spread",
     "sort_latest": "Latest first",
-    "sort_earliest": "Earliest first"
+    "sort_earliest": "Earliest first",
+    "lang_filter": "Spiking in {lang}",
+    "lang_clear": "Remove the language filter"
   },
   "languages": {
     "kicker": "fig. 02 · by language",
@@ -118,7 +120,8 @@
     "top": "Top events",
     "only": "Only here",
     "only_help": "Attention from one community: at least 95 % of the extra views came from this language.",
-    "none": "Nothing for this language on this day."
+    "none": "Nothing for this language on this day.",
+    "filter": "Show only these events in the day's list"
   },
   "briefing": {
     "kicker": "fig. 03 · the day in words",
