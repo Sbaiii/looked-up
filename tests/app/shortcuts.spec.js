@@ -41,3 +41,16 @@ test('the keyboard help line: shown with a mouse, hidden on touch screens, trans
   await page.click('[data-ui-lang="es"]');
   await expect(help).toHaveText('Teclado: ← → cambia de día · J K evento siguiente y anterior · T hoy · / buscar');
 });
+
+test('J selects the next card, K the previous one, and the URL names the event', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  const ids = await page.locator('#cards .card').evaluateAll((cs) => cs.map((c) => c.dataset.qid));
+  const selected = () => page.locator('.card.is-selected').getAttribute('data-qid');
+  const start = ids.indexOf(await selected());
+  await page.locator('body').press('j');
+  expect(await selected()).toBe(ids[start + 1]);
+  await expect(page).toHaveURL(new RegExp(`#/day/2026-08-17/event/${ids[start + 1]}$`));
+  await page.keyboard.press('k');                                    // focus is now on the card: keys still work
+  expect(await selected()).toBe(ids[start]);
+});
