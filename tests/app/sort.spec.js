@@ -50,3 +50,13 @@ test('fastest spread first', async ({ page }) => {
     expect(a.spread_h < b.spread_h || (a.spread_h === b.spread_h && a.breadth >= b.breadth)).toBe(true);
   }
 });
+
+test('order labels translate, and the order stays when the day changes', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.selectOption('#card-sort', 'views');
+  await page.click('[data-ui-lang="fr"]');
+  await expect(page.locator('#card-sort option[value="views"]')).toHaveText('Le plus de vues en plus');
+  await page.click('#prev-day');
+  await expect(page.locator('#card-sort')).toHaveValue('views');
+});
