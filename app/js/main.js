@@ -501,6 +501,7 @@ function showDay(d, payload, qid) {
         if (TIER_RANK[target.tier] < min) setTier('noticed');
         if (!matches(target, state.query)) { state.query = ''; $('card-search').value = ''; }   // the linked event must show
         if (state.category && target.category !== state.category) state.category = null;
+        if (state.langFilter && !(target.langs || []).some((r) => r.lang === state.langFilter)) state.langFilter = null;
         const pos = visibleEvents().findIndex((e) => e.id === target.id);
         state.shown = Math.max(PAGE, Math.ceil((pos + 1) / PAGE) * PAGE);
     }
