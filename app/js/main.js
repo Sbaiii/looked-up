@@ -699,7 +699,7 @@ function wire() {
     addEventListener('keydown', onKey);
 }
 
-/** Keyboard shortcuts: ← and → step through days, T returns to today, / jumps to the search (Escape clears it); never while typing in another field or with a modifier key. */
+/** Keyboard shortcuts: ← and → step through days, T returns to today, J and K move between cards, / jumps to the search (Escape clears it); never while typing in another field or with a modifier key. */
 function onKey(e) {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || !state.today) return;
     if (e.key === 'Escape' && e.target.id === 'card-search' && e.target.value) {
@@ -712,6 +712,20 @@ function onKey(e) {
     if (press) { e.preventDefault(); $(press).click(); }
     else if (e.key === 't' || e.key === 'T') { e.preventDefault(); selectDay(state.days.length - 1); }
     else if (e.key === '/') { e.preventDefault(); $('card-search').focus(); }
+    else if (e.key === 'j' || e.key === 'k') { e.preventDefault(); stepCard(e.key === 'j' ? 1 : -1); }
+}
+
+/** Select the next (+1) or previous (-1) visible card, or the first one when none is selected; focus its title. */
+function stepCard(dir) {
+    const cards = [...document.querySelectorAll('#cards .card')];
+    if (!cards.length) return;
+    const i = cards.findIndex((c) => c.dataset.id === state.selected);
+    const next = cards[i < 0 ? 0 : Math.max(0, Math.min(cards.length - 1, i + dir))];
+    const ev = findEvent(next.dataset.id);
+    if (!ev) return;
+    select(ev, { push: true });
+    next.querySelector('.card__title button').focus({ preventScroll: true });
+    next.scrollIntoView({ behavior: smooth(), block: 'nearest' });
 }
 
 /** Start the app: theme, language, live strip and map, then load today and stats, pick the hero and follow any deep link. */
