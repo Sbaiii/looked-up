@@ -6,7 +6,7 @@ from datetime import datetime
 import pytest
 from conftest import HOURLY_SAMPLE, LANGS
 
-from lookedup import query
+from lookedup import db, query
 from lookedup.store import LocalStore, write_hours
 from lookedup.transform import hourly_dump_to_table
 
@@ -52,8 +52,8 @@ def test_connect_views(lake, tmp_path):
     sl.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(pa.table({"lang": ["en"], "title": ["Lisbon"], "qid": [597]}), sl)
     con = query.connect(local=True)
-    assert con.sql("SELECT count(*) FROM hourly").fetchone()[0] == lake.num_rows
-    assert con.sql("SELECT qid FROM sitelinks WHERE title = 'Lisbon'").fetchone()[0] == 597
+    assert db.one(con, "SELECT count(*) FROM hourly")[0] == lake.num_rows
+    assert db.one(con, "SELECT qid FROM sitelinks WHERE title = 'Lisbon'")[0] == 597
 
 
 class _Con:
