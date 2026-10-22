@@ -71,3 +71,9 @@ test('unknown tier or order fall back to everything, in file order', () => {
   const evs = [ev('A', { tier: 'planetary', excess: 1 }), ev('B', { excess: 9 })];
   assert.deepEqual(visible(evs, { tier: 'nonsense', sort: 'nonsense' }).map((e) => e.qid), ['A', 'B']);
 });
+
+test('an empty search keeps every event; a description in Japanese is searchable', () => {
+  const evs = [ev('Q1', { desc: { ja: '日本の作家' } }), ev('Q2')];
+  assert.equal(visible(evs, { query: '' }).length, 2);
+  assert.deepEqual(visible(evs, { query: fold('作家') }).map((e) => e.qid), ['Q1']);
+});
