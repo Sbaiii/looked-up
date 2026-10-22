@@ -409,7 +409,7 @@ function renderSpread(ev) {
     $('spread-rows').replaceChildren(...rows.map((r) => el('tr', {},
         el('th', { scope: 'row', text: langNative(r.lang) }),
         el('td', { text: i18n.hour(r.first) }),
-        el('td', { text: within(r.lag) }),
+        el('td', { text: `+${r.lag} h` }),          // compact on purpose: the table has to fit a phone
         el('td', { text: one.format(r.surprise) }),
         el('td', { text: num(r.excess) }))));
 }

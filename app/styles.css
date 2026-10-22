@@ -408,7 +408,7 @@ body { padding-bottom: calc(3.3rem + env(safe-area-inset-bottom)); }
 .spread__scroll { overflow-x: auto; max-height: 22rem; overflow-y: auto; margin-bottom: 0.6rem; }
 .spread table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .spread caption { text-align: left; color: var(--muted); padding: 0.3rem 0 0.5rem; }
-.spread th, .spread td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.spread th, .spread td { padding: 0.3rem 0.4rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
 .spread th:first-child, .spread thead th:first-child { text-align: left; }
 .spread thead th { position: sticky; top: 0; background: var(--paper); color: var(--muted); font-weight: 500; }
 .spread td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
