@@ -425,3 +425,7 @@ input[type='date'] {
 }
 .lang-chip[hidden] { display: none; }
 .lang-chip .linkbtn { text-decoration: none; padding: 0.2rem 0.6rem; min-height: 2rem; }
+.sortbtn { color: inherit; font: inherit; padding: 0; text-align: inherit; cursor: pointer; }
+.sortbtn:hover { color: var(--ink); }
+th[aria-sort='ascending'] .sortbtn::after { content: ' ↑'; color: var(--accent); }
+th[aria-sort='descending'] .sortbtn::after { content: ' ↓'; color: var(--accent); }
