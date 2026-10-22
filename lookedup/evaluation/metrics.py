@@ -73,7 +73,7 @@ def variant_events(ctx: Context, p: EventParams, name: str, spikes: str = "spike
 
 def recall(ctx: Context, events: str, window_h: int, majors: str = "majors") -> dict:
     """Share of major (date, qid) pairs with an event start in [date - w, date + 24h + w)."""
-    r = ctx.con.execute(f"""
+    r = db.one(ctx.con, f"""
         WITH hit AS (
             SELECT m.date, m.qid, bool_or(e.qid IS NOT NULL) AS detected
             FROM {majors} m LEFT JOIN {events} e ON e.qid = m.qid
@@ -81,7 +81,7 @@ def recall(ctx: Context, events: str, window_h: int, majors: str = "majors") -> 
              AND e.start_hour <  m.date::TIMESTAMP + INTERVAL 24 HOUR + INTERVAL {window_h} HOUR
             GROUP BY ALL
         )
-        SELECT count(*), count(*) FILTER (WHERE detected) FROM hit""").fetchone()
+        SELECT count(*), count(*) FILTER (WHERE detected) FROM hit""")
     return {"pairs": r[0], "detected": r[1], "recall": r[1] / r[0] if r[0] else None}
 
 
@@ -103,7 +103,7 @@ def recall_by_section(ctx: Context, events: str, window_h: int) -> list[tuple]:
 def precision_proxy(ctx: Context, events: str) -> dict:
     """Share of events (in the evaluation period) whose QID is linked from the portal within ±2 days."""
     k = ctx.cfg.raw["evaluation"]["precision_window_days"]
-    r = ctx.con.execute(f"""
+    r = db.one(ctx.con, f"""
         WITH e AS (SELECT * FROM {events} WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'),
         m AS (
             SELECT e.qid, e.start_hour, bool_or(p.qid IS NOT NULL) AS in_portal
@@ -111,7 +111,7 @@ def precision_proxy(ctx: Context, events: str) -> dict:
              AND p.date BETWEEN e.start_hour::DATE - {k} AND e.start_hour::DATE + {k}
             GROUP BY ALL
         )
-        SELECT count(*), count(*) FILTER (WHERE in_portal) FROM m""").fetchone()
+        SELECT count(*), count(*) FILTER (WHERE in_portal) FROM m""")
     return {"events": r[0], "in_portal": r[1], "precision_proxy": r[1] / r[0] if r[0] else None}
 
 
@@ -207,8 +207,8 @@ def h2_lead_language(ctx: Context, events: str, claims_cache: Path) -> dict:
         if "en" not in langs:
             geo_non_en += 1
             hits_non_en += lead in langs
-    base = ctx.con.execute(f"""SELECT avg((lead_lang = 'en')::INT) FROM {events}
-        WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'""").fetchone()[0]
+    base = db.one(ctx.con, f"""SELECT avg((lead_lang = 'en')::INT) FROM {events}
+        WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'""")[0]
     share = hits / geo if geo else None
     return {"matched_events": len(rows), "geolocatable": geo, "lead_is_official": hits, "share": share,
             "geolocatable_non_english_countries": geo_non_en, "share_non_english_countries":
@@ -250,8 +250,8 @@ def detection_delays(ctx: Context, events: str) -> dict:
 
 def event_count(ctx: Context, events: str) -> int:
     """Number of events in the evaluation period."""
-    return ctx.con.execute(f"""SELECT count(*) FROM {events}
-        WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'""").fetchone()[0]
+    return db.one(ctx.con, f"""SELECT count(*) FROM {events}
+        WHERE start_hour::DATE BETWEEN DATE '{ctx.eval_start}' AND DATE '{ctx.end}'""")[0]
 
 
 def to_jsonable(x: object) -> str | float:
