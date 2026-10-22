@@ -13,3 +13,14 @@ test('typing narrows the cards to matching events', async ({ page }) => {
   expect(await page.locator('#cards .card').count()).toBeGreaterThan(1);
   expect(page.errors).toEqual([]);
 });
+
+test('accents, case and other languages', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.fill('#card-search', 'NAVANETHEM');                  // the French and German label of Navi Pillay
+  await expect(page.locator('#cards .card[data-qid="Q242078"]')).toHaveCount(1);
+  await page.fill('#card-search', 'нави');                         // the Russian label, in Cyrillic
+  await expect(page.locator('#cards .card[data-qid="Q242078"]')).toHaveCount(1);
+  await page.fill('#card-search', 'droits de lhomme'.replace('lh', "l'h"));   // French description
+  await expect(page.locator('#cards .card[data-qid="Q242078"]')).toHaveCount(1);
+});
