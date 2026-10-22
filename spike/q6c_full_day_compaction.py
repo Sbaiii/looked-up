@@ -52,6 +52,6 @@ for name, where in [("all", "true"), ("min5", "views >= 5")]:
     res[f"day_{name}_compact_s"] = round(time.perf_counter() - t, 1)
     res[f"day_{name}_gb_year"] = round(dst.stat().st_size * 365 / 1e9, 1)
 res["compaction_ratio_all"] = round(res["day_all_bytes"] / hourly_bytes, 3)
-res["rows_all"] = con.execute(f"SELECT count(*) FROM read_parquet('{out_dir}/hour=*.parquet')").fetchone()[0]
+res["rows_all"] = con.execute(f"SELECT count(*) FROM read_parquet('{out_dir}/hour=*.parquet')").fetchall()[0][0]
 (DERIVED / "q6c_full_day.json").write_text(json.dumps(res, indent=2))
 print(json.dumps(res, indent=2))
