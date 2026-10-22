@@ -33,3 +33,11 @@ test('UTF-8 BOM, and labels in the interface language', async ({ page }) => {
   const withFr = d.events.find((e) => e.labels.fr && e.labels.fr !== e.labels.en);
   if (withFr) expect(text).toContain(withFr.labels.fr);
 });
+
+test('today downloads under its own date', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const today = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'today.json'), 'utf8'));
+  const { name } = await download(page);
+  expect(name).toBe(`looked-up-${today.generated_at.slice(0, 10)}.csv`);
+});
