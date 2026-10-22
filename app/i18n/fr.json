@@ -141,7 +141,14 @@
     "flat": "Carte plane",
     "less": "moins",
     "more": "plus",
-    "scale": "Pic de surprise dans chaque langue, même échelle pour chaque événement"
+    "scale": "Pic de surprise dans chaque langue, même échelle pour chaque événement",
+    "table": "La diffusion en tableau",
+    "table_caption": "{label} : les langues dans l'ordre de leur pic",
+    "col_lang": "Langue",
+    "col_first": "Premier pic (UTC)",
+    "col_lag": "Après la première",
+    "col_surprise": "Surprise maximale",
+    "col_excess": "Vues en plus"
   },
   "about": {
     "kicker": "fig. 04 · fonctionnement",

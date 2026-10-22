@@ -141,7 +141,14 @@
     "flat": "Flat map",
     "less": "less",
     "more": "more",
-    "scale": "Peak surprise in each language, same scale for every event"
+    "scale": "Peak surprise in each language, same scale for every event",
+    "table": "The spread as a table",
+    "table_caption": "{label}: languages in the order they spiked",
+    "col_lang": "Language",
+    "col_first": "First spike (UTC)",
+    "col_lag": "After the first",
+    "col_surprise": "Peak surprise",
+    "col_excess": "Extra views"
   },
   "about": {
     "kicker": "fig. 04 · how it works",

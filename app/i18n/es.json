@@ -141,7 +141,14 @@
     "flat": "Mapa plano",
     "less": "menos",
     "more": "más",
-    "scale": "Pico de sorpresa en cada idioma, la misma escala para cada evento"
+    "scale": "Pico de sorpresa en cada idioma, la misma escala para cada evento",
+    "table": "La difusión en una tabla",
+    "table_caption": "{label}: los idiomas en el orden de su pico",
+    "col_lang": "Idioma",
+    "col_first": "Primer pico (UTC)",
+    "col_lag": "Tras el primero",
+    "col_surprise": "Sorpresa máxima",
+    "col_excess": "Visitas de más"
   },
   "about": {
     "kicker": "fig. 04 · cómo funciona",
