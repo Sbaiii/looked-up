@@ -25,3 +25,9 @@ test('Escape in a non-empty search clears it, and does nothing elsewhere', () =>
   assert.equal(keyAction({ key: 'Escape', inField: true, inSearch: false }), null);
   assert.equal(keyAction({ key: 'Escape', inSearch: true, ctrlKey: true }), null);
 });
+
+test('J and K work in lower case only, T in both', () => {
+  assert.equal(keyAction({ key: 'J' }), null);
+  assert.equal(keyAction({ key: 'K' }), null);
+  assert.equal(keyAction({ key: 'T' }), 'today');
+});
