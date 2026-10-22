@@ -86,3 +86,17 @@ test('the placeholder follows the interface language', async ({ page }) => {
   await page.click('[data-ui-lang="es"]');
   await expect(page.locator('#card-search')).toHaveAttribute('placeholder', 'Nombre, descripción o número Q');
 });
+
+test('opening an event the search hides clears the search', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.fill('#card-search', 'zzzz');
+  await page.goto('./#/day/2026-08-17/event/Q171571');
+  await ready(page);
+  await page.evaluate(() => { history.pushState(null, '', '#/day/2026-08-16'); history.pushState(null, '', '#/day/2026-08-17/event/Q171571'); });
+  await page.fill('#card-search', 'zzzz');
+  await page.goBack();
+  await page.goForward();
+  await expect(page.locator('.card.is-selected')).toContainText('Hayden Panettiere');
+  await expect(page.locator('#card-search')).toHaveValue('');
+});
