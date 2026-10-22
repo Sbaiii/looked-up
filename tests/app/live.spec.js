@@ -124,3 +124,11 @@ test('?live= on another domain falls back to the default Worker', async ({ page 
   await expect(page.locator('#live-list li').first()).toContainText('Saïdou Simporé');
   expect(asked.some((u) => u.startsWith('https://evil.example'))).toBe(false);
 });
+
+test('a live event name links the article where it burst first', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const link = page.locator('#live-list li').first().locator('strong a');
+  await expect(link).toHaveAttribute('href', `https://fr.wikipedia.org/wiki/${encodeURIComponent('Saïdou_Simporé')}`);
+  await expect(link).toHaveAttribute('rel', 'noopener');
+});
