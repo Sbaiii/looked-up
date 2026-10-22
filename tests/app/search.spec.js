@@ -55,3 +55,13 @@ test('/ jumps to the search, Escape clears it and brings the cards back', async 
   await expect(page.locator('#card-search')).toHaveValue('');
   await expect(page.locator('#cards .card')).toHaveCount(all);
 });
+
+test('letters and arrows typed in the search stay in the search', async ({ page }) => {
+  await page.goto('./#/day/2026-08-16');
+  await ready(page);
+  await page.locator('#card-search').focus();
+  await page.keyboard.type('t');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page).toHaveURL(/#\/day\/2026-08-16$/);
+  await expect(page.locator('#card-search')).toHaveValue('t');
+});
