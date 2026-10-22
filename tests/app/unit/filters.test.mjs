@@ -45,3 +45,9 @@ test('orders: views, fastest (wider first on ties), latest, earliest; the input 
   assert.deepEqual(evs.map((e) => e.qid), ['A', 'B', 'C']);
   assert.equal(SORTS.widest, null);
 });
+
+test('categoryCounts counts per category, missing ones as other', () => {
+  assert.deepEqual(categoryCounts([ev('1', { category: 'death' }), ev('2', { category: 'death' }), ev('3', { category: null })]),
+    { death: 2, other: 1 });
+  assert.deepEqual(categoryCounts(undefined), {});
+});
