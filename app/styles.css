@@ -412,3 +412,4 @@ body { padding-bottom: calc(3.3rem + env(safe-area-inset-bottom)); }
 .spread th:first-child, .spread thead th:first-child { text-align: left; }
 .spread thead th { position: sticky; top: 0; background: var(--paper); color: var(--muted); font-weight: 500; }
 .spread td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.scrubber__links { display: flex; flex-wrap: wrap; gap: 0 1rem; }
