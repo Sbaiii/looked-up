@@ -78,3 +78,11 @@ test('search and tier filter work together, and the search stays when the day ch
   await expect(page.locator('#card-search')).toHaveValue('pillay');
   await expect(page.locator('#cards .card, #cards .empty')).not.toHaveCount(0);
 });
+
+test('the placeholder follows the interface language', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#card-search')).toHaveAttribute('placeholder', 'Name, description or Q-number');
+  await page.click('[data-ui-lang="es"]');
+  await expect(page.locator('#card-search')).toHaveAttribute('placeholder', 'Nombre, descripción o número Q');
+});
