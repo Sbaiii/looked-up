@@ -646,6 +646,7 @@ function renderAll(animate) {
     $('day-slider').value = state.index;
     $('day-out').textContent = dayLabel(shownDay());
     $('day-slider').setAttribute('aria-valuetext', dayLabel(shownDay()));
+    $('day-pick').value = shownDay().today ? todayIso() : shownDay().iso;
     renderDay();
     renderSpread(findEvent(state.selected));
 }

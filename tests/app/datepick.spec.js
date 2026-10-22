@@ -41,3 +41,9 @@ test('a date with no file falls back to today', async ({ page }) => {
   await expect(page.locator('#day-archive')).toBeHidden();
   await expect(page.locator('#bars rect').last()).toHaveClass('is-on');
 });
+
+test('on the front page the field already shows today', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#day-pick')).toHaveValue(await page.locator('#day-pick').getAttribute('max'));
+});
