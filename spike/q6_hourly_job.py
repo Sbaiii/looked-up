@@ -75,7 +75,7 @@ def main() -> None:
         "file": latest["name"], "hour_start_utc": hour_start.isoformat(),
         "gz_bytes": dest.stat().st_size, "hour_parquet_bytes": out.stat().st_size,
         "day_parquet_bytes": day_file.stat().st_size, "hours_in_day_partition": hours_in_day,
-        "rows": con.execute(f"SELECT count(*) FROM '{out}'").fetchone()[0],
+        "rows": con.execute(f"SELECT count(*) FROM '{out}'").fetchall()[0][0],
         "peak_rss_mb": round(rss / (1024 * 1024 if sys.platform == "darwin" else 1024), 0),
         **{k: round(v, 2) for k, v in timings.items()},
     }
