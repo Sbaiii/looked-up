@@ -116,10 +116,10 @@ def main() -> None:
     t0 = time.perf_counter()
     con.execute(f"CREATE TABLE pv AS {load_sql(newest)}")
     load_s = time.perf_counter() - t0
-    n = con.execute("SELECT count(*) FROM pv").fetchone()[0]
+    n = con.execute("SELECT count(*) FROM pv").fetchall()[0][0]
     report["duckdb_load_s"] = round(load_s, 2)
     report["duckdb_rows"] = n
-    report["bytes_col_nonzero"] = con.execute("SELECT count(*) FROM pv WHERE bytes <> 0").fetchone()[0]
+    report["bytes_col_nonzero"] = con.execute("SELECT count(*) FROM pv WHERE bytes <> 0").fetchall()[0][0]
 
     proj = con.execute("""
         SELECT project, count(*) AS rows, sum(views) AS views FROM pv
@@ -165,20 +165,20 @@ def main() -> None:
     """).fetchall()
     report["top50_langs"] = [[l, int(v), round(100 * (mv or 0) / v, 1)] for l, v, mv in top50]
     langs = ",".join(f"'{l}'" for l, _, _ in top50)
-    total_wp = con.execute("SELECT sum(views) FROM wp").fetchone()[0]
-    total_all = con.execute("SELECT sum(views) FROM pv").fetchone()[0]
+    total_wp = con.execute("SELECT sum(views) FROM wp").fetchall()[0][0]
+    total_all = con.execute("SELECT sum(views) FROM pv").fetchall()[0][0]
     top50_views = sum(v for _, v, _ in top50)
     report["views_total"] = int(total_all)
     report["views_wikipedia"] = int(total_wp)
     report["views_top50"] = int(top50_views)
-    report["wikipedia_langs_present"] = con.execute("SELECT count(DISTINCT lang) FROM wp").fetchone()[0]
+    report["wikipedia_langs_present"] = con.execute("SELECT count(DISTINCT lang) FROM wp").fetchall()[0][0]
 
     # Variant A: keep desktop/mobile rows separate
     out_wp = DERIVED / "pv_wp50.parquet"
     con.execute(f"""COPY (SELECT lang, mobile, page_title, views FROM wp WHERE lang IN ({langs})
                     ORDER BY lang, page_title) TO '{out_wp}' (FORMAT parquet, COMPRESSION zstd)""")
     report["parquet_wp50_bytes"] = out_wp.stat().st_size
-    report["rows_wp50"] = con.execute(f"SELECT count(*) FROM wp WHERE lang IN ({langs})").fetchone()[0]
+    report["rows_wp50"] = con.execute(f"SELECT count(*) FROM wp WHERE lang IN ({langs})").fetchall()[0][0]
 
     # Variant B: desktop+mobile summed per (lang, title)
     out_wp_sum = DERIVED / "pv_wp50_summed.parquet"
@@ -186,7 +186,7 @@ def main() -> None:
                     GROUP BY 1, 2 ORDER BY 1, 2) TO '{out_wp_sum}' (FORMAT parquet, COMPRESSION zstd)""")
     report["parquet_wp50_summed_bytes"] = out_wp_sum.stat().st_size
     report["rows_wp50_summed"] = con.execute(
-        f"SELECT count(*) FROM (SELECT DISTINCT lang, page_title FROM wp WHERE lang IN ({langs}))").fetchone()[0]
+        f"SELECT count(*) FROM (SELECT DISTINCT lang, page_title FROM wp WHERE lang IN ({langs}))").fetchall()[0][0]
 
     # Variant C: summed + drop titles with views < 2 in the hour (long tail)
     out_wp_min = DERIVED / "pv_wp50_min2.parquet"
@@ -196,10 +196,10 @@ def main() -> None:
 
     # Mobile/desktop split per top language
     report["mobile_share_wikipedia_pct"] = round(
-        100 * con.execute("SELECT sum(views) FILTER (WHERE mobile) / sum(views) FROM wp").fetchone()[0], 1)
+        100 * con.execute("SELECT sum(views) FILTER (WHERE mobile) / sum(views) FROM wp").fetchall()[0][0], 1)
     report["titles_on_both"] = con.execute("""
         SELECT count(*) FROM (SELECT lang, page_title FROM wp GROUP BY 1,2 HAVING count(DISTINCT mobile) = 2)
-    """).fetchone()[0]
+    """).fetchall()[0][0]
 
     # ---- extrapolation -------------------------------------------------------------
     # Scale by the gz volume of a whole real day vs this hour's gz (captures diurnal cycle).
@@ -215,7 +215,7 @@ def main() -> None:
     # The per-article endpoint has no hourly granularity, so compare the en.wikipedia
     # total (en + en.m) in the newest file with aggregate hourly values per agent.
     fhour = files[-1]["hour"]
-    dump_en = con.execute("SELECT sum(views) FROM pv WHERE project IN ('en','en.m')").fetchone()[0]
+    dump_en = con.execute("SELECT sum(views) FROM pv WHERE project IN ('en','en.m')").fetchall()[0][0]
     start = (fhour - timedelta(hours=2)).strftime("%Y%m%d%H")
     end = fhour.strftime("%Y%m%d%H")
     api = {}
