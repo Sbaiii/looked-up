@@ -611,13 +611,19 @@ function wire() {
     addEventListener('keydown', onKey);
 }
 
-/** Keyboard shortcuts: ← and → step through days, T returns to today; never while typing in a field or with a modifier key. */
+/** Keyboard shortcuts: ← and → step through days, T returns to today, / jumps to the search (Escape clears it); never while typing in another field or with a modifier key. */
 function onKey(e) {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || !state.today) return;
+    if (e.key === 'Escape' && e.target.id === 'card-search' && e.target.value) {
+        e.target.value = '';
+        e.target.dispatchEvent(new Event('input'));
+        return;
+    }
     if (e.target.closest?.('input, select, textarea, [contenteditable="true"]')) return;
     const press = { ArrowLeft: 'prev-day', ArrowRight: 'next-day' }[e.key];
     if (press) { e.preventDefault(); $(press).click(); }
     else if (e.key === 't' || e.key === 'T') { e.preventDefault(); selectDay(state.days.length - 1); }
+    else if (e.key === '/') { e.preventDefault(); $('card-search').focus(); }
 }
 
 /** Start the app: theme, language, live strip and map, then load today and stats, pick the hero and follow any deep link. */
