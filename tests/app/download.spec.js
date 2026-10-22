@@ -22,3 +22,14 @@ test('a past day downloads as looked-up-<date>.csv with every event', async ({ p
   expect(lines).toHaveLength(1 + d.events.length + (d.single_language_events || []).length);
   expect(page.errors).toEqual([]);
 });
+
+test('UTF-8 BOM, and labels in the interface language', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.click('[data-ui-lang="fr"]');
+  const { text } = await download(page);
+  expect(text.charCodeAt(0)).toBe(0xfeff);
+  const d = day('2026-08-17');
+  const withFr = d.events.find((e) => e.labels.fr && e.labels.fr !== e.labels.en);
+  if (withFr) expect(text).toContain(withFr.labels.fr);
+});
