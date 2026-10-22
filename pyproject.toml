@@ -11,7 +11,7 @@ requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Sbaiii" }]
 dependencies = [
-    "duckdb>=1.1,<2",   # 2.0 removed relation fetchone() and blocks a connection with an unread result
+    "duckdb>=1.1",
     "numpy>=1.26",
     "pyarrow>=15",
     "requests>=2.31",
@@ -22,7 +22,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
-warehouse = ["dbt-duckdb>=1.9", "scipy>=1.11", "matplotlib>=3.8"]
+warehouse = ["dbt-duckdb>=1.9", "duckdb<2", "scipy>=1.11", "matplotlib>=3.8"]   # dbt-duckdb not yet checked on DuckDB 2.0
 forecast = ["lightgbm==4.6.0", "scikit-learn==1.7.2"]
 
 [project.scripts]
