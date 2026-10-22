@@ -127,3 +127,13 @@ test('a visitor who chose the flat map keeps it after interacting', async ({ pag
   if (await page.locator('#viz-mode').isVisible()) await expect(page.locator('#viz-mode')).toHaveText('3D globe');
   expect(page.errors).toEqual([]);
 });
+
+test('printing keeps the briefing and the cards, without navigation, controls or the map', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.emulateMedia({ media: 'print' });
+  for (const sel of ['.header', '.livestrip', '.layout__viz', '.scrubber', '.cardtools']) await expect(page.locator(sel).first()).toBeHidden();
+  await expect(page.locator('#brief-text')).toBeVisible();
+  await expect(page.locator('#cards .card').first()).toBeVisible();
+  expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(255, 255, 255)');
+});
