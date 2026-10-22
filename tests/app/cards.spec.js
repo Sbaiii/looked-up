@@ -147,3 +147,13 @@ test('without a share sheet, cards have no Share button', async ({ page }) => {
   await ready(page);
   await expect(page.locator('#cards .card__links button', { hasText: 'Share' })).toHaveCount(0);
 });
+
+test('the hero Share button shares the hero event with its day link', async ({ page }) => {
+  await page.addInitScript(() => { window.__shared = []; navigator.share = async (d) => { window.__shared.push(d); }; });
+  await page.goto('./');
+  await ready(page);
+  await page.click('#hero-share');
+  const [d] = await page.evaluate(() => window.__shared);
+  expect(d.title).toBe('Navi Pillay');
+  expect(d.url).toMatch(/#\/day\/2026-10-09\/event\/Q242078$/);
+});
