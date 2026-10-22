@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from lookedup import db
+
 if TYPE_CHECKING:
     import duckdb
 
@@ -61,8 +63,8 @@ def score(con: duckdb.DuckDBPyConnection, cfg: AnalyticsConfig, sample_csv: Path
     assert set(labels.values()) <= set(LABELS), set(labels.values())
     flagged = {}
     for uid, r in s.items():
-        f = con.execute("""SELECT is_automated, is_low_mobile, is_flat FROM wh.main.int_automation_flags
-            WHERE lang = ? AND title = ? AND day = ?""", [r["lang"], r["title"], r["day"]]).fetchone()
+        f = db.one(con, """SELECT is_automated, is_low_mobile, is_flat FROM wh.main.int_automation_flags
+            WHERE lang = ? AND title = ? AND day = ?""", [r["lang"], r["title"], r["day"]])
         flagged[uid] = {"is_automated": bool(f and f[0]), "is_low_mobile": bool(f and f[1]), "is_flat": bool(f and f[2])}
     non = [u for u, l in labels.items() if l == "non_event"]
     evs = [u for u, l in labels.items() if l == "event"]
