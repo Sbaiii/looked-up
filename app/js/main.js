@@ -678,7 +678,7 @@ function wire() {
         state.langFilter = state.lang;
         state.shown = PAGE;
         renderCards();
-        scrollTo($('cards'));
+        scrollTo($('lang-chip'));          // the chip, not the cards: scroll-padding keeps it clear of the sticky header
     });
     $('lang-chip-clear').addEventListener('click', () => { state.langFilter = null; state.shown = PAGE; renderCards(); });
     $('day-pick').addEventListener('change', (e) => {
