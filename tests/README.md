@@ -5,7 +5,7 @@
 | `tests/test_*.py` | The Python pipeline: parsing, storage, scoring, events, evaluation, forecasts, app export | `.venv/bin/pytest` |
 | `tests/live/` | The Python reference implementation of the live layer | `.venv/bin/pytest tests/live` |
 | `tests/app/*.spec.js` | The web app in a browser (desktop and phone), with the Hub data mocked from `tests/app/fixtures/` | `npx playwright test` |
-| `tests/app/unit/` | The app's pure modules (briefing, hero selection, colour scale, map projection, translations and formats, the Hub data client) | `npm run test:unit` |
+| `tests/app/unit/` | The app's pure modules (briefing, hero selection, colour scale, map projection, translations and formats, the Hub data client, card filters and orders, keyboard shortcuts, CSV downloads) | `npm run test:unit` |
 | `worker/test/` | The Cloudflare Worker (rules, encoding, storage) in miniflare | `cd worker && npm test` |
 
 - `tests/fixtures/` holds small real samples (a dump excerpt, a Current events page, a minute of recent changes).
@@ -17,7 +17,9 @@
   functions replaced by fakes; `test_figures.py` renders every results figure into a temp folder.
 - `test_retrain.py` runs the weekly retrain end to end on a tiny warehouse; `tests/app/panels.spec.js` covers the
   panels around the day view, including the interface language a first visit picks from the browser;
-  `tests/app/cards.spec.js` the event cards and the hero (sparklines, Wikipedia links, the URL guard).
+  `tests/app/cards.spec.js` the event cards and the hero (sparklines, Wikipedia links, the URL guard, sharing).
+- The day tools each have a spec: `search`, `sort`, `categories`, `langfilter`, `spread`, `download`, `datepick` and
+  `shortcuts` (ADR 0035).
 - `test_agreement.py`, `test_run.py` and the end-to-end tests in `test_run_v2_helpers.py` and
   `test_forecast_train.py` run each evaluation on synthetic data, with the ground truths and warehouse faked.
 - Network calls (Wikimedia, Wikidata, the Hub) are always replaced by small fakes in the unit tests.
