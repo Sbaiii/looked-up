@@ -522,6 +522,7 @@ function renderDay() {
     const p = state.payload;
     const d = shownDay();
     $('day-count').textContent = t('timeline.count', { n: p.summary?.events ?? p.events.length });
+    $('download-day').disabled = !(p.events?.length || p.single_language_events?.length);     // nothing to download
     $('day-brief').textContent = compose(p, d.today ? todayIso() : d.iso).text;
     renderCategories();
     renderCards();

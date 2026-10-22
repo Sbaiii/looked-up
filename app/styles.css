@@ -440,3 +440,4 @@ th[aria-sort='descending'] .sortbtn::after { content: ' ↓'; color: var(--accen
     .card { break-inside: avoid; border-color: #bbbbbb; }
     a { color: #000000; text-decoration: none; }
 }
+.linkbtn:disabled { color: var(--faint); text-decoration: none; cursor: default; }
