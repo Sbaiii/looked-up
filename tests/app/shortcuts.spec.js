@@ -31,3 +31,13 @@ test('T goes back to today from a past day', async ({ page }) => {
   await expect(page).toHaveURL(/#\/today$/);
   await expect(page.locator('#day-out')).toHaveText('Today');
 });
+
+test('the keyboard help line: shown with a mouse, hidden on touch screens, translated', async ({ page, isMobile }) => {
+  await page.goto('./');
+  await ready(page);
+  const help = page.locator('#keys-help');
+  if (isMobile) { await expect(help).toBeHidden(); return; }
+  await expect(help).toHaveText('Keys: ← → change the day · T today');
+  await page.click('[data-ui-lang="es"]');
+  await expect(help).toHaveText('Teclado: ← → cambia de día · T hoy');
+});
