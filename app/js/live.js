@@ -28,7 +28,9 @@ function article(lang, title, text) {
     const a = el('a', text);
     a.href = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title)}`;
     a.rel = 'noopener';
-    return el('strong', null, null).appendChild(a).parentNode;
+    const s = el('strong');
+    s.append(a);
+    return s;
 }
 
 const list = (codes) => {
