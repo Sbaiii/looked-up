@@ -149,10 +149,22 @@
                     <button type="button" role="radio" aria-checked="false" data-tier="international" data-i18n="timeline.intl">International and up</button>
                     <button type="button" role="radio" aria-checked="false" data-tier="planetary" data-i18n="timeline.planet">Planetary only</button>
                 </div>
-                <label class="field search">
-                    <span class="meta" data-i18n="timeline.search">Search this day's events</span>
-                    <input type="search" id="card-search" autocomplete="off" spellcheck="false" data-i18n-placeholder="timeline.search_hint" placeholder="Name, description or Q-number">
-                </label>
+                <div class="cardtools">
+                    <label class="field search">
+                        <span class="meta" data-i18n="timeline.search">Search this day's events</span>
+                        <input type="search" id="card-search" autocomplete="off" spellcheck="false" data-i18n-placeholder="timeline.search_hint" placeholder="Name, description or Q-number">
+                    </label>
+                    <label class="field">
+                        <span class="meta" data-i18n="timeline.sort">Order</span>
+                        <select id="card-sort">
+                            <option value="widest" data-i18n="timeline.sort_widest">Widest first</option>
+                            <option value="views" data-i18n="timeline.sort_views">Most extra views</option>
+                            <option value="fastest" data-i18n="timeline.sort_fastest">Fastest spread</option>
+                            <option value="latest" data-i18n="timeline.sort_latest">Latest first</option>
+                            <option value="earliest" data-i18n="timeline.sort_earliest">Earliest first</option>
+                        </select>
+                    </label>
+                </div>
                 <ol class="cards" id="cards"></ol>
                 <button type="button" class="btn btn--wide" id="more" data-i18n="event.more" hidden>Show more</button>
                 <p class="help forecast-note" id="forecast-note" hidden></p>

@@ -97,7 +97,13 @@
     "empty": "No event matches this filter on this day.",
     "search": "Search this day's events",
     "search_hint": "Name, description or Q-number",
-    "no_match": "No event on this day matches “{q}”."
+    "no_match": "No event on this day matches “{q}”.",
+    "sort": "Order",
+    "sort_widest": "Widest first",
+    "sort_views": "Most extra views",
+    "sort_fastest": "Fastest spread",
+    "sort_latest": "Latest first",
+    "sort_earliest": "Earliest first"
   },
   "languages": {
     "kicker": "fig. 02 · by language",

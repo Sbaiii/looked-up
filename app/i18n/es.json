@@ -97,7 +97,13 @@
     "empty": "Ningún evento coincide con este filtro ese día.",
     "search": "Buscar en los eventos del día",
     "search_hint": "Nombre, descripción o número Q",
-    "no_match": "Ningún evento de este día coincide con «{q}»."
+    "no_match": "Ningún evento de este día coincide con «{q}».",
+    "sort": "Orden",
+    "sort_widest": "Más extendidos",
+    "sort_views": "Más visitas de más",
+    "sort_fastest": "Difusión más rápida",
+    "sort_latest": "Más recientes",
+    "sort_earliest": "Más antiguos"
   },
   "languages": {
     "kicker": "fig. 02 · por idioma",
