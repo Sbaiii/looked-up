@@ -413,3 +413,9 @@ body { padding-bottom: calc(3.3rem + env(safe-area-inset-bottom)); }
 .spread thead th { position: sticky; top: 0; background: var(--paper); color: var(--muted); font-weight: 500; }
 .spread td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .scrubber__links { display: flex; flex-wrap: wrap; gap: 0 1rem; }
+.pick { margin: 0.6rem 0 0.2rem; max-width: 14rem; }
+input[type='date'] {
+    min-height: 2.6rem; padding: 0.4rem 0.7rem; border-radius: 8px; border: 1px solid var(--rule);
+    background: var(--paper-2); color-scheme: dark;
+}
+:root[data-theme='light'] input[type='date'] { color-scheme: light; }
