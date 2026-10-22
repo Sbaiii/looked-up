@@ -467,8 +467,7 @@ def backfill(store: Store, out_dir: Path, now: datetime | None = None, languages
             return [f for f in fs if f.exists()]
 
         newest = hourly(now.date() - timedelta(days=1), now.date())
-        last_hour = con.sql(f"SELECT max(ts_hour_start) FROM read_parquet([{', '.join(repr(str(f)) for f in newest)}])"
-                            ).fetchone()[0] if newest else None
+        last_hour = db.one(con, f"SELECT max(ts_hour_start) FROM read_parquet([{', '.join(repr(str(f)) for f in newest)}])")[0] if newest else None
         summaries = {}
         for d in sorted(days):
             summaries[f"{d:%Y-%m-%d}"] = write_day(con, out_dir, d, days[d], langs_by, titles, categories,
