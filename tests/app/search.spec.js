@@ -65,3 +65,16 @@ test('letters and arrows typed in the search stay in the search', async ({ page 
   await expect(page).toHaveURL(/#\/day\/2026-08-16$/);
   await expect(page.locator('#card-search')).toHaveValue('t');
 });
+
+test('search and tier filter work together, and the search stays when the day changes', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.fill('#card-search', 'pillay');
+  await page.click('[data-tier="international"]');
+  await expect(page.locator('#cards .card')).toHaveCount(1);              // Pillay is planetary, so still shown
+  await page.click('[data-tier="planetary"]');
+  await expect(page.locator('#cards .card')).toHaveCount(1);
+  await page.click('#prev-day');
+  await expect(page.locator('#card-search')).toHaveValue('pillay');
+  await expect(page.locator('#cards .card, #cards .empty')).not.toHaveCount(0);
+});
