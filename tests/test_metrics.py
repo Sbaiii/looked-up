@@ -5,6 +5,7 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
+from lookedup import db
 from lookedup.evaluation.metrics import to_jsonable
 
 
@@ -138,10 +139,10 @@ def test_open_context(tmp_path, monkeypatch):
 
     monkeypatch.delenv("LOOKEDUP_PERIOD_END", raising=False)
     ctx = open_context(*_warehouse(tmp_path), load())
-    assert ctx.con.sql("SELECT count(*) FROM spikes_ok").fetchone()[0] == 3
-    assert ctx.con.sql("SELECT count(*) FROM spikes_s1").fetchone()[0] == 4
+    assert db.one(ctx.con, "SELECT count(*) FROM spikes_ok")[0] == 3
+    assert db.one(ctx.con, "SELECT count(*) FROM spikes_s1")[0] == 4
     assert ctx.con.sql("SELECT qid, sections FROM majors").fetchall() == [(1, ["Sports"])]
-    assert ctx.con.sql("SELECT count(*) FROM portal_qids").fetchone()[0] == 2
+    assert db.one(ctx.con, "SELECT count(*) FROM portal_qids")[0] == 2
 
 
 def test_ablation_grid(tmp_path, monkeypatch):
