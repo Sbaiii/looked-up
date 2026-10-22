@@ -84,3 +84,10 @@ test('sortSpread copes with no rows and an unknown key', async () => {
   const rows = [{ lang: 'fr', lag: 1 }, { lang: 'en', lag: 0 }];
   assert.deepEqual(sortSpread(rows, 'nonsense').map((r) => r.lang), ['en', 'fr']);
 });
+
+test('events without labels or descriptions are still found by QID and never break the search', () => {
+  const bare = { qid: 'Q7', tier: 'noticed' };
+  assert.ok(matches(bare, 'q7'));
+  assert.ok(!matches(bare, 'paris'));
+  assert.deepEqual(visible([bare], { query: 'q7' }).map((e) => e.qid), ['Q7']);
+});
