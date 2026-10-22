@@ -30,3 +30,10 @@ def arrow(rel: duckdb.DuckDBPyRelation) -> pa.Table:
     """Fetch a relation as an Arrow table (``to_arrow_table`` since DuckDB 1.4, older name before)."""
     fetch = getattr(rel, "to_arrow_table", None) or rel.fetch_arrow_table
     return fetch()
+
+
+def one(con: duckdb.DuckDBPyConnection, sql: str, params: list | None = None) -> tuple | None:
+    """The first row of ``sql``, or None. Reads the whole result: DuckDB 2.0 keeps a connection busy until an
+    ``execute`` result has been read to the end, and it removed ``fetchone`` from relations."""
+    rows = (con.execute(sql, params) if params is not None else con.execute(sql)).fetchall()
+    return rows[0] if rows else None
