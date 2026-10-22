@@ -465,7 +465,7 @@ function showDay(d, payload, qid) {
     if (target && target.class !== 'single_language') {
         const min = TIER_RANK[state.tier];
         if (TIER_RANK[target.tier] < min) setTier('noticed');
-        const pos = state.payload.events.filter((e) => TIER_RANK[e.tier] >= TIER_RANK[state.tier]).findIndex((e) => e.id === target.id);
+        const pos = visibleEvents().findIndex((e) => e.id === target.id);
         state.shown = Math.max(PAGE, Math.ceil((pos + 1) / PAGE) * PAGE);
     }
     renderDay();
@@ -500,11 +500,16 @@ function matches(ev, q) {
     return [...Object.values(ev.labels || {}), ...Object.values(ev.desc || {}), ev.qid].some((s) => fold(s).includes(q));
 }
 
-/** The event cards of the shown day at or above the tier filter and matching the search, in the chosen order, a page at a time. */
-function renderCards() {
+/** The shown day's events at or above the tier filter and matching the search, in the chosen order. */
+function visibleEvents() {
     const min = TIER_RANK[state.tier];
     const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min && matches(e, state.query));
-    if (SORTS[state.sort]) list.sort(SORTS[state.sort]);
+    return SORTS[state.sort] ? list.sort(SORTS[state.sort]) : list;
+}
+
+/** The visible event cards, a page at a time. */
+function renderCards() {
+    const list = visibleEvents();
     const ol = $('cards');
     ol.replaceChildren(...list.slice(0, state.shown).map(card));
     renderForecastNote(!!ol.querySelector('.card__forecast'));
