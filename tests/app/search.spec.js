@@ -137,3 +137,10 @@ test('Clear filters appears with any filter and resets them all', async ({ page 
   await expect(page.locator('#cat-filters [data-category=""]')).toHaveAttribute('aria-checked', 'true');
   await expect(page.locator('#cards .card')).toHaveCount(12);
 });
+
+test('the card tools point assistive tech at the card list', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  for (const sel of ['#card-search', '#card-sort', '#cat-filters']) await expect(page.locator(sel)).toHaveAttribute('aria-controls', 'cards');
+  await expect(page.locator('#card-search')).toHaveAttribute('enterkeyhint', 'search');
+});
