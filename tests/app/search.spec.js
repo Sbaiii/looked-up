@@ -74,7 +74,7 @@ test('search and tier filter work together, and the search stays when the day ch
   await expect(page.locator('#cards .card')).toHaveCount(1);              // Pillay is planetary, so still shown
   await page.click('[data-tier="planetary"]');
   await expect(page.locator('#cards .card')).toHaveCount(1);
-  await page.click('#prev-day');
+  await page.locator('body').press('ArrowLeft');                 // the arrow button can still be moving on phones here
   await expect(page.locator('#card-search')).toHaveValue('pillay');
   await expect(page.locator('#cards .card, #cards .empty')).not.toHaveCount(0);
 });
