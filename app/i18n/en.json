@@ -102,6 +102,7 @@
     "search": "Search this day's events",
     "search_hint": "Name, description or Q-number",
     "no_match": "No event on this day matches “{q}”.",
+    "shown": "{shown} of {total} events shown",
     "sort": "Order",
     "sort_widest": "Widest first",
     "sort_views": "Most extra views",

@@ -102,6 +102,7 @@
     "search": "Buscar en los eventos del día",
     "search_hint": "Nombre, descripción o número Q",
     "no_match": "Ningún evento de este día coincide con «{q}».",
+    "shown": "{shown} de {total} eventos mostrados",
     "sort": "Orden",
     "sort_widest": "Más extendidos",
     "sort_views": "Más visitas de más",

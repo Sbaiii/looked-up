@@ -560,6 +560,9 @@ function renderCategories() {
 /** The visible event cards, a page at a time. */
 function renderCards() {
     const list = visibleEvents();
+    const total = (state.payload.events || []).length;
+    $('cards-shown').hidden = list.length === total;          // only when a filter or the search hides some
+    $('cards-shown').textContent = t('timeline.shown', { shown: list.length, total });
     const ol = $('cards');
     ol.replaceChildren(...list.slice(0, state.shown).map(card));
     renderForecastNote(!!ol.querySelector('.card__forecast'));
