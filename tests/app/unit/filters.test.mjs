@@ -19,3 +19,15 @@ test('matches looks at every label, every description and the QID', () => {
   assert.ok(matches(e, 'q90') && matches(e, ''));
   assert.ok(!matches(e, 'lyon'));
 });
+
+test('visible applies the tier floor, the category and the language together', () => {
+  const evs = [ev('Q1', { tier: 'planetary', category: 'death', langs: [{ lang: 'ja' }] }),
+    ev('Q2', { tier: 'international', category: 'death' }), ev('Q3', { category: 'sports', langs: [{ lang: 'ja' }] })];
+  const ids = (f) => visible(evs, f).map((e) => e.qid);
+  assert.deepEqual(ids({ tier: 'noticed' }), ['Q1', 'Q2', 'Q3']);
+  assert.deepEqual(ids({ tier: 'international' }), ['Q1', 'Q2']);
+  assert.deepEqual(ids({ tier: 'noticed', category: 'death' }), ['Q1', 'Q2']);
+  assert.deepEqual(ids({ tier: 'noticed', lang: 'ja' }), ['Q1', 'Q3']);
+  assert.deepEqual(ids({ tier: 'international', category: 'death', lang: 'ja' }), ['Q1']);
+  assert.deepEqual(visible(null, {}), []);
+});
