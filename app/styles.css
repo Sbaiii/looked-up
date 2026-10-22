@@ -267,6 +267,8 @@ button { background: none; border: none; cursor: pointer; }
     border: 1px solid var(--rule); color: var(--muted);
 }
 .filters button[aria-checked='true'] { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+.filters--small { margin-top: -0.6rem; }
+.filters--small button { font-size: 0.76rem; padding: 0.25rem 0.65rem; min-height: 2rem; }
 
 /* Event cards */
 .cards { list-style: none; display: grid; gap: 0.7rem; }
