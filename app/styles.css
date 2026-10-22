@@ -437,7 +437,6 @@ th[aria-sort='descending'] .sortbtn::after { content: ' ↓'; color: var(--accen
     .header, .bottomnav, .livestrip, .layout__viz, .scrubber, .filters, .cardtools, .lang-chip, #more, .hero__actions,
     .keys-help, .card__links, .spread summary, #languages, #forecast, .skip { display: none !important; }
     .spread { border: 0; padding: 0; }
-    .spread[open], .spread { display: block; }
     .card { break-inside: avoid; border-color: #bbbbbb; }
     a { color: #000000; text-decoration: none; }
 }
