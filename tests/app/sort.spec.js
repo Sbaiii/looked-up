@@ -38,3 +38,15 @@ test('latest and earliest first follow the start hour', async ({ page }) => {
   got = (await starts()).map((q) => byStart[q]);
   expect(got).toEqual([...got].sort((a, b) => a - b));
 });
+
+test('fastest spread first', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.selectOption('#card-sort', 'fastest');
+  const ev = Object.fromEntries(today.events.map((e) => [e.qid, e]));
+  const got = (await qids(page)).map((q) => ev[q]);
+  for (let i = 1; i < got.length; i++) {
+    const a = got[i - 1], b = got[i];
+    expect(a.spread_h < b.spread_h || (a.spread_h === b.spread_h && a.breadth >= b.breadth)).toBe(true);
+  }
+});
