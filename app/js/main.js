@@ -9,7 +9,7 @@ import { compose, excessPhrase } from './briefing.js';
 import { pickDay, pickHero, rank } from './select.js';
 import { renderLive, startLive } from './live.js';
 import { DAY_COLUMNS, dayRows, toCsv } from './csv.js';
-import { TIER_RANK, categoryCounts, fold, matches, visible } from './filters.js';
+import { SORTS, TIER_RANK, categoryCounts, fold, matches, visible } from './filters.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 12;
@@ -140,6 +140,13 @@ async function route({ scroll = true } = {}) {
 /* ---------------------------------------------------------------- theme and language */
 
 /** Wire the theme button: toggle light and dark, remember it, update theme-color and redraw the map colours. */
+/** The card order chosen on an earlier visit, if it is still one of the orders. */
+function restoreSort() {
+    let saved = null;
+    try { saved = localStorage.getItem('lookedup_sort'); } catch { /* ignore */ }
+    if (saved && saved in SORTS) { state.sort = saved; $('card-sort').value = saved; }
+}
+
 function initTheme() {
     $('theme').addEventListener('click', () => {
         const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -676,7 +683,12 @@ function wire() {
         renderCategories();
         renderCards();
     });
-    $('card-sort').addEventListener('change', (e) => { state.sort = e.target.value; state.shown = PAGE; renderCards(); });
+    $('card-sort').addEventListener('change', (e) => {
+        state.sort = e.target.value;
+        try { localStorage.setItem('lookedup_sort', state.sort); } catch { /* storage blocked: the choice lasts this visit */ }
+        state.shown = PAGE;
+        renderCards();
+    });
     $('card-search').addEventListener('input', (e) => { state.query = fold(e.target.value.trim()); state.shown = PAGE; renderCards(); });
     document.querySelector('.filters').addEventListener('click', (e) => {
         const b = e.target.closest('[data-tier]');
@@ -721,6 +733,7 @@ function stepCard(dir) {
 /** Start the app: theme, language, live strip and map, then load today and stats, pick the hero and follow any deep link. */
 async function boot() {
     initTheme();
+    restoreSort();
     await setLang(i18n.initialLang());
     wire();
     startLive();
