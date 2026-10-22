@@ -50,3 +50,13 @@ test('language and tier filters together, kept on the next day', async ({ page }
   await page.locator('body').press('ArrowLeft');
   await expect(page.locator('#lang-chip-text')).toHaveText('Spiking in English');
 });
+
+test('Clear filters also removes the language filter', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.selectOption('#lang-select', 'ja');
+  await page.click('#lang-filter');
+  await page.locator('#clear-filters').click();
+  await expect(page.locator('#lang-chip')).toBeHidden();
+  await expect(page.locator('#cards .card')).toHaveCount(12);
+});
