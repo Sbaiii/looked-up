@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import ClassVar
 
+from lookedup import db
 from lookedup.evaluation import run_v2 as R
 
 
@@ -57,8 +58,8 @@ def test_variant_built_once(tmp_path, monkeypatch):
     ev = _events(tmp_path, monkeypatch)
     name = ev.variant(2)
     assert name == "ev_n2" and ev.variant(2) == name
-    assert ev.con.sql(f"SELECT count(*) FROM {name}").fetchone()[0] == 1          # en and fr within the window
-    assert ev.con.sql(f"SELECT count(*) FROM {ev.variant(3)}").fetchone()[0] == 0
+    assert db.one(ev.con, f"SELECT count(*) FROM {name}")[0] == 1          # en and fr within the window
+    assert db.one(ev.con, f"SELECT count(*) FROM {ev.variant(3)}")[0] == 0
 
 
 def test_cached_builds_once_then_reads(tmp_path, monkeypatch):
