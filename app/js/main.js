@@ -27,6 +27,7 @@ const state = {
     lang: null,        // languages panel
     query: '',         // card search, folded (see fold)
     sort: 'widest',    // card order, a key of SORTS
+    category: null,    // category filter, null for all
 };
 
 /** Card orders. Day files list events widest first, so 'widest' keeps the file order; ties keep it too (stable sort). */
@@ -466,6 +467,7 @@ function showDay(d, payload, qid) {
         const min = TIER_RANK[state.tier];
         if (TIER_RANK[target.tier] < min) setTier('noticed');
         if (!matches(target, state.query)) { state.query = ''; $('card-search').value = ''; }   // the linked event must show
+        if (state.category && target.category !== state.category) state.category = null;
         const pos = visibleEvents().findIndex((e) => e.id === target.id);
         state.shown = Math.max(PAGE, Math.ceil((pos + 1) / PAGE) * PAGE);
     }
@@ -481,6 +483,7 @@ function renderDay() {
     const d = shownDay();
     $('day-count').textContent = t('timeline.count', { n: p.summary?.events ?? p.events.length });
     $('day-brief').textContent = compose(p, d.today ? todayIso() : d.iso).text;
+    renderCategories();
     renderCards();
     renderLanguages();
     renderBriefing();
@@ -504,8 +507,22 @@ function matches(ev, q) {
 /** The shown day's events at or above the tier filter and matching the search, in the chosen order. */
 function visibleEvents() {
     const min = TIER_RANK[state.tier];
-    const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min && matches(e, state.query));
+    const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min && matches(e, state.query)
+        && (!state.category || e.category === state.category));
     return SORTS[state.sort] ? list.sort(SORTS[state.sort]) : list;
+}
+
+/** The category chips of the shown day: every category present, most events first, each with its count. */
+function renderCategories() {
+    const counts = {};
+    for (const e of state.payload.events || []) counts[e.category || 'other'] = (counts[e.category || 'other'] || 0) + 1;
+    if (state.category && !counts[state.category]) state.category = null;    // not on this day: show everything
+    const chip = (cat, text) => el('button', { type: 'button', role: 'radio', 'aria-checked': String(state.category === cat),
+        'data-category': cat || '', text });
+    const total = (state.payload.events || []).length;
+    $('cat-filters').replaceChildren(chip(null, `${t('timeline.all_categories')} · ${total}`),
+        ...Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+            .map(([cat, n]) => chip(cat, `${t(`event.category.${cat}`)} · ${n}`)));
 }
 
 /** The visible event cards, a page at a time. */
@@ -616,6 +633,14 @@ function wire() {
     $('more').addEventListener('click', () => { state.shown += PAGE; renderCards(); });
     $('replay').addEventListener('click', () => { if (state.hero.event) select(state.hero.event, { animate: true }); });
     $('lang-select').addEventListener('change', (e) => { state.lang = e.target.value; renderLanguages(); setHash(`#/lang/${state.lang}`); });
+    $('cat-filters').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-category]');
+        if (!b) return;
+        state.category = b.dataset.category || null;
+        state.shown = PAGE;
+        renderCategories();
+        renderCards();
+    });
     $('card-sort').addEventListener('change', (e) => { state.sort = e.target.value; state.shown = PAGE; renderCards(); });
     $('card-search').addEventListener('input', (e) => { state.query = fold(e.target.value.trim()); state.shown = PAGE; renderCards(); });
     document.querySelector('.filters').addEventListener('click', (e) => {
