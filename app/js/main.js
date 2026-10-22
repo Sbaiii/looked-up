@@ -9,6 +9,7 @@ import { compose, excessPhrase } from './briefing.js';
 import { pickDay, pickHero, rank } from './select.js';
 import { renderLive, startLive } from './live.js';
 import { DAY_COLUMNS, dayRows, toCsv } from './csv.js';
+import { keyAction } from './keys.js';
 import { SORTS, SPREAD_KEYS, TIER_RANK, categoryCounts, fold, matches, sortSpread, visible } from './filters.js';
 
 const $ = (id) => document.getElementById(id);
@@ -715,18 +716,17 @@ function wire() {
 
 /** Keyboard shortcuts: ← and → step through days, T returns to today, J and K move between cards, / jumps to the search (Escape clears it); never while typing in another field or with a modifier key. */
 function onKey(e) {
-    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || !state.today) return;
-    if (e.key === 'Escape' && e.target.id === 'card-search' && e.target.value) {
-        e.target.value = '';
-        e.target.dispatchEvent(new Event('input'));
-        return;
-    }
-    if (e.target.closest?.('input, select, textarea, [contenteditable="true"]')) return;
-    const press = { ArrowLeft: 'prev-day', ArrowRight: 'next-day' }[e.key];
-    if (press) { e.preventDefault(); $(press).click(); }
-    else if (e.key === 't' || e.key === 'T') { e.preventDefault(); selectDay(state.days.length - 1); }
-    else if (e.key === '/') { e.preventDefault(); $('card-search').focus(); }
-    else if (e.key === 'j' || e.key === 'k') { e.preventDefault(); stepCard(e.key === 'j' ? 1 : -1); }
+    if (e.defaultPrevented || !state.today) return;
+    const field = e.target.closest?.('input, select, textarea, [contenteditable="true"]');
+    const action = keyAction({ key: e.key, altKey: e.altKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey, inField: !!field,
+        inSearch: e.target.id === 'card-search' && !!e.target.value });
+    if (!action) return;
+    if (action !== 'clear-search') e.preventDefault();
+    if (action === 'prev-day' || action === 'next-day') $(action).click();
+    else if (action === 'today') selectDay(state.days.length - 1);
+    else if (action === 'next-event' || action === 'prev-event') stepCard(action === 'next-event' ? 1 : -1);
+    else if (action === 'search') $('card-search').focus();
+    else if (action === 'clear-search') { e.target.value = ''; e.target.dispatchEvent(new Event('input')); }
 }
 
 /** Select the next (+1) or previous (-1) visible card, or the first one when none is selected; focus its title. */
