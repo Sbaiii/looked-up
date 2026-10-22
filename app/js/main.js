@@ -26,6 +26,16 @@ const state = {
     selected: null,    // event id on the map
     lang: null,        // languages panel
     query: '',         // card search, folded (see fold)
+    sort: 'widest',    // card order, a key of SORTS
+};
+
+/** Card orders. Day files list events widest first, so 'widest' keeps the file order; ties keep it too (stable sort). */
+const SORTS = {
+    widest: null,
+    views: (a, b) => b.excess - a.excess,
+    fastest: (a, b) => a.spread_h - b.spread_h || b.breadth - a.breadth,
+    latest: (a, b) => Date.parse(b.start) - Date.parse(a.start),
+    earliest: (a, b) => Date.parse(a.start) - Date.parse(b.start),
 };
 
 const safeUrl = (u) => (typeof u === 'string' && u.startsWith('https://') ? u : '#');
@@ -490,10 +500,11 @@ function matches(ev, q) {
     return [...Object.values(ev.labels || {}), ...Object.values(ev.desc || {}), ev.qid].some((s) => fold(s).includes(q));
 }
 
-/** The event cards of the shown day at or above the tier filter and matching the search, a page at a time. */
+/** The event cards of the shown day at or above the tier filter and matching the search, in the chosen order, a page at a time. */
 function renderCards() {
     const min = TIER_RANK[state.tier];
     const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min && matches(e, state.query));
+    if (SORTS[state.sort]) list.sort(SORTS[state.sort]);
     const ol = $('cards');
     ol.replaceChildren(...list.slice(0, state.shown).map(card));
     renderForecastNote(!!ol.querySelector('.card__forecast'));
@@ -599,6 +610,7 @@ function wire() {
     $('more').addEventListener('click', () => { state.shown += PAGE; renderCards(); });
     $('replay').addEventListener('click', () => { if (state.hero.event) select(state.hero.event, { animate: true }); });
     $('lang-select').addEventListener('change', (e) => { state.lang = e.target.value; renderLanguages(); setHash(`#/lang/${state.lang}`); });
+    $('card-sort').addEventListener('change', (e) => { state.sort = e.target.value; state.shown = PAGE; renderCards(); });
     $('card-search').addEventListener('input', (e) => { state.query = fold(e.target.value.trim()); state.shown = PAGE; renderCards(); });
     document.querySelector('.filters').addEventListener('click', (e) => {
         const b = e.target.closest('[data-tier]');
