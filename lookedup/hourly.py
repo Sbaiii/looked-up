@@ -85,10 +85,10 @@ def verify_alignment(ts_hour_start: datetime, work_dir: Path) -> dict:
     f = dumps.HourlyFile(name=dumps.file_name(ts_hour_start), url=dumps.file_url(ts_hour_start),
                          ts_hour_start=ts_hour_start, posted=ts_hour_start, size=0)
     raw = dumps.download(f.url, work_dir / f.name)
-    total = db.connect().sql(f"""
+    total = db.one(db.connect(), f"""
         SELECT sum(views) FROM read_csv('{raw}', delim=' ', header=false, quote='', escape='',
             auto_detect=false, columns={{'p':'VARCHAR','t':'VARCHAR','views':'BIGINT','b':'BIGINT'}},
-            ignore_errors=true) WHERE p IN ('en', 'en.m')""").fetchone()[0]
+            ignore_errors=true) WHERE p IN ('en', 'en.m')""")[0]
     return {
         "file": f.name,
         "dump_en_total": int(total),
