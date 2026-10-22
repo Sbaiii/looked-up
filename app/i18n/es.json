@@ -94,7 +94,10 @@
     "all": "Todos los niveles",
     "intl": "Internacional o más",
     "planet": "Solo planetario",
-    "empty": "Ningún evento coincide con este filtro ese día."
+    "empty": "Ningún evento coincide con este filtro ese día.",
+    "search": "Buscar en los eventos del día",
+    "search_hint": "Nombre, descripción o número Q",
+    "no_match": "Ningún evento de este día coincide con «{q}»."
   },
   "languages": {
     "kicker": "fig. 02 · por idioma",

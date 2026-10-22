@@ -94,7 +94,10 @@
     "all": "All tiers",
     "intl": "International and up",
     "planet": "Planetary only",
-    "empty": "No event matches this filter on this day."
+    "empty": "No event matches this filter on this day.",
+    "search": "Search this day's events",
+    "search_hint": "Name, description or Q-number",
+    "no_match": "No event on this day matches “{q}”."
   },
   "languages": {
     "kicker": "fig. 02 · by language",

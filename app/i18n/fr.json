@@ -94,7 +94,10 @@
     "all": "Tous les niveaux",
     "intl": "International et plus",
     "planet": "Planétaire seulement",
-    "empty": "Aucun événement ne correspond à ce filtre ce jour-là."
+    "empty": "Aucun événement ne correspond à ce filtre ce jour-là.",
+    "search": "Chercher parmi les événements du jour",
+    "search_hint": "Nom, description ou numéro Q",
+    "no_match": "Aucun événement de ce jour ne correspond à « {q} »."
   },
   "languages": {
     "kicker": "fig. 02 · par langue",
