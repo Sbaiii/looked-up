@@ -38,3 +38,15 @@ test('chip text and clear label follow the interface language', async ({ page })
   await expect(page.locator('#lang-chip-text')).toHaveText('En pic en japonais');
   await expect(page.locator('#lang-chip-clear')).toHaveAttribute('aria-label', 'Retirer le filtre de langue');
 });
+
+test('language and tier filters together, kept on the next day', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.selectOption('#lang-select', 'en');
+  await page.click('#lang-filter');
+  await page.click('[data-tier="international"]');
+  const want = inLang('en').filter((e) => e.tier !== 'noticed').length;
+  await expect(page.locator('#cards .card')).toHaveCount(Math.min(want, 12));
+  await page.locator('body').press('ArrowLeft');
+  await expect(page.locator('#lang-chip-text')).toHaveText('Spiking in English');
+});
