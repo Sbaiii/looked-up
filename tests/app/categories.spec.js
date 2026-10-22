@@ -50,3 +50,14 @@ test('a category the new day does not have resets to all', async ({ page }) => {
   await expect(page.locator('#cat-filters [data-category=""]')).toHaveAttribute('aria-checked', 'true');
   await expect(page.locator('#cards .card')).toHaveCount(12);
 });
+
+test('opening an event the category hides shows all categories', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17/event/Q171571');            // Hayden Panettiere, entertainment
+  await ready(page);
+  await page.evaluate(() => { history.pushState(null, '', '#/day/2026-08-16'); history.pushState(null, '', '#/day/2026-08-17/event/Q171571'); });
+  await page.click('#cat-filters [data-category="sports"]');
+  await page.goBack();
+  await page.goForward();
+  await expect(page.locator('.card.is-selected')).toContainText('Hayden Panettiere');
+  await expect(page.locator('#cat-filters [data-category=""]')).toHaveAttribute('aria-checked', 'true');
+});
