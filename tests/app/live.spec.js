@@ -132,3 +132,11 @@ test('a live event name links the article where it burst first', async ({ page }
   await expect(link).toHaveAttribute('href', `https://fr.wikipedia.org/wiki/${encodeURIComponent('Saïdou_Simporé')}`);
   await expect(link).toHaveAttribute('rel', 'noopener');
 });
+
+test('a quiet feed links each single-language burst', async ({ page }) => {
+  await feed(page, { bursts: [{ lang: 'es', title: 'Partido_Pueblo', first_burst: new Date().toISOString() }] });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#live-list li strong a')).toHaveAttribute('href', 'https://es.wikipedia.org/wiki/Partido_Pueblo');
+  await expect(page.locator('#live-list li strong a')).toHaveText('Partido Pueblo');
+});
