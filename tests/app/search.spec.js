@@ -120,3 +120,20 @@ test('the count is of all matching events, beyond the 12 cards of the first page
   expect(n).toBeGreaterThan(0);
   expect(await page.locator('#cards .card').count()).toBe(Math.min(n, 12));
 });
+
+test('Clear filters appears with any filter and resets them all', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  const clear = page.locator('#clear-filters');
+  await expect(clear).toBeHidden();
+  await page.click('[data-tier="international"]');
+  await page.click('#cat-filters [data-category="sports"]');
+  await page.fill('#card-search', 'a');
+  await expect(clear).toBeVisible();
+  await clear.click();
+  await expect(clear).toBeHidden();
+  await expect(page.locator('#card-search')).toHaveValue('');
+  await expect(page.locator('[data-tier="noticed"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#cat-filters [data-category=""]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#cards .card')).toHaveCount(12);
+});
