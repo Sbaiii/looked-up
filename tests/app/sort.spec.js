@@ -25,3 +25,16 @@ test('widest first is the file order and the default', async ({ page }) => {
   await page.selectOption('#card-sort', 'widest');
   expect(await qids(page)).toEqual(first12(today.events));
 });
+
+test('latest and earliest first follow the start hour', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.selectOption('#card-sort', 'latest');
+  const starts = () => page.locator('#cards .card').evaluateAll((cs) => cs.map((c) => c.dataset.qid));
+  const byStart = Object.fromEntries(today.events.map((e) => [e.qid, Date.parse(e.start)]));
+  let got = (await starts()).map((q) => byStart[q]);
+  expect(got).toEqual([...got].sort((a, b) => b - a));
+  await page.selectOption('#card-sort', 'earliest');
+  got = (await starts()).map((q) => byStart[q]);
+  expect(got).toEqual([...got].sort((a, b) => a - b));
+});
