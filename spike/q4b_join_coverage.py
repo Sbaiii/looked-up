@@ -28,15 +28,15 @@ con.execute("""
            regexp_matches(page_title, '^[^:_]+:') AS has_prefix
     FROM pv LEFT JOIN sl ON sl.site = pv.site AND sl.title = pv.page_title
 """)
-tot_v, tot_r = con.execute("SELECT sum(views), count(*) FROM j").fetchone()
-m_v, m_r = con.execute("SELECT sum(views), count(*) FROM j WHERE qid IS NOT NULL").fetchone()
-np_v = con.execute("SELECT sum(views) FROM j WHERE NOT has_prefix").fetchone()[0]
-np_m = con.execute("SELECT sum(views) FROM j WHERE NOT has_prefix AND qid IS NOT NULL").fetchone()[0]
+tot_v, tot_r = con.execute("SELECT sum(views), count(*) FROM j").fetchall()[0]
+m_v, m_r = con.execute("SELECT sum(views), count(*) FROM j WHERE qid IS NOT NULL").fetchall()[0]
+np_v = con.execute("SELECT sum(views) FROM j WHERE NOT has_prefix").fetchall()[0][0]
+np_m = con.execute("SELECT sum(views) FROM j WHERE NOT has_prefix AND qid IS NOT NULL").fetchall()[0][0]
 res = {
     "views_matched_pct": round(100 * m_v / tot_v, 1),
     "rows_matched_pct": round(100 * m_r / tot_r, 1),
     "views_matched_pct_excluding_prefixed_titles": round(100 * np_m / np_v, 1),
-    "distinct_qids_seen_in_hour": con.execute("SELECT count(DISTINCT qid) FROM j").fetchone()[0],
+    "distinct_qids_seen_in_hour": con.execute("SELECT count(DISTINCT qid) FROM j").fetchall()[0][0],
     "top_unmatched": con.execute("""
         SELECT lang, page_title, views FROM j WHERE qid IS NULL ORDER BY views DESC LIMIT 25
     """).fetchall(),
