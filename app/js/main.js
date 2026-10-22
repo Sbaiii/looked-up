@@ -2,7 +2,7 @@
 // URLs: #/today, #/day/YYYY-MM-DD, #/day/YYYY-MM-DD/event/Q123, #/lang/ja (history API, shareable).
 
 import * as i18n from './i18n.js';
-import { t, label, langNative, langName, within, compact, desc, pct } from './i18n.js';
+import { t, label, langNative, langName, within, compact, desc, pct, num } from './i18n.js';
 import * as data from './data.js';
 import * as viz from './viz.js';
 import { compose, excessPhrase } from './briefing.js';
@@ -389,12 +389,29 @@ function select(ev, { fromList = false, animate = true, push = false } = {}) {
     state.selected = ev.id;
     document.querySelectorAll('.card').forEach((c) => c.classList.toggle('is-selected', c.dataset.id === ev.id));
     viz.show(ev, { animate });
+    renderSpread(ev);
     if (push) setHash(eventHash(shownDay(), ev));
     if (fromList) {
         const stage = $('viz');
         const r = stage.getBoundingClientRect();
         if (r.bottom < 60 || r.top > innerHeight) stage.scrollIntoView({ behavior: smooth(), block: 'center' });
     }
+}
+
+/** The selected event's spread as a table, the readable twin of the map: languages by lag, then code. */
+function renderSpread(ev) {
+    const box = $('spread');
+    box.hidden = !ev?.langs?.length;
+    if (box.hidden) return;
+    $('spread-caption').textContent = t('map.table_caption', { label: label(ev) });
+    const one = new Intl.NumberFormat(i18n.current(), { maximumFractionDigits: 1 });
+    const rows = [...ev.langs].sort((a, b) => a.lag - b.lag || a.lang.localeCompare(b.lang));
+    $('spread-rows').replaceChildren(...rows.map((r) => el('tr', {},
+        el('th', { scope: 'row', text: langNative(r.lang) }),
+        el('td', { text: i18n.hour(r.first) }),
+        el('td', { text: within(r.lag) }),
+        el('td', { text: one.format(r.surprise) }),
+        el('td', { text: num(r.excess) }))));
 }
 
 /* ---------------------------------------------------------------- timeline */
@@ -614,6 +631,7 @@ function renderAll(animate) {
     $('day-out').textContent = dayLabel(shownDay());
     $('day-slider').setAttribute('aria-valuetext', dayLabel(shownDay()));
     renderDay();
+    renderSpread(findEvent(state.selected));
 }
 
 /** Attach every event handler: language buttons, slider, arrows, bars, copy, more, replay, filters and history. */
