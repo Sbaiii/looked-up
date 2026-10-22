@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import duckdb
 import numpy as np
 
+from lookedup import db
 from lookedup.forecast import train as T
 from lookedup.forecast.predict import forecast_open
 
@@ -112,8 +113,8 @@ def test_live_relations(tmp_path):
     ev = {"event_id": "E", "qid": 1, "start_hour": h, "lead_lang": "en", "breadth": 2, "event_class": "multi_language"}
     P.live_relations(con, [ev], {1: "death"}, {1: "human"}, {1: {"en": "A", "fr": "B"}}, [f])
     assert con.sql("SELECT lang, views, baseline_median FROM _fviews").fetchall() == [("en", 150, 40.0)]
-    assert con.sql("SELECT category FROM _fev").fetchone() == ("death",)
-    assert con.sql("SELECT entity_class, n_languages FROM _fdims").fetchone() == ("human", 2)
+    assert db.one(con, "SELECT category FROM _fev") == ("death",)
+    assert db.one(con, "SELECT entity_class, n_languages FROM _fdims") == ("human", 2)
 
 
 def test_entity_classes(monkeypatch):
