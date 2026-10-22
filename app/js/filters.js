@@ -35,3 +35,17 @@ export function categoryCounts(events) {
     for (const e of events || []) counts[e.category || 'other'] = (counts[e.category || 'other'] || 0) + 1;
     return counts;
 }
+
+/** Spread table columns that can be sorted, each with its natural first direction. */
+export const SPREAD_KEYS = { lang: 'asc', first: 'asc', lag: 'asc', surprise: 'desc', excess: 'desc' };
+
+/** An event's language rows sorted by ``key`` ('asc' or 'desc'); ties fall back to lag, then language code. */
+export function sortSpread(rows, key = 'lag', dir = SPREAD_KEYS[key] || 'asc') {
+    const sign = dir === 'desc' ? -1 : 1;
+    const val = (r) => (key === 'first' ? Date.parse(r.first) : r[key]);
+    const cmp = (a, b) => {
+        const x = val(a), y = val(b);
+        return typeof x === 'string' ? x.localeCompare(y) : x - y;
+    };
+    return [...(rows || [])].sort((a, b) => sign * cmp(a, b) || a.lag - b.lag || a.lang.localeCompare(b.lang));
+}
