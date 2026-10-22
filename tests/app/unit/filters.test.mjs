@@ -51,3 +51,18 @@ test('categoryCounts counts per category, missing ones as other', () => {
     { death: 2, other: 1 });
   assert.deepEqual(categoryCounts(undefined), {});
 });
+
+test('sortSpread sorts language rows by any column, ties by lag then code', async () => {
+  const { sortSpread } = await import('../../../app/js/filters.js');
+  const rows = [{ lang: 'fr', first: '2026-08-17T03:00Z', lag: 1, surprise: 20, excess: 50 },
+    { lang: 'en', first: '2026-08-17T02:00Z', lag: 0, surprise: 90, excess: 900 },
+    { lang: 'de', first: '2026-08-17T03:00Z', lag: 1, surprise: 40, excess: 50 }];
+  const by = (k, d) => sortSpread(rows, k, d).map((r) => r.lang);
+  assert.deepEqual(by('lag'), ['en', 'de', 'fr']);
+  assert.deepEqual(by('surprise'), ['en', 'de', 'fr']);              // largest first by default
+  assert.deepEqual(by('surprise', 'asc'), ['fr', 'de', 'en']);
+  assert.deepEqual(by('excess'), ['en', 'de', 'fr']);                // tie at 50: lag, then code
+  assert.deepEqual(by('lang'), ['de', 'en', 'fr']);
+  assert.deepEqual(by('first', 'desc'), ['de', 'fr', 'en']);
+  assert.deepEqual(rows.map((r) => r.lang), ['fr', 'en', 'de']);    // input untouched
+});
