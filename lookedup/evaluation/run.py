@@ -12,6 +12,7 @@ import json
 import logging
 from pathlib import Path
 
+from lookedup import db
 from lookedup.analytics.config import load
 from lookedup.evaluation import audit, metrics
 from lookedup.settings import DATA_DIR, ROOT
@@ -49,8 +50,8 @@ def evaluate() -> dict:
     res: dict = {"config": {"r3_threshold": cfg.spike.r3_threshold, "min_languages": cfg.event.min_languages,
                             "window_hours": cfg.event.window_hours}}
     res["events_eval_period"] = metrics.event_count(ctx, ev)
-    res["events_total"] = con.execute(f"SELECT count(*) FROM {ev}").fetchone()[0]
-    res["major_pairs"] = con.execute("SELECT count(*) FROM majors").fetchone()[0]
+    res["events_total"] = db.one(con, f"SELECT count(*) FROM {ev}")[0]
+    res["major_pairs"] = db.one(con, "SELECT count(*) FROM majors")[0]
     res["h1"] = {"recall_6h": metrics.recall(ctx, ev, 6), "recall_24h": metrics.recall(ctx, ev, 24)}
     r6 = res["h1"]["recall_6h"]["recall"]
     res["h1"]["verdict"] = "supported" if r6 is not None and r6 >= 0.70 else "rejected"
@@ -64,7 +65,7 @@ def evaluate() -> dict:
     s1 = metrics.variant_events(ctx, cfg.event, "events_s1", spikes="spikes_s1")
     res["s1_no_flat_rule"] = {"events": metrics.event_count(ctx, s1), "recall_6h": metrics.recall(ctx, s1, 6),
                               "recall_24h": metrics.recall(ctx, s1, 24), "precision": metrics.precision_proxy(ctx, s1)}
-    res["s2_story_headers"] = {"pairs": con.execute("SELECT count(*) FROM majors_s2").fetchone()[0],
+    res["s2_story_headers"] = {"pairs": db.one(con, "SELECT count(*) FROM majors_s2")[0],
                                "recall_6h": metrics.recall(ctx, ev, 6, "majors_s2"),
                                "recall_24h": metrics.recall(ctx, ev, 24, "majors_s2")}
     res["h4"] = metrics.h4_spread(ctx, ev)
