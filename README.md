@@ -78,7 +78,8 @@ Pick any day of the last 90 on the slider, or any older day with **Go to a date*
 link. A day's events can be searched by name in any language, description or Q-number, narrowed by tier,
 category or language (from the language panel), and ordered by breadth, extra views, spread speed or start time.
 **The spread as a table** under the cards lists the selected event's languages with their first spike, lag, peak
-and extra views, and **Download this day (CSV)** saves the day's events for a spreadsheet. Keys: ← → change the
+and extra views, and **Download this day (CSV)** saves the day's events for a spreadsheet. The spread table sorts by any heading,
+**Clear filters** resets everything at once, and phones get a Share button on each card. Keys: ← → change the
 day, J K move between events, T goes back to today and / jumps to the search.
 
 ## How to run it
