@@ -66,3 +66,8 @@ test('sortSpread sorts language rows by any column, ties by lag then code', asyn
   assert.deepEqual(by('first', 'desc'), ['de', 'fr', 'en']);
   assert.deepEqual(rows.map((r) => r.lang), ['fr', 'en', 'de']);    // input untouched
 });
+
+test('unknown tier or order fall back to everything, in file order', () => {
+  const evs = [ev('A', { tier: 'planetary', excess: 1 }), ev('B', { excess: 9 })];
+  assert.deepEqual(visible(evs, { tier: 'nonsense', sort: 'nonsense' }).map((e) => e.qid), ['A', 'B']);
+});
