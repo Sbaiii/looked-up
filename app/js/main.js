@@ -29,6 +29,7 @@ const state = {
     query: '',         // card search, folded (see fold)
     sort: 'widest',    // card order, a key of SORTS
     category: null,    // category filter, null for all
+    langFilter: null,  // only events spiking in this language, null for all
 };
 
 /** Card orders. Day files list events widest first, so 'widest' keeps the file order; ties keep it too (stable sort). */
@@ -540,7 +541,8 @@ function matches(ev, q) {
 function visibleEvents() {
     const min = TIER_RANK[state.tier];
     const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min && matches(e, state.query)
-        && (!state.category || e.category === state.category));
+        && (!state.category || e.category === state.category)
+        && (!state.langFilter || (e.langs || []).some((r) => r.lang === state.langFilter)));
     return SORTS[state.sort] ? list.sort(SORTS[state.sort]) : list;
 }
 
@@ -560,6 +562,8 @@ function renderCategories() {
 /** The visible event cards, a page at a time. */
 function renderCards() {
     const list = visibleEvents();
+    $('lang-chip').hidden = !state.langFilter;
+    if (state.langFilter) $('lang-chip-text').textContent = t('timeline.lang_filter', { lang: langName(state.langFilter) });
     const total = (state.payload.events || []).length;
     $('cards-shown').hidden = list.length === total;          // only when a filter or the search hides some
     $('cards-shown').textContent = t('timeline.shown', { shown: list.length, total });
@@ -669,6 +673,13 @@ function wire() {
     $('copy-day').addEventListener('click', (e) => copyLink(dayHash(shownDay()) === '#/today'
         ? `#/day/${todayIso()}` : dayHash(shownDay()), e.currentTarget));
     $('download-day').addEventListener('click', downloadDay);
+    $('lang-filter').addEventListener('click', () => {
+        state.langFilter = state.lang;
+        state.shown = PAGE;
+        renderCards();
+        scrollTo($('cards'));
+    });
+    $('lang-chip-clear').addEventListener('click', () => { state.langFilter = null; state.shown = PAGE; renderCards(); });
     $('day-pick').addEventListener('change', (e) => {
         const iso = e.target.value;
         if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
