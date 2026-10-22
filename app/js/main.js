@@ -9,10 +9,10 @@ import { compose, excessPhrase } from './briefing.js';
 import { pickDay, pickHero, rank } from './select.js';
 import { renderLive, startLive } from './live.js';
 import { DAY_COLUMNS, dayRows, toCsv } from './csv.js';
+import { TIER_RANK, categoryCounts, fold, matches, visible } from './filters.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 12;
-const TIER_RANK = { noticed: 0, international: 1, planetary: 2 };
 const KICKER = { 24: 'hero.kicker', 48: 'hero.kicker_48h', 168: 'hero.kicker_week' };
 
 const state = {
@@ -30,15 +30,6 @@ const state = {
     sort: 'widest',    // card order, a key of SORTS
     category: null,    // category filter, null for all
     langFilter: null,  // only events spiking in this language, null for all
-};
-
-/** Card orders. Day files list events widest first, so 'widest' keeps the file order; ties keep it too (stable sort). */
-const SORTS = {
-    widest: null,
-    views: (a, b) => b.excess - a.excess,
-    fastest: (a, b) => a.spread_h - b.spread_h || b.breadth - a.breadth,
-    latest: (a, b) => Date.parse(b.start) - Date.parse(a.start),
-    earliest: (a, b) => Date.parse(a.start) - Date.parse(b.start),
 };
 
 const safeUrl = (u) => (typeof u === 'string' && u.startsWith('https://') ? u : '#');
@@ -529,28 +520,15 @@ function setTier(tier) {
     document.querySelectorAll('.filters [data-tier]').forEach((x) => x.setAttribute('aria-checked', String(x.dataset.tier === tier)));
 }
 
-/** Lower-case text without accents, so that a search for "sao paulo" finds "São Paulo". */
-const fold = (s) => String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-
-/** Whether an event matches the card search: a label in any language, a description, or its QID. */
-function matches(ev, q) {
-    if (!q) return true;
-    return [...Object.values(ev.labels || {}), ...Object.values(ev.desc || {}), ev.qid].some((s) => fold(s).includes(q));
-}
-
-/** The shown day's events at or above the tier filter and matching the search, in the chosen order. */
+/** The shown day's events left by the filters and the search, in the chosen order. */
 function visibleEvents() {
-    const min = TIER_RANK[state.tier];
-    const list = (state.payload.events || []).filter((e) => TIER_RANK[e.tier] >= min && matches(e, state.query)
-        && (!state.category || e.category === state.category)
-        && (!state.langFilter || (e.langs || []).some((r) => r.lang === state.langFilter)));
-    return SORTS[state.sort] ? list.sort(SORTS[state.sort]) : list;
+    return visible(state.payload.events, { tier: state.tier, query: state.query, category: state.category,
+        lang: state.langFilter, sort: state.sort });
 }
 
 /** The category chips of the shown day: every category present, most events first, each with its count. */
 function renderCategories() {
-    const counts = {};
-    for (const e of state.payload.events || []) counts[e.category || 'other'] = (counts[e.category || 'other'] || 0) + 1;
+    const counts = categoryCounts(state.payload.events);
     if (state.category && !counts[state.category]) state.category = null;    // not on this day: show everything
     const chip = (cat, text) => el('button', { type: 'button', role: 'radio', 'aria-checked': String(state.category === cat),
         'data-category': cat || '', text });
