@@ -54,3 +54,16 @@ test('J selects the next card, K the previous one, and the URL names the event',
   await page.keyboard.press('k');                                    // focus is now on the card: keys still work
   expect(await selected()).toBe(ids[start]);
 });
+
+test('K on the first card and J on the last card stay put', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.click('#cards .card:first-child .card__title button');
+  const first = await page.locator('#cards .card').first().getAttribute('data-qid');
+  await page.keyboard.press('k');
+  await expect(page.locator('.card.is-selected')).toHaveAttribute('data-qid', first);
+  await page.click('#cards .card:last-child .card__title button');
+  const last = await page.locator('#cards .card').last().getAttribute('data-qid');
+  await page.keyboard.press('j');
+  await expect(page.locator('.card.is-selected')).toHaveAttribute('data-qid', last);
+});
