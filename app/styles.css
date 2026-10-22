@@ -429,3 +429,15 @@ input[type='date'] {
 .sortbtn:hover { color: var(--ink); }
 th[aria-sort='ascending'] .sortbtn::after { content: ' ↑'; color: var(--accent); }
 th[aria-sort='descending'] .sortbtn::after { content: ' ↓'; color: var(--accent); }
+
+/* Print: the day's briefing and events in black on white, without navigation, controls or the map */
+@media print {
+    :root { --paper: #ffffff; --paper-2: #ffffff; --ink: #000000; --muted: #333333; --faint: #555555; --rule: #bbbbbb; --accent: #000000; }
+    body { background: #ffffff; color: #000000; }
+    .header, .bottomnav, .livestrip, .layout__viz, .scrubber, .filters, .cardtools, .lang-chip, #more, .hero__actions,
+    .keys-help, .card__links, .spread summary, #languages, #forecast, .skip { display: none !important; }
+    .spread { border: 0; padding: 0; }
+    .spread[open], .spread { display: block; }
+    .card { break-inside: avoid; border-color: #bbbbbb; }
+    a { color: #000000; text-decoration: none; }
+}
