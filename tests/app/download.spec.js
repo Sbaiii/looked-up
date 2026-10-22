@@ -41,3 +41,13 @@ test('today downloads under its own date', async ({ page }) => {
   const { name } = await download(page);
   expect(name).toBe(`looked-up-${today.generated_at.slice(0, 10)}.csv`);
 });
+
+test('a day without events has nothing to download', async ({ page }) => {
+  await page.route('https://huggingface.co/datasets/Sbaiiiiii/looked-up/resolve/main/data/app/days/2026-08-16.json*', (route) =>
+    route.fulfill({ status: 404, body: '' }));
+  await page.goto('./#/day/2026-08-16');
+  await ready(page);
+  await expect(page.locator('#download-day')).toBeDisabled();
+  await page.locator('body').press('ArrowRight');
+  await expect(page.locator('#download-day')).toBeEnabled();
+});
