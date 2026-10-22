@@ -356,6 +356,7 @@ function renderHero(animate) {
     lab.classList.remove('skeleton');
     $('hero-kicker').textContent = t(KICKER[state.hero.hours] || KICKER[24]);
     $('replay').hidden = !ev;
+    $('hero-share').hidden = !ev || !navigator.share;
     const gen = state.today.generated_at;
     $('updated').textContent = t('ui.updated', { utc: i18n.dateTime(gen), local: i18n.localTime(gen) });
     $('hero-brief').textContent = compose(state.today, todayIso()).text;
@@ -669,6 +670,11 @@ function wire() {
     $('copy-day').addEventListener('click', (e) => copyLink(dayHash(shownDay()) === '#/today'
         ? `#/day/${todayIso()}` : dayHash(shownDay()), e.currentTarget));
     $('download-day').addEventListener('click', downloadDay);
+    $('hero-share').addEventListener('click', () => {
+        const ev = state.hero.event;
+        const iso = ev?.start.slice(0, 10);
+        if (ev) navigator.share({ title: label(ev), url: absolute(`#/day/${iso}/event/${ev.qid}`) }).catch(() => {});
+    });
     $('clear-filters').addEventListener('click', () => {
         setTier('noticed');
         Object.assign(state, { query: '', category: null, langFilter: null, shown: PAGE });
