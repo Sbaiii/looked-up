@@ -465,6 +465,7 @@ function showDay(d, payload, qid) {
     if (target && target.class !== 'single_language') {
         const min = TIER_RANK[state.tier];
         if (TIER_RANK[target.tier] < min) setTier('noticed');
+        if (!matches(target, state.query)) { state.query = ''; $('card-search').value = ''; }   // the linked event must show
         const pos = visibleEvents().findIndex((e) => e.id === target.id);
         state.shown = Math.max(PAGE, Math.ceil((pos + 1) / PAGE) * PAGE);
     }
