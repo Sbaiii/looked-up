@@ -42,3 +42,16 @@ test('no result: the empty line quotes the search, in the interface language', a
   await page.click('[data-ui-lang="fr"]');
   await expect(page.locator('#cards .empty')).toHaveText('Aucun événement de ce jour ne correspond à « zzzz nothing ».');
 });
+
+test('/ jumps to the search, Escape clears it and brings the cards back', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const all = await page.locator('#cards .card').count();
+  await page.locator('body').press('/');
+  await expect(page.locator('#card-search')).toBeFocused();
+  await page.keyboard.type('pillay');
+  await expect(page.locator('#cards .card')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#card-search')).toHaveValue('');
+  await expect(page.locator('#cards .card')).toHaveCount(all);
+});
