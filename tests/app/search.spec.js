@@ -111,3 +111,12 @@ test('"n of m events shown" appears when a filter or the search hides events, in
   await page.click('[data-tier="noticed"]');
   await expect(line).toBeHidden();
 });
+
+test('the count is of all matching events, beyond the 12 cards of the first page', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.fill('#card-search', 'e');
+  const n = await page.evaluate(() => Number(document.querySelector('#cards-shown').textContent.split(' ')[0]));
+  expect(n).toBeGreaterThan(0);
+  expect(await page.locator('#cards .card').count()).toBe(Math.min(n, 12));
+});
