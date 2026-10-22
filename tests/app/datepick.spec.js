@@ -21,3 +21,14 @@ test('an older date opens as an archive day', async ({ page }) => {
   await expect(page).toHaveURL(/#\/day\/2026-07-27$/);
   await expect(page.locator('#day-archive')).toBeVisible();
 });
+
+test('the field follows the shown day and cannot go past today', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await expect(page.locator('#day-pick')).toHaveValue('2026-08-17');
+  await page.click('#prev-day');
+  await expect(page.locator('#day-pick')).toHaveValue('2026-08-16');
+  const max = await page.locator('#day-pick').getAttribute('max');
+  await page.locator('body').press('t');
+  await expect(page.locator('#day-pick')).toHaveValue(max);
+});
