@@ -83,7 +83,7 @@
     "slider": "Jour",
     "prev": "Jour précédent",
     "next": "Jour suivant",
-    "keys": "Clavier : ← → change de jour · T aujourd'hui",
+    "keys": "Clavier : ← → change de jour · T aujourd'hui · / recherche",
     "today": "Aujourd'hui",
     "archive": "Archives",
     "count": {
