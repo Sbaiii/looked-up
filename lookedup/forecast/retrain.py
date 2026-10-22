@@ -73,7 +73,7 @@ def live_week(store: Store, monday: date, tmp: Path) -> pa.Table | None:
     classes = {q: classify(c, cfg) for q, c in cj.items()}
     titles = titles_from_api({e["qid"] for e in events}, active_codes())
     live_relations(con, events, categories_for(events), classes, titles, hourly)
-    end = con.sql(f"SELECT max(ts_hour_start) FROM read_parquet([{', '.join(repr(str(f)) for f in hourly)}])").fetchone()[0]
+    end = db.one(con, f"SELECT max(ts_hour_start) FROM read_parquet([{', '.join(repr(str(f)) for f in hourly)}])")[0]
     rows = snapshots(con, targets=True, data_end=f"{end:%Y-%m-%d %H:%M:%S}")
     return pa.Table.from_pylist(rows) if rows else None
 
