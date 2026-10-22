@@ -12,3 +12,10 @@ test('fold removes accents and case, and copes with missing text', () => {
   assert.equal(fold(null), '');
   assert.equal(fold(42), '42');
 });
+
+test('matches looks at every label, every description and the QID', () => {
+  const e = ev('Q90', { labels: { en: 'Paris', ru: 'Париж' }, desc: { fr: 'capitale de la France' } });
+  assert.ok(matches(e, fold('PARIS')) && matches(e, fold('париж')) && matches(e, fold('capitale')));
+  assert.ok(matches(e, 'q90') && matches(e, ''));
+  assert.ok(!matches(e, 'lyon'));
+});
