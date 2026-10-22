@@ -401,3 +401,14 @@ body { padding-bottom: calc(3.3rem + env(safe-area-inset-bottom)); }
 
 /* keyboard help: only where there is a keyboard and a pointer that hovers */
 @media (hover: none) { .keys-help { display: none; } }
+
+/* The spread table under the map: the readable twin of the map */
+.spread { margin-top: 0.8rem; border: 1px solid var(--rule); border-radius: 10px; padding: 0.2rem 0.9rem; }
+.spread summary { cursor: pointer; min-height: 2.4rem; display: flex; align-items: center; font-size: 0.85rem; color: var(--accent); }
+.spread__scroll { overflow-x: auto; max-height: 22rem; overflow-y: auto; margin-bottom: 0.6rem; }
+.spread table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.spread caption { text-align: left; color: var(--muted); padding: 0.3rem 0 0.5rem; }
+.spread th, .spread td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.spread th:first-child, .spread thead th:first-child { text-align: left; }
+.spread thead th { position: sticky; top: 0; background: var(--paper); color: var(--muted); font-weight: 500; }
+.spread td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
