@@ -19,3 +19,9 @@ test('nothing happens in a field or with Alt, Ctrl or Meta', () => {
     assert.equal(keyAction({ key, metaKey: true }), null, key);
   }
 });
+
+test('Escape in a non-empty search clears it, and does nothing elsewhere', () => {
+  assert.equal(keyAction({ key: 'Escape', inField: true, inSearch: true }), 'clear-search');
+  assert.equal(keyAction({ key: 'Escape', inField: true, inSearch: false }), null);
+  assert.equal(keyAction({ key: 'Escape', inSearch: true, ctrlKey: true }), null);
+});
