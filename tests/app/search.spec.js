@@ -97,3 +97,17 @@ test('opening an event the search hides clears the search', async ({ page }) => 
   await expect(page.locator('.card.is-selected')).toContainText('Hayden Panettiere');
   await expect(page.locator('#card-search')).toHaveValue('');
 });
+
+test('"n of m events shown" appears when a filter or the search hides events, in each language', async ({ page }) => {
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  const line = page.locator('#cards-shown');
+  await expect(line).toBeHidden();
+  await page.click('[data-tier="planetary"]');
+  await expect(line).toBeVisible();
+  await expect(line).toHaveText(/^\d+ of 15 events shown$/);
+  await page.click('[data-ui-lang="es"]');
+  await expect(line).toHaveText(/^\d+ de 15 eventos mostrados$/);
+  await page.click('[data-tier="noticed"]');
+  await expect(line).toBeHidden();
+});
