@@ -119,22 +119,6 @@
                 </figcaption>
                 <button type="button" class="btn btn--small viz__mode" id="viz-mode" hidden data-i18n="map.globe">3D globe</button>
             </figure>
-            <details class="spread" id="spread" hidden>
-                <summary data-i18n="map.table">The spread as a table</summary>
-                <div class="spread__scroll">
-                    <table>
-                        <caption id="spread-caption"></caption>
-                        <thead><tr>
-                            <th scope="col" data-i18n="map.col_lang">Language</th>
-                            <th scope="col" data-i18n="map.col_first">First spike (UTC)</th>
-                            <th scope="col" data-i18n="map.col_lag">After the first</th>
-                            <th scope="col" data-i18n="map.col_surprise">Peak surprise</th>
-                            <th scope="col" data-i18n="map.col_excess">Extra views</th>
-                        </tr></thead>
-                        <tbody id="spread-rows"></tbody>
-                    </table>
-                </div>
-            </details>
         </aside>
 
         <div class="layout__content">
@@ -185,6 +169,22 @@
                 <ol class="cards" id="cards"></ol>
                 <button type="button" class="btn btn--wide" id="more" data-i18n="event.more" hidden>Show more</button>
                 <p class="help forecast-note" id="forecast-note" hidden></p>
+                <details class="spread" id="spread" hidden>
+                    <summary data-i18n="map.table">The spread as a table</summary>
+                    <div class="spread__scroll">
+                        <table>
+                            <caption id="spread-caption"></caption>
+                            <thead><tr>
+                                <th scope="col" data-i18n="map.col_lang">Language</th>
+                                <th scope="col" data-i18n="map.col_first">First spike (UTC)</th>
+                                <th scope="col" data-i18n="map.col_lag">After the first</th>
+                                <th scope="col" data-i18n="map.col_surprise">Peak surprise</th>
+                                <th scope="col" data-i18n="map.col_excess">Extra views</th>
+                            </tr></thead>
+                            <tbody id="spread-rows"></tbody>
+                        </table>
+                    </div>
+                </details>
             </section>
 
             <section class="fig" id="languages" aria-labelledby="langs-title">
