@@ -120,3 +120,13 @@ test('"Most likely to spread next" ranks open events by chance, three at most', 
   await expect(items.nth(1)).toContainText('70% chance');
   await expect(items.nth(2)).toContainText('40% chance');
 });
+
+test('cards without a description or a forecast never print "null"', async ({ page }) => {
+  await serveToday(page, (d) => { d.events[0].desc = {}; delete d.events[0].forecast; });
+  await page.goto('./');
+  await ready(page);
+  for (const text of await page.locator('#cards .card').allTextContents()) expect(text).not.toContain('null');
+  const nodes = await page.locator('#cards .card').evaluateAll((cards) => cards.flatMap((c) => [...c.childNodes])
+    .filter((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim()).map((n) => n.textContent));
+  expect(nodes).toEqual([]);
+});

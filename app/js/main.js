@@ -281,7 +281,7 @@ function card(ev) {
         el('button', { type: 'button', 'aria-label': `${label(ev)}: ${t('event.show')}`, onclick: () => select(ev, { fromList: true, push: true }), text: label(ev) }));
     const copy = el('button', { type: 'button', class: 'linkbtn', text: t('ui.copy') });
     copy.addEventListener('click', () => copyLink(eventHash(day, ev), copy));
-    li.append(
+    li.append(...[
         title,
         sparkline(ev.spark),
         desc(ev) ? el('p', { class: 'card__desc', text: desc(ev) }) : null,
@@ -293,7 +293,7 @@ function card(ev) {
             el('span', { text: t(`event.category.${ev.category}`) })),
         forecastLine(ev),
         el('p', { class: 'card__links' }, ...wikiLinks(ev), copy),
-    );
+    ].filter((c) => c != null));   // append(null) would print "null" on cards without a description or forecast
     return li;
 }
 
