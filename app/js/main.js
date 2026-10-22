@@ -9,7 +9,7 @@ import { compose, excessPhrase } from './briefing.js';
 import { pickDay, pickHero, rank } from './select.js';
 import { renderLive, startLive } from './live.js';
 import { DAY_COLUMNS, dayRows, toCsv } from './csv.js';
-import { SORTS, TIER_RANK, categoryCounts, fold, matches, visible } from './filters.js';
+import { SORTS, SPREAD_KEYS, TIER_RANK, categoryCounts, fold, matches, sortSpread, visible } from './filters.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 12;
@@ -30,6 +30,7 @@ const state = {
     sort: 'widest',    // card order, a key of SORTS
     category: null,    // category filter, null for all
     langFilter: null,  // only events spiking in this language, null for all
+    spreadSort: { key: 'lag', dir: 'asc' },   // spread table order
 };
 
 const safeUrl = (u) => (typeof u === 'string' && u.startsWith('https://') ? u : '#');
@@ -418,7 +419,10 @@ function renderSpread(ev) {
     if (box.hidden) return;
     $('spread-caption').textContent = t('map.table_caption', { label: label(ev) });
     const one = new Intl.NumberFormat(i18n.current(), { maximumFractionDigits: 1 });
-    const rows = [...ev.langs].sort((a, b) => a.lag - b.lag || a.lang.localeCompare(b.lang));
+    const { key, dir } = state.spreadSort;
+    const rows = sortSpread(ev.langs.map((r) => ({ ...r, name: langNative(r.lang) })), key, dir);
+    document.querySelectorAll('#spread [data-sort]').forEach((b) => b.closest('th').setAttribute('aria-sort',
+        b.dataset.sort === key ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'));
     $('spread-rows').replaceChildren(...rows.map((r) => el('tr', {},
         el('th', { scope: 'row', text: langNative(r.lang) }),
         el('td', { text: i18n.hour(r.first) }),
@@ -659,6 +663,14 @@ function wire() {
     $('copy-day').addEventListener('click', (e) => copyLink(dayHash(shownDay()) === '#/today'
         ? `#/day/${todayIso()}` : dayHash(shownDay()), e.currentTarget));
     $('download-day').addEventListener('click', downloadDay);
+    document.querySelector('#spread thead').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-sort]');
+        if (!b) return;
+        const k = b.dataset.sort;
+        const s = state.spreadSort;
+        state.spreadSort = s.key === k ? { key: k, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key: k, dir: SPREAD_KEYS[k] };
+        renderSpread(findEvent(state.selected));
+    });
     $('lang-filter').addEventListener('click', () => {
         state.langFilter = state.lang;
         state.shown = PAGE;

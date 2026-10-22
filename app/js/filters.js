@@ -37,7 +37,7 @@ export function categoryCounts(events) {
 }
 
 /** Spread table columns that can be sorted, each with its natural first direction. */
-export const SPREAD_KEYS = { lang: 'asc', first: 'asc', lag: 'asc', surprise: 'desc', excess: 'desc' };
+export const SPREAD_KEYS = { name: 'asc', lang: 'asc', first: 'asc', lag: 'asc', surprise: 'desc', excess: 'desc' };
 
 /** An event's language rows sorted by ``key`` ('asc' or 'desc'); ties fall back to lag, then language code. */
 export function sortSpread(rows, key = 'lag', dir = SPREAD_KEYS[key] || 'asc') {
