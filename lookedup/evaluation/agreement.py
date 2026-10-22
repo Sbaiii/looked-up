@@ -44,10 +44,10 @@ def production_vs_batch(warehouse_db: Path, day: date, hours: list[int], lake_di
                         WHERE surprise >= {r3} AND (r1 OR r2) AND NOT coalesce(is_automated, false)""")
     con.execute(f"""CREATE TABLE batch AS SELECT lang, title, ts_hour_start FROM wh.main.int_spikes
                     WHERE day = DATE '{day}' AND hour_of_day IN ({hrs}) AND is_spike""")
-    both = con.execute("SELECT count(*) FROM prod INNER JOIN batch USING (lang, title, ts_hour_start)").fetchone()[0]
-    n_prod = con.execute("SELECT count(*) FROM prod").fetchone()[0]
-    n_batch = con.execute("SELECT count(*) FROM batch").fetchone()[0]
+    both = db.one(con, "SELECT count(*) FROM prod INNER JOIN batch USING (lang, title, ts_hour_start)")[0]
+    n_prod = db.one(con, "SELECT count(*) FROM prod")[0]
+    n_batch = db.one(con, "SELECT count(*) FROM batch")[0]
     return {"day": str(day), "hours": hours, "batch_spikes": n_batch, "production_spikes": n_prod, "both": both,
             "share_of_batch_reproduced": both / n_batch if n_batch else None,
             "share_of_production_in_batch": both / n_prod if n_prod else None,
-            "baseline_slots": con.execute("SELECT count(*) FROM bl WHERE title IS NOT NULL").fetchone()[0]}
+            "baseline_slots": db.one(con, "SELECT count(*) FROM bl WHERE title IS NOT NULL")[0]}
