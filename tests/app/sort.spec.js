@@ -60,3 +60,21 @@ test('order labels translate, and the order stays when the day changes', async (
   await page.click('#prev-day');
   await expect(page.locator('#card-sort')).toHaveValue('views');
 });
+
+test('the chosen order is remembered on the next visit', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.selectOption('#card-sort', 'views');
+  await page.reload();
+  await ready(page);
+  await expect(page.locator('#card-sort')).toHaveValue('views');
+  expect(await qids(page)).toEqual(first12([...today.events].sort((a, b) => b.excess - a.excess)));
+});
+
+test('an unknown stored order is ignored', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('lookedup_sort', 'nonsense'));
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#card-sort')).toHaveValue('widest');
+  expect(page.errors).toEqual([]);
+});
