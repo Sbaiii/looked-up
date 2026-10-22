@@ -23,3 +23,11 @@ test('arrows in a field or with a modifier key leave the day alone', async ({ pa
   await page.locator('body').press('Control+ArrowRight');
   await expect(page.locator('#day-out')).toHaveText(before);
 });
+
+test('T goes back to today from a past day', async ({ page }) => {
+  await page.goto('./#/day/2026-08-16');
+  await ready(page);
+  await page.locator('body').press('t');
+  await expect(page).toHaveURL(/#\/today$/);
+  await expect(page.locator('#day-out')).toHaveText('Today');
+});
