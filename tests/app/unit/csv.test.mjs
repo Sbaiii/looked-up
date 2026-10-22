@@ -37,3 +37,12 @@ test('non-Latin text passes through and carriage returns are quoted', () => {
   assert.equal(field('Пиллэй, Нави'), '"Пиллэй, Нави"');
   assert.equal(field('a\rb'), '"a\rb"');
 });
+
+test('an empty day gives no rows, and an event without a lead URL has a blank link', async () => {
+  const { dayRows } = await import('../../../app/js/csv.js');
+  const fns = { label: (e) => e.qid, desc: () => '' };
+  assert.deepEqual(dayRows({}, '2026-08-17', fns), []);
+  const [r] = dayRows({ events: [{ qid: 'Q1', lead: 'ja', urls: { en: 'https://en.wikipedia.org/wiki/X' } }] }, '2026-08-17', fns);
+  assert.equal(r.wikipedia_url, '');
+  assert.equal(r.languages, '');
+});
