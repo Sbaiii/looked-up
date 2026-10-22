@@ -497,7 +497,10 @@ function renderCards() {
     const ol = $('cards');
     ol.replaceChildren(...list.slice(0, state.shown).map(card));
     renderForecastNote(!!ol.querySelector('.card__forecast'));
-    if (!list.length) ol.append(el('li', { class: 'empty', text: t('timeline.empty') }));
+    if (!list.length) {
+        const text = state.query ? t('timeline.no_match', { q: $('card-search').value.trim() }) : t('timeline.empty');
+        ol.append(el('li', { class: 'empty', text }));
+    }
     $('more').hidden = list.length <= state.shown;
 }
 
