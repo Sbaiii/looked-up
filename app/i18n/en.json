@@ -104,6 +104,7 @@
     "search_hint": "Name, description or Q-number",
     "no_match": "No event on this day matches “{q}”.",
     "shown": "{shown} of {total} events shown",
+    "clear": "Clear filters",
     "sort": "Order",
     "sort_widest": "Widest first",
     "sort_views": "Most extra views",

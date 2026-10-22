@@ -561,6 +561,7 @@ function renderCards() {
     if (state.langFilter) $('lang-chip-text').textContent = t('timeline.lang_filter', { lang: langName(state.langFilter) });
     const total = (state.payload.events || []).length;
     $('cards-shown').hidden = list.length === total;          // only when a filter or the search hides some
+    $('clear-filters').hidden = state.tier === 'noticed' && !state.query && !state.category && !state.langFilter;
     $('cards-shown').textContent = t('timeline.shown', { shown: list.length, total });
     const ol = $('cards');
     ol.replaceChildren(...list.slice(0, state.shown).map(card));
@@ -668,6 +669,13 @@ function wire() {
     $('copy-day').addEventListener('click', (e) => copyLink(dayHash(shownDay()) === '#/today'
         ? `#/day/${todayIso()}` : dayHash(shownDay()), e.currentTarget));
     $('download-day').addEventListener('click', downloadDay);
+    $('clear-filters').addEventListener('click', () => {
+        setTier('noticed');
+        Object.assign(state, { query: '', category: null, langFilter: null, shown: PAGE });
+        $('card-search').value = '';
+        renderCategories();
+        renderCards();
+    });
     document.querySelector('#spread thead').addEventListener('click', (e) => {
         const b = e.target.closest('[data-sort]');
         if (!b) return;
