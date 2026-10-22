@@ -26,7 +26,7 @@ def test_db_connections_cap_spill(tmp_path, monkeypatch):
     from lookedup import db
 
     con = db.connect()
-    assert con.execute("SELECT current_setting('max_temp_directory_size')").fetchone()[0] in ("20.0 GiB", "20GiB", "21.4 GB")
+    assert db.one(con, "SELECT current_setting('max_temp_directory_size')")[0] in ("20.0 GiB", "20GiB", "21.4 GB")
 
 
 def test_short_copy_is_retried(tmp_path, monkeypatch):
