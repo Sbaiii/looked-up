@@ -46,3 +46,9 @@ test('an empty day gives no rows, and an event without a lead URL has a blank li
   assert.equal(r.wikipedia_url, '');
   assert.equal(r.languages, '');
 });
+
+test('the download columns are unique and start with the day and the QID', async () => {
+  const { DAY_COLUMNS } = await import('../../../app/js/csv.js');
+  assert.equal(new Set(DAY_COLUMNS).size, DAY_COLUMNS.length);
+  assert.deepEqual(DAY_COLUMNS.slice(0, 2), ['date', 'qid']);
+});
