@@ -39,3 +39,4 @@ decision says so in its status line; deviations from a pre-registration are reco
 | [0032](0032-live-layer-on-workers.md) | The live layer moves to a Cloudflare Worker, and its rules are tuned | accepted |
 | [0033](0033-live-state-in-d1.md) | Live-layer state in D1, five poll groups | accepted, frozen |
 | [0034](0034-duckdb-2.md) | DuckDB 2.0: read single rows with `db.one` | accepted |
+| [0035](0035-exploring-a-day.md) | Exploring a day in the app: client-side filters, no new exports | accepted |
