@@ -32,3 +32,12 @@ test('the field follows the shown day and cannot go past today', async ({ page }
   await page.locator('body').press('t');
   await expect(page.locator('#day-pick')).toHaveValue(max);
 });
+
+test('a date with no file falls back to today', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.fill('#day-pick', '2026-06-01');
+  await page.locator('#day-pick').dispatchEvent('change');
+  await expect(page.locator('#day-archive')).toBeHidden();
+  await expect(page.locator('#bars rect').last()).toHaveClass('is-on');
+});
