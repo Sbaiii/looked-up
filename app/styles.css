@@ -392,3 +392,6 @@ body { padding-bottom: calc(3.3rem + env(safe-area-inset-bottom)); }
     .pulse { animation: none; }
     .country { transition: none; }
 }
+
+/* keyboard help: only where there is a keyboard and a pointer that hovers */
+@media (hover: none) { .keys-help { display: none; } }
