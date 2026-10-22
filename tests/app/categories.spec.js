@@ -26,3 +26,17 @@ test('chip labels are translated', async ({ page }) => {
   await expect(page.locator('#cat-filters button').first()).toHaveText(`Toutes les catégories · ${today.events.length}`);
   if (counts.human) await expect(page.locator('#cat-filters [data-category="human"]')).toHaveText(`Personne · ${counts.human}`);
 });
+
+test('a category chip filters the cards', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const [cat, n] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  await page.click(`#cat-filters [data-category="${cat}"]`);
+  await expect(page.locator(`#cat-filters [data-category="${cat}"]`)).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#cards .card')).toHaveCount(Math.min(n, 12));
+  const shown = await page.locator('#cards .card').evaluateAll((cs) => cs.map((c) => c.dataset.qid));
+  const byQid = Object.fromEntries(today.events.map((e) => [e.qid, e.category]));
+  expect(shown.every((q) => byQid[q] === cat)).toBe(true);
+  await page.click('#cat-filters [data-category=""]');
+  await expect(page.locator('#cards .card')).toHaveCount(Math.min(today.events.length, 12));
+});
