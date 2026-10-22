@@ -19,3 +19,13 @@ test('one row per language of the selected event, earliest first', async ({ page
   expect(lags).toEqual([...lags].sort((a, b) => a - b));
   expect(page.errors).toEqual([]);
 });
+
+test('selecting another card refills the table and its caption', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.click('#cards .card[data-qid="Q804"] .card__title button');
+  await expect(page.locator('#spread-caption')).toContainText('Panama');
+  await page.click('#cards .card[data-qid="Q242078"] .card__title button');
+  await expect(page.locator('#spread-caption')).toHaveText('Navi Pillay: languages in the order they spiked');
+  await expect(page.locator('#spread-rows tr')).toHaveCount(byQid.Q242078.langs.length);
+});
