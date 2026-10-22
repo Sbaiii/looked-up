@@ -10,3 +10,12 @@ test('each shortcut maps to its action', () => {
   assert.equal(act('x'), null);
   assert.equal(act('Escape'), null);
 });
+
+test('nothing happens in a field or with Alt, Ctrl or Meta', () => {
+  for (const key of ['ArrowLeft', 't', 'j', '/']) {
+    assert.equal(keyAction({ key, inField: true }), null, key);
+    assert.equal(keyAction({ key, altKey: true }), null, key);
+    assert.equal(keyAction({ key, ctrlKey: true }), null, key);
+    assert.equal(keyAction({ key, metaKey: true }), null, key);
+  }
+});
