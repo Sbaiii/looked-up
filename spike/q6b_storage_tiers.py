@@ -31,15 +31,15 @@ union = " UNION ALL ".join(f"""
     WHERE regexp_matches(project, '^[a-z0-9-]+(\\.m)?$') AND split_part(project, '.', 1) IN ({langs})"""
                    for f in recent)
 con.execute(f"CREATE TABLE h AS SELECT lang, page_title, hour, sum(views)::INTEGER AS views FROM ({union}) GROUP BY ALL")
-total_views = con.execute("SELECT sum(views) FROM h").fetchone()[0]
+total_views = con.execute("SELECT sum(views) FROM h").fetchall()[0][0]
 factor = q1["day_factor_vs_newest_hour"] / 3 * 365  # 3 hours -> one year
 
-res = {"hours": 3, "rows_all": con.execute("SELECT count(*) FROM h").fetchone()[0], "tiers": []}
+res = {"hours": 3, "rows_all": con.execute("SELECT count(*) FROM h").fetchall()[0][0], "tiers": []}
 for n in [1, 2, 5, 10, 25]:
     out = DERIVED / f"tier_min{n}.parquet"
     con.execute(f"""COPY (SELECT * FROM h WHERE views >= {n} ORDER BY lang, page_title, hour)
                     TO '{out}' (FORMAT parquet, COMPRESSION zstd, COMPRESSION_LEVEL 9)""")
-    rows, kept = con.execute(f"SELECT count(*), sum(views) FROM h WHERE views >= {n}").fetchone()
+    rows, kept = con.execute(f"SELECT count(*), sum(views) FROM h WHERE views >= {n}").fetchall()[0]
     res["tiers"].append({"min_views_per_hour": n, "rows": rows, "views_kept_pct": round(100 * kept / total_views, 1),
                          "bytes_3h": out.stat().st_size, "gb_year": round(out.stat().st_size * factor / 1e9, 1)})
 
