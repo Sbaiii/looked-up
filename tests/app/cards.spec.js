@@ -130,3 +130,20 @@ test('cards without a description or a forecast never print "null"', async ({ pa
     .filter((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim()).map((n) => n.textContent));
   expect(nodes).toEqual([]);
 });
+
+test('where the browser can share, a Share button sends the event title and link', async ({ page }) => {
+  await page.addInitScript(() => { window.__shared = []; navigator.share = async (d) => { window.__shared.push(d); }; });
+  await page.goto('./#/day/2026-08-17');
+  await ready(page);
+  await page.locator('#cards .card[data-qid="Q171571"] .card__links button', { hasText: 'Share' }).click();
+  const [d] = await page.evaluate(() => window.__shared);
+  expect(d.title).toBe('Hayden Panettiere');
+  expect(d.url).toMatch(/#\/day\/2026-08-17\/event\/Q171571$/);
+});
+
+test('without a share sheet, cards have no Share button', async ({ page }) => {
+  await page.addInitScript(() => { delete Navigator.prototype.share; });
+  await page.goto('./');
+  await ready(page);
+  await expect(page.locator('#cards .card__links button', { hasText: 'Share' })).toHaveCount(0);
+});
