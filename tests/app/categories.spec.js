@@ -18,3 +18,11 @@ test('one chip per category of the day, with its count, after "All categories"',
   expect(shown).toEqual([...shown].sort((a, b) => b - a));
   expect(page.errors).toEqual([]);
 });
+
+test('chip labels are translated', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.click('[data-ui-lang="fr"]');
+  await expect(page.locator('#cat-filters button').first()).toHaveText(`Toutes les catégories · ${today.events.length}`);
+  if (counts.human) await expect(page.locator('#cat-filters [data-category="human"]')).toHaveText(`Personne · ${counts.human}`);
+});
