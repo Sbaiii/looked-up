@@ -29,3 +29,13 @@ test('selecting another card refills the table and its caption', async ({ page }
   await expect(page.locator('#spread-caption')).toHaveText('Navi Pillay: languages in the order they spiked');
   await expect(page.locator('#spread-rows tr')).toHaveCount(byQid.Q242078.langs.length);
 });
+
+test('row contents: language, first spike hour, +lag, peak surprise, extra views', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  await page.click('#cards .card[data-qid="Q242078"] .card__title button');
+  await page.click('#spread summary');
+  const de = byQid.Q242078.langs.find((r) => r.lang === 'de');
+  const row = page.locator('#spread-rows tr', { hasText: 'German' });
+  await expect(row.locator('td')).toHaveText(['09:00', `+${de.lag} h`, '1,886.4', de.excess.toLocaleString('en-GB')]);
+});
