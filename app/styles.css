@@ -316,10 +316,12 @@ button { background: none; border: none; cursor: pointer; }
 
 /* Languages panel */
 .field { display: grid; gap: 0.3rem; max-width: 22rem; }
-select {
+select, input[type='search'] {
     min-height: 2.6rem; padding: 0.4rem 0.7rem; border-radius: 8px; border: 1px solid var(--rule);
     background: var(--paper-2);
 }
+input[type='search']::placeholder { color: var(--faint); }
+.search { margin: 0 0 1rem; max-width: none; }
 .langpanel { display: grid; gap: 1rem 2rem; }
 @media (min-width: 640px) { .langpanel { grid-template-columns: 1fr 1fr; } }
 .mini { list-style: none; display: grid; gap: 0.45rem; counter-reset: mini; }
