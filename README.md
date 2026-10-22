@@ -72,6 +72,15 @@ Operations, workflows and the full command list: [docs/ops.md](docs/ops.md).
 favours the famous. Planetary forecasts rest on 3 test events. **Known limitation:** the Worker's polls run at about
 10 ms of CPU (p95 16 ms), over the free plan's 10 ms; no run has been rejected so far (ADR 0033).
 
+## Using the app
+
+Pick any day of the last 90 on the slider, or any older day with **Go to a date**; every day and event has its own
+link. A day's events can be searched by name in any language, description or Q-number, narrowed by tier,
+category or language (from the language panel), and ordered by breadth, extra views, spread speed or start time.
+**The spread as a table** under the cards lists the selected event's languages with their first spike, lag, peak
+and extra views, and **Download this day (CSV)** saves the day's events for a spreadsheet. Keys: ← → change the
+day, J K move between events, T goes back to today and / jumps to the search.
+
 ## How to run it
 
 ```bash
