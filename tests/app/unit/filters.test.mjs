@@ -31,3 +31,17 @@ test('visible applies the tier floor, the category and the language together', (
   assert.deepEqual(ids({ tier: 'international', category: 'death', lang: 'ja' }), ['Q1']);
   assert.deepEqual(visible(null, {}), []);
 });
+
+test('orders: views, fastest (wider first on ties), latest, earliest; the input is left alone', () => {
+  const evs = [ev('A', { excess: 5, spread_h: 2, breadth: 3, start: '2026-08-17T05:00Z' }),
+    ev('B', { excess: 9, spread_h: 1, breadth: 2, start: '2026-08-17T01:00Z' }),
+    ev('C', { excess: 1, spread_h: 1, breadth: 6, start: '2026-08-17T09:00Z' })];
+  const ids = (sort) => visible(evs, { sort }).map((e) => e.qid);
+  assert.deepEqual(ids('widest'), ['A', 'B', 'C']);
+  assert.deepEqual(ids('views'), ['B', 'A', 'C']);
+  assert.deepEqual(ids('fastest'), ['C', 'B', 'A']);
+  assert.deepEqual(ids('latest'), ['C', 'A', 'B']);
+  assert.deepEqual(ids('earliest'), ['B', 'A', 'C']);
+  assert.deepEqual(evs.map((e) => e.qid), ['A', 'B', 'C']);
+  assert.equal(SORTS.widest, null);
+});
