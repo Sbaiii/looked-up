@@ -21,7 +21,7 @@ test('accents, case and other languages', async ({ page }) => {
   await expect(page.locator('#cards .card[data-qid="Q242078"]')).toHaveCount(1);
   await page.fill('#card-search', 'нави');                         // the Russian label, in Cyrillic
   await expect(page.locator('#cards .card[data-qid="Q242078"]')).toHaveCount(1);
-  await page.fill('#card-search', 'droits de lhomme'.replace('lh', "l'h"));   // French description
+  await page.fill('#card-search', "droits de l'homme");                     // French description
   await expect(page.locator('#cards .card[data-qid="Q242078"]')).toHaveCount(1);
 });
 
