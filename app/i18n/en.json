@@ -82,6 +82,7 @@
     "title": "Pick a day",
     "standfirst": "Every bar is one day: how many events spread to two languages or more.",
     "slider": "Day",
+    "pick": "Go to a date",
     "prev": "Previous day",
     "next": "Next day",
     "keys": "Keys: ← → change the day · T today · / search",

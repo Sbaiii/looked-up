@@ -82,6 +82,7 @@
     "title": "Choisissez un jour",
     "standfirst": "Chaque barre est un jour : le nombre d'événements propagés à deux langues ou plus.",
     "slider": "Jour",
+    "pick": "Aller à une date",
     "prev": "Jour précédent",
     "next": "Jour suivant",
     "keys": "Clavier : ← → change de jour · T aujourd'hui · / recherche",
