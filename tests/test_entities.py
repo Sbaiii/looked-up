@@ -276,5 +276,5 @@ def test_gender_ignores_non_item_values(monkeypatch):
 def test_gender_of_unknown_values():
     from lookedup.analytics.entities import gender_of
 
-    assert gender_of([123456789]) == "other" or gender_of([123456789]) is None
+    assert gender_of([123456789]) == "other"                 # any value that is neither female nor male
     assert gender_of([]) is None
