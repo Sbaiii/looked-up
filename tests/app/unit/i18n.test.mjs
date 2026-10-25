@@ -148,3 +148,8 @@ test('within in French and Spanish', () => {
   i18n.use(dict('es'), 'es');
   assert.match(i18n.within(3), /^3 horas$/);
 });
+
+test('a placeholder used twice is filled twice', () => {
+  i18n.use({ locale: 'en-GB', s: '{a} and {a} or {b}' }, 'en');
+  assert.equal(i18n.t('s', { a: 'x', b: 'y' }), 'x and x or y');
+});
