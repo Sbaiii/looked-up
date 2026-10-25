@@ -162,3 +162,8 @@ def test_two_qids_two_events():
     rows = [(q, l, h, 20) for q in (1, 2) for l, h in [("en", 0), ("fr", 1), ("de", 2)]]
     events, _ = _events(_spikes(rows))
     assert sorted(e["qid"] for e in events) == [1, 2]
+
+
+def test_lead_is_a_member():
+    [ev], el = _events(_spikes([(1, "ja", 0, 20), (1, "ko", 0, 25), (1, "zh", 1, 30)]))
+    assert ev["lead_lang"] in el and el[ev["lead_lang"]] == 0
