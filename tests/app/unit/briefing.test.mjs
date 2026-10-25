@@ -133,3 +133,13 @@ test('compose writes the lead sentence in French and Spanish', () => {
     assert.ok(out.text.includes('Dolly Parton') && out.text.length > 40, code);
   }
 });
+
+test('facts gives at most three, one of each kind', async () => {
+  const { facts } = await import('../../../app/js/briefing.js');
+  i18n.use(dict('en'), 'en');
+  const ev = (qid, lead, breadth) => ({ id: `${qid}@x`, qid, class: 'multi_language', breadth, spread_h: 1, lead,
+    excess: 1000 * breadth, labels: { en: qid }, langs: [] });
+  const out = facts([ev('A', 'en', 9), ev('B', 'ja', 7), ev('C', 'fr', 6), ev('D', 'de', 5)]);
+  assert.ok(out.length <= 3);
+  assert.equal(new Set(out.map(([k]) => k)).size, out.length);
+});
