@@ -174,3 +174,9 @@ test('langName names Japanese in each interface language', () => {
   i18n.use(dict('es'), 'es');
   assert.equal(i18n.langName('ja'), 'japonés');
 });
+
+test('missing plural forms fall back to other', () => {
+  i18n.use({ locale: 'en-GB', p: { other: '{n} things' } }, 'en');
+  assert.equal(i18n.t('p', { n: 1 }), '1 things');
+  assert.equal(i18n.t('p', { n: 0 }), '0 things');
+});
