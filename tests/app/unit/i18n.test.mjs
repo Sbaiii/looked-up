@@ -127,3 +127,10 @@ test('current reports the language last installed', () => {
   i18n.use(dict('en'), 'en');
   assert.equal(i18n.current(), 'en');
 });
+
+test('pct rounds to the nearest whole percent', () => {
+  i18n.use(dict('en'), 'en');
+  assert.equal(i18n.pct(0.874), '87%');
+  assert.equal(i18n.pct(1), '100%');
+  assert.equal(i18n.pct(0), '0%');
+});
