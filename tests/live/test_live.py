@@ -853,3 +853,11 @@ def test_parse_sse_multiline_data():
     from lookedup_live.stream import parse_sse
     [(i, d)] = list(parse_sse(["id: [5]", "data: {\"a\":", "data: 1}", ""]))
     assert i == "[5]" and json.loads(d) == {"a": 1}
+
+
+def test_same_title_two_wikis():
+    d = B.Detector()
+    for lang in ("en", "fr"):
+        out = [d.add(lang, "X", T0 + 60 * i, u) for i, u in enumerate("abcde")]
+        assert out[-1] is not None
+    assert [b.lang for b in d.bursts] == ["en", "fr"]
