@@ -441,3 +441,7 @@ def test_manifest_key_round_trip():
 
 def test_day_path_padding():
     assert day_path(datetime(2026, 1, 5, 7)) == "data/hourly/year=2026/month=01/day=05.parquet"
+
+
+def test_local_list_prefix_missing(tmp_path):
+    assert LocalStore(tmp_path / "lake").list_prefix("data/none/") == []
