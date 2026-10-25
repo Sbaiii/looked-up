@@ -172,3 +172,7 @@ def test_lead_is_a_member():
 def test_threshold_is_inclusive():
     [ev], _ = _events(_spikes([(1, "es", 0, 8), (1, "en", 1, 8), (1, "fr", 2, 8)]))
     assert ev["breadth"] == 3
+
+
+def test_window_end_is_exclusive():
+    assert _events(_spikes([(1, "es", 0, 20), (1, "en", 0, 20), (1, "fr", 6, 20)]))[0] == []
