@@ -78,3 +78,9 @@ def test_h1_rejected_below_threshold(stubbed, monkeypatch, r6):
 
     monkeypatch.setattr(metrics, "recall", lambda *a, **k: {"recall": r6, "pairs": 2, "detected": 1})
     assert run.evaluate()["h1"]["verdict"] == "rejected"
+
+
+def test_csv_creates_folders(tmp_path):
+    out = tmp_path / "a" / "b" / "c.csv"
+    run._csv(out, [{"x": 1}])
+    assert out.exists()
