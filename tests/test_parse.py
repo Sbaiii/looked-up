@@ -185,3 +185,8 @@ def test_pvc_mobile_variants():
 def test_normalize_spaces_only():
     assert normalize_title("  ") == "__"
     assert normalize_title("A B C") == "A_B_C"
+
+
+def test_keep_row_custom_floor():
+    assert keep_row(5, 4, min_views=10) is False
+    assert keep_row(5, 5, min_views=10) is True
