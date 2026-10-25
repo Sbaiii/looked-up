@@ -861,3 +861,8 @@ def test_same_title_two_wikis():
         out = [d.add(lang, "X", T0 + 60 * i, u) for i, u in enumerate("abcde")]
         assert out[-1] is not None
     assert [b.lang for b in d.bursts] == ["en", "fr"]
+
+
+def test_live_events_need_qids():
+    mk = lambda lang, qid: B.Burst(lang, "t", T0, "window", 5, 3, qid)
+    assert B.live_events([mk("en", None), mk("fr", None)]) == []
