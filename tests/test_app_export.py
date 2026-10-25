@@ -464,3 +464,8 @@ def test_summary_of_nothing():
     s = ax.summary([], {})
     assert s["events"] == 0 and s["single_language"] == 0 and sum(s["hourly"]) == 0
     assert s["tiers"] == {"noticed": 0, "international": 0, "planetary": 0} and s["languages"] == {}
+
+
+def test_select_nothing():
+    assert ax.select([], {}) == ([], [])
+    assert ax.published([], {}) == []
