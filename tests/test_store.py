@@ -449,3 +449,9 @@ def test_local_list_prefix_missing(tmp_path):
 
 def test_local_fetch_missing(tmp_path):
     assert LocalStore(tmp_path / "lake").fetch("data/none.parquet", tmp_path / "out") is None
+
+
+def test_merge_into_empty_existing():
+    h = datetime(2026, 10, 7, 3)
+    merged = merge_day(_hour(h, []), [_hour(h, [("fr", "B", 5, 0), ("en", "A", 9, 9)])])
+    assert merged["lang"].to_pylist() == ["en", "fr"]
