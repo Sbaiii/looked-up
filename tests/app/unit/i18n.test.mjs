@@ -153,3 +153,8 @@ test('a placeholder used twice is filled twice', () => {
   i18n.use({ locale: 'en-GB', s: '{a} and {a} or {b}' }, 'en');
   assert.equal(i18n.t('s', { a: 'x', b: 'y' }), 'x and x or y');
 });
+
+test('dateTime shows UTC', () => {
+  i18n.use(dict('en'), 'en');
+  assert.match(i18n.dateTime('2026-08-17T14:00:00Z'), /UTC/);
+});
