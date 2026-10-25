@@ -85,3 +85,7 @@ test('geomPath draws holes as extra subpaths', () => {
   const hole = [[2, 2], [3, 2], [3, 3], [2, 2]];
   assert.equal((geomPath({ type: 'Polygon', coordinates: [outer, hole] }).match(/M/g) || []).length, 2);
 });
+
+test('project is monotonic in longitude', () => {
+  assert.ok(project([-90, 0])[0] < project([0, 0])[0] && project([0, 0])[0] < project([90, 0])[0]);
+});
