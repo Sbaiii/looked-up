@@ -180,3 +180,8 @@ test('missing plural forms fall back to other', () => {
   assert.equal(i18n.t('p', { n: 1 }), '1 things');
   assert.equal(i18n.t('p', { n: 0 }), '0 things');
 });
+
+test('desc falls back to English for a French reader', () => {
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.desc({ desc: { en: 'singer', es: 'cantante' } }), 'singer');
+});
