@@ -215,3 +215,8 @@ def test_spike_and_event_paths_match_days():
 def test_qids_for_nothing(monkeypatch):
     monkeypatch.setattr(scorer, "session", lambda: pytest.fail("no request expected"))
     assert scorer.qids_for([]) == {}
+
+
+def test_labels_for_nothing(monkeypatch):
+    monkeypatch.setattr(scorer, "session", lambda: pytest.fail("no request expected"))
+    assert scorer.labels_for([], ["en"]) == {}
