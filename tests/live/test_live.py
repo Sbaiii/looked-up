@@ -866,3 +866,9 @@ def test_same_title_two_wikis():
 def test_live_events_need_qids():
     mk = lambda lang, qid: B.Burst(lang, "t", T0, "window", 5, 3, qid)
     assert B.live_events([mk("en", None), mk("fr", None)]) == []
+
+
+def test_live_events_newest_first():
+    mk = lambda lang, ts, qid: B.Burst(lang, "t", T0 + ts, "window", 5, 3, qid)
+    evs = B.live_events([mk("en", 0, "Q1"), mk("fr", 60, "Q1"), mk("en", 600, "Q2"), mk("de", 700, "Q2")])
+    assert [e["qid"] for e in evs] == ["Q2", "Q1"]
