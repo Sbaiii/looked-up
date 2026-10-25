@@ -147,3 +147,11 @@ test('facts gives at most three, one of each kind', async () => {
 test('leadKey: other genders get the pronoun-free sentence', () => {
   assert.equal(leadKey({ category: 'death', gender: 'other' }), 'briefing.lead_death_neutral');
 });
+
+test('compose: only single-language events is a quiet day', () => {
+  i18n.use(dict('en'), 'en');
+  const solo = { ...dolly(null), class: 'single_language' };
+  const out = compose({ events: [solo] }, '2026-08-25');
+  assert.equal(out.top, null);
+  assert.deepEqual(out.facts, []);
+});
