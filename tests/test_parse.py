@@ -195,3 +195,8 @@ def test_keep_row_custom_floor():
 def test_namespace_prefix_spacing():
     assert namespace_prefix("_Talk_:X") == "talk"
     assert namespace_prefix("User_talk:X") == "user talk"
+
+
+def test_file_url_across_new_year():
+    assert dumps.file_name(datetime(2026, 12, 31, 23)) == "pageviews-20270101-000000.gz"
+    assert dumps.file_url(datetime(2026, 12, 31, 23)).endswith("/2027/2027-01/pageviews-20270101-000000.gz")
