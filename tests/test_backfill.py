@@ -92,3 +92,8 @@ def test_backfill_keeps_raw_when_asked(fake_dumps, tmp_path):
 
 def test_day_range_single_day():
     assert backfill.day_range(DAY, DAY) == [DAY] == backfill.day_range(DAY, DAY, newest_first=False)
+
+
+def test_day_range_oldest_first():
+    assert backfill.day_range(date(2026, 7, 30), date(2026, 8, 2), newest_first=False) == [
+        date(2026, 7, 30), date(2026, 7, 31), date(2026, 8, 1), date(2026, 8, 2)]
