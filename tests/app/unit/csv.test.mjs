@@ -52,3 +52,7 @@ test('the download columns are unique and start with the day and the QID', async
   assert.equal(new Set(DAY_COLUMNS).size, DAY_COLUMNS.length);
   assert.deepEqual(DAY_COLUMNS.slice(0, 2), ['date', 'qid']);
 });
+
+test('numbers and booleans become their text', () => {
+  assert.equal(toCsv([{ a: 1.5, b: true, c: false }], ['a', 'b', 'c']), 'a,b,c\r\n1.5,true,false\r\n');
+});
