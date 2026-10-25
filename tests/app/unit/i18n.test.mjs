@@ -103,3 +103,10 @@ test('compact counts in words, short weekday dates, and an unknown code kept as 
   i18n.use(dict('fr'), 'fr');
   assert.equal(i18n.compact(2_000_000), '2 millions');
 });
+
+test('hour is 24-hour in English, French and Spanish', () => {
+  for (const code of ['en', 'fr', 'es']) {
+    i18n.use(dict(code), code);
+    assert.equal(i18n.hour('2026-08-17T15:00:00Z'), '15:00', code);
+  }
+});
