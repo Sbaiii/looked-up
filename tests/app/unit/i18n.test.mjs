@@ -110,3 +110,8 @@ test('hour is 24-hour in English, French and Spanish', () => {
     assert.equal(i18n.hour('2026-08-17T15:00:00Z'), '15:00', code);
   }
 });
+
+test('Spanish groups thousands with a dot', () => {
+  i18n.use(dict('es'), 'es');
+  assert.equal(i18n.num(1234567), '1.234.567');
+});
