@@ -79,3 +79,9 @@ test('ringPath is M, then L for each other point, then Z', () => {
   const d = ringPath([[0, 0], [10, 0], [10, 10]]);
   assert.match(d, /^M[\d.]+,[\d.]+(L[\d.]+,[\d.]+){2}Z$/);
 });
+
+test('geomPath draws holes as extra subpaths', () => {
+  const outer = [[0, 0], [10, 0], [10, 10], [0, 0]];
+  const hole = [[2, 2], [3, 2], [3, 3], [2, 2]];
+  assert.equal((geomPath({ type: 'Polygon', coordinates: [outer, hole] }).match(/M/g) || []).length, 2);
+});
