@@ -82,3 +82,10 @@ test('rank returns a new order and leaves the input untouched', () => {
   assert.deepEqual(rank(list).map((x) => x.id), ['b', 'a']);
   assert.deepEqual(list.map((x) => x.id), ['a', 'b']);
 });
+
+test('pick skips a bigger event that does not qualify for a smaller one that does', async () => {
+  const { HERO_MIN_EXCESS } = await import('../../../app/js/select.js');
+  const e = (id, excess, tier) => ({ id, excess, breadth: 2, tier, class: 'multi_language' });
+  const r = pick([e('big', HERO_MIN_EXCESS - 1, 'noticed'), e('intl', 10, 'international')]);
+  assert.equal(r.id, 'intl');
+});
