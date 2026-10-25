@@ -100,3 +100,8 @@ test('an event without a category is left out when a category is chosen', () => 
   const evs = [ev('A', { category: undefined }), ev('B', { category: 'death' })];
   assert.deepEqual(visible(evs, { category: 'death' }).map((e) => e.qid), ['B']);
 });
+
+test('zh does not match zh-yue', () => {
+  const evs = [ev('A', { langs: [{ lang: 'zh-yue' }] }), ev('B', { langs: [{ lang: 'zh' }] })];
+  assert.deepEqual(visible(evs, { lang: 'zh' }).map((e) => e.qid), ['B']);
+});
