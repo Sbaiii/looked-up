@@ -76,3 +76,8 @@ def test_product_rule_is_looser_than_the_evaluated_one():
 
 def test_weekend_days():
     assert load().baseline["weekend_days"] == [5, 6]
+
+
+def test_spike_thresholds_positive():
+    s = load().spike
+    assert s.r1_ratio > 1 and s.r2_ratio > 1 and s.min_views > 0 and s.r3_threshold > 0 and s.mad_scale > 1
