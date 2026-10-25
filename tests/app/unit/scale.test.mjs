@@ -40,3 +40,9 @@ test('tickLabel: plain under 1,000, k above, plus at the top', () => {
   assert.equal(tickLabel(2000), '2k');
   assert.equal(tickLabel(MAX), '5k+');
 });
+
+test('TICKS has four strictly rising values', async () => {
+  const { TICKS } = await import('../../../app/js/scale.js');
+  assert.equal(TICKS.length, 4);
+  assert.ok(TICKS.every((v, i) => !i || v > TICKS[i - 1]));
+});
