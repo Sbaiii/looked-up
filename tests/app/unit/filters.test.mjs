@@ -95,3 +95,8 @@ test('events without labels or descriptions are still found by QID and never bre
 test('a partial word matches', () => {
   assert.ok(matches(ev('Q1', { labels: { en: 'Constantinople' } }), 'stanti'));
 });
+
+test('an event without a category is left out when a category is chosen', () => {
+  const evs = [ev('A', { category: undefined }), ev('B', { category: 'death' })];
+  assert.deepEqual(visible(evs, { category: 'death' }).map((e) => e.qid), ['B']);
+});
