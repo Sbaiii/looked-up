@@ -178,3 +178,8 @@ def test_resolve_qids_gives_up(monkeypatch):
     with pytest.raises(requests.HTTPError):
         gt.resolve_qids("en", ["Lisbon"])
     assert len(s.calls) == 5
+
+
+def test_page_title_month_and_day():
+    assert page_title(date(2026, 9, 1)) == "Portal:Current_events/2026_September_1"
+    assert page_title(date(2026, 12, 31)) == "Portal:Current_events/2026_December_31"
