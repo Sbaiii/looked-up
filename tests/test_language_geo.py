@@ -78,3 +78,8 @@ def test_iso_upper_and_late_numeric_code():
     rows = [row("prt", "Q5146", "Portugal"), row("PRT", "Q5146", "Portugal", "620")]
     by_lang, countries = G.build(rows, ["pt"])
     assert "PRT" in by_lang["pt"] and countries["PRT"]["num"] == "620"
+
+
+def test_language_without_rows_has_an_entry():
+    by_lang, _ = G.build([], ["eo"])
+    assert by_lang == {"eo": []}
