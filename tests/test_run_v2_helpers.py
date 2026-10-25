@@ -213,3 +213,7 @@ def test_phase2b_quake_verdict_and_rows(tmp_path, monkeypatch):
 
 def test_floor_on_the_hour():
     assert R._floor(datetime(2026, 8, 17, 2)) == datetime(2026, 8, 17, 2)
+
+
+def test_recall_none_detected():
+    assert R._recall([{"detected": False}] * 3) == {"n": 3, "detected": 0, "recall": 0.0}
