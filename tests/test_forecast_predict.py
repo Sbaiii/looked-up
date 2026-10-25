@@ -179,3 +179,8 @@ def test_attention_left_only_at_three_hours():
 
 def test_no_events_no_forecasts():
     assert forecast_open(_con(5), [], T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5), manifest={}, models=_models()) == {}
+
+
+def test_single_language_events_get_no_forecast():
+    events = [{"event_id": "young", "qid": 1, "start_hour": T0, "lead_lang": "en", "breadth": 2, "event_class": "single_language"}]
+    assert forecast_open(_con(5), events, T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5), manifest={}, models=_models()) == {}
