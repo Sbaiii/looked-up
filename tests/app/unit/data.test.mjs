@@ -113,3 +113,7 @@ test('the cache boundary sits 2.2 days after the day starts', async (t) => {
   await (await load('', win)).dayFile('2026-08-17');
   assert.equal(store.size, 1);
 });
+
+test('nested relative folders are allowed as the data base', async () => {
+  assert.equal((await load('?data=tests/app/fixtures/')).BASE, 'tests/app/fixtures/');
+});
