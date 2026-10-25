@@ -309,3 +309,8 @@ def test_lift_without_positives():
 
 def test_calib_slope_single_class():
     assert np.isnan(E.calib_slope(np.ones(5), np.full(5, 0.7)))
+
+
+def test_m1_metrics_single_class():
+    m = E.m1_metrics(np.zeros(4), np.array([0.1, 0.2, 0.3, 0.4]))
+    assert m["roc_auc"] is None and m["pr_auc"] is None and m["positives"] == 0 and m["brier"] > 0
