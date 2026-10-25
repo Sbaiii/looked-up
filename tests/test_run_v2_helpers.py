@@ -217,3 +217,7 @@ def test_floor_on_the_hour():
 
 def test_recall_none_detected():
     assert R._recall([{"detected": False}] * 3) == {"n": 3, "detected": 0, "recall": 0.0}
+
+
+def test_dist_share_within_four_hours():
+    assert R._dist([1.0, 4.0, 4.5, 10.0])["share_le_4h"] == 0.5
