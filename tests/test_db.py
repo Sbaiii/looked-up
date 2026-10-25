@@ -18,3 +18,8 @@ def test_connect_sets_the_spill_directory():
 
     con = db.connect()
     assert db.one(con, "SELECT current_setting('temp_directory')")[0] == str(DUCKDB_TEMP_DIR)
+
+
+def test_arrow_fetch():
+    t = db.arrow(db.connect().sql("SELECT 1 AS a, 'x' AS b"))
+    assert t.column_names == ["a", "b"] and t.num_rows == 1
