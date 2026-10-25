@@ -133,3 +133,8 @@ test('equal extra views keep the file order', () => {
   const evs = [ev('A', { excess: 5 }), ev('B', { excess: 5 }), ev('C', { excess: 9 })];
   assert.deepEqual(visible(evs, { sort: 'views' }).map((e) => e.qid), ['C', 'A', 'B']);
 });
+
+test('international and up excludes noticed only', async () => {
+  const { TIER_RANK } = await import('../../../app/js/filters.js');
+  assert.ok(TIER_RANK.noticed < TIER_RANK.international && TIER_RANK.international < TIER_RANK.planetary);
+});
