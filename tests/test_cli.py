@@ -523,3 +523,7 @@ def test_push_skips_sitelinks_already_on_the_hub(monkeypatch, tmp_path):
     cli.main(["push"])
     assert LocalStore(tmp_path / "hub").read_manifest().present() == {h14}
     assert not (tmp_path / "hub" / SITELINKS_PATH).exists()
+
+
+def test_hour_argument_with_seconds():
+    assert cli._hour("2026-10-06 14:00:00") == datetime(2026, 10, 6, 14)
