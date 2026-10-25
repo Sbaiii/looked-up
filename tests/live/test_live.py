@@ -880,3 +880,11 @@ def test_maintenance_case_insensitive():
 
 def test_language_rejects_bots_and_talk():
     assert language(ev(bot=True)) is None and language(ev(ns=4)) is None and language(ev(ns=0)) == "en"
+
+
+def test_resolver_queue_dedupes():
+    from lookedup_live.qids import Resolver
+    r = Resolver()
+    r.want("en", "X")
+    r.want("en", "X")
+    assert r.pending == {("en", "X")}
