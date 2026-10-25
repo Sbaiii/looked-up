@@ -51,5 +51,6 @@ def compact_local(root: Path) -> list[dict]:
                        "ratio": round(after / before, 3)})
         log.info("compacted %s: %d hour files, %d rows, %d -> %d bytes", rel, len(hour_files),
                  table.num_rows, before, after)
-    manifest_file.write_text(manifest.to_json())
+    if report:                       # nothing compacted: leave the manifest (or its absence) as it was
+        manifest_file.write_text(manifest.to_json())
     return report

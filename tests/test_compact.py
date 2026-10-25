@@ -71,3 +71,8 @@ def test_compact_leaves_other_days_alone(tmp_path, article_filter):
     m = json.loads((root / "data" / "manifest.json").read_text())
     assert m["hours"]["2026-09-12T10:00:00Z"]["path"] == other["path"] and m["hours"]["2026-09-12T10:00:00Z"]["bytes"] == 9
     assert m["hours"]["2026-09-13T14:00:00Z"]["path"] == day_path(ts)
+
+
+def test_compact_empty_lake_writes_nothing(tmp_path):
+    assert compact_local(tmp_path) == []
+    assert not (tmp_path / "data").exists()                 # no manifest invented for an empty folder
