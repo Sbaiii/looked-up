@@ -492,3 +492,9 @@ def test_wiki_url_escaping():
     assert ax.wiki_url("en", "100%_Love") == "https://en.wikipedia.org/wiki/100%25_Love"
     assert ax.wiki_url("en", "AC/DC") == "https://en.wikipedia.org/wiki/AC/DC"
     assert ax.wiki_url("en", "Tom_&_Jerry") == "https://en.wikipedia.org/wiki/Tom_&_Jerry"
+
+
+def test_with_gz_twins(tmp_path):
+    files = {"data/app/a.json": tmp_path / "a.json", "data/app/b.json": tmp_path / "b.json"}
+    out = ax.with_gz(files)
+    assert len(out) == 4 and out["data/app/b.json.gz"] == tmp_path / "b.json.gz" and out["data/app/a.json"] == files["data/app/a.json"]
