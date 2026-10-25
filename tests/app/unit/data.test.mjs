@@ -91,3 +91,12 @@ test('today and stats fetch their own files', async (t) => {
   await data.stats();
   assert.deepEqual(urls, [`${HUB}today.json.gz`, `${HUB}stats.json.gz`]);
 });
+
+test('two simultaneous requests for one file share a single fetch', async (t) => {
+  let calls = 0;
+  t.mock.method(globalThis, 'fetch', async () => { calls++; return gz({ n: calls }); });
+  const data = await load();
+  const [a, b] = await Promise.all([data.get('stats.json'), data.get('stats.json')]);
+  assert.deepEqual(a, b);
+  assert.equal(calls, 1);
+});
