@@ -60,3 +60,7 @@ test('numbers and booleans become their text', () => {
 test('missing values are empty', () => {
   assert.equal(toCsv([{ a: 1 }], ['a', 'b', 'c']), 'a,b,c\r\n1,,\r\n');
 });
+
+test('a lone quote becomes four quotes', () => {
+  assert.equal(field('"'), '""""');
+});
