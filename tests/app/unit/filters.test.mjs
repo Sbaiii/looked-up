@@ -124,3 +124,7 @@ test('ø, æ, þ, ß and dotless ı fold too', () => {
   assert.equal(fold('Straße'), 'strasse');
   assert.equal(fold('Diyarbakır'), 'diyarbakir');
 });
+
+test('"da nang" finds Đà Nẵng', () => {
+  assert.ok(matches(ev('Q1', { labels: { vi: 'Đà Nẵng' } }), fold('da nang')));
+});
