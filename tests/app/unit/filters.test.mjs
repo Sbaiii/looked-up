@@ -110,3 +110,9 @@ test('folding handles Vietnamese and Polish letters', () => {
   assert.equal(fold('Hồ Chí Minh'), 'ho chi minh');
   assert.equal(fold('Łódź'), 'łodz');                                  // Ł is a letter, not an accent
 });
+
+test('equal starts keep the file order in time orders', () => {
+  const evs = [ev('A'), ev('B'), ev('C')];
+  assert.deepEqual(visible(evs, { sort: 'latest' }).map((e) => e.qid), ['A', 'B', 'C']);
+  assert.deepEqual(visible(evs, { sort: 'earliest' }).map((e) => e.qid), ['A', 'B', 'C']);
+});
