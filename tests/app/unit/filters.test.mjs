@@ -116,3 +116,11 @@ test('equal starts keep the file order in time orders', () => {
   assert.deepEqual(visible(evs, { sort: 'latest' }).map((e) => e.qid), ['A', 'B', 'C']);
   assert.deepEqual(visible(evs, { sort: 'earliest' }).map((e) => e.qid), ['A', 'B', 'C']);
 });
+
+test('ø, æ, þ, ß and dotless ı fold too', () => {
+  assert.equal(fold('Øresund'), 'oresund');
+  assert.equal(fold('Ærø'), 'aero');
+  assert.equal(fold('Þingvellir'), 'thingvellir');
+  assert.equal(fold('Straße'), 'strasse');
+  assert.equal(fold('Diyarbakır'), 'diyarbakir');
+});
