@@ -527,3 +527,8 @@ def test_push_skips_sitelinks_already_on_the_hub(monkeypatch, tmp_path):
 
 def test_hour_argument_with_seconds():
     assert cli._hour("2026-10-06 14:00:00") == datetime(2026, 10, 6, 14)
+
+
+def test_hour_argument_rejects_garbage():
+    with pytest.raises((ValueError, SystemExit)):
+        cli._hour("yesterday")
