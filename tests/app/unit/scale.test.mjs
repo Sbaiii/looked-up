@@ -23,3 +23,8 @@ test('legend ticks start at the floor, end at the top and rise along the scale',
   assert.deepEqual([pos[0], pos.at(-1)], [0, 1]);
   assert.ok(pos.every((p, i) => !i || p > pos[i - 1]));
 });
+
+test('scale rises strictly between the floor and the top', () => {
+  const xs = [9, 20, 100, 1000, 4999].map(scale);
+  assert.ok(xs.every((x, i) => x > 0 && x < 1 && (!i || x > xs[i - 1])));
+});
