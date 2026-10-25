@@ -180,3 +180,8 @@ def test_pvc_mobile_variants():
     assert parse_pvc_project("de.wikipedia", "mobile-app") == ("de", True)
     assert parse_pvc_project("de.wikipedia", "mobile-web") == ("de", True)
     assert parse_pvc_project("de.wikipedia", "desktop") == ("de", False)
+
+
+def test_normalize_spaces_only():
+    assert normalize_title("  ") == "__"
+    assert normalize_title("A B C") == "A_B_C"
