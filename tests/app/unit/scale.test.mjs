@@ -28,3 +28,9 @@ test('scale rises strictly between the floor and the top', () => {
   const xs = [9, 20, 100, 1000, 4999].map(scale);
   assert.ok(xs.every((x, i) => x > 0 && x < 1 && (!i || x > xs[i - 1])));
 });
+
+test('negative, NaN and null surprises map to 0', () => {
+  assert.equal(scale(-5), 0);
+  assert.equal(scale(Number.NaN), 0);
+  assert.equal(scale(null), 0);
+});
