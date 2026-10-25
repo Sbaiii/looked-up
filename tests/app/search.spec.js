@@ -130,7 +130,8 @@ test('Clear filters appears with any filter and resets them all', async ({ page 
   await page.click('#cat-filters [data-category="sports"]');
   await page.fill('#card-search', 'a');
   await expect(clear).toBeVisible();
-  await clear.click();
+  await clear.focus();                                             // on phones the fixed bottom nav can cover it
+  await page.keyboard.press('Enter');
   await expect(clear).toBeHidden();
   await expect(page.locator('#card-search')).toHaveValue('');
   await expect(page.locator('[data-tier="noticed"]')).toHaveAttribute('aria-checked', 'true');
