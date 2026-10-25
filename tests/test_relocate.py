@@ -125,3 +125,9 @@ def test_progress_logged_every_25_files(tmp_path, caplog):
     with caplog.at_level(logging.INFO, logger="lookedup.relocate"):
         assert relocate(source=src, target=dst)["moved"] == 26
     assert [r.getMessage() for r in caplog.records if r.getMessage().startswith("moved")] == ["moved 25 files (0.0 GB)"]
+
+
+def test_relocate_into_itself(tmp_path):
+    (tmp_path / "a.txt").write_text("a")
+    assert relocate(source=tmp_path, target=tmp_path)["moved"] == 0
+    assert not (tmp_path / "README.md").exists() and (tmp_path / "a.txt").exists()
