@@ -239,3 +239,7 @@ def test_append_scores_without_rows_commits_nothing(tmp_path, monkeypatch):
 
 def test_anonymous_revision_counts():
     assert LA.counted({"timestamp": "2026-10-09T12:00:00Z", "user": None, "tags": [], "comment": "added a source"})
+
+
+def test_rollback_tag_is_not_counted():
+    assert not LA.counted(rev(0, "a", tags=["mw-rollback"])) and not LA.counted(rev(0, "a", tags=["mw-undo"]))
