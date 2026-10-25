@@ -437,3 +437,7 @@ def test_manifest_key_round_trip():
 
     h = datetime(2026, 2, 28, 23)
     assert _key(h) == "2026-02-28T23:00:00Z" and _parse_key(_key(h)) == h
+
+
+def test_day_path_padding():
+    assert day_path(datetime(2026, 1, 5, 7)) == "data/hourly/year=2026/month=01/day=05.parquet"
