@@ -75,3 +75,10 @@ test('a huge single-language event is never picked', () => {
   assert.equal(pick([solo]), null);
   assert.equal(pickDay([solo]), null);
 });
+
+test('rank returns a new order and leaves the input untouched', () => {
+  const e = (id, excess) => ({ id, excess, breadth: 2, class: 'multi_language' });
+  const list = [e('a', 1), e('b', 5)];
+  assert.deepEqual(rank(list).map((x) => x.id), ['b', 'a']);
+  assert.deepEqual(list.map((x) => x.id), ['b', 'a'].reverse());
+});
