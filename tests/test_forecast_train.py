@@ -314,3 +314,8 @@ def test_calib_slope_single_class():
 def test_m1_metrics_single_class():
     m = E.m1_metrics(np.zeros(4), np.array([0.1, 0.2, 0.3, 0.4]))
     assert m["roc_auc"] is None and m["pr_auc"] is None and m["positives"] == 0 and m["brier"] > 0
+
+
+def test_m2_metrics_all_zero():
+    m = E.m2_metrics(np.zeros(3), np.array([0.1, 0.2, 0.3]))
+    assert m["mape_log"] is None and m["n"] == 3 and abs(m["mae_log"] - 0.2) < 1e-9
