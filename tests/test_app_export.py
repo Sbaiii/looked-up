@@ -439,3 +439,8 @@ def test_day_and_og_paths_are_dated():
 
     assert ax.day_file(date(2026, 1, 2)) == "data/app/days/2026-01-02.json"
     assert ax.og_file(date(2026, 1, 2)) == "data/app/og/2026-01-02.png"
+
+
+def test_short_keeps_short_text():
+    assert ax.short("capital of Portugal") == "capital of Portugal"
+    assert len(ax.short("x " * 200)) <= ax.DESC_MAX + 1
