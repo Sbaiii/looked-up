@@ -60,3 +60,9 @@ def test_optional_sections_need_their_files(tmp_path):
     (tmp_path / "empty.yml").write_text("")
     cfg = load(ANALYTICS_FILE, tmp_path / "empty.yml", tmp_path / "empty.yml")
     assert cfg.raw["v2"] == {} and cfg.raw["product"] == {}                 # an empty file reads as no settings
+
+
+def test_product_tiers_are_ordered_high_to_low():
+    tiers = load().product_event.tiers
+    assert [n for _, n in tiers] == sorted((n for _, n in tiers), reverse=True)
+    assert tiers[-1][0] == "noticed"
