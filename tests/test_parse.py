@@ -200,3 +200,8 @@ def test_namespace_prefix_spacing():
 def test_file_url_across_new_year():
     assert dumps.file_name(datetime(2026, 12, 31, 23)) == "pageviews-20270101-000000.gz"
     assert dumps.file_url(datetime(2026, 12, 31, 23)).endswith("/2027/2027-01/pageviews-20270101-000000.gz")
+
+
+def test_file_name_on_a_leap_day():
+    assert dumps.file_name(datetime(2028, 2, 29, 9)) == "pageviews-20280229-100000.gz"
+    assert dumps.hour_start_from_name("pageviews-20280301-000000.gz") == datetime(2028, 2, 29, 23)
