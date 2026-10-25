@@ -88,3 +88,9 @@ def test_build_sitelinks_exact_batches(tmp_path, monkeypatch):
     out = tmp_path / "s.parquet"
     assert W.build_sitelinks(["en"], out, dump) == {"en": 4}
     assert pq.read_table(out)["title"].to_pylist() == [f"Title_{i}" for i in range(4)]
+
+
+def test_site_id_hyphens():
+    from lookedup.wikidata import site_id
+
+    assert site_id("zh-min-nan") == "zh_min_nanwiki" and site_id("en") == "enwiki"
