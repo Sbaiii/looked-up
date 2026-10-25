@@ -167,3 +167,8 @@ def test_two_qids_two_events():
 def test_lead_is_a_member():
     [ev], el = _events(_spikes([(1, "ja", 0, 20), (1, "ko", 0, 25), (1, "zh", 1, 30)]))
     assert ev["lead_lang"] in el and el[ev["lead_lang"]] == 0
+
+
+def test_threshold_is_inclusive():
+    [ev], _ = _events(_spikes([(1, "es", 0, 8), (1, "en", 1, 8), (1, "fr", 2, 8)]))
+    assert ev["breadth"] == 3
