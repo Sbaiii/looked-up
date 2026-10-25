@@ -315,3 +315,8 @@ def test_km_symmetric():
 
     assert _km(10, 20, 10, 20) == 0
     assert abs(_km(0, 0, 0, 10) - _km(0, 10, 0, 0)) < 1e-9
+
+
+def test_death_words_whole_words():
+    assert not DEATH_WORDS.search("deadline extended") and not DEATH_WORDS.search("rippling")
+    assert DEATH_WORDS.search("RIP") and DEATH_WORDS.search("passed away")
