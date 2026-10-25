@@ -847,3 +847,9 @@ def test_new_engine_status():
 def test_parse_sse_ignores_comments():
     from lookedup_live.stream import parse_sse
     assert list(parse_sse([": keep-alive", "", ": another"])) == []
+
+
+def test_parse_sse_multiline_data():
+    from lookedup_live.stream import parse_sse
+    [(i, d)] = list(parse_sse(["id: [5]", "data: {\"a\":", "data: 1}", ""]))
+    assert i == "[5]" and json.loads(d) == {"a": 1}
