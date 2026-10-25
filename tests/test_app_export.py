@@ -480,3 +480,8 @@ def test_stats_days_sorted():
     s = ax.stats_payload({"2026-08-17": _day_summary(1), "2026-08-15": _day_summary(1)}, datetime(2026, 8, 18), ["en"])
     assert [r["day"] for r in s["timeline"]] == ["2026-08-15", "2026-08-17"]
     assert (s["first_day"], s["last_day"]) == ("2026-08-15", "2026-08-17")
+
+
+def test_label_from_title_qualifier():
+    assert ax.label_from_title("Paris_(Texas)") == "Paris"
+    assert ax.label_from_title("The_(Not)_Band") == "The (Not) Band"
