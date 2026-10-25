@@ -448,3 +448,8 @@ def test_short_keeps_short_text():
 
 def test_iso_hour_format():
     assert ax._iso(datetime(2026, 8, 17, 2)) == "2026-08-17T02:00Z"
+
+
+def test_label_from_plain_title():
+    assert ax.label_from_title("Lisbon") == "Lisbon"
+    assert ax.label_from_title("New_York_City") == "New York City"
