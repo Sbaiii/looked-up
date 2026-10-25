@@ -187,3 +187,8 @@ def test_page_title_month_and_day():
 
 def test_parse_empty_day():
     assert parse_day("", DAY) == [] and parse_day("'''Sports'''\nNo bullets here.\n", DAY) == []
+
+
+def test_parse_skips_template_and_portal_links():
+    links = parse_day("'''Sports'''\n*[[Template:Foo]] [[Portal:Bar]] [[:fr:Paris]] [[Lyon]]\n", DAY)
+    assert [l.title for l in links] == ["Lyon"]
