@@ -138,3 +138,9 @@ test('international and up excludes noticed only', async () => {
   const { TIER_RANK } = await import('../../../app/js/filters.js');
   assert.ok(TIER_RANK.noticed < TIER_RANK.international && TIER_RANK.international < TIER_RANK.planetary);
 });
+
+test('sortSpread by name uses the displayed names, not the codes', async () => {
+  const { sortSpread } = await import('../../../app/js/filters.js');
+  const rows = [{ lang: 'ja', name: 'Japanese', lag: 0 }, { lang: 'de', name: 'German', lag: 0 }, { lang: 'en', name: 'English', lag: 0 }];
+  assert.deepEqual(sortSpread(rows, 'name').map((r) => r.lang), ['en', 'de', 'ja']);
+});
