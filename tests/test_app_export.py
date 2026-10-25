@@ -444,3 +444,7 @@ def test_day_and_og_paths_are_dated():
 def test_short_keeps_short_text():
     assert ax.short("capital of Portugal") == "capital of Portugal"
     assert len(ax.short("x " * 200)) <= ax.DESC_MAX + 1
+
+
+def test_iso_hour_format():
+    assert ax._iso(datetime(2026, 8, 17, 2)) == "2026-08-17T02:00Z"
