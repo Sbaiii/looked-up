@@ -134,3 +134,10 @@ test('pct rounds to the nearest whole percent', () => {
   assert.equal(i18n.pct(1), '100%');
   assert.equal(i18n.pct(0), '0%');
 });
+
+test('label falls back to the QID when there are no labels at all', () => {
+  for (const code of ['en', 'fr', 'es']) {
+    i18n.use(dict(code), code);
+    assert.equal(i18n.label({ qid: 'Q5', labels: {} }), 'Q5', code);
+  }
+});
