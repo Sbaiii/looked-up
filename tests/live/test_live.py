@@ -876,3 +876,7 @@ def test_live_events_newest_first():
 
 def test_maintenance_case_insensitive():
     assert is_maintenance("REVERTED EDITS BY X") and is_maintenance("Fix Typo")
+
+
+def test_language_rejects_bots_and_talk():
+    assert language(ev(bot=True)) is None and language(ev(ns=4)) is None and language(ev(ns=0)) == "en"
