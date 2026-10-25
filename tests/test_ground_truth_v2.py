@@ -308,3 +308,10 @@ def test_football_matches_without_a_team_link(monkeypatch):
     monkeypatch.setattr(G, "_expand_links", lambda text: ["France national football team"] if "FRA" in text else ["Flag of TBD"])
     [m] = G.football_matches("2026 FIFA World Cup knockout stage")
     assert m["teams"] == ["France national football team"]
+
+
+def test_km_symmetric():
+    from lookedup.evaluation.ground_truth_v2 import _km
+
+    assert _km(10, 20, 10, 20) == 0
+    assert abs(_km(0, 0, 0, 10) - _km(0, 10, 0, 0)) < 1e-9
