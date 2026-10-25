@@ -74,3 +74,8 @@ test('polygons ignores points, lines and missing geometry', () => {
   assert.deepEqual(polygons({ type: 'LineString', coordinates: [[0, 0], [1, 1]] }), []);
   assert.deepEqual(polygons(undefined), []);
 });
+
+test('ringPath is M, then L for each other point, then Z', () => {
+  const d = ringPath([[0, 0], [10, 0], [10, 10]]);
+  assert.match(d, /^M[\d.]+,[\d.]+(L[\d.]+,[\d.]+){2}Z$/);
+});
