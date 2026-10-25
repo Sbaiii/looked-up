@@ -325,3 +325,9 @@ def test_m2_metrics_hours():
     y = np.log1p(np.array([2.0, 4.0]))
     m = E.m2_metrics(y, y, hours=True)
     assert m["median_abs_error_hours"] == 0.0 and m["mae_log"] == 0.0
+
+
+def test_m1_rows_drop_reached_tiers():
+    rows = [{"offset_h": 1, "breadth_t": 4}, {"offset_h": 1, "breadth_t": 5}, {"offset_h": 3, "breadth_t": 2}]
+    assert T.m1_rows(rows, "international", 1) == [{"offset_h": 1, "breadth_t": 4}]
+    assert len(T.m1_rows(rows, "planetary", 1)) == 2
