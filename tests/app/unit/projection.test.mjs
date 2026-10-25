@@ -68,3 +68,9 @@ test('lon 0 is the horizontal middle and latitude 0 sits inside the band', () =>
   assert.equal(x, W / 2);
   assert.ok(y > 0 && y < H);
 });
+
+test('polygons ignores points, lines and missing geometry', () => {
+  assert.deepEqual(polygons({ type: 'Point', coordinates: [0, 0] }), []);
+  assert.deepEqual(polygons({ type: 'LineString', coordinates: [[0, 0], [1, 1]] }), []);
+  assert.deepEqual(polygons(undefined), []);
+});
