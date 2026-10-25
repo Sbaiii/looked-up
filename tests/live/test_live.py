@@ -810,3 +810,8 @@ def test_baseline_needs_a_day_of_history():
     assert b.get("en") == B.DEFAULT_BASELINE
     b.medians["en"].append(6.0)
     assert b.get("en") == 6.0
+
+
+def test_editor_hash_is_stable_and_distinct():
+    assert B.editor_hash("alice") == B.editor_hash("alice") != B.editor_hash("bob")
+    assert B.editor_hash(None) is None and B.editor_hash("") is None
