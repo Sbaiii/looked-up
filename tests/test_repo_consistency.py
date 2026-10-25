@@ -254,3 +254,8 @@ def test_pure_app_modules_have_unit_tests():
     unit = " ".join(p.read_text(encoding="utf-8") for p in (ROOT / "tests" / "app" / "unit").glob("*.mjs"))
     for name in ("briefing", "csv", "data", "filters", "i18n", "keys", "live", "projection", "scale", "select"):
         assert f"app/js/{name}.js" in unit, name
+
+
+def test_page_loads_main_as_module():
+    html = (ROOT / "app" / "index.html").read_text(encoding="utf-8")
+    assert re.search(r'<script type="module" src="js/main\.js', html)
