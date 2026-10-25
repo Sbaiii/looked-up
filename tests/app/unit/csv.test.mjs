@@ -71,3 +71,7 @@ test('the date column is the day shown, not the event start', async () => {
   assert.equal(r.date, '2026-08-17');
   assert.equal(r.first_spike_utc, '2026-08-16T23:00Z');
 });
+
+test('the header follows the column order', () => {
+  assert.equal(toCsv([], ['b', 'a', 'c']), 'b,a,c\r\n');
+});
