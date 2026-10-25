@@ -69,3 +69,9 @@ test('pickDay and pick return null on an empty or missing day', () => {
   assert.equal(pickDay(undefined), null);
   assert.equal(pick(null), null);
 });
+
+test('a huge single-language event is never picked', () => {
+  const solo = { id: 's', qid: 'Q9', excess: 9e9, breadth: 1, tier: 'planetary', class: 'single_language' };
+  assert.equal(pick([solo]), null);
+  assert.equal(pickDay([solo]), null);
+});
