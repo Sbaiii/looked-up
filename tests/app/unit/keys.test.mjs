@@ -35,3 +35,8 @@ test('J and K work in lower case only, T in both', () => {
 test('ArrowUp, ArrowDown, Enter and Space have no shortcut', () => {
   for (const key of ['ArrowUp', 'ArrowDown', 'Enter', ' ', 'Tab']) assert.equal(keyAction({ key }), null, key);
 });
+
+test('Shift is not a blocking modifier', () => {
+  assert.equal(keyAction({ key: '/', shiftKey: true }), 'search');
+  assert.equal(keyAction({ key: 'T', shiftKey: true }), 'today');
+});
