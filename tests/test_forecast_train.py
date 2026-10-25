@@ -305,3 +305,7 @@ def test_calib_curve_bins():
 
 def test_lift_without_positives():
     assert np.isnan(E.lift_top10(np.zeros(20), np.arange(20.0)))
+
+
+def test_calib_slope_single_class():
+    assert np.isnan(E.calib_slope(np.ones(5), np.full(5, 0.7)))
