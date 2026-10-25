@@ -144,3 +144,11 @@ test('sortSpread by name uses the displayed names, not the codes', async () => {
   const rows = [{ lang: 'ja', name: 'Japanese', lag: 0 }, { lang: 'de', name: 'German', lag: 0 }, { lang: 'en', name: 'English', lag: 0 }];
   assert.deepEqual(sortSpread(rows, 'name').map((r) => r.lang), ['en', 'de', 'ja']);
 });
+
+test('SPREAD_KEYS: surprise and excess descend, the rest ascend', async () => {
+  const { SPREAD_KEYS } = await import('../../../app/js/filters.js');
+  assert.equal(SPREAD_KEYS.surprise, 'desc');
+  assert.equal(SPREAD_KEYS.excess, 'desc');
+  assert.equal(SPREAD_KEYS.lag, 'asc');
+  assert.equal(SPREAD_KEYS.name, 'asc');
+});
