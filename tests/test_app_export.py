@@ -458,3 +458,9 @@ def test_label_from_plain_title():
 def test_group_langs_by_event():
     g = ax.group_langs([_lang("a", "en", 1), _lang("b", "fr", 2), _lang("a", "de", 3)])
     assert [r["lang"] for r in g["a"]] == ["en", "de"] and [r["lang"] for r in g["b"]] == ["fr"]
+
+
+def test_summary_of_nothing():
+    s = ax.summary([], {})
+    assert s["events"] == 0 and s["single_language"] == 0 and sum(s["hourly"]) == 0
+    assert s["tiers"] == {"noticed": 0, "international": 0, "planetary": 0} and s["languages"] == {}
