@@ -118,3 +118,10 @@ test('compose leaves the about line empty without a description', () => {
   assert.equal(out.about, '');
   assert.equal(out.top.qid, 'Q180453');
 });
+
+test('excessPhrase: exact number below a million, words from a million up', async () => {
+  const { excessPhrase } = await import('../../../app/js/briefing.js');
+  i18n.use(dict('en'), 'en');
+  assert.match(excessPhrase(999999), /999,999/);
+  assert.match(excessPhrase(1000000), /1 million/);
+});
