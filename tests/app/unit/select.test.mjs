@@ -94,3 +94,8 @@ test('no hero anywhere: the result says 24 hours', async () => {
   const r = await pickHero(async () => [], now);
   assert.deepEqual([r.event, r.hours], [null, 24]);
 });
+
+test('pickDay returns the top-ranked event when the hero rule finds none', () => {
+  const e = (id, excess) => ({ id, excess, breadth: 2, tier: 'noticed', class: 'multi_language' });
+  assert.equal(pickDay([e('a', 5), e('b', 50)]).id, 'b');
+});
