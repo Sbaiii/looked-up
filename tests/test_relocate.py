@@ -131,3 +131,10 @@ def test_relocate_into_itself(tmp_path):
     (tmp_path / "a.txt").write_text("a")
     assert relocate(source=tmp_path, target=tmp_path)["moved"] == 0
     assert not (tmp_path / "README.md").exists() and (tmp_path / "a.txt").exists()
+
+
+def test_relocate_empty_source(tmp_path):
+    src, dst = tmp_path / "old", tmp_path / "new"
+    src.mkdir()
+    res = relocate(source=src, target=dst)
+    assert res["moved"] == 0 and (src / "README.md").exists()
