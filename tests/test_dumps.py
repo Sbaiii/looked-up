@@ -266,3 +266,10 @@ def test_download_incomplete_after_all_attempts(tmp_path, monkeypatch):
 def test_listing_without_links(monkeypatch):
     monkeypatch.setattr(dumps._session, "get", lambda url, timeout=None: _Page(200, "<html><body>empty</body></html>"))
     assert dumps.list_month(2026, 10) == []
+
+
+def test_hourly_file_lag():
+    from datetime import datetime
+
+    f = dumps.HourlyFile(name="x", url="u", ts_hour_start=datetime(2026, 10, 7, 9), posted=datetime(2026, 10, 7, 12, 14), size=1)
+    assert f.lag_minutes == 134
