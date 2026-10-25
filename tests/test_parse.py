@@ -190,3 +190,8 @@ def test_normalize_spaces_only():
 def test_keep_row_custom_floor():
     assert keep_row(5, 4, min_views=10) is False
     assert keep_row(5, 5, min_views=10) is True
+
+
+def test_namespace_prefix_spacing():
+    assert namespace_prefix("_Talk_:X") == "talk"
+    assert namespace_prefix("User_talk:X") == "user talk"
