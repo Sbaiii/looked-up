@@ -324,3 +324,7 @@ def test_death_words_whole_words():
 
 def test_place_parts_without_comma():
     assert place_parts("Kermadec Islands region") == (None, "Kermadec Islands region")
+
+
+def test_kickoff_already_utc():
+    assert kickoff_utc("{{Start date|2026|7|12}}", "20:00 [[Coordinated Universal Time|UTC]]") in (datetime(2026, 7, 12, 20), None)
