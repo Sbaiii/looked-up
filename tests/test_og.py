@@ -183,3 +183,8 @@ def test_within_long_spread():
 def test_qualifies_at_threshold():
     assert og.qualifies({"excess": og.HERO_MIN_EXCESS, "tier": "noticed"})
     assert not og.qualifies({"excess": 0, "tier": "noticed"})
+
+
+def test_rank_ties_by_id():
+    e = lambda i, cls="multi_language": {"id": i, "excess": 5, "breadth": 3, "class": cls}
+    assert [x["id"] for x in og.rank([e("b"), e("a"), e("c", "single_language")])] == ["a", "b"]
