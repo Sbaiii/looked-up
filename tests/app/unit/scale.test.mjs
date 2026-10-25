@@ -34,3 +34,9 @@ test('negative, NaN and null surprises map to 0', () => {
   assert.equal(scale(Number.NaN), 0);
   assert.equal(scale(null), 0);
 });
+
+test('tickLabel: plain under 1,000, k above, plus at the top', () => {
+  assert.equal(tickLabel(999), '999');
+  assert.equal(tickLabel(2000), '2k');
+  assert.equal(tickLabel(MAX), '5k+');
+});
