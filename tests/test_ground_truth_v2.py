@@ -320,3 +320,7 @@ def test_km_symmetric():
 def test_death_words_whole_words():
     assert not DEATH_WORDS.search("deadline extended") and not DEATH_WORDS.search("rippling")
     assert DEATH_WORDS.search("RIP") and DEATH_WORDS.search("passed away")
+
+
+def test_place_parts_without_comma():
+    assert place_parts("Kermadec Islands region") == (None, "Kermadec Islands region")
