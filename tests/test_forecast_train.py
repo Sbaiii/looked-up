@@ -294,3 +294,10 @@ def test_split_windows_are_ordered():
 def test_identity_calibration():
     p = np.array([0.1, 0.5, 0.9])
     assert np.allclose(T.calibrate(p, (1.0, 0.0)), p)
+
+
+def test_calib_curve_bins():
+    y = np.array([0, 1, 1])
+    p = np.array([0.05, 0.95, 1.0])
+    curve = E.calib_curve(y, p)
+    assert [c["bin"] for c in curve] == [0, 9] and curve[1]["n"] == 2 and curve[1]["observed"] == 1.0
