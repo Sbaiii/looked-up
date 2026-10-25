@@ -319,3 +319,9 @@ def test_m1_metrics_single_class():
 def test_m2_metrics_all_zero():
     m = E.m2_metrics(np.zeros(3), np.array([0.1, 0.2, 0.3]))
     assert m["mape_log"] is None and m["n"] == 3 and abs(m["mae_log"] - 0.2) < 1e-9
+
+
+def test_m2_metrics_hours():
+    y = np.log1p(np.array([2.0, 4.0]))
+    m = E.m2_metrics(y, y, hours=True)
+    assert m["median_abs_error_hours"] == 0.0 and m["mae_log"] == 0.0
