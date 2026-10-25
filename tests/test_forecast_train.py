@@ -278,3 +278,10 @@ def test_backtest_run_end_to_end(tmp_path, monkeypatch):
     assert (tmp_path / "fig" / "phase4_calibration.png").exists() and (tmp_path / "fig" / "phase4_importance.png").exists()
     assert len(list((tmp_path / "data" / "models" / "backtest").glob("*.txt"))) == 8
     assert json.loads((tmp_path / "analysis" / "phase4_metrics.json").read_text())["backtest_model_bytes"]
+
+
+def test_categorical_features_are_features():
+    from lookedup.forecast.features import CATEGORICAL, FEATURES, LEAKY, MONOTONE_UP
+
+    assert set(CATEGORICAL) <= set(FEATURES) and LEAKY <= set(FEATURES) and MONOTONE_UP <= set(FEATURES)
+    assert len(FEATURES) == len(set(FEATURES))
