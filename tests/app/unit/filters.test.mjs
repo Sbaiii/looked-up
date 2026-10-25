@@ -128,3 +128,8 @@ test('ø, æ, þ, ß and dotless ı fold too', () => {
 test('"da nang" finds Đà Nẵng', () => {
   assert.ok(matches(ev('Q1', { labels: { vi: 'Đà Nẵng' } }), fold('da nang')));
 });
+
+test('equal extra views keep the file order', () => {
+  const evs = [ev('A', { excess: 5 }), ev('B', { excess: 5 }), ev('C', { excess: 9 })];
+  assert.deepEqual(visible(evs, { sort: 'views' }).map((e) => e.qid), ['C', 'A', 'B']);
+});
