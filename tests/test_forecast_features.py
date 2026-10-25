@@ -99,3 +99,7 @@ def test_custom_offsets():
 
 def test_offsets_increase():
     assert [r["offset_h"] for r in _rows(_con(SPIKES, VIEWS))] == [0, 1, 3]
+
+
+def test_lead_share_bounds():
+    assert all(0 <= r["lead_share_t"] <= 1 for r in _rows(_con(SPIKES, VIEWS)))
