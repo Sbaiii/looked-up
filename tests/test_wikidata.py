@@ -94,3 +94,10 @@ def test_site_id_hyphens():
     from lookedup.wikidata import site_id
 
     assert site_id("zh-min-nan") == "zh_min_nanwiki" and site_id("en") == "enwiki"
+
+
+def test_parse_sitelinks_unescapes_quotes():
+    from lookedup.wikidata import parse_sitelinks
+
+    line = b"INSERT INTO `wb_items_per_site` VALUES (1,42,'enwiki','Rock \\'n\\' Roll');\n"
+    assert list(parse_sitelinks([line], {b"enwiki": "en"})) == [("en", "Rock_'n'_Roll", 42)]
