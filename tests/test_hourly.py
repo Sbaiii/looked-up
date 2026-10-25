@@ -123,3 +123,7 @@ def test_process_hour_deletes_the_raw_dump(fake_server, tmp_path, article_filter
     t = hourly.process_hour(f, LANGS, article_filter, work)
     assert t.num_rows > 0 and set(t["ts_hour_start"].to_pylist()) == {ts}
     assert list(work.iterdir()) == []
+
+
+def test_current_hour_not_expected():
+    assert hourly.expected_hours(NOW, 3)[-1] == datetime(2026, 10, 7, 11)       # 12:45: the 12:00 hour is still running
