@@ -842,3 +842,8 @@ def test_resolver_without_cache_file():
 def test_new_engine_status():
     s = Engine().status(now=T0)
     assert s["connected"] is False and s["last_event_at"] is None
+
+
+def test_parse_sse_ignores_comments():
+    from lookedup_live.stream import parse_sse
+    assert list(parse_sse([": keep-alive", "", ": another"])) == []
