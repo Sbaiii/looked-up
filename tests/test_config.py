@@ -66,3 +66,9 @@ def test_product_tiers_are_ordered_high_to_low():
     tiers = load().product_event.tiers
     assert [n for _, n in tiers] == sorted((n for _, n in tiers), reverse=True)
     assert tiers[-1][0] == "noticed"
+
+
+def test_product_rule_is_looser_than_the_evaluated_one():
+    cfg = load()
+    assert cfg.product_event.min_languages < cfg.event.min_languages
+    assert cfg.product_event.window_hours == cfg.event.window_hours
