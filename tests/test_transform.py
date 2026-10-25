@@ -119,3 +119,9 @@ def test_sql_str_escapes_quotes():
     from lookedup.transform import _sql_str
 
     assert _sql_str(Path("/tmp/o'clock")) == "'/tmp/o''clock'"
+
+
+def test_mobile_column(tmp_path, article_filter):
+    src = tmp_path / "dump"
+    src.write_text("en.m Lisbon 7 0\n")
+    assert _rows(hourly_dump_to_table(src, HOUR, ["en"], article_filter)) == [(HOUR, "en", "Lisbon", 0, 7)]
