@@ -11,3 +11,10 @@ def test_one_returns_the_first_row_or_none_and_frees_the_connection():
     assert db.one(con, "SELECT i FROM t WHERE i > ?", [2]) == (3,)
     assert db.one(con, "SELECT i FROM t WHERE i > 10") is None
     assert con.execute("SELECT count(*) FROM t").fetchall() == [(5,)]     # usable right after, even on DuckDB 2.0
+
+
+def test_connect_sets_the_spill_directory():
+    from lookedup.settings import DUCKDB_TEMP_DIR
+
+    con = db.connect()
+    assert db.one(con, "SELECT current_setting('temp_directory')")[0] == str(DUCKDB_TEMP_DIR)
