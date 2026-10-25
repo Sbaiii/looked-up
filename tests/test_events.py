@@ -149,3 +149,10 @@ def test_excess_from_scored_hours():
     [e] = _dicts(ev)
     assert e["excess_views"] == 3 * 900 + 3 * 300
     assert e["lead_excess_share"] == pytest.approx(1200 / 3600)
+
+
+def test_breadth_matches_language_rows():
+    con = _spikes([(1, "es", 0, 50), (1, "en", 1, 30), (1, "fr", 2, 12), (1, "de", 3, 9)])
+    ev, el = build_events(con, "spikes", P)
+    [e] = _dicts(ev)
+    assert e["breadth"] == len(_dicts(el)) == 4
