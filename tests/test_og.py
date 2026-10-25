@@ -193,3 +193,7 @@ def test_rank_ties_by_id():
 def test_pick_not_strict_takes_the_top():
     weak = _e(1, 10, 2)
     assert og.pick([weak]) is None and og.pick([weak], strict=False) is weak and og.pick([], strict=False) is None
+
+
+def test_country_colours_without_languages():
+    assert og.country_colours({"langs": []}) == {} and og.country_colours({}) == {}
