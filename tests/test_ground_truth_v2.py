@@ -326,5 +326,7 @@ def test_place_parts_without_comma():
     assert place_parts("Kermadec Islands region") == (None, "Kermadec Islands region")
 
 
-def test_kickoff_already_utc():
-    assert kickoff_utc("{{Start date|2026|7|12}}", "20:00 [[Coordinated Universal Time|UTC]]") in (datetime(2026, 7, 12, 20), None)
+def test_kickoff_needs_an_offset():
+    # only times with an explicit UTC offset are read; a bare "UTC" leaves the match out (pre-registered parser, kept)
+    assert kickoff_utc("{{Start date|2026|7|12}}", "20:00 [[Coordinated Universal Time|UTC]]") is None
+    assert kickoff_utc("{{Start date|2026|7|12}}", "20:00 [[UTC+00:00|UTC+0]]") == datetime(2026, 7, 12, 20)
