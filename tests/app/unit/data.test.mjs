@@ -100,3 +100,16 @@ test('two simultaneous requests for one file share a single fetch', async (t) =>
   assert.deepEqual(a, b);
   assert.equal(calls, 1);
 });
+
+test('the cache boundary sits 2.2 days after the day starts', async (t) => {
+  const { win, store } = withCaches();
+  globalThis.caches = win.caches;
+  t.after(() => { delete globalThis.caches; });
+  t.mock.method(globalThis, 'fetch', async () => gz({ ok: 1 }));
+  t.mock.method(Date, 'now', () => Date.parse('2026-08-19T04:00:00Z'));           // 2.17 days after 17 Aug 00:00
+  await (await load('', win)).dayFile('2026-08-17');
+  assert.equal(store.size, 0);
+  Date.now.mock.mockImplementation(() => Date.parse('2026-08-19T06:00:00Z'));    // 2.25 days
+  await (await load('', win)).dayFile('2026-08-17');
+  assert.equal(store.size, 1);
+});
