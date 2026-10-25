@@ -156,3 +156,9 @@ def test_breadth_matches_language_rows():
     ev, el = build_events(con, "spikes", P)
     [e] = _dicts(ev)
     assert e["breadth"] == len(_dicts(el)) == 4
+
+
+def test_two_qids_two_events():
+    rows = [(q, l, h, 20) for q in (1, 2) for l, h in [("en", 0), ("fr", 1), ("de", 2)]]
+    events, _ = _events(_spikes(rows))
+    assert sorted(e["qid"] for e in events) == [1, 2]
