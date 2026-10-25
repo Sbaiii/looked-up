@@ -432,3 +432,10 @@ def test_stats_update_takes_a_new_forecast():
     old = ax.stats_payload({"2026-08-16": _day_summary(2)}, datetime(2026, 8, 17), ["en"], forecast={"auc": 0.875})
     new = ax._update_stats(old, {}, datetime(2026, 8, 18), ["en"], forecast={"auc": 0.9})
     assert new["forecast"] == {"auc": 0.9} and sorted(new["days"]) == ["2026-08-16"]
+
+
+def test_day_and_og_paths_are_dated():
+    from datetime import date
+
+    assert ax.day_file(date(2026, 1, 2)) == "data/app/days/2026-01-02.json"
+    assert ax.og_file(date(2026, 1, 2)) == "data/app/og/2026-01-02.png"
