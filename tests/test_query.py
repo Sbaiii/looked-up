@@ -84,3 +84,8 @@ def test_hub_without_token_and_local_without_httpfs(monkeypatch, tmp_path):
 def test_local_lake_root_is_the_directory(lake, monkeypatch):
     monkeypatch.delenv("LOOKEDUP_LOCAL_LAKE", raising=False)
     assert query.lake_root(local=True) == str(query.LOCAL_LAKE_DIR)
+
+
+def test_top_more_than_available(lake):
+    rows = query.top("fr", H14, n=100000, local=True).fetchall()
+    assert 0 < len(rows) <= lake.num_rows
