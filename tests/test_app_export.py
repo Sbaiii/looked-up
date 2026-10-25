@@ -453,3 +453,8 @@ def test_iso_hour_format():
 def test_label_from_plain_title():
     assert ax.label_from_title("Lisbon") == "Lisbon"
     assert ax.label_from_title("New_York_City") == "New York City"
+
+
+def test_group_langs_by_event():
+    g = ax.group_langs([_lang("a", "en", 1), _lang("b", "fr", 2), _lang("a", "de", 3)])
+    assert [r["lang"] for r in g["a"]] == ["en", "de"] and [r["lang"] for r in g["b"]] == ["fr"]
