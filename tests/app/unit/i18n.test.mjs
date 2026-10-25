@@ -141,3 +141,10 @@ test('label falls back to the QID when there are no labels at all', () => {
     assert.equal(i18n.label({ qid: 'Q5', labels: {} }), 'Q5', code);
   }
 });
+
+test('within in French and Spanish', () => {
+  i18n.use(dict('fr'), 'fr');
+  assert.match(i18n.within(3), /^3 heures$/);
+  i18n.use(dict('es'), 'es');
+  assert.match(i18n.within(3), /^3 horas$/);
+});
