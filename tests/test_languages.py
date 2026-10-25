@@ -212,3 +212,10 @@ def test_shipped_languages_are_complete():
         assert l["name_en"] and l["name_native"] and l["speakers"] > 0, l["code"]
     shares = [l["cumulative_share_of_candidates"] for l in doc["languages"]]
     assert shares == sorted(shares) and shares[-1] <= 1.0
+
+
+def test_active_codes_shape():
+    import re
+
+    codes = active_codes()
+    assert all(re.fullmatch(r"[a-z]{2,3}(-[a-z]+)?", c) for c in codes)
