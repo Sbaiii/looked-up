@@ -261,3 +261,8 @@ def test_download_incomplete_after_all_attempts(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="incomplete download after 3 attempts"):
         dumps.download("https://x/f.gz", tmp_path / "f.gz", retries=3)
     assert not (tmp_path / "f.gz").exists() and (tmp_path / "f.gz.part").read_bytes() == b"aaa"
+
+
+def test_listing_without_links(monkeypatch):
+    monkeypatch.setattr(dumps._session, "get", lambda url, timeout=None: _Page(200, "<html><body>empty</body></html>"))
+    assert dumps.list_month(2026, 10) == []
