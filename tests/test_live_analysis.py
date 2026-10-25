@@ -243,3 +243,8 @@ def test_anonymous_revision_counts():
 
 def test_rollback_tag_is_not_counted():
     assert not LA.counted(rev(0, "a", tags=["mw-rollback"])) and not LA.counted(rev(0, "a", tags=["mw-undo"]))
+
+
+def test_precision_without_live_events():
+    res = LA.precision([])
+    assert res["verdict"] == "inconclusive" and res["live_events_scored"] == 0
