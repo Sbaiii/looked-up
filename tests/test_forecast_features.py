@@ -95,3 +95,7 @@ def test_fade_cap_and_observability():
 def test_custom_offsets():
     rel = _con(SPIKES, VIEWS).sql(snapshot_sql("events", "spikes", "views", "dims", offsets=(1,)))
     assert [r[rel.columns.index("offset_h")] for r in rel.fetchall()] == [1]
+
+
+def test_offsets_increase():
+    assert [r["offset_h"] for r in _rows(_con(SPIKES, VIEWS))] == [0, 1, 3]
