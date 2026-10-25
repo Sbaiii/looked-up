@@ -152,3 +152,8 @@ def test_no_observations_before_the_period():
     from datetime import date
 
     assert observation_counts(date(2026, 7, 9), CFG) == {"all": 0, "weekend": 0, "weekday": 0}
+
+
+def test_below_floor_never_r1_r2():
+    rows = [("en", "Low", _at(D, 9), 60, 39)]                       # 99 views
+    assert _score_day(_con(rows), D) == {}
