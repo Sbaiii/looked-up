@@ -188,3 +188,8 @@ def test_qualifies_at_threshold():
 def test_rank_ties_by_id():
     e = lambda i, cls="multi_language": {"id": i, "excess": 5, "breadth": 3, "class": cls}
     assert [x["id"] for x in og.rank([e("b"), e("a"), e("c", "single_language")])] == ["a", "b"]
+
+
+def test_pick_not_strict_takes_the_top():
+    weak = _e(1, 10, 2)
+    assert og.pick([weak]) is None and og.pick([weak], strict=False) is weak and og.pick([], strict=False) is None
