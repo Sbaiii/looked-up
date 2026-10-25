@@ -210,3 +210,8 @@ def test_spike_and_event_paths_match_days():
     d = date(2026, 1, 9)
     assert scorer.spikes_path(d).endswith("year=2026/month=01/day=09.parquet")
     assert scorer.events_path(d).replace("events", "spikes") == scorer.spikes_path(d)
+
+
+def test_qids_for_nothing(monkeypatch):
+    monkeypatch.setattr(scorer, "session", lambda: pytest.fail("no request expected"))
+    assert scorer.qids_for([]) == {}
