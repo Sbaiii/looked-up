@@ -111,3 +111,11 @@ def test_plain_text_pageview_complete(tmp_path, article_filter):
     assert _rows(tables[datetime(2026, 9, 13, 0)]) == [(datetime(2026, 9, 13, 0), "en", "Lisbon", 5, 4)]
     assert _rows(tables[datetime(2026, 9, 13, 14)]) == [(datetime(2026, 9, 13, 14), "en", "Lisbon", 7, 0)]
     assert tables[datetime(2026, 9, 13, 1)].num_rows == 0
+
+
+def test_sql_str_escapes_quotes():
+    from pathlib import Path
+
+    from lookedup.transform import _sql_str
+
+    assert _sql_str(Path("/tmp/o'clock")) == "'/tmp/o''clock'"
