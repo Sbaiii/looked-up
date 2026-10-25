@@ -174,3 +174,9 @@ def test_parse_dump_line_edge_columns():
     assert parse_dump_line("en Lisbon 42 0 \n") is None                     # five columns
     assert parse_dump_line("en.m Lisbon 7 0") == ("en.m", "Lisbon", 7)
     assert parse_dump_line("") is None
+
+
+def test_pvc_mobile_variants():
+    assert parse_pvc_project("de.wikipedia", "mobile-app") == ("de", True)
+    assert parse_pvc_project("de.wikipedia", "mobile-web") == ("de", True)
+    assert parse_pvc_project("de.wikipedia", "desktop") == ("de", False)
