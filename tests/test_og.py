@@ -174,3 +174,7 @@ def test_country_colours_take_the_strongest_language(tmp_path, monkeypatch):
 def test_ramp_brightness_grows():
     lum = lambda c: sum(c)
     assert lum(og.ramp(0.0)) < lum(og.ramp(0.5)) < lum(og.ramp(1.0))
+
+
+def test_within_long_spread():
+    assert og.within(48) == "48 hours"
