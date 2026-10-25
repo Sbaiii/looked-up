@@ -125,3 +125,11 @@ test('excessPhrase: exact number below a million, words from a million up', asyn
   assert.match(excessPhrase(999999), /999,999/);
   assert.match(excessPhrase(1000000), /1 million/);
 });
+
+test('compose writes the lead sentence in French and Spanish', () => {
+  for (const code of ['fr', 'es']) {
+    i18n.use(dict(code), code);
+    const out = compose(day('female'), '2026-08-25');
+    assert.ok(out.text.includes('Dolly Parton') && out.text.length > 40, code);
+  }
+});
