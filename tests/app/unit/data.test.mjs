@@ -82,3 +82,12 @@ test('a day from yesterday is fetched but never cached', async (t) => {
   assert.deepEqual(await (await load('', win)).dayFile(yesterday), { fresh: true });
   assert.equal(store.size, 0);
 });
+
+test('today and stats fetch their own files', async (t) => {
+  const urls = [];
+  t.mock.method(globalThis, 'fetch', async (url) => { urls.push(url); return gz({ ok: 1 }); });
+  const data = await load();
+  await data.today();
+  await data.stats();
+  assert.deepEqual(urls, [`${HUB}today.json.gz`, `${HUB}stats.json.gz`]);
+});
