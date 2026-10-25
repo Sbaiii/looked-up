@@ -91,3 +91,7 @@ test('events without labels or descriptions are still found by QID and never bre
   assert.ok(!matches(bare, 'paris'));
   assert.deepEqual(visible([bare], { query: 'q7' }).map((e) => e.qid), ['Q7']);
 });
+
+test('a partial word matches', () => {
+  assert.ok(matches(ev('Q1', { labels: { en: 'Constantinople' } }), 'stanti'));
+});
