@@ -88,3 +88,7 @@ def test_backfill_keeps_raw_when_asked(fake_dumps, tmp_path):
     store = LocalStore(tmp_path / "lake")
     assert backfill.backfill(store, DAY, DAY, keep_raw=True) == 24
     assert len(list((tmp_path / "raw").rglob("*.bz2"))) == 1
+
+
+def test_day_range_single_day():
+    assert backfill.day_range(DAY, DAY) == [DAY] == backfill.day_range(DAY, DAY, newest_first=False)
