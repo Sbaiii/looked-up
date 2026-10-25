@@ -485,3 +485,10 @@ def test_stats_days_sorted():
 def test_label_from_title_qualifier():
     assert ax.label_from_title("Paris_(Texas)") == "Paris"
     assert ax.label_from_title("The_(Not)_Band") == "The (Not) Band"
+
+
+def test_wiki_url_escaping():
+    assert ax.wiki_url("en", "C#") == "https://en.wikipedia.org/wiki/C%23"                  # a raw # would cut the URL
+    assert ax.wiki_url("en", "100%_Love") == "https://en.wikipedia.org/wiki/100%25_Love"
+    assert ax.wiki_url("en", "AC/DC") == "https://en.wikipedia.org/wiki/AC/DC"
+    assert ax.wiki_url("en", "Tom_&_Jerry") == "https://en.wikipedia.org/wiki/Tom_&_Jerry"
