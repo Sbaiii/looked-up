@@ -72,3 +72,9 @@ def test_main_builds_and_writes(monkeypatch):
     monkeypatch.setattr(G, "write", lambda by_lang, countries: seen.update(by_lang=by_lang, countries=countries))
     G.main()
     assert seen["by_lang"] == {"fr": ["FRA"]} and seen["countries"]["FRA"]["num"] == "250"
+
+
+def test_iso_upper_and_late_numeric_code():
+    rows = [row("prt", "Q5146", "Portugal"), row("PRT", "Q5146", "Portugal", "620")]
+    by_lang, countries = G.build(rows, ["pt"])
+    assert "PRT" in by_lang["pt"] and countries["PRT"]["num"] == "620"
