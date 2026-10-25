@@ -341,3 +341,8 @@ def test_m2_rows_fade_observable():
 def test_count_labels_log1p():
     y = T.labels([{"excess_next24": 0}, {"excess_next24": -5}, {"excess_next24": None}, {"excess_next24": np.e - 1}], "excess_next24")
     assert np.allclose(y, [0, 0, 0, 1])
+
+
+def test_logit_clipped():
+    z = T.logit(np.array([0.0, 0.5, 1.0]))
+    assert np.isfinite(z).all() and z[1] == 0 and np.isclose(z[0], -z[2])
