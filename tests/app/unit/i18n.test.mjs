@@ -120,3 +120,10 @@ test('array entries come back as arrays', () => {
   i18n.use({ locale: 'en-GB', lines: ['a', 'b'] }, 'en');
   assert.deepEqual(i18n.t('lines'), ['a', 'b']);
 });
+
+test('current reports the language last installed', () => {
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.current(), 'fr');
+  i18n.use(dict('en'), 'en');
+  assert.equal(i18n.current(), 'en');
+});
