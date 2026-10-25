@@ -108,7 +108,7 @@ test('zh does not match zh-yue', () => {
 
 test('folding handles Vietnamese and Polish letters', () => {
   assert.equal(fold('Hồ Chí Minh'), 'ho chi minh');
-  assert.equal(fold('Łódź'), 'łodz');                                  // Ł is a letter, not an accent
+  assert.equal(fold('Łódź'), 'lodz');
 });
 
 test('equal starts keep the file order in time orders', () => {

@@ -11,8 +11,12 @@ export const SORTS = {
     earliest: (a, b) => Date.parse(a.start) - Date.parse(b.start),
 };
 
-/** Lower-case text without accents, so that a search for "sao paulo" finds "São Paulo". */
-export const fold = (s) => String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+// Letters that carry no separable accent, written as their plain Latin forms (Łódź, Øresund, Đà Nẵng, Straße).
+const PLAIN = { ł: 'l', ø: 'o', æ: 'ae', œ: 'oe', đ: 'd', ð: 'd', þ: 'th', ß: 'ss', ı: 'i' };
+
+/** Lower-case text without accents, so that a search for "sao paulo" finds "São Paulo" and "lodz" finds "Łódź". */
+export const fold = (s) => String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+    .replace(/[łøæœđðþßı]/g, (c) => PLAIN[c]);
 
 /** Whether an event matches a folded search: a label in any language, a description, or its QID. */
 export function matches(ev, q) {
