@@ -825,3 +825,8 @@ def test_language_rejects_sister_projects():
 
 def test_counts_of_an_unseen_article():
     assert B.Detector().counts("en", "Nothing", T0) == {"edits_10m": 0, "edits_30m": 0, "edits_60m": 0, "editors_30m": 0}
+
+
+def test_burst_json_fields():
+    d = B.Burst("en", "X", T0, "window", 5, 3, qid="Q1").to_json()
+    assert d == {"lang": "en", "title": "X", "ts": T0, "kind": "window", "edits_30m": 5, "editors_30m": 3, "qid": "Q1"}
