@@ -56,3 +56,7 @@ test('the download columns are unique and start with the day and the QID', async
 test('numbers and booleans become their text', () => {
   assert.equal(toCsv([{ a: 1.5, b: true, c: false }], ['a', 'b', 'c']), 'a,b,c\r\n1.5,true,false\r\n');
 });
+
+test('missing values are empty', () => {
+  assert.equal(toCsv([{ a: 1 }], ['a', 'b', 'c']), 'a,b,c\r\n1,,\r\n');
+});
