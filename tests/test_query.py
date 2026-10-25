@@ -79,3 +79,8 @@ def test_hub_without_token_and_local_without_httpfs(monkeypatch, tmp_path):
     query._base("hf://datasets/user/repo")
     query._base(str(tmp_path))
     assert cons[0].sql == ["INSTALL httpfs; LOAD httpfs;"] and cons[1].sql == []
+
+
+def test_local_lake_root_is_the_directory(lake, monkeypatch):
+    monkeypatch.delenv("LOOKEDUP_LOCAL_LAKE", raising=False)
+    assert query.lake_root(local=True) == str(query.LOCAL_LAKE_DIR)
