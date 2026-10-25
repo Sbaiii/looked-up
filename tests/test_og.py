@@ -178,3 +178,8 @@ def test_ramp_brightness_grows():
 
 def test_within_long_spread():
     assert og.within(48) == "48 hours"
+
+
+def test_qualifies_at_threshold():
+    assert og.qualifies({"excess": og.HERO_MIN_EXCESS, "tier": "noticed"})
+    assert not og.qualifies({"excess": 0, "tier": "noticed"})
