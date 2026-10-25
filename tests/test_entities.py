@@ -271,3 +271,10 @@ def test_gender_ignores_non_item_values(monkeypatch):
     monkeypatch.setattr(E, "_sparql", lambda q: answers.pop(0))
     monkeypatch.setattr(E.time, "sleep", lambda s: None)
     assert E.fetch_text_sparql([7], ["en"]) == [{"qid": 7, "descriptions_json": "{}", "gender": None}]
+
+
+def test_gender_of_unknown_values():
+    from lookedup.analytics.entities import gender_of
+
+    assert gender_of([123456789]) == "other" or gender_of([123456789]) is None
+    assert gender_of([]) is None
