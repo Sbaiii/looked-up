@@ -462,3 +462,10 @@ def test_write_hours_twice_is_a_no_op(tmp_path):
     t = {H14: (_hour(H14, [("en", "A", 5, 5)]), "hourly_dump")}
     assert write_hours(store, t, "first") == [H14]
     assert write_hours(store, t, "again") == []
+
+
+def test_write_hours_overwrite(tmp_path):
+    store = LocalStore(tmp_path / "lake")
+    write_hours(store, {H14: (_hour(H14, [("en", "A", 5, 5)]), "hourly_dump")}, "first")
+    assert write_hours(store, {H14: (_hour(H14, [("en", "A", 9, 9)]), "hourly_dump")}, "redo", overwrite=True) == [H14]
+    assert pq.read_table(tmp_path / "lake" / day_path(H14))["views_desktop"].to_pylist() == [9]
