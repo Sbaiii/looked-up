@@ -31,3 +31,7 @@ test('J and K work in lower case only, T in both', () => {
   assert.equal(keyAction({ key: 'K' }), null);
   assert.equal(keyAction({ key: 'T' }), 'today');
 });
+
+test('ArrowUp, ArrowDown, Enter and Space have no shortcut', () => {
+  for (const key of ['ArrowUp', 'ArrowDown', 'Enter', ' ', 'Tab']) assert.equal(keyAction({ key }), null, key);
+});
