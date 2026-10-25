@@ -331,3 +331,8 @@ def test_m1_rows_drop_reached_tiers():
     rows = [{"offset_h": 1, "breadth_t": 4}, {"offset_h": 1, "breadth_t": 5}, {"offset_h": 3, "breadth_t": 2}]
     assert T.m1_rows(rows, "international", 1) == [{"offset_h": 1, "breadth_t": 4}]
     assert len(T.m1_rows(rows, "planetary", 1)) == 2
+
+
+def test_m2_rows_fade_observable():
+    rows = [{"offset_h": 3, "fade_observable": True}, {"offset_h": 3, "fade_observable": False}, {"offset_h": 1, "fade_observable": True}]
+    assert len(T.m2_rows(rows, "fade_hours")) == 1 and len(T.m2_rows(rows, "excess_next24")) == 2
