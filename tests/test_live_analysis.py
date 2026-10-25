@@ -235,3 +235,7 @@ def test_append_scores_without_rows_commits_nothing(tmp_path, monkeypatch):
     monkeypatch.setattr(sc, "_commit", lambda *a: (_ for _ in ()).throw(AssertionError("nothing to commit")))
     res = LA.append_scores(LocalStore(tmp_path), date(2026, 10, 9))
     assert res["units_today"] == 0 and res["day"] == "2026-10-09" and not (tmp_path / LA.LEAD_CSV).exists()
+
+
+def test_anonymous_revision_counts():
+    assert LA.counted({"timestamp": "2026-10-09T12:00:00Z", "user": None, "tags": [], "comment": "added a source"})
