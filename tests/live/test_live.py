@@ -821,3 +821,7 @@ def test_language_rejects_sister_projects():
     assert language(ev(wiki="enwiktionary")) is None
     assert language(ev(wiki="commonswiki")) is None
     assert language(ev(wiki="frwiki")) == "fr"
+
+
+def test_counts_of_an_unseen_article():
+    assert B.Detector().counts("en", "Nothing", T0) == {"edits_10m": 0, "edits_30m": 0, "edits_60m": 0, "editors_30m": 0}
