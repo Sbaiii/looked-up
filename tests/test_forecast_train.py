@@ -289,3 +289,8 @@ def test_categorical_features_are_features():
 
 def test_split_windows_are_ordered():
     assert T.TRAIN_END < T.VALID_END < T.TEST_END
+
+
+def test_identity_calibration():
+    p = np.array([0.1, 0.5, 0.9])
+    assert np.allclose(T.calibrate(p, (1.0, 0.0)), p)
