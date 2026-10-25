@@ -143,3 +143,7 @@ test('facts gives at most three, one of each kind', async () => {
   assert.ok(out.length <= 3);
   assert.equal(new Set(out.map(([k]) => k)).size, out.length);
 });
+
+test('leadKey: other genders get the pronoun-free sentence', () => {
+  assert.equal(leadKey({ category: 'death', gender: 'other' }), 'briefing.lead_death_neutral');
+});
