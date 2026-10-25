@@ -63,3 +63,10 @@ def test_shares_are_none_when_either_side_is_empty(lake, tmp_path):
     assert (res["batch_spikes"], res["production_spikes"], res["both"]) == (0, 0, 0)
     assert res["share_of_batch_reproduced"] is None and res["share_of_production_in_batch"] is None
     assert res["baseline_slots"] == 0                                                  # no title reached the view floor
+
+
+def test_agreement_needs_every_lookback_file(tmp_path):
+    import duckdb as _d
+
+    with pytest.raises(_d.Error):
+        agreement.production_vs_batch(_warehouse(tmp_path / "w.duckdb", []), D, [9], lake_dir=tmp_path / "empty")
