@@ -285,3 +285,7 @@ def test_categorical_features_are_features():
 
     assert set(CATEGORICAL) <= set(FEATURES) and LEAKY <= set(FEATURES) and MONOTONE_UP <= set(FEATURES)
     assert len(FEATURES) == len(set(FEATURES))
+
+
+def test_split_windows_are_ordered():
+    assert T.TRAIN_END < T.VALID_END < T.TEST_END
