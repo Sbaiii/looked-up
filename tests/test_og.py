@@ -169,3 +169,8 @@ def test_country_colours_take_the_strongest_language(tmp_path, monkeypatch):
     c = og.country_colours({"langs": [{"lang": "fr", "surprise": 50}, {"lang": "nl", "surprise": 500}, {"lang": "xx", "surprise": 900}]})
     assert c["056"] == og.ramp(og.scale(500)) and c["250"] == og.ramp(og.scale(50)) and c["528"] == c["056"]
     assert og.country_colours({"langs": [{"lang": "fr", "surprise": 8}]}) == {}             # at the threshold: no colour
+
+
+def test_ramp_brightness_grows():
+    lum = lambda c: sum(c)
+    assert lum(og.ramp(0.0)) < lum(og.ramp(0.5)) < lum(og.ramp(1.0))
