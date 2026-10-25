@@ -12,3 +12,10 @@ const WORKER = 'https://looked-up-live.abdellahsbaisbai.workers.dev/live.json';
 test('without ?live= the strip reads the deployed Worker', async () => {
   assert.equal(await liveUrl(''), WORKER);
 });
+
+test('?live= may name another workers.dev or hf.space feed', async () => {
+  const w = 'https://staging.example.workers.dev/live.json';
+  const s = 'https://someone-looked-up.hf.space/live.json';
+  assert.equal(await liveUrl(`?live=${encodeURIComponent(w)}`), w);
+  assert.equal(await liveUrl(`?live=${encodeURIComponent(s)}`), s);
+});
