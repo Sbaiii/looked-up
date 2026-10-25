@@ -469,3 +469,8 @@ def test_summary_of_nothing():
 def test_select_nothing():
     assert ax.select([], {}) == ([], [])
     assert ax.published([], {}) == []
+
+
+def test_by_day_keeps_order():
+    a, b = _ev("a", 1, 3, 1, start=T0), _ev("b", 2, 3, 1, start=T0 + timedelta(hours=1))
+    assert [e["event_id"] for e in ax.by_day([b, a])[T0.date()]] == ["b", "a"]
