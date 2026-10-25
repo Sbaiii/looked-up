@@ -175,3 +175,7 @@ def test_attention_left_only_at_three_hours():
     young = out["young"]
     assert young["offset_h"] == 1 and young["p_international"] == 0.6
     assert "predicted_excess_24h" not in young and "fade_eta" not in young
+
+
+def test_no_events_no_forecasts():
+    assert forecast_open(_con(5), [], T0 + timedelta(hours=6), last_hour=T0 + timedelta(hours=5), manifest={}, models=_models()) == {}
