@@ -115,3 +115,8 @@ test('Spanish groups thousands with a dot', () => {
   i18n.use(dict('es'), 'es');
   assert.equal(i18n.num(1234567), '1.234.567');
 });
+
+test('array entries come back as arrays', () => {
+  i18n.use({ locale: 'en-GB', lines: ['a', 'b'] }, 'en');
+  assert.deepEqual(i18n.t('lines'), ['a', 'b']);
+});
