@@ -285,3 +285,14 @@ def test_classify_without_class():
     from lookedup.analytics.entities import classify
 
     assert classify({}, load()) == "other"
+
+
+def test_classify_human_by_occupation():
+    from lookedup.analytics.config import load
+    from lookedup.analytics.entities import classify
+
+    cfg = load()
+    cls, occ = next(iter(cfg.raw["occupations"].items()))
+    human = int(cfg.raw["human_class"][1:])
+    assert classify({"P31": [human], "P106": [int(next(iter(occ))[1:])]}, cfg) == cls
+    assert classify({"P31": [human], "P106": []}, cfg) == "human"
