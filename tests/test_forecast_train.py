@@ -336,3 +336,8 @@ def test_m1_rows_drop_reached_tiers():
 def test_m2_rows_fade_observable():
     rows = [{"offset_h": 3, "fade_observable": True}, {"offset_h": 3, "fade_observable": False}, {"offset_h": 1, "fade_observable": True}]
     assert len(T.m2_rows(rows, "fade_hours")) == 1 and len(T.m2_rows(rows, "excess_next24")) == 2
+
+
+def test_count_labels_log1p():
+    y = T.labels([{"excess_next24": 0}, {"excess_next24": -5}, {"excess_next24": None}, {"excess_next24": np.e - 1}], "excess_next24")
+    assert np.allclose(y, [0, 0, 0, 1])
