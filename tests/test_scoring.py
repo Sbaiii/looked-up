@@ -141,3 +141,8 @@ def test_automation_flags_skip_quiet_articles():
     rows += [("en", "Quiet", _at(D - timedelta(days=1), h), 900, 0) for h in range(24)]       # busy, but another day
     rel = _con(rows).sql(automation_flags_sql("stg", D, CFG))
     assert rel.fetchall() == []
+
+
+def test_observation_counts_add_up():
+    n = observation_counts(D, CFG)
+    assert n["weekday"] + n["weekend"] == n["all"] == CFG.baseline["lookback_days"]
