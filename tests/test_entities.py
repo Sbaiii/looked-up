@@ -278,3 +278,10 @@ def test_gender_of_unknown_values():
 
     assert gender_of([123456789]) == "other"                 # any value that is neither female nor male
     assert gender_of([]) is None
+
+
+def test_classify_without_class():
+    from lookedup.analytics.config import load
+    from lookedup.analytics.entities import classify
+
+    assert classify({}, load()) == "other"
