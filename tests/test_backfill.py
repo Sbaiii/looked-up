@@ -97,3 +97,7 @@ def test_day_range_single_day():
 def test_day_range_oldest_first():
     assert backfill.day_range(date(2026, 7, 30), date(2026, 8, 2), newest_first=False) == [
         date(2026, 7, 30), date(2026, 7, 31), date(2026, 8, 1), date(2026, 8, 2)]
+
+
+def test_day_range_backwards_is_empty():
+    assert backfill.day_range(date(2026, 8, 2), date(2026, 8, 1)) == []
