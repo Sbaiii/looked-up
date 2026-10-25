@@ -157,3 +157,9 @@ def test_no_observations_before_the_period():
 def test_below_floor_never_r1_r2():
     rows = [("en", "Low", _at(D, 9), 60, 39)]                       # 99 views
     assert _score_day(_con(rows), D) == {}
+
+
+def test_surprise_zero_at_baseline():
+    rows = [("en", "Flat", _at(D - timedelta(days=i), 10), 50, 50) for i in range(1, 29)] + [("en", "Flat", _at(D, 10), 50, 50)]
+    s = _score_day(_con(rows), D)[("Flat", 10)]
+    assert s["baseline_median"] == 100 and s["surprise"] == 0
