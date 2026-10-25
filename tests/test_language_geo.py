@@ -83,3 +83,9 @@ def test_iso_upper_and_late_numeric_code():
 def test_language_without_rows_has_an_entry():
     by_lang, _ = G.build([], ["eo"])
     assert by_lang == {"eo": []}
+
+
+def test_countries_limited_to_used():
+    rows = [row("FRA", "Q150", "France", "250"), row("JPN", "Q5287", "Japan", "392")]
+    _, countries = G.build(rows, ["fr"])
+    assert "JPN" not in countries and "FRA" in countries
