@@ -146,3 +146,9 @@ def test_automation_flags_skip_quiet_articles():
 def test_observation_counts_add_up():
     n = observation_counts(D, CFG)
     assert n["weekday"] + n["weekend"] == n["all"] == CFG.baseline["lookback_days"]
+
+
+def test_no_observations_before_the_period():
+    from datetime import date
+
+    assert observation_counts(date(2026, 7, 9), CFG) == {"all": 0, "weekend": 0, "weekday": 0}
