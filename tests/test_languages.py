@@ -219,3 +219,8 @@ def test_active_codes_shape():
 
     codes = active_codes()
     assert all(re.fullmatch(r"[a-z]{2,3}(-[a-z]+)?", c) for c in codes)
+
+
+def test_last_full_days_are_consecutive():
+    days = L.last_full_days(7, today=date(2026, 3, 1))
+    assert days[-1] == date(2026, 2, 28) and all((b - a).days == 1 for a, b in zip(days, days[1:], strict=False))
