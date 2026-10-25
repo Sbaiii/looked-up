@@ -165,3 +165,12 @@ test('dayShort in French and Spanish', () => {
   i18n.use(dict('es'), 'es');
   assert.match(i18n.dayShort('2026-08-17'), /^lun,? 17 ago/);
 });
+
+test('langName names Japanese in each interface language', () => {
+  i18n.use(dict('en'), 'en');
+  assert.equal(i18n.langName('ja'), 'Japanese');
+  i18n.use(dict('fr'), 'fr');
+  assert.equal(i18n.langName('ja'), 'japonais');
+  i18n.use(dict('es'), 'es');
+  assert.equal(i18n.langName('ja'), 'japonés');
+});
