@@ -445,3 +445,7 @@ def test_day_path_padding():
 
 def test_local_list_prefix_missing(tmp_path):
     assert LocalStore(tmp_path / "lake").list_prefix("data/none/") == []
+
+
+def test_local_fetch_missing(tmp_path):
+    assert LocalStore(tmp_path / "lake").fetch("data/none.parquet", tmp_path / "out") is None
