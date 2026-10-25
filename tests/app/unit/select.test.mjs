@@ -89,3 +89,8 @@ test('pick skips a bigger event that does not qualify for a smaller one that doe
   const r = pick([e('big', HERO_MIN_EXCESS - 1, 'noticed'), e('intl', 10, 'international')]);
   assert.equal(r.id, 'intl');
 });
+
+test('no hero anywhere: the result says 24 hours', async () => {
+  const r = await pickHero(async () => [], now);
+  assert.deepEqual([r.event, r.hours], [null, 24]);
+});
