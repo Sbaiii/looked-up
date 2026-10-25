@@ -209,3 +209,7 @@ def test_phase2b_quake_verdict_and_rows(tmp_path, monkeypatch):
         rows = {r["usgs_id"]: r for r in csv.DictReader(f)}
     assert rows["u1"]["country"] == "17" and rows["u1"]["lead_is_country_language"] == "True" and rows["u1"]["delay_h"] == "2.0"
     assert rows["u2"]["detected"] == "False" and rows["u2"]["lead_is_country_language"] == ""
+
+
+def test_floor_on_the_hour():
+    assert R._floor(datetime(2026, 8, 17, 2)) == datetime(2026, 8, 17, 2)
