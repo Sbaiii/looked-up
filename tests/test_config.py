@@ -72,3 +72,7 @@ def test_product_rule_is_looser_than_the_evaluated_one():
     cfg = load()
     assert cfg.product_event.min_languages < cfg.event.min_languages
     assert cfg.product_event.window_hours == cfg.event.window_hours
+
+
+def test_weekend_days():
+    assert load().baseline["weekend_days"] == [5, 6]
