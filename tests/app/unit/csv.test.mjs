@@ -64,3 +64,10 @@ test('missing values are empty', () => {
 test('a lone quote becomes four quotes', () => {
   assert.equal(field('"'), '""""');
 });
+
+test('the date column is the day shown, not the event start', async () => {
+  const { dayRows } = await import('../../../app/js/csv.js');
+  const [r] = dayRows({ events: [{ qid: 'Q1', start: '2026-08-16T23:00Z', lead: 'en' }] }, '2026-08-17', { label: () => '', desc: () => '' });
+  assert.equal(r.date, '2026-08-17');
+  assert.equal(r.first_spike_utc, '2026-08-16T23:00Z');
+});
