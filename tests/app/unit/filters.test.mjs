@@ -105,3 +105,8 @@ test('zh does not match zh-yue', () => {
   const evs = [ev('A', { langs: [{ lang: 'zh-yue' }] }), ev('B', { langs: [{ lang: 'zh' }] })];
   assert.deepEqual(visible(evs, { lang: 'zh' }).map((e) => e.qid), ['B']);
 });
+
+test('folding handles Vietnamese and Polish letters', () => {
+  assert.equal(fold('Hồ Chí Minh'), 'ho chi minh');
+  assert.equal(fold('Łódź'), 'łodz');                                  // Ł is a letter, not an accent
+});
