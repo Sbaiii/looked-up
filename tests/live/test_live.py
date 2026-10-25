@@ -837,3 +837,8 @@ def test_resolver_without_cache_file():
     r = Resolver()
     assert r.qids == {} and r.items == {} and r.pending == set()
     r.save()                                                        # no file configured: a no-op
+
+
+def test_new_engine_status():
+    s = Engine().status(now=T0)
+    assert s["connected"] is False and s["last_event_at"] is None
