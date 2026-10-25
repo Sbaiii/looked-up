@@ -40,3 +40,8 @@ test('Shift is not a blocking modifier', () => {
   assert.equal(keyAction({ key: '/', shiftKey: true }), 'search');
   assert.equal(keyAction({ key: 'T', shiftKey: true }), 'today');
 });
+
+test('Meta+ArrowLeft (browser back on Mac) is never taken', () => {
+  assert.equal(keyAction({ key: 'ArrowLeft', metaKey: true }), null);
+  assert.equal(keyAction({ key: 'ArrowRight', altKey: true }), null);
+});
