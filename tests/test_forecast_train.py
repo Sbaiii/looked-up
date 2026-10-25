@@ -301,3 +301,7 @@ def test_calib_curve_bins():
     p = np.array([0.05, 0.95, 1.0])
     curve = E.calib_curve(y, p)
     assert [c["bin"] for c in curve] == [0, 9] and curve[1]["n"] == 2 and curve[1]["observed"] == 1.0
+
+
+def test_lift_without_positives():
+    assert np.isnan(E.lift_top10(np.zeros(20), np.arange(20.0)))
