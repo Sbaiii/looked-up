@@ -158,3 +158,10 @@ test('dateTime shows UTC', () => {
   i18n.use(dict('en'), 'en');
   assert.match(i18n.dateTime('2026-08-17T14:00:00Z'), /UTC/);
 });
+
+test('dayShort in French and Spanish', () => {
+  i18n.use(dict('fr'), 'fr');
+  assert.match(i18n.dayShort('2026-08-17'), /^lun\.? 17 août$/);
+  i18n.use(dict('es'), 'es');
+  assert.match(i18n.dayShort('2026-08-17'), /^lun,? 17 ago/);
+});
