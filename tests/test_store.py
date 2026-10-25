@@ -430,3 +430,10 @@ def test_expected_hours_on_the_hour():
     assert expected_hours(datetime(2026, 10, 7, 12, 0), 2) == [datetime(2026, 10, 7, 10), datetime(2026, 10, 7, 11)]
     assert expected_hours(datetime(2026, 10, 7, 12, 59, 59), 1) == [datetime(2026, 10, 7, 11)]
     assert expected_hours(datetime(2026, 10, 7, 12), 0) == []
+
+
+def test_manifest_key_round_trip():
+    from lookedup.store import _key, _parse_key
+
+    h = datetime(2026, 2, 28, 23)
+    assert _key(h) == "2026-02-28T23:00:00Z" and _parse_key(_key(h)) == h
