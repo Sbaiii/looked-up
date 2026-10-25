@@ -62,3 +62,9 @@ test('geomPath draws every ring of every part', () => {
   assert.equal((d.match(/Z/g) || []).length, 3);
   assert.equal(geomPath({ type: 'Point', coordinates: [0, 0] }), '');
 });
+
+test('lon 0 is the horizontal middle and latitude 0 sits inside the band', () => {
+  const [x, y] = project([0, 0]);
+  assert.equal(x, W / 2);
+  assert.ok(y > 0 && y < H);
+});
