@@ -241,3 +241,16 @@ def test_no_fetchone_in_the_package():
     for base in ("lookedup", "live/lookedup_live"):
         for p in (ROOT / base).rglob("*.py"):
             assert ".fetchone()" not in p.read_text(encoding="utf-8"), p.relative_to(ROOT)
+
+
+def test_app_imports_resolve():
+    js = ROOT / "app" / "js"
+    for f in js.glob("*.js"):
+        for mod in re.findall(r"from '\./([\w-]+\.js)'", f.read_text(encoding="utf-8")):
+            assert (js / mod).exists(), (f.name, mod)
+
+
+def test_pure_app_modules_have_unit_tests():
+    unit = " ".join(p.read_text(encoding="utf-8") for p in (ROOT / "tests" / "app" / "unit").glob("*.mjs"))
+    for name in ("briefing", "csv", "data", "filters", "i18n", "keys", "live", "projection", "scale", "select"):
+        assert f"app/js/{name}.js" in unit, name
