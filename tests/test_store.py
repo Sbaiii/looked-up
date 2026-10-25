@@ -455,3 +455,10 @@ def test_merge_into_empty_existing():
     h = datetime(2026, 10, 7, 3)
     merged = merge_day(_hour(h, []), [_hour(h, [("fr", "B", 5, 0), ("en", "A", 9, 9)])])
     assert merged["lang"].to_pylist() == ["en", "fr"]
+
+
+def test_write_hours_twice_is_a_no_op(tmp_path):
+    store = LocalStore(tmp_path / "lake")
+    t = {H14: (_hour(H14, [("en", "A", 5, 5)]), "hourly_dump")}
+    assert write_hours(store, t, "first") == [H14]
+    assert write_hours(store, t, "again") == []
