@@ -228,3 +228,17 @@ def test_h2_skips_events_without_a_tracked_official_language(monkeypatch, tmp_pa
         "qid": sorted(qids), "label_en": [None] * len(qids), "claims_json": [json.dumps(claims[q]) for q in sorted(qids)]}))
     res = h2_lead_language(ctx, "ev", tmp_path / "claims.parquet")
     assert res["geolocatable"] == 1 and res["lead_is_official"] == 1          # only QID 1 can be placed
+
+
+def test_to_jsonable_dates_and_durations():
+    from datetime import date, datetime, timedelta
+
+    import pytest
+
+    from lookedup.evaluation.metrics import to_jsonable
+
+    assert to_jsonable(date(2026, 8, 17)) == "2026-08-17"
+    assert to_jsonable(datetime(2026, 8, 17, 2)) == "2026-08-17T02:00:00"
+    assert to_jsonable(timedelta(hours=1)) == 3600.0
+    with pytest.raises(TypeError):
+        to_jsonable(object())
